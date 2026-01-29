@@ -5,8 +5,12 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "eslint:check": "eslint --cache --cache-strategy content",
     "eslint:fix": "eslint --cache --cache-strategy content --fix",
+    "code:check": "npm run eslint:check && npm run prettier:check",
+    "code:fix": "npm run eslint:fix && npm run prettier:fix",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -20,6 +24,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.4"
   }
