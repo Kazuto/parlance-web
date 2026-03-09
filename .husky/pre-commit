@@ -1,0 +1,1 @@
+npx lint-staged --config ./lintStaged.config.ts
