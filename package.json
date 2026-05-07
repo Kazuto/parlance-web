@@ -19,7 +19,9 @@
   "dependencies": {
     "@nuxt/fonts": "0.13.0",
     "@nuxt/icon": "2.2.1",
+    "@tailwindcss/vite": "^4.2.4",
     "nuxt": "^4.3.0",
+    "tailwindcss": "^4.2.4",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
   },
