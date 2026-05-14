@@ -1,0 +1,45 @@
+{
+  "name": "nuxt-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "eslint:check": "eslint --cache --cache-strategy content",
+    "eslint:fix": "eslint --cache --cache-strategy content --fix",
+    "code:check": "npm run eslint:check && npm run prettier:check",
+    "code:fix": "npm run eslint:fix && npm run prettier:fix",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@nuxt/fonts": "0.13.0",
+    "@nuxt/icon": "2.2.1",
+    "@pinia/nuxt": "0.11.3",
+    "@tailwindcss/vite": "^4.2.4",
+    "@tanstack/vue-query": "^5.100.9",
+    "@vueuse/core": "^14.3.0",
+    "jwt-decode": "^4.0.0",
+    "ky": "^2.0.2",
+    "nuxt": "^4.3.0",
+    "pinia": "^3.0.4",
+    "qs": "^6.15.1",
+    "tailwindcss": "^4.2.4",
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "1.13.0",
+    "@types/qs": "^6.15.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.2.4"
+  }
+}

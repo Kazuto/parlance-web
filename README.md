@@ -106,4 +106,3 @@ This project is licensed under the GNU General Public License - see the [LICENSE
 ---
 
 Made with ❤️ by developers, for developers
-
