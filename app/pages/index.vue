@@ -1,5 +1,14 @@
 <script setup lang="ts">
+import { useQuery } from "@tanstack/vue-query";
+import { api } from "~/lib/api";
+
 const authStore = useAuthStore();
+
+// Fetch locales count
+const localeListEndpoint = api.locale.list.use({});
+const { data: localesData } = useQuery(localeListEndpoint);
+
+const localesCount = computed(() => localesData.value?.locales.length ?? 0);
 
 const cards = [
   {
@@ -77,7 +86,9 @@ const visibleCards = computed(() =>
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Locales</p>
-              <p class="text-2xl font-semibold text-gray-900">-</p>
+              <p class="text-2xl font-semibold text-gray-900">
+                {{ localesCount }}
+              </p>
             </div>
           </div>
         </div>
