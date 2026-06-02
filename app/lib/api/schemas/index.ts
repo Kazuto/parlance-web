@@ -1,4 +1,4 @@
 // Export all your schemas from here
-export * from "./common";
+export * from "./CommonSchema";
 export * from "./UserSchema";
 export * from "./AuthSchema";
