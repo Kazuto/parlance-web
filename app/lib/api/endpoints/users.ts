@@ -1,68 +1,80 @@
-import { z } from "zod";
 import { authedEndpoint } from "../builder";
-import { UserSchema } from "../schemas/UserSchema";
+import {
+  ListUsersRequestSchema,
+  ListUsersResponseSchema,
+  GetUserRequestSchema,
+  GetUserResponseSchema,
+  CreateUserRequestSchema,
+  CreateUserResponseSchema,
+  UpdateUserRequestSchema,
+  UpdateUserResponseSchema,
+  DeleteUserRequestSchema,
+  DeleteUserResponseSchema,
+  type ListUsersRequest,
+  type GetUserRequest,
+  type CreateUserRequest,
+  type UpdateUserRequest,
+  type DeleteUserRequest,
+} from "../schemas/UserSchema";
 
 export const users = {
   list: authedEndpoint.query(
-    () => ({
-      url: "/users",
+    (data: ListUsersRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/ListUsers",
+      json: data,
     }),
     {
-      output: z.array(UserSchema),
+      input: ListUsersRequestSchema,
+      output: ListUsersResponseSchema,
     },
   ),
 
   get: authedEndpoint.query(
-    (id: number) => ({
-      url: `/users/${id}`,
+    (data: GetUserRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/GetUser",
+      json: data,
     }),
     {
-      input: z.number(),
-      output: UserSchema,
+      input: GetUserRequestSchema,
+      output: GetUserResponseSchema,
     },
   ),
 
   create: authedEndpoint.mutate(
-    (data: Omit<z.infer<typeof UserSchema>, "id">) => ({
+    (data: CreateUserRequest) => ({
       method: "post",
-      url: "/users",
+      url: "/parlance.v1.UserService/CreateUser",
       json: data,
     }),
     {
-      input: UserSchema.omit({ id: true }),
-      output: UserSchema,
+      input: CreateUserRequestSchema,
+      output: CreateUserResponseSchema,
     },
   ),
 
   update: authedEndpoint.mutate(
-    ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: Partial<z.infer<typeof UserSchema>>;
-    }) => ({
-      method: "patch",
-      url: `/users/${id}`,
+    (data: UpdateUserRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/UpdateUser",
       json: data,
     }),
     {
-      input: z.object({
-        id: z.number(),
-        data: UserSchema.partial(),
-      }),
-      output: UserSchema,
+      input: UpdateUserRequestSchema,
+      output: UpdateUserResponseSchema,
     },
   ),
 
   delete: authedEndpoint.mutate(
-    (id: number) => ({
-      method: "delete",
-      url: `/users/${id}`,
+    (data: DeleteUserRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/DeleteUser",
+      json: data,
     }),
     {
-      input: z.number(),
-      output: z.object({ success: z.boolean() }),
+      input: DeleteUserRequestSchema,
+      output: DeleteUserResponseSchema,
     },
   ),
 };
