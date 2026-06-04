@@ -3,11 +3,13 @@ import {
   PaginationRequestSchema,
   PaginationResponseSchema,
 } from "./CommonSchema";
+import { DefinitionSchema } from "./DefinitionSchema";
 
 export const TerminologySchema = z.object({
   id: z.string(),
   term: z.string(),
   description: z.string(),
+  definitions: DefinitionSchema.array(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullish(),

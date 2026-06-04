@@ -3,11 +3,13 @@ import {
   PaginationRequestSchema,
   PaginationResponseSchema,
 } from "./CommonSchema";
+import { LocalizationSchema } from "./LocalizationSchema";
 
 export const EntrySchema = z.object({
   id: z.string(),
   key: z.string(),
   description: z.string(),
+  localizations: LocalizationSchema.array(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullish(),
