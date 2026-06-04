@@ -7,7 +7,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-100">
     <!-- Header -->
     <header class="bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,6 +36,30 @@ function handleLogout() {
               >
                 Locales
               </NuxtLink>
+              <NuxtLink
+                v-can="'read_entry'"
+                to="/entries"
+                class="text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition"
+                active-class="text-blue-600 bg-blue-50"
+              >
+                Entries
+              </NuxtLink>
+              <NuxtLink
+                v-can="'read_terminology'"
+                to="/terminologies"
+                class="text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition"
+                active-class="text-blue-600 bg-blue-50"
+              >
+                Terminologies
+              </NuxtLink>
+              <NuxtLink
+                v-can="'read_user'"
+                to="/users"
+                class="text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition"
+                active-class="text-blue-600 bg-blue-50"
+              >
+                Users
+              </NuxtLink>
             </nav>
           </div>
 
@@ -49,12 +73,9 @@ function handleLogout() {
               </p>
               <p class="text-xs text-gray-500">{{ authStore.user.email }}</p>
             </div>
-            <button
-              class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
-              @click="handleLogout"
-            >
+            <CoreButton variant="secondary" @click="handleLogout">
               Logout
-            </button>
+            </CoreButton>
           </div>
         </div>
       </div>
