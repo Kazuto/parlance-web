@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { useQuery } from "@tanstack/vue-query";
-import { api } from "~/lib/api";
-
 const authStore = useAuthStore();
 
-// Fetch locales count
-const localeListEndpoint = api.locale.list.use({});
-const { data: localesData } = useQuery(localeListEndpoint);
+const { list: localesList } = useLocaleStore();
+const { data: localesResponse } = localesList;
 
-const localesCount = computed(() => localesData.value?.locales.length ?? 0);
+const localesCount = computed(() => localesResponse?.pagination?.total ?? 0);
+
+const { list: entriesList } = useEntryStore();
+const { data: entriesResponse } = entriesList;
+
+const entryCount = computed(() => entriesResponse?.pagination?.total ?? 0);
 
 const cards = [
   {
@@ -31,8 +32,8 @@ const cards = [
     title: "Terminology",
     description: "Manage glossary and terminology",
     icon: "📚",
-    href: "/terminology",
-    permission: "manage_terminology",
+    href: "/terminologies",
+    permission: "read_terminology",
     color: "purple",
   },
   {
@@ -40,7 +41,7 @@ const cards = [
     description: "Manage users and permissions",
     icon: "👥",
     href: "/users",
-    permission: "manage_users",
+    permission: "read_user",
     color: "orange",
   },
 ];
@@ -67,103 +68,85 @@ const visibleCards = computed(() =>
 
       <!-- Quick Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Total Locales</p>
-              <p class="text-2xl font-semibold text-gray-900">
-                {{ localesCount }}
-              </p>
-            </div>
-          </div>
-        </div>
+        <DashboardMetricCard
+          v-if="!localesList.isFetching"
+          title="Total Locales"
+          :description="localesCount.toString()"
+        >
+          <template #icon>
+            <svg
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+              />
+            </svg>
+          </template>
+        </DashboardMetricCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
-              <svg
-                class="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Total Entries</p>
-              <p class="text-2xl font-semibold text-gray-900">-</p>
-            </div>
-          </div>
-        </div>
+        <DashboardMetricCard
+          v-if="!entriesList.isFetching"
+          title="Total Entries"
+          :description="entryCount.toString()"
+        >
+          <template #icon>
+            <svg
+              class="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </template>
+        </DashboardMetricCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-100 rounded-lg p-3">
-              <svg
-                class="w-6 h-6 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Pending</p>
-              <p class="text-2xl font-semibold text-gray-900">-</p>
-            </div>
-          </div>
-        </div>
+        <DashboardMetricCard title="Pending" description="0">
+          <template #icon>
+            <svg
+              class="w-6 h-6 text-yellow-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </template>
+        </DashboardMetricCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-purple-100 rounded-lg p-3">
-              <svg
-                class="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Completed</p>
-              <p class="text-2xl font-semibold text-gray-900">-</p>
-            </div>
-          </div>
-        </div>
+        <DashboardMetricCard title="Completed" description="0">
+          <template #icon>
+            <svg
+              class="w-6 h-6 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
+          </template>
+        </DashboardMetricCard>
       </div>
 
       <!-- Quick Actions -->
@@ -174,40 +157,39 @@ const visibleCards = computed(() =>
             v-for="card in visibleCards"
             :key="card.href"
             :to="card.href"
-            class="group bg-white rounded-lg shadow hover:shadow-lg transition-all p-6 border-2 border-transparent hover:border-blue-500"
+            class="group transition-all rounded-lg border-2 border-transparent hover:border-blue-500"
           >
-            <div class="flex items-start">
-              <div
-                class="text-4xl mb-3"
-                :class="`group-hover:scale-110 transition-transform`"
-              >
-                {{ card.icon }}
+            <CoreCard>
+              <div class="flex items-start">
+                <div class="text-4xl mb-3">
+                  {{ card.icon }}
+                </div>
               </div>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">
-              {{ card.title }}
-            </h3>
-            <p class="text-sm text-gray-600">
-              {{ card.description }}
-            </p>
-            <div
-              class="mt-4 flex items-center text-blue-600 text-sm font-medium"
-            >
-              <span>Open</span>
-              <svg
-                class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                {{ card.title }}
+              </h3>
+              <p class="text-sm text-gray-600">
+                {{ card.description }}
+              </p>
+              <div
+                class="mt-4 flex items-center text-blue-600 text-sm font-medium"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
+                <span>Open</span>
+                <svg
+                  class="w-4 h-4 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </CoreCard>
           </NuxtLink>
         </div>
 
@@ -228,11 +210,11 @@ const visibleCards = computed(() =>
         <h2 class="text-xl font-semibold text-gray-900 mb-4">
           Recent Activity
         </h2>
-        <div class="bg-white rounded-lg shadow p-6">
+        <CoreCard class="bg-white rounded-lg shadow p-6">
           <p class="text-gray-500 text-center py-8">
             No recent activity to display
           </p>
-        </div>
+        </CoreCard>
       </div>
     </div>
   </div>
