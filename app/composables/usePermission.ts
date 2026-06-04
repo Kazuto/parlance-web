@@ -1,3 +1,5 @@
+import type { Permission } from "~/lib/api/schemas/PermissionSchema";
+
 export function usePermission() {
   const authStore = useAuthStore();
 
@@ -9,7 +11,8 @@ export function usePermission() {
 
     return authStore.user.roles
       .flatMap((role) => role.permissions)
-      .some((permission) => permission.name === permissionName);
+      .filter((permission) => permission !== null)
+      .some((permission: Permission) => permission.name === permissionName);
   };
 
   /**
@@ -20,8 +23,9 @@ export function usePermission() {
 
     return authStore.user.roles
       .flatMap((role) => role.permissions)
+      .filter((permission) => permission !== null)
       .some(
-        (permission) =>
+        (permission: Permission) =>
           permission.resource === resource && permission.action === action,
       );
   };

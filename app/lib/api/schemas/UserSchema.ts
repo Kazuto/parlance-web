@@ -9,7 +9,7 @@ export const UserSchema = z.object({
   id: z.string(),
   email: z.email(),
   name: z.string(),
-  roles: z.array(RoleSchema),
+  roles: RoleSchema.array(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

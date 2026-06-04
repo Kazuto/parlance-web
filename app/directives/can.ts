@@ -1,4 +1,5 @@
 import type { Directive, DirectiveBinding } from "vue";
+import type { Permission } from "~/lib/api/schemas/PermissionSchema";
 
 interface CanBindingValue {
   permission?: string;
@@ -25,27 +26,37 @@ function checkPermission(
 
   // Check by permission name
   if (value.permission) {
-    return allPermissions.some((p) => p.name === value.permission);
+    return allPermissions
+      .filter((permission) => permission !== null)
+      .some((permission: Permission) => permission.name === value.permission);
   }
 
   // Check by resource and action
   if (value.resource && value.action) {
-    return allPermissions.some(
-      (p) => p.resource === value.resource && p.action === value.action,
-    );
+    return allPermissions
+      .filter((permission) => permission !== null)
+      .some(
+        (permission: Permission) =>
+          permission.resource === value.resource &&
+          permission.action === value.action,
+      );
   }
 
   // Check if has any of the permissions
   if (value.any) {
     return value.any.some((name) =>
-      allPermissions.some((p) => p.name === name),
+      allPermissions
+        .filter((permission) => permission !== null)
+        .some((permission: Permission) => permission.name === name),
     );
   }
 
   // Check if has all of the permissions
   if (value.all) {
     return value.all.every((name) =>
-      allPermissions.some((p) => p.name === name),
+      allPermissions
+        .filter((permission) => permission !== null)
+        .some((permission: Permission) => permission.name === name),
     );
   }
 
