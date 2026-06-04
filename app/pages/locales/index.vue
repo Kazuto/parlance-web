@@ -33,6 +33,9 @@ const tableItems = computed(() => {
     createdAt: new Date(locale.createdAt).toLocaleDateString(),
   }));
 });
+
+// Create modal state
+const showCreateModal = ref(false);
 </script>
 
 <template>
@@ -125,8 +128,26 @@ const tableItems = computed(() => {
             />
           </svg>
           <h3 class="mt-2 text-sm font-medium text-gray-900">No locales</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Get started by creating a new locale.
+          </p>
+          <div class="mt-6">
+            <button
+              v-can="'create_locale'"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              @click="showCreateModal = true"
+            >
+              Create Locale
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Create Modal -->
+    <CreateLocaleModal
+      :open="showCreateModal"
+      @close="showCreateModal = false"
+    />
   </div>
 </template>
