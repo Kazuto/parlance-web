@@ -3,15 +3,17 @@ import { Card } from "@thkzt/eunoia";
 
 const authStore = useAuthStore();
 
-const { list: localesList } = useLocaleStore();
-const { data: localesResponse } = localesList;
+const localeStore = useLocaleStore();
+const { data: localesData, isLoading: isLocalesLoading } =
+  storeToRefs(localeStore);
 
-const localesCount = computed(() => localesResponse?.pagination?.total ?? 0);
+const localesCount = computed(() => localesData.value?.pagination?.total ?? 0);
 
-const { list: entriesList } = useEntryStore();
-const { data: entriesResponse } = entriesList;
+const entryStore = useEntryStore();
+const { data: entriesData, isLoading: isEntriesLoading } =
+  storeToRefs(entryStore);
 
-const entryCount = computed(() => entriesResponse?.pagination?.total ?? 0);
+const entryCount = computed(() => entriesData.value?.pagination?.total ?? 0);
 
 const cards = [
   {
@@ -69,7 +71,7 @@ const visibleCards = computed(() =>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <DashboardMetricCard
       title="Total Locales"
-      :loading="localesList.isLoading"
+      :loading="isLocalesLoading"
       :description="localesCount.toString()"
     >
       <template #icon>
@@ -91,7 +93,7 @@ const visibleCards = computed(() =>
 
     <DashboardMetricCard
       title="Total Entries"
-      :loading="entriesList.isFetching"
+      :loading="isEntriesLoading"
       :description="entryCount.toString()"
     >
       <template #icon>

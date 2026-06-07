@@ -1,11 +1,10 @@
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 
 export function useCurrentLocale() {
-  const { list: localeList } = useLocaleStore();
+  const store = useLocaleStore();
+  const { data } = storeToRefs(store);
 
-  const { data: localeResponse } = localeList;
-
-  const locales = computed(() => localeResponse?.locales ?? []);
+  const locales = computed(() => data.value?.locales ?? []);
 
   const currentLocale = ref<Locale | null>(locales.value[0] ?? null);
 

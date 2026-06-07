@@ -5,18 +5,23 @@ import {
   Button,
   Alert,
   Card,
+  Badge,
+  useRelativeTime,
+  Tooltip,
+  Icon,
 } from "@thkzt/eunoia";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 
-const { list } = useLocaleStore();
+const store = useLocaleStore();
 
-const { data, isLoading, error, refetch } = list;
+const { data, isLoading, error } = storeToRefs(store);
+const { refetch } = store;
 
 const defaultLocale = computed(() =>
-  data?.locales.find((locale: Locale) => locale.isDefault),
+  data.value?.locales.find((locale: Locale) => locale.isDefault),
 );
 
-const tableHeaders: DataTableColumn[] = [
+const tableColumns: DataTableColumn<Locale>[] = [
   {
     title: "Code",
     key: "code",
@@ -27,24 +32,24 @@ const tableHeaders: DataTableColumn[] = [
     key: "name",
     sortable: true,
   },
-  { title: "Default", key: "isDefault", sortable: true },
-  { title: "Created", key: "createdAt", sortable: true },
-  { title: "Actions", key: "actions", sortable: false },
+  {
+    title: "Created",
+    key: "createdAt",
+    sortable: true,
+  },
 ];
 
-const tableItems = computed(() => {
-  if (!data?.locales) return [];
-
-  return data?.locales.map((locale: Locale) => ({
-    code: locale.code,
-    name: locale.name,
-    isDefault: locale.isDefault,
-    createdAt: new Date(locale.createdAt).toLocaleDateString(),
-  }));
-});
+const tableItems = computed(() => data.value?.locales ?? []);
 
 // Create modal state
 const showCreateModal = ref(false);
+
+function formatDate(date: string) {
+  return useRelativeTime(new Date(date), {
+    locale: "en",
+    interval: 60000,
+  });
+}
 </script>
 
 <template>
@@ -99,7 +104,38 @@ const showCreateModal = ref(false);
 
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :headers="tableHeaders" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems">
+        <template #name="{ item }">
+          <div class="flex items-center gap-2">
+            <span>{{ item.name }}</span>
+            <Tooltip
+              v-if="item.isDefault"
+              content="Default"
+              placement="top"
+              class="inline-flex"
+            >
+              <Badge variant="success" class="p-1 w-6 h-6 rounded-full">
+                <Icon name="check" class="w-4 h-4" />
+              </Badge>
+            </Tooltip>
+          </div>
+        </template>
+        <template #createdAt="{ item }">
+          <Tooltip
+            :content="formatDate(item.createdAt).date.value"
+            placement="top"
+            class="inline-flex items-center gap-1"
+          >
+            <span>{{ formatDate(item.createdAt).relative }}</span>
+          </Tooltip>
+        </template>
+        <template #actions>
+          <div class="flex items-center gap-2">
+            <Button ghost> Edit </Button>
+            <Button destructive> Delete </Button>
+          </div>
+        </template>
+      </DataTable>
     </Card>
 
     <!-- Empty State -->

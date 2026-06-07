@@ -7,11 +7,13 @@ import {
   type DataTableColumn,
 } from "@thkzt/eunoia";
 import type { Definition } from "~/lib/api/schemas/DefinitionSchema";
+import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 import type { Terminology } from "~/lib/api/schemas/TerminologySchema";
 
-const { list } = useTerminologyStore();
+const store = useTerminologyStore();
 
-const { data, isLoading, error, refetch } = list;
+const { data, isLoading, error } = storeToRefs(store);
+const { refetch } = store;
 
 const { locales, setCurrentLocale, findByLocale } = useCurrentLocale();
 
@@ -19,7 +21,7 @@ const selectedLocaleId = ref(locales.value[0]?.id ?? "");
 
 watch(selectedLocaleId, () => {
   const selectedLocale = locales.value.find(
-    (locale) => locale.id === selectedLocaleId.value,
+    (locale: Locale) => locale.id === selectedLocaleId.value,
   );
 
   if (!selectedLocale) return;
@@ -28,13 +30,13 @@ watch(selectedLocaleId, () => {
 });
 
 const localeOptions = computed(() =>
-  locales.value.map((locale) => ({
+  locales.value.map((locale: Locale) => ({
     label: locale.name,
     value: locale.id,
   })),
 );
 
-const tableHeaders: DataTableColumn[] = [
+const tableColumns: DataTableColumn<Terminology>[] = [
   {
     title: "Term",
     key: "term",
@@ -49,8 +51,14 @@ const tableHeaders: DataTableColumn[] = [
     title: "Definition",
     key: "definition",
     sortable: true,
+    value: (item: Terminology) => findTranslation(item),
   },
-  { title: "Created", key: "createdAt", sortable: true },
+  {
+    title: "Created",
+    key: "createdAt",
+    sortable: true,
+    value: (item: Terminology) => new Date(item.createdAt).toLocaleDateString(),
+  },
 ];
 
 const findTranslation = (terminology: Terminology) => {
@@ -61,16 +69,7 @@ const findTranslation = (terminology: Terminology) => {
   return definition.translation;
 };
 
-const tableItems = computed(() => {
-  if (!data?.terminologies) return [];
-
-  return data.terminologies.map((terminology: Terminology) => ({
-    term: terminology.term,
-    description: terminology.description,
-    definition: findTranslation(terminology),
-    createdAt: new Date(terminology.createdAt).toLocaleDateString(),
-  }));
-});
+const tableItems = computed(() => data.value?.terminologies ?? []);
 </script>
 
 <template>
@@ -103,7 +102,7 @@ const tableItems = computed(() => {
 
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :headers="tableHeaders" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems" />
     </Card>
 
     <!-- Empty State -->

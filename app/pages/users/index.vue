@@ -3,11 +3,12 @@ import { Button, Card, DataTable, type DataTableColumn } from "@thkzt/eunoia";
 import type { User } from "~/lib/api";
 import type { Role } from "~/lib/api/schemas/RoleSchema";
 
-const { list } = useUserStore();
+const store = useUserStore();
 
-const { data, isLoading, error, refetch } = list;
+const { data, isLoading, error } = storeToRefs(store);
+const { refetch } = store;
 
-const tableHeaders: DataTableColumn[] = [
+const tableColumns: DataTableColumn<User>[] = [
   {
     title: "Name",
     key: "name",
@@ -17,19 +18,17 @@ const tableHeaders: DataTableColumn[] = [
     title: "Roles",
     key: "roles",
     sortable: true,
+    value: (item: User) => item.roles.map((role: Role) => role.name).join(", "),
   },
-  { title: "Created", key: "createdAt", sortable: true },
+  {
+    title: "Created",
+    key: "createdAt",
+    sortable: true,
+    value: (item: User) => new Date(item.createdAt).toLocaleDateString(),
+  },
 ];
 
-const tableItems = computed(() => {
-  if (!data?.users) return [];
-
-  return data.users.map((user: User) => ({
-    name: user.name,
-    roles: user.roles.map((role: Role) => role.name).join(", "),
-    createdAt: new Date(user.createdAt).toLocaleDateString(),
-  }));
-});
+const tableItems = computed(() => data.value?.users ?? []);
 </script>
 
 <template>
@@ -56,7 +55,7 @@ const tableItems = computed(() => {
   <div v-else-if="data?.users">
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :headers="tableHeaders" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems" />
     </Card>
 
     <!-- Empty State -->

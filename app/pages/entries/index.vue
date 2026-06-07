@@ -7,11 +7,13 @@ import {
   type DataTableColumn,
 } from "@thkzt/eunoia";
 import type { Entry } from "~/lib/api/schemas/EntrySchema";
+import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/LocalizationSchema";
 
-const { list } = useEntryStore();
+const store = useEntryStore();
 
-const { data, isLoading, error, refetch } = list;
+const { data, isLoading, error } = storeToRefs(store);
+const { refetch } = store;
 
 const { locales, setCurrentLocale, findByLocale } = useCurrentLocale();
 
@@ -19,7 +21,7 @@ const selectedLocaleId = ref(locales.value[0]?.id ?? "");
 
 watch(selectedLocaleId, () => {
   const selectedLocale = locales.value.find(
-    (locale) => locale.id === selectedLocaleId.value,
+    (locale: Locale) => locale.id === selectedLocaleId.value,
   );
 
   if (!selectedLocale) return;
@@ -28,13 +30,13 @@ watch(selectedLocaleId, () => {
 });
 
 const localeOptions = computed(() =>
-  locales.value.map((locale) => ({
+  locales.value.map((locale: Locale) => ({
     label: locale.name,
     value: locale.id,
   })),
 );
 
-const tableHeaders: DataTableColumn[] = [
+const tableColumns: DataTableColumn<Entry>[] = [
   {
     title: "Key",
     key: "key",
@@ -49,8 +51,14 @@ const tableHeaders: DataTableColumn[] = [
     title: "Translation",
     key: "localization",
     sortable: true,
+    value: (item: Entry) => findTranslation(item),
   },
-  { title: "Created", key: "createdAt", sortable: true },
+  {
+    title: "Created",
+    key: "createdAt",
+    sortable: true,
+    value: (item: Entry) => new Date(item.createdAt).toLocaleDateString(),
+  },
 ];
 
 const findTranslation = (entry: Entry) => {
@@ -61,16 +69,7 @@ const findTranslation = (entry: Entry) => {
   return localization.translation;
 };
 
-const tableItems = computed(() => {
-  if (!data?.entries) return [];
-
-  return data.entries.map((entry: Entry) => ({
-    key: entry.key,
-    description: entry.description,
-    localization: findTranslation(entry),
-    createdAt: new Date(entry.createdAt).toLocaleDateString(),
-  }));
-});
+const tableItems = computed(() => data.value?.entries ?? []);
 </script>
 
 <template>
@@ -101,7 +100,7 @@ const tableItems = computed(() => {
 
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :headers="tableHeaders" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems" />
     </Card>
 
     <!-- Empty State -->
