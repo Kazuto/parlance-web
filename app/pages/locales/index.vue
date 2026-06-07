@@ -16,6 +16,8 @@ const store = useLocaleStore();
 const { data, isLoading, error } = storeToRefs(store);
 const { refetch } = store;
 
+const router = useRouter();
+
 const defaultLocale = computed(() =>
   data.value?.locales.find((locale: Locale) => locale.isDefault),
 );
@@ -36,12 +38,16 @@ const tableColumns: DataTableColumn<Locale>[] = [
     key: "createdAt",
     sortable: true,
   },
+  {
+    title: "Updated",
+    key: "updatedAt",
+    sortable: true,
+  },
 ];
 
 const tableItems = computed(() => data.value?.locales ?? []);
 
-// Create modal state
-const showCreateModal = ref(false);
+const showDialog = ref(false);
 </script>
 
 <template>
@@ -53,7 +59,7 @@ const showCreateModal = ref(false);
           Manage languages and regional variants for your translations
         </p>
       </div>
-      <Button v-can="'create_locale'" primary @click="showCreateModal = true">
+      <Button v-can="'create_locale'" primary @click="showDialog = true">
         Create Locale
       </Button>
     </div>
@@ -115,10 +121,17 @@ const showCreateModal = ref(false);
         <template #createdAt="{ item }">
           <RelativeTime :timestamp="item.createdAt" />
         </template>
-        <template #actions>
-          <div class="flex items-center gap-2">
-            <Button ghost> Edit </Button>
-            <Button destructive> Delete </Button>
+        <template #updatedAt="{ item }">
+          <RelativeTime :timestamp="item.updatedAt" />
+        </template>
+        <template #actions="{ item }">
+          <div class="flex items-center justify-end gap-2">
+            <Button
+              ghost
+              icon="eye"
+              @click="() => router.push(`/locales/${item.id}`)"
+            />
+            <Button destructive icon="trash" />
           </div>
         </template>
       </DataTable>
@@ -147,7 +160,7 @@ const showCreateModal = ref(false);
         <button
           v-can="'create_locale'"
           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-          @click="showCreateModal = true"
+          @click="showDialog = true"
         >
           Create Locale
         </button>
@@ -155,8 +168,5 @@ const showCreateModal = ref(false);
     </Card>
   </div>
 
-  <CreateLocaleModal
-    v-model="showCreateModal"
-    @close="showCreateModal = false"
-  />
+  <DialogCreateLocale v-model="showDialog" @close="showDialog = false" />
 </template>

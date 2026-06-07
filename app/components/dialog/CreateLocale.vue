@@ -3,7 +3,6 @@ import { Button, Checkbox, Dialog, Input } from "@thkzt/eunoia";
 
 const model = defineModel<boolean>({ default: false });
 
-// Form state
 const code = ref("");
 const nameEn = ref("");
 const isDefault = ref(false);
