@@ -24,6 +24,7 @@ const menuItems: MenuItem[] = [
   { label: "Locales", to: "/locales", icon: "globe-simple" },
   { label: "Entries", to: "/entries", icon: "book" },
   { label: "Terminologies", to: "/terminologies", icon: "tag-simple" },
+  { label: "Roles", to: "/roles", icon: "group" },
   { label: "Users", to: "/users", icon: "users" },
 ];
 
