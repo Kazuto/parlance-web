@@ -4,6 +4,7 @@ import { definitions } from "./endpoints/definition";
 import { entries } from "./endpoints/entries";
 import { locale } from "./endpoints/locale";
 import { localizations } from "./endpoints/localizations";
+import { permissions } from "./endpoints/permissions";
 import { roles } from "./endpoints/roles";
 import { terminologies } from "./endpoints/terminologies";
 import { users } from "./endpoints/users";
@@ -14,9 +15,10 @@ export const api = defineApi({
   entries,
   locale,
   localizations,
+  permissions,
   roles,
-  users,
   terminologies,
+  users,
 });
 
 export * from "./schemas";
