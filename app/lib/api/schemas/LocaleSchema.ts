@@ -10,9 +10,9 @@ export const LocaleSchema = z.object({
   name: z.string(),
   names: z.record(z.string(), z.string()),
   isDefault: z.boolean().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullish(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullish(),
 });
 
 // List Locales

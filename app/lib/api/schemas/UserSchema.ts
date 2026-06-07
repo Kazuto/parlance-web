@@ -10,8 +10,9 @@ export const UserSchema = z.object({
   email: z.email(),
   name: z.string(),
   roles: RoleSchema.array(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullish(),
 });
 
 // List Users

@@ -8,7 +8,11 @@ import { PermissionSchema } from "./PermissionSchema";
 export const RoleSchema = z.object({
   id: z.string(),
   name: z.string(),
-  permissions: z.array(PermissionSchema).nullish(),
+  description: z.string().nullish(),
+  permissions: PermissionSchema.array().nullish(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullish(),
 });
 
 // List Roles
