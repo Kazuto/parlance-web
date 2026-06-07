@@ -10,8 +10,7 @@ export function usePermission() {
     if (!authStore.user) return false;
 
     return authStore.user.roles
-      .flatMap((role) => role.permissions)
-      .filter((permission) => permission !== null)
+      .flatMap((role) => role.permissions ?? [])
       .some((permission: Permission) => permission.name === permissionName);
   };
 
@@ -22,8 +21,7 @@ export function usePermission() {
     if (!authStore.user) return false;
 
     return authStore.user.roles
-      .flatMap((role) => role.permissions)
-      .filter((permission) => permission !== null)
+      .flatMap((role) => role.permissions ?? [])
       .some(
         (permission: Permission) =>
           permission.resource === resource && permission.action === action,

@@ -21,42 +21,36 @@ function checkPermission(
   if (!authStore.user) return false;
 
   const allPermissions = authStore.user.roles.flatMap(
-    (role) => role.permissions,
+    (role) => role.permissions ?? [],
   );
 
   // Check by permission name
   if (value.permission) {
-    return allPermissions
-      .filter((permission) => permission !== null)
-      .some((permission: Permission) => permission.name === value.permission);
+    return allPermissions.some(
+      (permission: Permission) => permission.name === value.permission,
+    );
   }
 
   // Check by resource and action
   if (value.resource && value.action) {
-    return allPermissions
-      .filter((permission) => permission !== null)
-      .some(
-        (permission: Permission) =>
-          permission.resource === value.resource &&
-          permission.action === value.action,
-      );
+    return allPermissions.some(
+      (permission: Permission) =>
+        permission.resource === value.resource &&
+        permission.action === value.action,
+    );
   }
 
   // Check if has any of the permissions
   if (value.any) {
     return value.any.some((name) =>
-      allPermissions
-        .filter((permission) => permission !== null)
-        .some((permission: Permission) => permission.name === name),
+      allPermissions.some((permission: Permission) => permission.name === name),
     );
   }
 
   // Check if has all of the permissions
   if (value.all) {
     return value.all.every((name) =>
-      allPermissions
-        .filter((permission) => permission !== null)
-        .some((permission: Permission) => permission.name === name),
+      allPermissions.some((permission: Permission) => permission.name === name),
     );
   }
 
