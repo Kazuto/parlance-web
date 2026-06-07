@@ -55,7 +55,11 @@ const tableItems = computed(() => data.value?.users ?? []);
   <div v-else-if="data?.users">
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :columns="tableColumns" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems">
+        <template #createdAt="{ item }">
+          <RelativeTime :timestamp="item.createdAt" />
+        </template>
+      </DataTable>
     </Card>
 
     <!-- Empty State -->

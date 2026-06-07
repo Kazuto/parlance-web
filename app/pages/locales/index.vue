@@ -6,7 +6,6 @@ import {
   Alert,
   Card,
   Badge,
-  useRelativeTime,
   Tooltip,
   Icon,
 } from "@thkzt/eunoia";
@@ -43,13 +42,6 @@ const tableItems = computed(() => data.value?.locales ?? []);
 
 // Create modal state
 const showCreateModal = ref(false);
-
-function formatDate(date: string) {
-  return useRelativeTime(new Date(date), {
-    locale: "en",
-    interval: 60000,
-  });
-}
 </script>
 
 <template>
@@ -121,13 +113,7 @@ function formatDate(date: string) {
           </div>
         </template>
         <template #createdAt="{ item }">
-          <Tooltip
-            :content="formatDate(item.createdAt).date.value"
-            placement="top"
-            class="inline-flex items-center gap-1"
-          >
-            <span>{{ formatDate(item.createdAt).relative }}</span>
-          </Tooltip>
+          <RelativeTime :timestamp="item.createdAt" />
         </template>
         <template #actions>
           <div class="flex items-center gap-2">

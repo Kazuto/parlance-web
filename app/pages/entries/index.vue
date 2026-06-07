@@ -100,7 +100,11 @@ const tableItems = computed(() => data.value?.entries ?? []);
 
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :columns="tableColumns" :items="tableItems" />
+      <DataTable :columns="tableColumns" :items="tableItems">
+        <template #createdAt="{ item }">
+          <RelativeTime :timestamp="item.createdAt" />
+        </template>
+      </DataTable>
     </Card>
 
     <!-- Empty State -->
