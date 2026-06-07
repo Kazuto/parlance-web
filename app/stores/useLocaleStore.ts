@@ -13,7 +13,7 @@ export const useLocaleStore = defineStore("localeStore", () => {
 
   const localeListEndpoint = api.locale.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...localeListEndpoint,
   });
 
@@ -46,7 +46,11 @@ export const useLocaleStore = defineStore("localeStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

@@ -13,7 +13,7 @@ export const useTerminologyStore = defineStore("terminologyStore", () => {
 
   const terminologyListEndpoint = api.terminologies.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...terminologyListEndpoint,
   });
 
@@ -52,7 +52,11 @@ export const useTerminologyStore = defineStore("terminologyStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

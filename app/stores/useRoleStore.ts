@@ -13,7 +13,7 @@ export const useRoleStore = defineStore("roleStore", () => {
 
   const roleListEndpoint = api.roles.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...roleListEndpoint,
   });
 
@@ -46,7 +46,11 @@ export const useRoleStore = defineStore("roleStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

@@ -12,8 +12,7 @@ export const useUserStore = defineStore("userStore", () => {
   }));
 
   const userListEndpoint = api.users.list.use({ pagination });
-
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...userListEndpoint,
   });
 
@@ -28,7 +27,6 @@ export const useUserStore = defineStore("userStore", () => {
   });
 
   const updateEndpoint = api.users.update.use();
-
   const update = useMutation({
     ...updateEndpoint,
     onSuccess: () => {
@@ -37,7 +35,6 @@ export const useUserStore = defineStore("userStore", () => {
   });
 
   const deleteEndpoint = api.users.delete.use();
-
   const destroy = useMutation({
     ...deleteEndpoint,
     onSuccess: () => {
@@ -46,7 +43,11 @@ export const useUserStore = defineStore("userStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

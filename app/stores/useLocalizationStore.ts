@@ -13,7 +13,7 @@ export const useLocalizationStore = defineStore("localizationStore", () => {
 
   const localizationListEndpoint = api.localizations.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...localizationListEndpoint,
   });
 
@@ -52,7 +52,11 @@ export const useLocalizationStore = defineStore("localizationStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

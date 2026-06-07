@@ -13,7 +13,7 @@ export const useEntryStore = defineStore("entryStore", () => {
 
   const entryListEndpoint = api.entries.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...entryListEndpoint,
   });
 
@@ -46,7 +46,11 @@ export const useEntryStore = defineStore("entryStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

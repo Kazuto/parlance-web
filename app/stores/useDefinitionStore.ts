@@ -13,7 +13,7 @@ export const useDefinitionStore = defineStore("definitionStore", () => {
 
   const definitionListEndpoint = api.definitions.list.use({ pagination });
 
-  const list = useQuery({
+  const { data, isLoading, isPending, error, refetch } = useQuery({
     ...definitionListEndpoint,
   });
 
@@ -52,7 +52,11 @@ export const useDefinitionStore = defineStore("definitionStore", () => {
   });
 
   return {
-    list,
+    data,
+    isLoading,
+    isPending,
+    error,
+    refetch,
     create,
     update,
     destroy,

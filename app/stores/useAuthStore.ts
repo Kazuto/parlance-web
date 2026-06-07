@@ -197,13 +197,6 @@ export const useAuthStore = defineStore("authStore", () => {
     }
   }
 
-  // Cleanup timer on unmount
-  onUnmounted(() => {
-    if (timer.value) {
-      clearTimeout(timer.value);
-    }
-  });
-
   watchEffect(() => {
     if (isTokenExpired.value && !isRefreshTokenExpired.value) {
       if (isLoggedOut.value) {
