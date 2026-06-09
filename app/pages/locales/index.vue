@@ -34,6 +34,11 @@ const tableColumns: DataTableColumn<Locale>[] = [
     sortable: true,
   },
   {
+    title: "Status",
+    key: "translations",
+    sortable: true,
+  },
+  {
     title: "Created",
     key: "createdAt",
     sortable: true,
@@ -45,7 +50,13 @@ const tableColumns: DataTableColumn<Locale>[] = [
   },
 ];
 
-const tableItems = computed(() => data.value?.locales ?? []);
+const { mapTranslatable } = useTranslatable<Locale>();
+
+const tableItems = computed(() => {
+  if (!data.value?.locales) return [];
+
+  return mapTranslatable(data.value.locales, "names");
+});
 
 const showDialog = ref(false);
 </script>
@@ -112,10 +123,15 @@ const showDialog = ref(false);
               placement="top"
               class="inline-flex"
             >
-              <Badge variant="success" class="p-1 w-6 h-6 rounded-full">
-                <Icon name="check" class="w-4 h-4" />
+              <Badge variant="success" class="p-0.5 w-4 h-4 rounded-full">
+                <Icon name="check" class="w-3 h-3" />
               </Badge>
             </Tooltip>
+          </div>
+        </template>
+        <template #translations="{ item }">
+          <div class="flex items-center gap-2">
+            <TranslationCountBadge :item />
           </div>
         </template>
         <template #createdAt="{ item }">

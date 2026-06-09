@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { Button, Card, Input, Checkbox } from "@thkzt/eunoia";
+import {
+  Button,
+  Card,
+  Input,
+  Checkbox,
+  SplitView,
+  type SplitViewItem,
+  Tooltip,
+} from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
@@ -27,6 +35,23 @@ const form = ref({
   code: "",
   names: {} as Record<string, string>,
   isDefault: false,
+});
+
+const selectedLocale = ref<SplitViewItem>();
+
+const search = ref("");
+
+const splitViewItems = computed((): SplitViewItem[] => {
+  if (!localeData.value?.locales) return [];
+
+  return localeData.value?.locales
+    .map((locale) => ({
+      key: locale.code,
+      label: `${locale.name}`,
+    }))
+    .filter((item) =>
+      item.label.toLowerCase().includes(search.value.toLowerCase()),
+    );
 });
 
 watch(
@@ -78,17 +103,28 @@ async function handleUpdate() {
       <div class="space-y-4">
         <Input v-model="form.code"> Code </Input>
 
-        <div v-if="localeData?.locales" class="text-sm text-neutral-600">
-          <p class="font-bold text-base">Names</p>
-          <div class="space-y-2">
-            <Input
-              v-for="locale in localeData.locales"
-              :key="locale.id"
-              v-model="form.names[locale.code]"
-            >
-              {{ locale.code }}
-            </Input>
-          </div>
+        <div v-if="localeData?.locales">
+          <p class="text-neutral-900 mb-2">Names</p>
+          <SplitView
+            :items="splitViewItems"
+            :selected="selectedLocale"
+            searchable
+            @search="search = $event"
+            @select="selectedLocale = $event"
+          >
+            <template #item="{ item }">
+              <span class="flex gap-4 w-full items-center justify-between">
+                {{ item.label }}
+                <Tooltip v-if="!form.names[item.key]" content="Missing">
+                  <span class="w-3 h-3 rounded-full bg-red-400" />
+                </Tooltip>
+              </span>
+            </template>
+
+            <template #default="{ item }">
+              <Input v-if="item" v-model="form.names[item.key]" />
+            </template>
+          </SplitView>
         </div>
 
         <Checkbox
