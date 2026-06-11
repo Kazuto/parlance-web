@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   PaginationResponseSchema,
   PaginationRequestSchema,
+  FilterRequestSchema,
 } from "./CommonSchema";
 
 export const PermissionSchema = z.object({
@@ -14,6 +15,7 @@ export const PermissionSchema = z.object({
 // List Permissions
 export const ListPermissionsRequestSchema = z.object({
   pagination: PaginationRequestSchema.optional(),
+  filter: FilterRequestSchema.optional(),
 });
 
 export const ListPermissionsResponseSchema = z.object({

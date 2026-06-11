@@ -1,8 +1,8 @@
 import { defineApi } from "./client";
 import { auth } from "./endpoints/auth";
-import { definitions } from "./endpoints/definition";
+import { definitions } from "./endpoints/definitions";
 import { entries } from "./endpoints/entries";
-import { locale } from "./endpoints/locale";
+import { locales } from "./endpoints/locales";
 import { localizations } from "./endpoints/localizations";
 import { permissions } from "./endpoints/permissions";
 import { roles } from "./endpoints/roles";
@@ -13,7 +13,7 @@ export const api = defineApi({
   auth,
   definitions,
   entries,
-  locale,
+  locales,
   localizations,
   permissions,
   roles,

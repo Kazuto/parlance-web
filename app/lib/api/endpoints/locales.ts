@@ -22,7 +22,7 @@ import {
   type SetDefaultLocaleRequest,
 } from "../schemas/LocaleSchema";
 
-export const locale = {
+export const locales = {
   list: authedEndpoint.query(
     (data: ListLocalesRequest) => ({
       method: "post",

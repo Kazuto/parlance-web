@@ -12,5 +12,13 @@ export const PaginationResponseSchema = z.object({
   totalPages: z.number().int(),
 });
 
+export const FilterRequestSchema = z.object({
+  search: z.string().optional(),
+  sort: z.string().optional(),
+  order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
+  includeDeleted: z.boolean().optional(),
+});
+
 export type PaginationRequest = z.infer<typeof PaginationRequestSchema>;
 export type PaginationResponse = z.infer<typeof PaginationResponseSchema>;
+export type FilterRequest = z.infer<typeof FilterRequestSchema>;

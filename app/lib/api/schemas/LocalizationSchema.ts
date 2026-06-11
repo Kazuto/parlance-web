@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  FilterRequestSchema,
   PaginationRequestSchema,
   PaginationResponseSchema,
 } from "./CommonSchema";
@@ -19,6 +20,7 @@ export const LocalizationSchema = z.object({
 // List Localizations
 export const ListLocalizationsRequestSchema = z.object({
   pagination: PaginationRequestSchema.optional(),
+  filter: FilterRequestSchema.optional(),
 });
 
 export const ListLocalizationsResponseSchema = z.object({

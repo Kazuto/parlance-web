@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  FilterRequestSchema,
   PaginationRequestSchema,
   PaginationResponseSchema,
 } from "./CommonSchema";
@@ -20,6 +21,7 @@ export const TerminologySchema = z.object({
 // List Terminologies
 export const ListTerminologiesRequestSchema = z.object({
   pagination: PaginationRequestSchema.optional(),
+  filter: FilterRequestSchema.optional(),
 });
 
 export const ListTerminologiesResponseSchema = z.object({

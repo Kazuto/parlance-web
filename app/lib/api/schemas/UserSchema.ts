@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   PaginationResponseSchema,
   PaginationRequestSchema,
+  FilterRequestSchema,
 } from "./CommonSchema";
 import { RoleSchema } from "./RoleSchema";
 
@@ -18,6 +19,7 @@ export const UserSchema = z.object({
 // List Users
 export const ListUsersRequestSchema = z.object({
   pagination: PaginationRequestSchema.optional(),
+  filter: FilterRequestSchema.optional(),
 });
 
 export const ListUsersResponseSchema = z.object({
