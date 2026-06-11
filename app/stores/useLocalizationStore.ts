@@ -26,9 +26,17 @@ export const useLocalizationStore = defineStore("localizationStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.localizations.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

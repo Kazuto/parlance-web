@@ -26,9 +26,17 @@ export const useDefinitionStore = defineStore("definitionStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.definitions.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

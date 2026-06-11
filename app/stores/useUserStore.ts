@@ -26,9 +26,17 @@ export const useUserStore = defineStore("userStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.users.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

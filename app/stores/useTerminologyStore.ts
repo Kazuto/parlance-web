@@ -26,9 +26,17 @@ export const useTerminologyStore = defineStore("terminologyStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.terminologies.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

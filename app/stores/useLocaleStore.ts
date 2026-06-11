@@ -26,9 +26,17 @@ export const useLocaleStore = defineStore("localeStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.locales.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

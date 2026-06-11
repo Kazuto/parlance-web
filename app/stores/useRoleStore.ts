@@ -26,9 +26,17 @@ export const useRoleStore = defineStore("roleStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.roles.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });

@@ -26,9 +26,17 @@ export const useEntryStore = defineStore("entryStore", () => {
     },
   });
 
+  const restore = useMutation({
+    ...api.entries.restore.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
+    restore,
   };
 });
