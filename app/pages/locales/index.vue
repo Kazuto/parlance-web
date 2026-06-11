@@ -12,7 +12,7 @@ import {
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 
-const { data, filter, isLoading, error, refetch } = useLocaleList();
+const { data, filter, isFetching, error, refetch } = useLocaleList();
 
 filter.value.includeDeleted = true;
 
@@ -79,7 +79,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
   </div>
 
   <!-- Loading State -->
-  <div v-if="isLoading" class="flex items-center justify-center py-12">
+  <div v-if="isFetching" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">Loading locales...</div>
   </div>
 
@@ -118,7 +118,8 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
       <DataTable
         :columns="tableColumns"
         :items="tableItems"
-        :loading="isLoading"
+        :loading="isFetching"
+        :loading-rows="data.locales.length"
         :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
       >
         <template #name="{ item }">

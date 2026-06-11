@@ -7,6 +7,7 @@ import {
   UserMenu,
   type MenuItem,
   type UserMenuItem,
+  ToastStack,
 } from "@thkzt/eunoia";
 
 const { user, logout } = useAuthStore();
@@ -31,6 +32,10 @@ const menuItems: MenuItem[] = [
 const userMenuItems: UserMenuItem[] = [
   { label: "Sign Out", icon: "sign-out", variant: "danger" },
 ];
+
+const toastStack = useTemplateRef("toastStack");
+
+provide("toastStack", toastStack);
 </script>
 
 <template>
@@ -69,4 +74,6 @@ const userMenuItems: UserMenuItem[] = [
       </main>
     </div>
   </div>
+
+  <ToastStack ref="toastStack" position="bottom-right" />
 </template>

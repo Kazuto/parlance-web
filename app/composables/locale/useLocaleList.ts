@@ -14,7 +14,7 @@ export function useLocaleList() {
     includeDeleted: false,
   });
 
-  const { data, isLoading, isPending, error, refetch } = useQuery({
+  const { data, isLoading, isPending, isFetching, error, refetch } = useQuery({
     ...api.locales.list.use({ pagination, filter }),
   });
 
@@ -22,6 +22,7 @@ export function useLocaleList() {
     data,
     isLoading,
     isPending,
+    isFetching,
     error,
     refetch,
     pagination,

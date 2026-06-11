@@ -10,12 +10,26 @@ const props = defineProps<{
 const { destroy } = useLocaleStore();
 const { mutateAsync: destroyLocale, isPending } = destroy;
 
+const toast = useToast();
+
 async function handleSubmit() {
   if (!props.item) return;
 
-  await destroyLocale({
-    id: props.item.id,
-  });
+  await destroyLocale(
+    {
+      id: props.item.id,
+    },
+    {
+      onSuccess: () => {
+        toast.add(`Locale ${props.item?.name} deleted`, { variant: "success" });
+      },
+      onError: () => {
+        toast.add(`Failed to delete locale: ${props.item?.name}`, {
+          variant: "danger",
+        });
+      },
+    },
+  );
 
   handleClose();
 }

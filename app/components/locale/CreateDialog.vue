@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button, Checkbox, Dialog, Input } from "@thkzt/eunoia";
+import type { CreateLocaleResponse } from "~/lib/api/schemas/LocaleSchema";
 
 defineProps<{
   open: boolean;
@@ -12,6 +13,8 @@ const error = ref<string>();
 
 const { create } = useLocaleStore();
 const { mutateAsync: createLocale, isPending } = create;
+
+const toast = useToast();
 
 function resetForm() {
   code.value = "";
@@ -28,13 +31,27 @@ async function handleSubmit() {
     return;
   }
 
-  await createLocale({
-    code: code.value,
-    names: {
-      en: nameEn.value,
+  await createLocale(
+    {
+      code: code.value,
+      names: {
+        en: nameEn.value,
+      },
+      isDefault: isDefault.value,
     },
-    isDefault: isDefault.value,
-  });
+    {
+      onSuccess: (response: CreateLocaleResponse) => {
+        toast.add(`Locale ${response.locale.name} created`, {
+          variant: "success",
+        });
+      },
+      onError: () => {
+        toast.add(`Failed to create locale: ${nameEn.value}`, {
+          variant: "danger",
+        });
+      },
+    },
+  );
 
   handleClose();
 }

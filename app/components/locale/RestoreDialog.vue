@@ -10,12 +10,28 @@ const props = defineProps<{
 const { restore } = useLocaleStore();
 const { mutateAsync: restoreLocale, isPending } = restore;
 
+const toast = useToast();
+
 async function handleSubmit() {
   if (!props.item) return;
 
-  await restoreLocale({
-    id: props.item.id,
-  });
+  await restoreLocale(
+    {
+      id: props.item.id,
+    },
+    {
+      onSuccess: () => {
+        toast.add(`Locale ${props.item?.name} restored`, {
+          variant: "success",
+        });
+      },
+      onError: () => {
+        toast.add(`Failed to restore locale: ${props.item?.name}`, {
+          variant: "danger",
+        });
+      },
+    },
+  );
 
   handleClose();
 }
