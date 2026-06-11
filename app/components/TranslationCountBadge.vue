@@ -4,14 +4,13 @@
   generic="T extends { translations: number; missingKeys: string[] }"
 >
 import { Badge, Tooltip } from "@thkzt/eunoia";
+import { useLocaleList } from "~/composables/locale/useLocaleList";
 
 const props = defineProps<{
   item: T;
 }>();
 
-const store = useLocaleStore();
-
-const { data } = storeToRefs(store);
+const { data } = useLocaleList();
 
 const localeCount = computed(() => data.value?.pagination?.total ?? 0);
 

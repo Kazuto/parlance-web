@@ -8,23 +8,19 @@ import {
   type SplitViewItem,
   Tooltip,
 } from "@thkzt/eunoia";
-import { useQuery } from "@tanstack/vue-query";
-import { api } from "~/lib/api";
+import { useLocaleList } from "~/composables/locale/useLocaleList";
+import { useLocaleGet } from "~/composables/locale/useLocaleGet";
 
 const route = useRoute();
 const router = useRouter();
 
-const localStore = useLocaleStore();
+const { data: localeData } = useLocaleList();
 
-const { data: localeData } = storeToRefs(localStore);
-
-const localeGetEndpoint = api.locale.get.use(
-  computed(() => ({ id: route.params.id as string })),
-);
-
-const { data, isLoading: isLoadingLocale } = useQuery({
-  ...localeGetEndpoint,
+const { data, isLoading: isLoadingLocale } = useLocaleGet({
+  id: route.params.id as string,
 });
+
+const localStore = useLocaleStore();
 
 const { update } = localStore;
 const { mutateAsync: updateLocale, error: errorUpdate } = update;

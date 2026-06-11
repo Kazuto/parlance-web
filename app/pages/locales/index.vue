@@ -9,12 +9,12 @@ import {
   Tooltip,
   Icon,
 } from "@thkzt/eunoia";
+import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 
-const store = useLocaleStore();
+const { data, filter, isLoading, error, refetch } = useLocaleList();
 
-const { data, isLoading, error } = storeToRefs(store);
-const { refetch } = store;
+filter.value.includeDeleted = true;
 
 const router = useRouter();
 
@@ -59,6 +59,7 @@ const tableItems = computed(() => {
 });
 
 const showDialog = ref(false);
+const deleteDialogItem = ref<Locale | undefined>(undefined);
 </script>
 
 <template>
@@ -113,7 +114,12 @@ const showDialog = ref(false);
 
     <!-- Table -->
     <Card class="overflow-x-auto">
-      <DataTable :columns="tableColumns" :items="tableItems">
+      <DataTable
+        :columns="tableColumns"
+        :items="tableItems"
+        :loading="isLoading"
+        :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
+      >
         <template #name="{ item }">
           <div class="flex items-center gap-2">
             <span>{{ item.name }}</span>
@@ -141,13 +147,23 @@ const showDialog = ref(false);
           <RelativeTime :timestamp="item.updatedAt" />
         </template>
         <template #actions="{ item }">
-          <div class="flex items-center justify-end gap-2">
+          <div
+            v-if="!item.deletedAt"
+            class="flex items-center justify-end gap-2"
+          >
             <Button
               ghost
               icon="eye"
               @click="() => router.push(`/locales/${item.id}`)"
             />
-            <Button destructive icon="trash" />
+            <Button destructive icon="trash" @click="deleteDialogItem = item" />
+          </div>
+          <div v-else class="flex items-center justify-end gap-2">
+            <Button
+              ghost
+              icon="arrow-counter-clockwise"
+              @click="deleteDialogItem = item"
+            />
           </div>
         </template>
       </DataTable>
@@ -184,5 +200,10 @@ const showDialog = ref(false);
     </Card>
   </div>
 
-  <DialogCreateLocale v-model="showDialog" @close="showDialog = false" />
+  <LocaleCreateDialog :open="showDialog" @close="showDialog = false" />
+  <LocaleDeleteDialog
+    :item="deleteDialogItem"
+    :open="deleteDialogItem !== undefined"
+    @close="deleteDialogItem = undefined"
+  />
 </template>

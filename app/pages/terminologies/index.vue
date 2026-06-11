@@ -6,14 +6,12 @@ import {
   RadioGroup,
   type DataTableColumn,
 } from "@thkzt/eunoia";
+import { useTerminologyList } from "~/composables/terminology/useTerminologyList";
 import type { Definition } from "~/lib/api/schemas/DefinitionSchema";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 import type { Terminology } from "~/lib/api/schemas/TerminologySchema";
 
-const store = useTerminologyStore();
-
-const { data, isLoading, error } = storeToRefs(store);
-const { refetch } = store;
+const { data, isLoading, error, refetch } = useTerminologyList();
 
 const { locales, setCurrentLocale, findByLocale } = useCurrentLocale();
 

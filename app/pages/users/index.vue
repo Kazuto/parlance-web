@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Button, Card, DataTable, type DataTableColumn } from "@thkzt/eunoia";
+import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api";
 import type { Role } from "~/lib/api/schemas/RoleSchema";
 
-const store = useUserStore();
-
-const { data, isLoading, error } = storeToRefs(store);
-const { refetch } = store;
+const { data, isLoading, error, refetch } = useUserList();
 
 const tableColumns: DataTableColumn<User>[] = [
   {

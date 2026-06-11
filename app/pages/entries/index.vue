@@ -6,14 +6,12 @@ import {
   RadioGroup,
   type DataTableColumn,
 } from "@thkzt/eunoia";
+import { useEntryList } from "~/composables/entry/useEntryList";
 import type { Entry } from "~/lib/api/schemas/EntrySchema";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/LocalizationSchema";
 
-const store = useEntryStore();
-
-const { data, isLoading, error } = storeToRefs(store);
-const { refetch } = store;
+const { data, isLoading, error, refetch } = useEntryList();
 
 const { locales, setCurrentLocale, findByLocale } = useCurrentLocale();
 

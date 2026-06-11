@@ -6,12 +6,10 @@ import {
   DataTable,
   type DataTableColumn,
 } from "@thkzt/eunoia";
+import { useRoleList } from "~/composables/role/useRoleList";
 import type { Role } from "~/lib/api/schemas/RoleSchema";
 
-const store = useRoleStore();
-
-const { data, isLoading, error } = storeToRefs(store);
-const { refetch } = store;
+const { data, isLoading, error, refetch } = useRoleList();
 
 const tableColumns: DataTableColumn<Role>[] = [
   {

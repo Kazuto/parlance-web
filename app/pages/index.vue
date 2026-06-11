@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { Card } from "@thkzt/eunoia";
+import { useEntryList } from "~/composables/entry/useEntryList";
+import { useLocaleList } from "~/composables/locale/useLocaleList";
 
 const authStore = useAuthStore();
 
-const localeStore = useLocaleStore();
-const { data: localesData, isLoading: isLocalesLoading } =
-  storeToRefs(localeStore);
+const { data: localesData, isLoading: isLocalesLoading } = useLocaleList();
 
 const localesCount = computed(() => localesData.value?.pagination?.total ?? 0);
 
-const entryStore = useEntryStore();
-const { data: entriesData, isLoading: isEntriesLoading } =
-  storeToRefs(entryStore);
+const { data: entriesData, isLoading: isEntriesLoading } = useEntryList();
 
 const entryCount = computed(() => entriesData.value?.pagination?.total ?? 0);
 
