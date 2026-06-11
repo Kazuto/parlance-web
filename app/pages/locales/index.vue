@@ -60,6 +60,7 @@ const tableItems = computed(() => {
 
 const showDialog = ref(false);
 const deleteDialogItem = ref<Locale | undefined>(undefined);
+const restoreDialogItem = ref<Locale | undefined>(undefined);
 </script>
 
 <template>
@@ -162,7 +163,7 @@ const deleteDialogItem = ref<Locale | undefined>(undefined);
             <Button
               ghost
               icon="arrow-counter-clockwise"
-              @click="deleteDialogItem = item"
+              @click="restoreDialogItem = item"
             />
           </div>
         </template>
@@ -205,5 +206,10 @@ const deleteDialogItem = ref<Locale | undefined>(undefined);
     :item="deleteDialogItem"
     :open="deleteDialogItem !== undefined"
     @close="deleteDialogItem = undefined"
+  />
+  <LocaleRestoreDialog
+    :item="restoreDialogItem"
+    :open="restoreDialogItem !== undefined"
+    @close="restoreDialogItem = undefined"
   />
 </template>

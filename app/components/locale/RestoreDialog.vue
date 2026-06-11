@@ -7,13 +7,13 @@ const props = defineProps<{
   item?: Locale;
 }>();
 
-const { destroy } = useLocaleStore();
-const { mutateAsync: destroyLocale, isPending } = destroy;
+const { restore } = useLocaleStore();
+const { mutateAsync: restoreLocale, isPending } = restore;
 
 async function handleSubmit() {
   if (!props.item) return;
 
-  await destroyLocale({
+  await restoreLocale({
     id: props.item.id,
   });
 
@@ -34,13 +34,13 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="`Delete Locale: ${props.item?.name}`"
+    :title="`Restore Locale: ${props.item?.name}`"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"
   >
     <p class="text-sm text-neutral-500">
-      Are you sure you want to delete this locale?
+      Are you sure you want to restore this locale?
     </p>
   </ConfirmDialog>
 </template>

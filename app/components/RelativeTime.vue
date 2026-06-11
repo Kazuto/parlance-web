@@ -1,17 +1,28 @@
 <script setup lang="ts">
 import { Tooltip, useRelativeTime } from "@thkzt/eunoia";
 
-const props = defineProps<{
-  timestamp: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    timestamp: string;
+    interval?: number;
+  }>(),
+  {
+    interval: 1000 * 60 * 5,
+  },
+);
 
-const { relative, date, time } = useRelativeTime(new Date(props.timestamp), {
+const date = computed(() => new Date(props.timestamp));
+const {
+  relative,
+  date: dateStr,
+  time,
+} = useRelativeTime(date, {
   locale: "en",
-  interval: 60000,
+  interval: props.interval,
 });
 
 const content = computed(() => {
-  return `${date.value} ${time.value}`;
+  return `${dateStr.value} ${time.value}`;
 });
 </script>
 
