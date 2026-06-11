@@ -1,8 +1,8 @@
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import { useLocaleList } from "./locale/useLocaleList";
 
 export function useCurrentLocale() {
-  const store = useLocaleStore();
-  const { data } = storeToRefs(store);
+  const { data } = useLocaleList();
 
   const locales = computed(() => data.value?.locales ?? []);
 

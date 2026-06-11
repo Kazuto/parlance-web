@@ -1,57 +1,34 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import type { PaginationRequest } from "~/lib/api/schemas/CommonSchema";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
 export const useUserStore = defineStore("userStore", () => {
-  const perPage = ref(10);
-  const page = ref(1);
-
-  const pagination = computed<PaginationRequest>(() => ({
-    perPage: perPage.value,
-    page: page.value,
-  }));
-
-  const userListEndpoint = api.users.list.use({ pagination });
-  const { data, isLoading, isPending, error, refetch } = useQuery({
-    ...userListEndpoint,
-  });
-
   const queryClient = useQueryClient();
-  const createEndpoint = api.users.create.use();
+  const queryKey = api.users.list.getQueryKey();
 
   const create = useMutation({
-    ...createEndpoint,
+    ...api.users.create.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
-  const updateEndpoint = api.users.update.use();
   const update = useMutation({
-    ...updateEndpoint,
+    ...api.users.update.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
-  const deleteEndpoint = api.users.delete.use();
   const destroy = useMutation({
-    ...deleteEndpoint,
+    ...api.users.delete.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   return {
-    data,
-    isLoading,
-    isPending,
-    error,
-    refetch,
     create,
     update,
     destroy,
-    perPage,
-    page,
   };
 });

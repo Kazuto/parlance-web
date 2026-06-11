@@ -1,60 +1,34 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import type { PaginationRequest } from "~/lib/api/schemas/CommonSchema";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
 export const useLocaleStore = defineStore("localeStore", () => {
-  const perPage = ref(10);
-  const page = ref(1);
-
-  const pagination = computed<PaginationRequest>(() => ({
-    perPage: perPage.value,
-    page: page.value,
-  }));
-
-  const localeListEndpoint = api.locale.list.use({ pagination });
-
-  const { data, isLoading, isPending, error, refetch } = useQuery({
-    ...localeListEndpoint,
-  });
-
   const queryClient = useQueryClient();
-  const createEndpoint = api.locale.create.use();
+  const queryKey = api.locales.list.getQueryKey();
 
   const create = useMutation({
-    ...createEndpoint,
+    ...api.locales.create.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: localeListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
-
-  const updateEndpoint = api.locale.update.use();
 
   const update = useMutation({
-    ...updateEndpoint,
+    ...api.locales.update.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: localeListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
-  const deleteEndpoint = api.locale.delete.use();
-
   const destroy = useMutation({
-    ...deleteEndpoint,
+    ...api.locales.delete.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: localeListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   return {
-    data,
-    isLoading,
-    isPending,
-    error,
-    refetch,
     create,
     update,
     destroy,
-    perPage,
-    page,
   };
 });

@@ -1,60 +1,34 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import type { PaginationRequest } from "~/lib/api/schemas/CommonSchema";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
 export const useRoleStore = defineStore("roleStore", () => {
-  const perPage = ref(10);
-  const page = ref(1);
-
-  const pagination = computed<PaginationRequest>(() => ({
-    perPage: perPage.value,
-    page: page.value,
-  }));
-
-  const roleListEndpoint = api.roles.list.use({ pagination });
-
-  const { data, isLoading, isPending, error, refetch } = useQuery({
-    ...roleListEndpoint,
-  });
-
   const queryClient = useQueryClient();
-  const createEndpoint = api.roles.create.use();
+  const queryKey = api.roles.list.getQueryKey();
 
   const create = useMutation({
-    ...createEndpoint,
+    ...api.roles.create.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: roleListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
-
-  const updateEndpoint = api.roles.update.use();
 
   const update = useMutation({
-    ...updateEndpoint,
+    ...api.roles.update.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: roleListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
-  const deleteEndpoint = api.roles.delete.use();
-
   const destroy = useMutation({
-    ...deleteEndpoint,
+    ...api.roles.delete.use(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: roleListEndpoint.queryKey });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   return {
-    data,
-    isLoading,
-    isPending,
-    error,
-    refetch,
     create,
     update,
     destroy,
-    perPage,
-    page,
   };
 });

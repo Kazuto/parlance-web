@@ -1,9 +1,10 @@
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import { useLocaleList } from "./locale/useLocaleList";
 
 export function useTranslatable<T>() {
-  const store = useLocaleStore();
+  const { data, filter } = useLocaleList();
 
-  const { data } = storeToRefs(store);
+  filter.value.includeDeleted = false;
 
   const localeCount = computed(() => data.value?.pagination?.total ?? 0);
 
