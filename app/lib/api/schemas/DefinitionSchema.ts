@@ -65,6 +65,15 @@ export const DeleteDefinitionRequestSchema = z.object({
 
 export const DeleteDefinitionResponseSchema = z.object({});
 
+// Restore Definition
+export const RestoreDefinitionRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreDefinitionResponseSchema = z.object({
+  definition: DefinitionSchema,
+});
+
 // Types
 export type Definition = z.infer<typeof DefinitionSchema>;
 export type ListDefinitionsRequest = z.infer<
@@ -92,4 +101,10 @@ export type DeleteDefinitionRequest = z.infer<
 >;
 export type DeleteDefinitionResponse = z.infer<
   typeof DeleteDefinitionResponseSchema
+>;
+export type RestoreDefinitionRequest = z.infer<
+  typeof RestoreDefinitionRequestSchema
+>;
+export type RestoreDefinitionResponse = z.infer<
+  typeof RestoreDefinitionResponseSchema
 >;

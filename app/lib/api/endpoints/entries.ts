@@ -15,6 +15,9 @@ import {
   type CreateEntryRequest,
   type UpdateEntryRequest,
   type DeleteEntryRequest,
+  type RestoreEntryRequest,
+  RestoreEntryResponseSchema,
+  RestoreEntryRequestSchema,
 } from "../schemas/EntrySchema";
 
 export const entries = {
@@ -75,6 +78,18 @@ export const entries = {
     {
       input: DeleteEntryRequestSchema,
       output: DeleteEntryResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreEntryRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/RestoreEntry",
+      json: data,
+    }),
+    {
+      input: RestoreEntryRequestSchema,
+      output: RestoreEntryResponseSchema,
     },
   ),
 };

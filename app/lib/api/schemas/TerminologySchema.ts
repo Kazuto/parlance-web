@@ -66,6 +66,15 @@ export const DeleteTerminologyRequestSchema = z.object({
 
 export const DeleteTerminologyResponseSchema = z.object({});
 
+// Restore Terminology
+export const RestoreTerminologyRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreTerminologyResponseSchema = z.object({
+  terminology: TerminologySchema,
+});
+
 // Types
 export type Terminology = z.infer<typeof TerminologySchema>;
 export type ListTerminologiesRequest = z.infer<
@@ -95,4 +104,10 @@ export type DeleteTerminologyRequest = z.infer<
 >;
 export type DeleteTerminologyResponse = z.infer<
   typeof DeleteTerminologyResponseSchema
+>;
+export type RestoreTerminologyRequest = z.infer<
+  typeof RestoreTerminologyRequestSchema
+>;
+export type RestoreTerminologyResponse = z.infer<
+  typeof RestoreTerminologyResponseSchema
 >;

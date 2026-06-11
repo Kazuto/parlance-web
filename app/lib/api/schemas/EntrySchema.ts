@@ -65,6 +65,15 @@ export const DeleteEntryRequestSchema = z.object({
 
 export const DeleteEntryResponseSchema = z.object({});
 
+// Restore Entry
+export const RestoreEntryRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreEntryResponseSchema = z.object({
+  entry: EntrySchema,
+});
+
 // Types
 export type Entry = z.infer<typeof EntrySchema>;
 export type ListEntriesRequest = z.infer<typeof ListEntriesRequestSchema>;
@@ -77,3 +86,5 @@ export type UpdateEntryRequest = z.infer<typeof UpdateEntryRequestSchema>;
 export type UpdateEntryResponse = z.infer<typeof UpdateEntryResponseSchema>;
 export type DeleteEntryRequest = z.infer<typeof DeleteEntryRequestSchema>;
 export type DeleteEntryResponse = z.infer<typeof DeleteEntryResponseSchema>;
+export type RestoreEntryRequest = z.infer<typeof RestoreEntryRequestSchema>;
+export type RestoreEntryResponse = z.infer<typeof RestoreEntryResponseSchema>;

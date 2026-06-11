@@ -15,6 +15,9 @@ import {
   type CreateLocalizationRequest,
   type UpdateLocalizationRequest,
   type DeleteLocalizationRequest,
+  RestoreLocalizationRequestSchema,
+  RestoreLocalizationResponseSchema,
+  type RestoreLocalizationRequest,
 } from "../schemas/LocalizationSchema";
 
 export const localizations = {
@@ -75,6 +78,18 @@ export const localizations = {
     {
       input: DeleteLocalizationRequestSchema,
       output: DeleteLocalizationResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreLocalizationRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocalizationService/RestoreLocalization",
+      json: data,
+    }),
+    {
+      input: RestoreLocalizationRequestSchema,
+      output: RestoreLocalizationResponseSchema,
     },
   ),
 };

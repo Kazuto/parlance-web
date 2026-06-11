@@ -66,6 +66,15 @@ export const DeleteRoleRequestSchema = z.object({
 
 export const DeleteRoleResponseSchema = z.object({});
 
+// Restore Role
+export const RestoreRoleRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreRoleResponseSchema = z.object({
+  role: RoleSchema,
+});
+
 // Types
 export type Role = z.infer<typeof RoleSchema>;
 export type ListRolesRequest = z.infer<typeof ListRolesRequestSchema>;
@@ -78,3 +87,5 @@ export type UpdateRoleRequest = z.infer<typeof UpdateRoleRequestSchema>;
 export type UpdateRoleResponse = z.infer<typeof UpdateRoleResponseSchema>;
 export type DeleteRoleRequest = z.infer<typeof DeleteRoleRequestSchema>;
 export type DeleteRoleResponse = z.infer<typeof DeleteRoleResponseSchema>;
+export type RestoreRoleRequest = z.infer<typeof RestoreRoleRequestSchema>;
+export type RestoreRoleResponse = z.infer<typeof RestoreRoleResponseSchema>;

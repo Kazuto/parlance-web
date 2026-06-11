@@ -15,6 +15,9 @@ import {
   type CreateDefinitionRequest,
   type UpdateDefinitionRequest,
   type DeleteDefinitionRequest,
+  RestoreDefinitionResponseSchema,
+  RestoreDefinitionRequestSchema,
+  type RestoreDefinitionRequest,
 } from "../schemas/DefinitionSchema";
 
 export const definitions = {
@@ -75,6 +78,18 @@ export const definitions = {
     {
       input: DeleteDefinitionRequestSchema,
       output: DeleteDefinitionResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreDefinitionRequest) => ({
+      method: "post",
+      url: "/parlance.v1.DefinitionService/RestoreDefinition",
+      json: data,
+    }),
+    {
+      input: RestoreDefinitionRequestSchema,
+      output: RestoreDefinitionResponseSchema,
     },
   ),
 };

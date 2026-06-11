@@ -15,6 +15,9 @@ import {
   type CreateTerminologyRequest,
   type UpdateTerminologyRequest,
   type DeleteTerminologyRequest,
+  type RestoreTerminologyRequest,
+  RestoreTerminologyResponseSchema,
+  RestoreTerminologyRequestSchema,
 } from "../schemas/TerminologySchema";
 
 export const terminologies = {
@@ -75,6 +78,18 @@ export const terminologies = {
     {
       input: DeleteTerminologyRequestSchema,
       output: DeleteTerminologyResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreTerminologyRequest) => ({
+      method: "post",
+      url: "/parlance.v1.TerminologyService/RestoreTerminology",
+      json: data,
+    }),
+    {
+      input: RestoreTerminologyRequestSchema,
+      output: RestoreTerminologyResponseSchema,
     },
   ),
 };

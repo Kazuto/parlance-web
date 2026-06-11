@@ -65,6 +65,15 @@ export const DeleteLocalizationRequestSchema = z.object({
 
 export const DeleteLocalizationResponseSchema = z.object({});
 
+// Restore Localization
+export const RestoreLocalizationRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreLocalizationResponseSchema = z.object({
+  localization: LocalizationSchema,
+});
+
 // Types
 export type Localization = z.infer<typeof LocalizationSchema>;
 export type ListLocalizationsRequest = z.infer<
@@ -96,4 +105,10 @@ export type DeleteLocalizationRequest = z.infer<
 >;
 export type DeleteLocalizationResponse = z.infer<
   typeof DeleteLocalizationResponseSchema
+>;
+export type RestoreLocalizationRequest = z.infer<
+  typeof RestoreLocalizationRequestSchema
+>;
+export type RestoreLocalizationResponse = z.infer<
+  typeof RestoreLocalizationResponseSchema
 >;

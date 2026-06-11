@@ -15,6 +15,9 @@ import {
   type CreateUserRequest,
   type UpdateUserRequest,
   type DeleteUserRequest,
+  type RestoreUserRequest,
+  RestoreUserResponseSchema,
+  RestoreUserRequestSchema,
 } from "../schemas/UserSchema";
 
 export const users = {
@@ -75,6 +78,18 @@ export const users = {
     {
       input: DeleteUserRequestSchema,
       output: DeleteUserResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreUserRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/RestoreUser",
+      json: data,
+    }),
+    {
+      input: RestoreUserRequestSchema,
+      output: RestoreUserResponseSchema,
     },
   ),
 };

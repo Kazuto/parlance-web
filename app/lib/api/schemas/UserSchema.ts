@@ -66,6 +66,15 @@ export const DeleteUserRequestSchema = z.object({
 
 export const DeleteUserResponseSchema = z.object({});
 
+// Restore User
+export const RestoreUserRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreUserResponseSchema = z.object({
+  user: UserSchema,
+});
+
 // Types
 export type User = z.infer<typeof UserSchema>;
 export type ListUsersRequest = z.infer<typeof ListUsersRequestSchema>;
@@ -78,3 +87,5 @@ export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>;
 export type UpdateUserResponse = z.infer<typeof UpdateUserResponseSchema>;
 export type DeleteUserRequest = z.infer<typeof DeleteUserRequestSchema>;
 export type DeleteUserResponse = z.infer<typeof DeleteUserResponseSchema>;
+export type RestoreUserRequest = z.infer<typeof RestoreUserRequestSchema>;
+export type RestoreUserResponse = z.infer<typeof RestoreUserResponseSchema>;

@@ -20,6 +20,9 @@ import {
   type UpdateLocaleRequest,
   type DeleteLocaleRequest,
   type SetDefaultLocaleRequest,
+  type RestoreLocaleRequest,
+  RestoreLocaleRequestSchema,
+  RestoreLocaleResponseSchema,
 } from "../schemas/LocaleSchema";
 
 export const locales = {
@@ -80,6 +83,18 @@ export const locales = {
     {
       input: DeleteLocaleRequestSchema,
       output: DeleteLocaleResponseSchema,
+    },
+  ),
+
+  restore: authedEndpoint.mutate(
+    (data: RestoreLocaleRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocaleService/RestoreLocale",
+      json: data,
+    }),
+    {
+      input: RestoreLocaleRequestSchema,
+      output: RestoreLocaleResponseSchema,
     },
   ),
 

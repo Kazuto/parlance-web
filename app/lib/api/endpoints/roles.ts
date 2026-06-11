@@ -15,6 +15,9 @@ import {
   type CreateRoleRequest,
   type UpdateRoleRequest,
   type DeleteRoleRequest,
+  type RestoreRoleRequest,
+  RestoreRoleResponseSchema,
+  RestoreRoleRequestSchema,
 } from "../schemas/RoleSchema";
 
 export const roles = {
@@ -75,6 +78,17 @@ export const roles = {
     {
       input: DeleteRoleRequestSchema,
       output: DeleteRoleResponseSchema,
+    },
+  ),
+  restore: authedEndpoint.mutate(
+    (data: RestoreRoleRequest) => ({
+      method: "post",
+      url: "/parlance.v1.RoleService/RestoreRole",
+      json: data,
+    }),
+    {
+      input: RestoreRoleRequestSchema,
+      output: RestoreRoleResponseSchema,
     },
   ),
 };

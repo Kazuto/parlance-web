@@ -66,6 +66,15 @@ export const DeleteLocaleRequestSchema = z.object({
 
 export const DeleteLocaleResponseSchema = z.object({});
 
+// Restore Locale
+export const RestoreLocaleRequestSchema = z.object({
+  id: z.string(),
+});
+
+export const RestoreLocaleResponseSchema = z.object({
+  locale: LocaleSchema,
+});
+
 // Get Default Locale
 export const GetDefaultLocaleRequestSchema = z.object({});
 
@@ -94,6 +103,8 @@ export type UpdateLocaleRequest = z.infer<typeof UpdateLocaleRequestSchema>;
 export type UpdateLocaleResponse = z.infer<typeof UpdateLocaleResponseSchema>;
 export type DeleteLocaleRequest = z.infer<typeof DeleteLocaleRequestSchema>;
 export type DeleteLocaleResponse = z.infer<typeof DeleteLocaleResponseSchema>;
+export type RestoreLocaleRequest = z.infer<typeof RestoreLocaleRequestSchema>;
+export type RestoreLocaleResponse = z.infer<typeof RestoreLocaleResponseSchema>;
 export type GetDefaultLocaleRequest = z.infer<
   typeof GetDefaultLocaleRequestSchema
 >;
