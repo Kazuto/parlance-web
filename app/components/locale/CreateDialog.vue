@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Button, Checkbox, Dialog, Input } from "@thkzt/eunoia";
 
-const model = defineModel<boolean>({ default: false });
+defineProps<{
+  open: boolean;
+}>();
 
 const code = ref("");
 const nameEn = ref("");
@@ -33,6 +35,8 @@ async function handleSubmit() {
     },
     isDefault: isDefault.value,
   });
+
+  handleClose();
 }
 
 const emit = defineEmits<{
@@ -49,7 +53,7 @@ function handleClose() {
 </script>
 
 <template>
-  <Dialog v-model="model" title="Create Locale" @close="handleClose">
+  <Dialog :open title="Create Locale" @close="handleClose">
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <!-- Code -->
       <div>
