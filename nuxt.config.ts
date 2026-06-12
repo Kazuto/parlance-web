@@ -23,5 +23,13 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      hmr: {
+        port: 24678,
+      },
+      watch: {
+        usePolling: true, // required for file watching in Docker
+      },
+    },
   },
 });
