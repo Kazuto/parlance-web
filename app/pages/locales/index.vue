@@ -3,16 +3,17 @@ import {
   DataTable,
   type DataTableColumn,
   Button,
-  Alert,
   Card,
   Badge,
   Tooltip,
   Icon,
+  Pagination,
 } from "@thkzt/eunoia";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 
-const { data, filter, isFetching, error, refetch } = useLocaleList();
+const { data, filter, pagination, isFetching, error, refetch } =
+  useLocaleList();
 
 filter.value.includeDeleted = true;
 
@@ -89,30 +90,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
 
   <!-- Locales List -->
   <div v-else-if="data?.locales">
-    <!-- Default Locale Banner -->
-    <Alert v-if="defaultLocale" persistent variant="info" class="mb-4">
-      <div class="flex items-center">
-        <svg
-          class="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-        <span class="text-sm">
-          <strong>{{ defaultLocale.code }}</strong> is set as the default locale
-        </span>
-      </div>
-    </Alert>
-
-    <!-- Table -->
-    <Card class="overflow-x-auto">
+    <Card>
       <DataTable
         :columns="tableColumns"
         :items="tableItems"
@@ -167,6 +145,13 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
           </div>
         </template>
       </DataTable>
+      <Pagination
+        v-model:current="pagination.page"
+        :per-page="pagination.perPage"
+        :total="data?.pagination?.totalPages ?? 0"
+        @update:current="pagination.page = $event"
+        @update:per-page="pagination.perPage = $event"
+      />
     </Card>
 
     <!-- Empty State -->
