@@ -4,6 +4,19 @@ import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api";
 import type { Role } from "~/lib/api/schemas/RoleSchema";
 
+const router = useRouter();
+
+usePage({
+  width: "wide",
+  title: "Users",
+  description: "Manage users and their roles",
+  backAction: {
+    content: "Back to Dashboard",
+    onClick: () => router.push("/"),
+    icon: "arrow-left",
+  },
+});
+
 const { data, isLoading, error, refetch } = useUserList();
 
 const tableColumns: DataTableColumn<User>[] = [
@@ -30,15 +43,6 @@ const tableItems = computed(() => data.value?.users ?? []);
 </script>
 
 <template>
-  <div class="mb-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-neutral-900">Users</h1>
-        <p class="mt-2 text-sm text-neutral-600">Manage the users</p>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">Loading users...</div>

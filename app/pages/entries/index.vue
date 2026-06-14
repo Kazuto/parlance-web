@@ -11,6 +11,19 @@ import type { Entry } from "~/lib/api/schemas/EntrySchema";
 import type { Locale } from "~/lib/api/schemas/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/LocalizationSchema";
 
+const router = useRouter();
+
+usePage({
+  width: "wide",
+  title: "Entries",
+  description: "Manage translation entries and content",
+  backAction: {
+    content: "Back to Dashboard",
+    onClick: () => router.push("/"),
+    icon: "arrow-left",
+  },
+});
+
 const { data, isLoading, error, refetch } = useEntryList();
 
 const { locales, setCurrentLocale, findByLocale } = useCurrentLocale();
@@ -71,15 +84,6 @@ const tableItems = computed(() => data.value?.entries ?? []);
 </script>
 
 <template>
-  <div class="mb-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-neutral-900">Entries</h1>
-        <p class="mt-2 text-sm text-neutral-600">Manage your translations</p>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">Loading entries...</div>

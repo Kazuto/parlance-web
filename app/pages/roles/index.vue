@@ -9,6 +9,19 @@ import {
 import { useRoleList } from "~/composables/role/useRoleList";
 import type { Role } from "~/lib/api/schemas/RoleSchema";
 
+const router = useRouter();
+
+usePage({
+  width: "wide",
+  title: "Roles",
+  description: "Manage roles and permissions",
+  backAction: {
+    content: "Back to Dashboard",
+    onClick: () => router.push("/"),
+    icon: "arrow-left",
+  },
+});
+
 const { data, isLoading, error, refetch } = useRoleList();
 
 const tableColumns: DataTableColumn<Role>[] = [
@@ -36,15 +49,6 @@ const tableItems = computed(() => data.value?.roles ?? []);
 </script>
 
 <template>
-  <div class="mb-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-neutral-900">Roles</h1>
-        <p class="mt-2 text-sm text-neutral-600">Manage the roles</p>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">Loading roles...</div>

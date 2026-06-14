@@ -8,6 +8,7 @@ import {
   type MenuItem,
   type UserMenuItem,
   ToastStack,
+  Page,
 } from "@thkzt/eunoia";
 
 const { user, logout } = useAuthStore();
@@ -36,6 +37,8 @@ const userMenuItems: UserMenuItem[] = [
 const toastStack = useTemplateRef("toastStack");
 
 provide("toastStack", toastStack);
+
+const pageOptions = usePageProvider();
 </script>
 
 <template>
@@ -67,10 +70,10 @@ provide("toastStack", toastStack);
         <Menu class="p-3" :items="menuItems" :current-path="route.path" />
       </Sidebar>
 
-      <main class="flex-1 overflow-y-auto p-8">
-        <div class="mx-auto flex max-w-6xl flex-col gap-8">
+      <main class="flex-1 overflow-y-auto mx-auto">
+        <Page v-bind="pageOptions">
           <slot />
-        </div>
+        </Page>
       </main>
     </div>
   </div>

@@ -18,9 +18,21 @@ filter.value.includeDeleted = true;
 
 const router = useRouter();
 
-const defaultLocale = computed(() =>
-  data.value?.locales.find((locale: Locale) => locale.isDefault),
-);
+usePage({
+  width: "wide",
+  title: "Locales",
+  description: "Manage languages and regional variants for your translations",
+  backAction: {
+    content: "Back to Dashboard",
+    onClick: () => router.push("/"),
+    icon: "arrow-left",
+  },
+  primaryAction: {
+    content: "Create Locale",
+    icon: "plus",
+    onClick: () => (showDialog.value = true),
+  },
+});
 
 const tableColumns: DataTableColumn<Locale>[] = [
   {
@@ -64,20 +76,6 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
 </script>
 
 <template>
-  <div class="mb-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-neutral-900">Locales</h1>
-        <p class="mt-2 text-sm text-neutral-600">
-          Manage languages and regional variants for your translations
-        </p>
-      </div>
-      <Button v-can="'create_locale'" primary @click="showDialog = true">
-        Create Locale
-      </Button>
-    </div>
-  </div>
-
   <!-- Loading State -->
   <div v-if="isFetching" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">Loading locales...</div>

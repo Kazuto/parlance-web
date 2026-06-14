@@ -22,6 +22,19 @@ const { data, isLoading: isLoadingLocale } = useLocaleGet({
 
 const localStore = useLocaleStore();
 
+usePage(
+  computed(() => ({
+    width: "wide",
+    title: `Locale: ${data.value?.locale?.name ?? ""} (${data.value?.locale?.code ?? ""})`,
+    description: `Manage ${data.value?.locale?.name ?? ""} locale`,
+    backAction: {
+      content: "Back to locales overview",
+      onClick: () => router.push("/locales"),
+      icon: "arrow-left",
+    },
+  })),
+);
+
 const { update } = localStore;
 const { mutateAsync: updateLocale, error: errorUpdate } = update;
 
@@ -87,14 +100,6 @@ async function handleUpdate() {
   <div v-else-if="errorUpdate">Error: {{ errorUpdate.message }}</div>
 
   <template v-else-if="data?.locale">
-    <div class="flex items-center gap-2">
-      <Button ghost icon="arrow-left" @click="router.back()" />
-
-      <h2 class="text-2xl font-bold text-neutral-900">
-        Locale: {{ data.locale.name }} ({{ data.locale.code }})
-      </h2>
-    </div>
-
     <Card>
       <div class="space-y-4">
         <Input v-model="form.code"> Code </Input>
