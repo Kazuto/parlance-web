@@ -13,7 +13,7 @@ import {
   type RegisterRequest,
   type LoginRequest,
   type RefreshTokenRequest,
-} from "../schemas/AuthSchema";
+} from "../schemas/parlance/v1/AuthSchema";
 
 export const auth = {
   register: publicEndpoint.mutate(

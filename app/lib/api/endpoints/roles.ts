@@ -18,7 +18,7 @@ import {
   type RestoreRoleRequest,
   RestoreRoleResponseSchema,
   RestoreRoleRequestSchema,
-} from "../schemas/RoleSchema";
+} from "../schemas/parlance/v1/RoleSchema";
 
 export const roles = {
   list: authedEndpoint.query(

@@ -1,4 +1,4 @@
-import type { Permission } from "~/lib/api/schemas/PermissionSchema";
+import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 
 export function usePermission() {
   const authStore = useAuthStore();
@@ -9,7 +9,7 @@ export function usePermission() {
   const can = (permissionName: string): boolean => {
     if (!authStore.user) return false;
 
-    return authStore.user.roles
+    return (authStore.user.roles ?? [])
       .flatMap((role) => role.permissions ?? [])
       .some((permission: Permission) => permission.name === permissionName);
   };
@@ -20,7 +20,7 @@ export function usePermission() {
   const canDo = (resource: string, action: string): boolean => {
     if (!authStore.user) return false;
 
-    return authStore.user.roles
+    return (authStore.user.roles ?? [])
       .flatMap((role) => role.permissions ?? [])
       .some(
         (permission: Permission) =>
@@ -48,7 +48,7 @@ export function usePermission() {
   const hasRole = (roleName: string): boolean => {
     if (!authStore.user) return false;
 
-    return authStore.user.roles.some((role) => role.name === roleName);
+    return (authStore.user.roles ?? []).some((role) => role.name === roleName);
   };
 
   /**

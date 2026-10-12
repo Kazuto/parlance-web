@@ -10,9 +10,9 @@ import {
 } from "@thkzt/eunoia";
 import { useEntryList } from "~/composables/entry/useEntryList";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
-import type { Entry } from "~/lib/api/schemas/EntrySchema";
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
-import type { Localization } from "~/lib/api/schemas/LocalizationSchema";
+import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
 const router = useRouter();
 
@@ -37,23 +37,27 @@ const selectedEntry = ref<SplitViewItem>();
 
 const localeOptions = computed(
   () =>
-    localeData.value?.locales.map((locale: Locale) => ({
-      label: locale.name,
-      value: locale.id,
-    })) ?? [],
+    localeData.value?.locales
+      ?.filter((locale) => !!locale.id)
+      .map((locale: Locale) => ({
+        label: locale.name ?? locale.code ?? "",
+        value: locale.id ?? "",
+      })) ?? [],
 );
 
 const splitViewItems = computed((): SplitViewItem[] => {
   if (!data.value?.entries) return [];
 
-  return data.value.entries.map((entry: Entry) => ({
-    key: entry.id,
-    label: entry.key,
-  }));
+  return data.value.entries
+    .filter((entry) => !!entry.id)
+    .map((entry: Entry) => ({
+      key: entry.id ?? "",
+      label: entry.key ?? "",
+    }));
 });
 
 const selectedEntryData = computed(() =>
-  data.value?.entries.find(
+  data.value?.entries?.find(
     (entry: Entry) => entry.id === selectedEntry.value?.key,
   ),
 );
@@ -65,15 +69,19 @@ watchEffect(() => {
   if (!data.value?.entries) return;
 
   localizationForms.value = Object.fromEntries(
-    data.value.entries.map((entry: Entry) => [
-      entry.id,
-      Object.fromEntries(
-        entry.localizations.map((localization: Localization) => [
-          String(localization.localeId),
-          localization.translation,
-        ]),
-      ),
-    ]),
+    data.value.entries
+      .filter((entry) => !!entry.id)
+      .map((entry: Entry) => [
+        entry.id,
+        Object.fromEntries(
+          (entry.localizations ?? [])
+            .filter((localization) => !!localization.localeId)
+            .map((localization: Localization) => [
+              String(localization.localeId),
+              localization.translation ?? "",
+            ]),
+        ),
+      ]),
   );
 });
 
@@ -117,13 +125,15 @@ const toast = useToast();
 
 async function handleSave() {
   const entry = selectedEntryData.value;
-  if (!entry) return;
+  if (!entry?.id) return;
+
+  const entryId = entry.id;
 
   await Promise.all(
     selectedLocaleIds.value.map((localeId) => {
       const translation =
-        localizationForms.value[entry.id]?.[String(localeId)] ?? "";
-      const existing = entry.localizations.find(
+        localizationForms.value[entryId]?.[String(localeId)] ?? "";
+      const existing = entry.localizations?.find(
         (localization: Localization) =>
           localization.localeId === String(localeId),
       );
@@ -147,7 +157,7 @@ async function handleSave() {
       } else {
         return createLocalization(
           {
-            entryId: entry.id,
+            entryId,
             localeId: String(localeId),
             translation,
           },
@@ -182,7 +192,7 @@ async function handleSave() {
     <Button ghost @click="() => refetch()">Try again</Button>
   </div>
 
-  <template v-else-if="data?.entries">
+  <template v-else-if="data">
     <Card>
       <div class="space-y-4">
         <Select

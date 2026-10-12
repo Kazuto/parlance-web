@@ -18,7 +18,7 @@ import {
   RestoreLocalizationRequestSchema,
   RestoreLocalizationResponseSchema,
   type RestoreLocalizationRequest,
-} from "../schemas/LocalizationSchema";
+} from "../schemas/parlance/v1/LocalizationSchema";
 
 export const localizations = {
   list: authedEndpoint.query(

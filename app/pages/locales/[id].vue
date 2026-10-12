@@ -54,8 +54,9 @@ const splitViewItems = computed((): SplitViewItem[] => {
   if (!localeData.value?.locales) return [];
 
   return localeData.value?.locales
+    .filter((locale) => !!locale.code)
     .map((locale) => ({
-      key: locale.code,
+      key: locale.code ?? "",
       label: `${locale.name}`,
     }))
     .filter((item) =>
@@ -68,7 +69,7 @@ watch(
   (newData) => {
     if (!newData?.locale) return;
     form.value = {
-      code: newData.locale.code,
+      code: newData.locale.code ?? "",
       names: { ...newData.locale.names },
       isDefault: newData.locale.isDefault ?? false,
     };

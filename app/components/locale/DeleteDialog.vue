@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ConfirmDialog } from "@thkzt/eunoia";
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const props = defineProps<{
   open: boolean;

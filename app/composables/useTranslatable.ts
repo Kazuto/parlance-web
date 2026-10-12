@@ -1,4 +1,4 @@
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { useLocaleList } from "./locale/useLocaleList";
 
 export function useTranslatable<T>() {
@@ -10,8 +10,9 @@ export function useTranslatable<T>() {
   const activeCodes = computed(
     () =>
       data.value?.locales
-        .filter((locale: Locale) => !locale.deletedAt)
-        .map((locale: Locale) => locale.code) ?? [],
+        ?.filter((locale: Locale) => !locale.deletedAt)
+        .map((locale: Locale) => locale.code)
+        .filter((code): code is string => !!code) ?? [],
   );
 
   const localeCount = computed(() => activeCodes.value.length);

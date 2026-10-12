@@ -18,7 +18,7 @@ import {
   RestoreDefinitionResponseSchema,
   RestoreDefinitionRequestSchema,
   type RestoreDefinitionRequest,
-} from "../schemas/DefinitionSchema";
+} from "../schemas/parlance/v1/DefinitionSchema";
 
 export const definitions = {
   list: authedEndpoint.query(

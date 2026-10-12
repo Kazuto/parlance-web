@@ -7,7 +7,7 @@ import {
   type DataTableColumn,
 } from "@thkzt/eunoia";
 import { useRoleList } from "~/composables/role/useRoleList";
-import type { Role } from "~/lib/api/schemas/RoleSchema";
+import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const router = useRouter();
 
@@ -60,25 +60,28 @@ const tableItems = computed(() => data.value?.roles ?? []);
     <Button ghost @click="() => refetch()"> Try again </Button>
   </div>
 
-  <div v-else-if="data?.roles">
+  <div v-else-if="data">
     <!-- Table -->
     <Card class="overflow-x-auto">
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #permissions="{ item }">
           <div class="flex flex-wrap gap-1">
-            <Badge v-for="permission in item.permissions" :key="permission.id">
+            <Badge
+              v-for="permission in item.permissions"
+              :key="permission.id ?? undefined"
+            >
               {{ permission.name }}
             </Badge>
           </div>
         </template>
         <template #createdAt="{ item }">
-          <RelativeTime :timestamp="item.createdAt" />
+          <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
       </DataTable>
     </Card>
 
     <!-- Empty State -->
-    <Card v-if="data?.roles.length === 0">
+    <Card v-if="tableItems.length === 0">
       <svg
         class="mx-auto h-12 w-12 text-neutral-400"
         fill="none"

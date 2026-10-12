@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/vue-query";
 import { useLocalStorage, useNow } from "@vueuse/core";
 import { jwtDecode as _jwtDecode } from "jwt-decode";
-import type { User } from "~/lib/api/schemas/UserSchema";
+import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 import { api } from "~/lib/api";
 
 export type JWTPayload = {
@@ -93,10 +93,10 @@ export const useAuthStore = defineStore("authStore", () => {
     },
     onSuccess: (data) => {
       setToken({
-        refreshToken: data.refreshToken,
-        token: data.accessToken,
+        refreshToken: data.refreshToken ?? undefined,
+        token: data.accessToken ?? undefined,
       });
-      user.value = data.user;
+      user.value = data.user ?? undefined;
     },
   });
 
@@ -112,10 +112,10 @@ export const useAuthStore = defineStore("authStore", () => {
     },
     onSuccess: (data) => {
       setToken({
-        refreshToken: data.refreshToken,
-        token: data.accessToken,
+        refreshToken: data.refreshToken ?? undefined,
+        token: data.accessToken ?? undefined,
       });
-      user.value = data.user;
+      user.value = data.user ?? undefined;
     },
   });
 

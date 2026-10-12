@@ -18,7 +18,7 @@ import {
   type RestoreUserRequest,
   RestoreUserResponseSchema,
   RestoreUserRequestSchema,
-} from "../schemas/UserSchema";
+} from "../schemas/parlance/v1/UserSchema";
 
 export const users = {
   list: authedEndpoint.query(

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Button, Card, DataTable, type DataTableColumn } from "@thkzt/eunoia";
 import { useUserList } from "~/composables/user/useUserList";
-import type { User } from "~/lib/api";
-import type { Role } from "~/lib/api/schemas/RoleSchema";
+import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
+import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const router = useRouter();
 
@@ -29,13 +29,15 @@ const tableColumns: DataTableColumn<User>[] = [
     title: "Roles",
     key: "roles",
     sortable: true,
-    value: (item: User) => item.roles.map((role: Role) => role.name).join(", "),
+    value: (item: User) =>
+      (item.roles ?? []).map((role: Role) => role.name).join(", "),
   },
   {
     title: "Created",
     key: "createdAt",
     sortable: true,
-    value: (item: User) => new Date(item.createdAt).toLocaleDateString(),
+    value: (item: User) =>
+      item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "",
   },
 ];
 
@@ -54,18 +56,18 @@ const tableItems = computed(() => data.value?.users ?? []);
     <Button ghost @click="() => refetch()"> Try again </Button>
   </div>
 
-  <div v-else-if="data?.users">
+  <div v-else-if="data">
     <!-- Table -->
     <Card class="overflow-x-auto">
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #createdAt="{ item }">
-          <RelativeTime :timestamp="item.createdAt" />
+          <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
       </DataTable>
     </Card>
 
     <!-- Empty State -->
-    <Card v-if="data?.users.length === 0">
+    <Card v-if="tableItems.length === 0">
       <svg
         class="mx-auto h-12 w-12 text-neutral-400"
         fill="none"

@@ -1,5 +1,5 @@
 import type { Directive, DirectiveBinding } from "vue";
-import type { Permission } from "~/lib/api/schemas/PermissionSchema";
+import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 
 interface CanBindingValue {
   permission?: string;
@@ -20,7 +20,7 @@ function checkPermission(
 ): boolean {
   if (!authStore.user) return false;
 
-  const allPermissions = authStore.user.roles.flatMap(
+  const allPermissions = (authStore.user.roles ?? []).flatMap(
     (role) => role.permissions ?? [],
   );
 
@@ -56,7 +56,7 @@ function checkPermission(
 
   // Check by role
   if (value.role) {
-    return authStore.user.roles.some((r) => r.name === value.role);
+    return (authStore.user.roles ?? []).some((r) => r.name === value.role);
   }
 
   return false;

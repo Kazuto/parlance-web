@@ -57,7 +57,7 @@ const pageOptions = usePageProvider();
       <template #right>
         <UserMenu
           v-if="user"
-          :name="user.name"
+          :name="user.name ?? undefined"
           :items="userMenuItems"
           @select="onMenuSelect"
         />

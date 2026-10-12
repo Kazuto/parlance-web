@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button, Checkbox, Dialog, Input } from "@thkzt/eunoia";
-import type { CreateLocaleResponse } from "~/lib/api/schemas/LocaleSchema";
+import type { CreateLocaleResponse } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 defineProps<{
   open: boolean;
@@ -41,7 +41,7 @@ async function handleSubmit() {
     },
     {
       onSuccess: (response: CreateLocaleResponse) => {
-        toast.add(`Locale ${response.locale.name} created`, {
+        toast.add(`Locale ${response.locale?.name ?? nameEn.value} created`, {
           variant: "success",
         });
       },

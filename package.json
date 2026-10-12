@@ -3,6 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "schemas:generate": "node scripts/generate-schemas.mjs",
+    "schemas:check": "node scripts/generate-schemas.mjs --check",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "prettier:check": "prettier --check .",

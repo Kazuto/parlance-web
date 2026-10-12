@@ -1,4 +1,4 @@
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { useLocaleList } from "./locale/useLocaleList";
 
 export function useCurrentLocale() {
@@ -16,7 +16,7 @@ export function useCurrentLocale() {
     return currentLocale.value?.id ?? null;
   });
 
-  function findByLocale(items: { localeId: string }[]) {
+  function findByLocale<T extends { localeId?: string | null }>(items: T[]) {
     return items.find((item) => {
       return item.localeId === currentLocaleId.value;
     });

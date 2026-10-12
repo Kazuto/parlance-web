@@ -18,7 +18,7 @@ import {
   type RestoreEntryRequest,
   RestoreEntryResponseSchema,
   RestoreEntryRequestSchema,
-} from "../schemas/EntrySchema";
+} from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
   list: authedEndpoint.query(

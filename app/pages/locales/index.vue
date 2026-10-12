@@ -10,7 +10,7 @@ import {
   Pagination,
 } from "@thkzt/eunoia";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const { data, filter, pagination, isFetching, error, refetch } =
   useLocaleList();
@@ -89,13 +89,13 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
   </div>
 
   <!-- Locales List -->
-  <div v-else-if="data?.locales">
+  <div v-else-if="data">
     <Card>
       <DataTable
         :columns="tableColumns"
         :items="tableItems"
         :loading="isFetching"
-        :loading-rows="data.locales.length"
+        :loading-rows="tableItems.length"
         :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
       >
         <template #name="{ item }">
@@ -119,10 +119,10 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
           </div>
         </template>
         <template #createdAt="{ item }">
-          <RelativeTime :timestamp="item.createdAt" />
+          <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
         <template #updatedAt="{ item }">
-          <RelativeTime :timestamp="item.updatedAt" />
+          <RelativeTime v-if="item.updatedAt" :timestamp="item.updatedAt" />
         </template>
         <template #actions="{ item }">
           <div
@@ -146,8 +146,8 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
         </template>
       </DataTable>
       <Pagination
-        v-model:current="pagination.page"
-        :per-page="pagination.perPage"
+        :current="pagination.page ?? 1"
+        :per-page="pagination.perPage ?? 20"
         :total="data?.pagination?.totalPages ?? 0"
         @update:current="pagination.page = $event"
         @update:per-page="pagination.perPage = $event"
@@ -155,7 +155,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
     </Card>
 
     <!-- Empty State -->
-    <Card v-if="data.locales.length === 0">
+    <Card v-if="tableItems.length === 0">
       <svg
         class="mx-auto h-12 w-12 text-neutral-400"
         fill="none"

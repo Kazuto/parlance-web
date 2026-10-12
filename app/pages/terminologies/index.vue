@@ -7,9 +7,8 @@ import {
   type DataTableColumn,
 } from "@thkzt/eunoia";
 import { useTerminologyList } from "~/composables/terminology/useTerminologyList";
-import type { Definition } from "~/lib/api/schemas/DefinitionSchema";
-import type { Locale } from "~/lib/api/schemas/LocaleSchema";
-import type { Terminology } from "~/lib/api/schemas/TerminologySchema";
+import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
 const router = useRouter();
 
@@ -41,10 +40,12 @@ watch(selectedLocaleId, () => {
 });
 
 const localeOptions = computed(() =>
-  locales.value.map((locale: Locale) => ({
-    label: locale.name,
-    value: locale.id,
-  })),
+  locales.value
+    .filter((locale) => !!locale.id)
+    .map((locale: Locale) => ({
+      label: locale.name ?? locale.code ?? "",
+      value: locale.id ?? "",
+    })),
 );
 
 const tableColumns: DataTableColumn<Terminology>[] = [
@@ -68,16 +69,17 @@ const tableColumns: DataTableColumn<Terminology>[] = [
     title: "Created",
     key: "createdAt",
     sortable: true,
-    value: (item: Terminology) => new Date(item.createdAt).toLocaleDateString(),
+    value: (item: Terminology) =>
+      item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "",
   },
 ];
 
 const findTranslation = (terminology: Terminology) => {
-  const definition = findByLocale(terminology.definitions) as Definition | null;
+  const definition = findByLocale(terminology.definitions ?? []);
 
   if (!definition) return "";
 
-  return definition.translation;
+  return definition.translation ?? "";
 };
 
 const tableItems = computed(() => data.value?.terminologies ?? []);
@@ -97,7 +99,7 @@ const tableItems = computed(() => data.value?.terminologies ?? []);
     <Button ghost @click="() => refetch()"> Try again </Button>
   </div>
 
-  <div v-else-if="data?.terminologies">
+  <div v-else-if="data">
     <div class="mb-4">
       <RadioGroup v-model="selectedLocaleId" :options="localeOptions" />
     </div>
@@ -106,13 +108,13 @@ const tableItems = computed(() => data.value?.terminologies ?? []);
     <Card class="overflow-x-auto">
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #createdAt="{ item }">
-          <RelativeTime :timestamp="item.createdAt" />
+          <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
       </DataTable>
     </Card>
 
     <!-- Empty State -->
-    <Card v-if="data?.terminologies.length === 0">
+    <Card v-if="tableItems.length === 0">
       <svg
         class="mx-auto h-12 w-12 text-neutral-400"
         fill="none"

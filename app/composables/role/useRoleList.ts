@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type {
   FilterRequest,
   PaginationRequest,
-} from "~/lib/api/schemas/CommonSchema";
+} from "~/lib/api/schemas/parlance/v1/CommonSchema";
 import { api } from "~/lib/api";
 
 export function useRoleList() {

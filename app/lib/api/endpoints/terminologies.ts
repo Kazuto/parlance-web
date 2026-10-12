@@ -18,7 +18,7 @@ import {
   type RestoreTerminologyRequest,
   RestoreTerminologyResponseSchema,
   RestoreTerminologyRequestSchema,
-} from "../schemas/TerminologySchema";
+} from "../schemas/parlance/v1/TerminologySchema";
 
 export const terminologies = {
   list: authedEndpoint.query(

@@ -23,7 +23,7 @@ import {
   type RestoreLocaleRequest,
   RestoreLocaleRequestSchema,
   RestoreLocaleResponseSchema,
-} from "../schemas/LocaleSchema";
+} from "../schemas/parlance/v1/LocaleSchema";
 
 export const locales = {
   list: authedEndpoint.query(

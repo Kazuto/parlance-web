@@ -6,7 +6,7 @@ import {
   GetPermissionResponseSchema,
   type ListPermissionsRequest,
   type GetPermissionRequest,
-} from "../schemas/PermissionSchema";
+} from "../schemas/parlance/v1/PermissionSchema";
 
 export const permissions = {
   list: authedEndpoint.query(
