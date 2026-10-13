@@ -2,7 +2,10 @@
 import { Button, Icon } from "@thkzt/eunoia";
 import { onClickOutside, useEventListener } from "@vueuse/core";
 
-const props = defineProps<{ disabled?: boolean }>();
+const props = withDefaults(
+  defineProps<{ disabled?: boolean; subject?: string }>(),
+  { subject: "entry" },
+);
 const emit = defineEmits<{ edit: []; delete: [] }>();
 const open = ref(false);
 const trigger = useTemplateRef("trigger");
@@ -66,7 +69,7 @@ watch(() => props.disabled, close);
       type="button"
       ghost
       icon="dots-three-vertical"
-      aria-label="Entry actions"
+      :aria-label="`${subject} actions`"
       aria-haspopup="menu"
       :aria-expanded="open"
       :disabled="disabled"
@@ -78,7 +81,7 @@ watch(() => props.disabled, close);
       v-if="open"
       ref="menu"
       role="menu"
-      aria-label="Entry actions"
+      :aria-label="`${subject} actions`"
       :style="position"
       class="fixed z-50 w-44 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
       @keydown="onKeydown"
@@ -94,7 +97,7 @@ watch(() => props.disabled, close);
         class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
         @click="choose('edit')"
       >
-        <Icon name="pencil" size="sm" />Edit entry
+        <Icon name="pencil" size="sm" />Edit {{ subject }}
       </button>
       <div
         role="separator"
@@ -106,7 +109,7 @@ watch(() => props.disabled, close);
         class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
         @click="choose('delete')"
       >
-        <Icon name="trash" size="sm" />Delete entry
+        <Icon name="trash" size="sm" />Delete {{ subject }}
       </button>
     </div>
   </Teleport>

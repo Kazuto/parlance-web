@@ -7,13 +7,15 @@ const props = defineProps<{
   item?: Locale;
 }>();
 
-const { destroy } = useLocaleStore();
-const { mutateAsync: destroyLocale, isPending } = destroy;
+const localeStore = useLocaleStore();
+const destroyLocale = localeStore.destroy.mutateAsync;
+const isPending = computed(() => localeStore.destroy.isPending);
 
 const toast = useToast();
 
 async function handleSubmit() {
-  if (!props.item) return;
+  if (!props.item || isPending.value) return;
+  const id = props.item.id;
 
   await destroyLocale(
     {
@@ -31,15 +33,18 @@ async function handleSubmit() {
     },
   );
 
+  if (id) emit("deleted", id);
+
   handleClose();
 }
 
 const emit = defineEmits<{
   close: [];
+  deleted: [id: string];
 }>();
 
 function handleClose() {
-  if (!isPending) {
+  if (!isPending.value) {
     emit("close");
   }
 }
