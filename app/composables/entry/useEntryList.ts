@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/vue-query";
+import { keepPreviousData, useQuery } from "@tanstack/vue-query";
 import type {
   FilterRequest,
   PaginationRequest,
 } from "~/lib/api/schemas/parlance/v1/CommonSchema";
 import { api } from "~/lib/api";
 
-export function useEntryList() {
-  const pagination = ref<PaginationRequest>({ perPage: 10, page: 1 });
+export function useEntryList(perPage = 10) {
+  const pagination = ref<PaginationRequest>({ perPage, page: 1 });
   const filter = ref<FilterRequest>({
     search: undefined,
     sort: undefined,
@@ -14,14 +14,16 @@ export function useEntryList() {
     includeDeleted: false,
   });
 
-  const { data, isLoading, isPending, error, refetch } = useQuery({
+  const { data, isLoading, isPending, isFetching, error, refetch } = useQuery({
     ...api.entries.list.use({ pagination, filter }),
+    placeholderData: keepPreviousData,
   });
 
   return {
     data,
     isLoading,
     isPending,
+    isFetching,
     error,
     refetch,
     pagination,
