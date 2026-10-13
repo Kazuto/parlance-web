@@ -63,6 +63,8 @@ export type ListEntriesRequest = {
   localeId?: string | null;
   pagination?: PaginationRequest | null;
   filter?: FilterRequest | null;
+  translationStatus?: string | null;
+  targetLocaleIds?: Array<string> | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -76,6 +78,14 @@ export const ListEntriesRequestSchema = z.object({
   },
   get filter(): z.ZodOptional<z.ZodNullable<z.ZodType<FilterRequest>>> {
     return FilterRequestSchema.nullish();
+  },
+  get translationStatus(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get targetLocaleIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
   },
 });
 export type ListEntriesResponse = {
@@ -136,6 +146,7 @@ export type UpdateEntryRequest = {
   id?: string | null;
   description?: string | null;
   key?: string | null;
+  scopes?: EntryScopeSelection | null;
 };
 export const UpdateEntryRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -146,6 +157,17 @@ export const UpdateEntryRequestSchema = z.object({
   },
   get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<EntryScopeSelection>>> {
+    return EntryScopeSelectionSchema.nullish();
+  },
+});
+export type EntryScopeSelection = {
+  ids?: Array<string> | null;
+};
+export const EntryScopeSelectionSchema = z.object({
+  get ids(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type UpdateEntryResponse = {

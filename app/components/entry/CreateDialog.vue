@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Textarea } from "@thkzt/eunoia";
+import { Button, Dialog, Input, Textarea, Select } from "@thkzt/eunoia";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: []; created: [entry: Entry] }>();
 const key = ref("");
 const description = ref("");
+const scopeIds = ref<string[]>([]);
+const {
+  options: scopeOptions,
+  error: scopeError,
+  isFetching: scopesLoading,
+} = useScopeOptions();
 const error = ref<string>();
 const entryStore = useEntryStore();
 const createEntry = entryStore.create.mutateAsync;
@@ -19,6 +25,7 @@ watch(
     if (open) {
       key.value = "";
       description.value = "";
+      scopeIds.value = [];
       error.value = undefined;
     }
   },
@@ -39,6 +46,7 @@ async function handleSubmit() {
     const response = await createEntry({
       key: key.value.trim(),
       description: description.value.trim(),
+      scopeIds: scopeIds.value,
     });
     toast.add(t("entries.created", { key: key.value.trim() }), {
       variant: "success",
@@ -75,6 +83,18 @@ async function handleSubmit() {
       >
         {{ t("entries.optionalDescription") }}
       </Textarea>
+      <Select
+        v-model="scopeIds"
+        teleport-to="body"
+        multiple
+        :options="scopeOptions"
+        :disabled="isPending || scopesLoading"
+        :placeholder="t('scopes.select')"
+        >{{ t("scopes.title") }}</Select
+      >
+      <p v-if="scopeError" role="alert" class="text-sm text-red-600">
+        {{ t("scopes.loadFailed") }}
+      </p>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
       <div class="flex items-center justify-end gap-3 pt-4">
         <Button

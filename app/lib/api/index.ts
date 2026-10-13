@@ -10,6 +10,7 @@ import { terminologies } from "./endpoints/terminologies";
 import { users } from "./endpoints/users";
 import { imports } from "./endpoints/imports";
 import { exports } from "./endpoints/exports";
+import { scopes } from "./endpoints/scopes";
 
 export const api = defineApi({
   auth,
@@ -23,6 +24,7 @@ export const api = defineApi({
   users,
   imports,
   exports,
+  scopes,
 });
 
 export * from "./schemas";

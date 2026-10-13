@@ -13,9 +13,18 @@ export function useEntryList(perPage = 10) {
     order: undefined,
     includeDeleted: false,
   });
+  const scopeId = ref("");
+  const translationStatus = ref("");
+  const targetLocaleIds = ref<string[]>([]);
 
   const { data, isLoading, isPending, isFetching, error, refetch } = useQuery({
-    ...api.entries.list.use({ pagination, filter }),
+    ...api.entries.list.use({
+      pagination,
+      filter,
+      scopeId,
+      translationStatus,
+      targetLocaleIds,
+    }),
     placeholderData: keepPreviousData,
   });
 
@@ -28,5 +37,8 @@ export function useEntryList(perPage = 10) {
     refetch,
     pagination,
     filter,
+    scopeId,
+    translationStatus,
+    targetLocaleIds,
   };
 }

@@ -195,18 +195,27 @@ async function handleSubmit() {
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Select
         v-model="localeId"
+        teleport-to="body"
         :options="localeOptions"
         :disabled="isPending"
         :placeholder="t('transfer.selectLanguage')"
         >{{ t("common.language") }}</Select
       >
-      <Select v-model="format" :options="formatOptions" :disabled="isPending">{{
-        t("common.format")
-      }}</Select>
+      <Select
+        v-model="format"
+        teleport-to="body"
+        :options="formatOptions"
+        :disabled="isPending"
+        >{{ t("common.format") }}</Select
+      >
       <template v-if="action === 'import'">
-        <Select v-model="mode" :options="modeOptions" :disabled="isPending">{{
-          t("transfer.behavior")
-        }}</Select>
+        <Select
+          v-model="mode"
+          teleport-to="body"
+          :options="modeOptions"
+          :disabled="isPending"
+          >{{ t("transfer.behavior") }}</Select
+        >
         <label class="flex flex-col gap-2 text-sm">
           {{ t("transfer.file") }}
           <!-- prettier-ignore -->

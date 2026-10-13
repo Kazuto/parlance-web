@@ -78,12 +78,32 @@ const {
   refetch,
   pagination: entryPagination,
   filter,
+  scopeId,
+  translationStatus,
+  targetLocaleIds,
 } = useEntryList(100);
+const { options: scopeOptions, error: scopeError } = useScopeOptions();
+const statusOptions = computed(() => [
+  { label: t("entries.filterAll"), value: "" },
+  { label: t("entries.filterMissing"), value: "missing" },
+  { label: t("entries.filterComplete"), value: "complete" },
+]);
 const { data: localeData, pagination } = useLocaleList();
 
 pagination.value.perPage = 100;
 
 const selectedLocaleIds = ref<string[]>([]);
+watch(
+  selectedLocaleIds,
+  (ids) => {
+    targetLocaleIds.value = [...ids];
+    if (translationStatus.value) entryPagination.value.page = 1;
+  },
+  { deep: true },
+);
+watch([scopeId, translationStatus], () => {
+  entryPagination.value.page = 1;
+});
 const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
 const isSaving = ref(false);
@@ -119,6 +139,8 @@ watchDebounced(
 );
 
 async function handleCreated(entry: Entry) {
+  scopeId.value = "";
+  translationStatus.value = "";
   search.value = "";
   filter.value.search = "";
   filter.value.sort = "created_at";
@@ -519,6 +541,7 @@ async function saveTranslations(
       <div class="locale-selector">
         <Select
           v-model="selectedLocaleIds"
+          teleport-to="body"
           multiple
           :disabled="isSaving"
           :aria-label="t('entries.languages')"
@@ -539,6 +562,39 @@ async function saveTranslations(
             : t("entries.selectAll")
         }}
       </Button>
+    </div>
+    <div
+      class="flex shrink-0 flex-wrap items-center gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-700"
+    >
+      <span class="text-sm font-medium">{{ t("entries.filters") }}</span>
+      <div class="w-52 max-w-full">
+        <Select
+          v-model="scopeId"
+          teleport-to="body"
+          :options="[{ label: t('scopes.all'), value: '' }, ...scopeOptions]"
+          :aria-label="t('scopes.title')"
+          :disabled="isSaving"
+        />
+      </div>
+      <div class="w-52 max-w-full">
+        <Select
+          v-model="translationStatus"
+          teleport-to="body"
+          :options="statusOptions"
+          :aria-label="t('entries.translationStatus')"
+          :disabled="isSaving"
+        />
+      </div>
+      <span class="text-xs text-neutral-500">{{
+        t(
+          selectedLocaleIds.length
+            ? "entries.filterSelectedHelp"
+            : "entries.filterAllHelp",
+        )
+      }}</span>
+      <span v-if="scopeError" class="text-xs text-red-600">{{
+        t("scopes.loadFailed")
+      }}</span>
     </div>
     <div
       class="editor-panels"
@@ -592,6 +648,16 @@ async function saveTranslations(
               >
                 {{ selectedEntryData.description }}
               </p>
+              <div
+                v-if="selectedEntryData?.scopes?.length"
+                class="mt-2 flex flex-wrap gap-1"
+              >
+                <Badge
+                  v-for="scope in selectedEntryData.scopes"
+                  :key="scope.id ?? undefined"
+                  >{{ scope.name }}</Badge
+                >
+              </div>
             </div>
             <EntryActionsMenu
               v-if="selectedEntryData"
@@ -637,35 +703,37 @@ async function saveTranslations(
                     >{{ t("common.unsaved") }}</span
                   >
                 </label>
-                <Button
-                  v-if="!contextOpen || activeLocaleId !== localeId"
-                  type="button"
-                  ghost
-                  icon="sidebar"
-                  :aria-label="
-                    t('context.openFor', {
-                      language:
-                        localeOptions.find(
-                          (locale) => locale.value === localeId,
-                        )?.label ?? '',
-                    })
-                  "
-                  @click="openContext(localeId)"
-                />
-                <span v-else class="text-xs text-primary-600">{{
-                  t("context.active")
-                }}</span>
-                <Button
-                  v-if="localeId === defaultLocale?.id"
-                  type="button"
-                  ghost
-                  dense
-                  icon="copy"
-                  :disabled="!canFillEmptyTranslations"
-                  @click="fillEmptyTranslations"
-                >
-                  {{ t("entries.copyEmpty") }}
-                </Button>
+                <div class="flex items-center gap-2">
+                  <Button
+                    v-if="localeId === defaultLocale?.id"
+                    type="button"
+                    ghost
+                    dense
+                    icon="copy"
+                    :disabled="!canFillEmptyTranslations"
+                    @click="fillEmptyTranslations"
+                  >
+                    {{ t("entries.copyEmpty") }}
+                  </Button>
+                  <Button
+                    v-if="!contextOpen || activeLocaleId !== localeId"
+                    type="button"
+                    ghost
+                    icon="sidebar"
+                    :aria-label="
+                      t('context.openFor', {
+                        language:
+                          localeOptions.find(
+                            (locale) => locale.value === localeId,
+                          )?.label ?? '',
+                      })
+                    "
+                    @click="openContext(localeId)"
+                  />
+                  <span v-else class="text-xs text-primary-600">{{
+                    t("context.active")
+                  }}</span>
+                </div>
               </div>
               <Textarea
                 :id="`entry-${item.key}-${localeId}`"
