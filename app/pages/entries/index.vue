@@ -8,6 +8,7 @@ import {
   Tooltip,
   Pagination,
   Badge,
+  Dialog,
 } from "@thkzt/eunoia";
 import { useEntryList } from "~/composables/entry/useEntryList";
 import { watchDebounced } from "@vueuse/core";
@@ -22,6 +23,7 @@ const deleteDialogItem = ref<Entry>();
 const editDialogItem = ref<Entry>();
 
 function handleEntryUpdated(entry: Entry) {
+  if (entry.id) knownEntries.value[entry.id] = entry;
   if (entry.id && selectedEntry.value?.key === entry.id) {
     selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
   }
@@ -80,6 +82,7 @@ const selectedLocaleIds = ref<string[]>([]);
 const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
 const isSaving = ref(false);
+const showSaveAllDialog = ref(false);
 
 watchDebounced(
   search,
@@ -100,7 +103,10 @@ async function handleCreated(entry: Entry) {
   selectedEntry.value = { key: entry.id ?? "", label: entry.key ?? "" };
 }
 
-async function handleDeleted() {
+async function handleDeleted(id: string) {
+  Reflect.deleteProperty(localizationForms.value, id);
+  Reflect.deleteProperty(savedTranslations.value, id);
+  Reflect.deleteProperty(knownEntries.value, id);
   selectedEntry.value = undefined;
   if (
     (data.value?.entries?.length ?? 0) <= 1 &&
@@ -191,12 +197,17 @@ watch(
 // localizationForms keyed by entryId -> localeId -> translation
 const localizationForms = ref<Record<string, Record<string, string>>>({});
 const savedTranslations = ref<Record<string, Record<string, string>>>({});
+const knownEntries = ref<Record<string, Entry>>({});
 
 watch(
   () => data.value?.entries,
   (entries) => {
     for (const entry of entries ?? []) {
       if (!entry.id) continue;
+      knownEntries.value[entry.id] = {
+        ...entry,
+        localizations: [...(entry.localizations ?? [])],
+      };
       const saved = Object.fromEntries(
         (entry.localizations ?? [])
           .filter((localization) => !!localization.localeId)
@@ -245,6 +256,16 @@ const selectedUnsavedLocaleIds = computed(() =>
     unsavedLocaleIds.value.includes(localeId),
   ),
 );
+
+const allUnsavedTranslations = computed(() =>
+  Object.entries(localizationForms.value).flatMap(([entryId, translations]) =>
+    Object.entries(translations)
+      .filter(([localeId]) => isTranslationDirty(entryId, localeId))
+      .map(([localeId, translation]) => ({ entryId, localeId, translation })),
+  ),
+);
+const allUnsavedCount = computed(() => allUnsavedTranslations.value.length);
+registerUnsavedChanges("entry-translations", allUnsavedCount, isSaving);
 
 const currentEntryForms = computed(() => {
   const key = selectedEntry.value?.key;
@@ -320,54 +341,87 @@ async function handleSave() {
   const entryId = entry.id;
   const localeIds = [...selectedUnsavedLocaleIds.value];
   if (!localeIds.length) return;
-  const submitted = Object.fromEntries(
-    localeIds.map((id) => [id, localizationForms.value[entryId]?.[id] ?? ""]),
+  await saveTranslations(
+    localeIds.map((localeId) => ({
+      entryId,
+      localeId,
+      translation: localizationForms.value[entryId]?.[localeId] ?? "",
+    })),
+    `Translations for ${entry.key}`,
   );
+}
+
+async function handleSaveAll() {
+  if (isSaving.value) return;
+  showSaveAllDialog.value = false;
+  await saveTranslations([...allUnsavedTranslations.value], "Translations");
+}
+
+async function saveTranslations(
+  changes: { entryId: string; localeId: string; translation: string }[],
+  label: string,
+) {
+  if (!changes.length || isSaving.value) return;
 
   isSaving.value = true;
   try {
     const results = await Promise.allSettled(
-      localeIds.map((localeId) => {
-        const translation = submitted[localeId] ?? "";
-        const existing = entry.localizations?.find(
+      changes.map(async ({ entryId, localeId, translation }) => {
+        const existing = knownEntries.value[entryId]?.localizations?.find(
           (localization: Localization) =>
             localization.localeId === String(localeId),
         );
 
         if (existing) {
-          return updateLocalization({ id: existing.id, translation });
+          const response = await updateLocalization({
+            id: existing.id,
+            translation,
+          });
+          return response.localization;
         } else {
-          return createLocalization({
+          const response = await createLocalization({
             entryId,
             localeId: String(localeId),
             translation,
           });
+          return response.localization;
         }
       }),
     );
 
     for (const [index, result] of results.entries()) {
-      const id = localeIds[index];
-      if (result.status === "fulfilled" && id) {
+      const change = changes[index];
+      if (result.status === "fulfilled" && change) {
+        const { entryId, localeId: id, translation } = change;
         savedTranslations.value[entryId] ??= {};
-        savedTranslations.value[entryId][id] = submitted[id] ?? "";
+        savedTranslations.value[entryId][id] = translation;
+        if (result.value?.id && knownEntries.value[entryId]) {
+          const entry = knownEntries.value[entryId];
+          entry.localizations = [
+            ...(entry.localizations ?? []).filter(
+              (item) => item.localeId !== id,
+            ),
+            result.value,
+          ];
+        }
       }
     }
 
     const failedLanguages = results.flatMap((result, index) => {
       if (result.status !== "rejected") return [];
-      const localeId = localeIds[index];
+      const change = changes[index];
+      if (!change) return [];
+      const { entryId, localeId } = change;
       return [
-        localeOptions.value.find((locale) => locale.value === localeId)
-          ?.label ?? localeId,
+        `${knownEntries.value[entryId]?.key ?? entryId}: ${localeOptions.value.find((locale) => locale.value === localeId)?.label ?? localeId}`,
       ];
     });
     const failed = failedLanguages.length;
     if (failed === 0) {
-      toast.add(`Translations for ${entry.key} saved`, { variant: "success" });
+      toast.add(`${label} saved`, { variant: "success" });
     } else {
       toast.add(
-        `Saved ${results.length - failed} of ${results.length} translations for ${entry.key}. Failed: ${failedLanguages.join(", ")}`,
+        `Saved ${results.length - failed} of ${results.length} translations. Failed: ${failedLanguages.join(", ")}`,
         { variant: failed === results.length ? "danger" : "warning" },
       );
     }
@@ -453,6 +507,7 @@ async function handleSave() {
             >
             <Tooltip
               v-if="
+                !hasUnsavedTranslations(String(item.key)) &&
                 selectedLocaleIds.some(
                   (localeId) =>
                     !getLocalizationForm(String(item.key), localeId),
@@ -579,13 +634,25 @@ async function handleSave() {
                 }}</span
               >
             </span>
-            <Button
-              primary
-              :disabled="!item || !selectedUnsavedLocaleIds.length || isSaving"
-              @click="handleSave"
-            >
-              {{ isSaving ? "Saving…" : "Save changes" }}
-            </Button>
+            <div class="flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                ghost
+                :disabled="!allUnsavedCount || isSaving"
+                @click="showSaveAllDialog = true"
+              >
+                Save all{{ allUnsavedCount ? ` (${allUnsavedCount})` : "" }}
+              </Button>
+              <Button
+                primary
+                :disabled="
+                  !item || !selectedUnsavedLocaleIds.length || isSaving
+                "
+                @click="handleSave"
+              >
+                {{ isSaving ? "Saving…" : "Save changes" }}
+              </Button>
+            </div>
           </div>
         </template>
       </SplitView>
@@ -605,6 +672,29 @@ async function handleSave() {
       />
     </div>
   </section>
+  <Dialog
+    :open="showSaveAllDialog"
+    title="Save all translations?"
+    @close="showSaveAllDialog = false"
+  >
+    <p class="text-sm text-neutral-500">
+      Save {{ allUnsavedCount }} unsaved translations across
+      {{ new Set(allUnsavedTranslations.map((change) => change.entryId)).size }}
+      entries, including languages and entries not currently visible?
+    </p>
+    <div class="mt-6 flex justify-end gap-3">
+      <Button type="button" ghost @click="showSaveAllDialog = false"
+        >Cancel</Button
+      >
+      <Button
+        type="button"
+        primary
+        :disabled="!allUnsavedCount || isSaving"
+        @click="handleSaveAll"
+        >Save all</Button
+      >
+    </div>
+  </Dialog>
   <EntryEditDialog
     :open="!!editDialogItem"
     :item="editDialogItem"
