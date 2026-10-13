@@ -11,6 +11,7 @@ import {
 } from "./CommonSchema";
 import { LocalizationSchema, type Localization } from "./LocalizationSchema";
 import { ScopeSchema, type Scope } from "./ScopeSchema";
+import { UserSchema, type User } from "./UserSchema";
 export type Entry = {
   id?: string | null;
   key?: string | null;
@@ -248,6 +249,7 @@ export type LocalizationHistory = {
   translation?: string | null;
   action?: string | null;
   changedAt?: string | null;
+  user?: User | null;
 };
 export const LocalizationHistorySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -273,5 +275,8 @@ export const LocalizationHistorySchema = z.object({
   },
   get changedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
+    return UserSchema.nullish();
   },
 });

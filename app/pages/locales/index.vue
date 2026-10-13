@@ -79,12 +79,18 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
 
 <template>
   <!-- Loading State -->
-  <div v-if="isFetching" class="flex items-center justify-center py-12">
+  <div
+    v-if="isFetching && !data"
+    class="flex items-center justify-center py-12"
+  >
     <div class="text-neutral-600">{{ t("locales.loading") }}</div>
   </div>
 
   <!-- Error State -->
-  <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
+  <div
+    v-else-if="error && !data"
+    class="bg-red-50 border border-red-200 rounded-lg p-4"
+  >
     <p class="text-red-800">
       {{ t("locales.loadFailed", { error: error.message }) }}
     </p>
@@ -97,7 +103,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
       <DataTable
         :columns="tableColumns"
         :items="tableItems"
-        :loading="isFetching"
+        :loading="isFetching && !data"
         :loading-rows="tableItems.length"
         :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
       >

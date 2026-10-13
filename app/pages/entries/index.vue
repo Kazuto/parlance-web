@@ -11,13 +11,17 @@ import {
   Dialog,
 } from "@thkzt/eunoia";
 import { useEntryList } from "~/composables/entry/useEntryList";
-import { watchDebounced } from "@vueuse/core";
+import { watchDebounced, useMediaQuery } from "@vueuse/core";
+import { useQueryClient } from "@tanstack/vue-query";
+import { api } from "~/lib/api";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
 const router = useRouter();
+const queryClient = useQueryClient();
+const historyQueryKey = api.entries.history.getQueryKey();
 const { t } = useI18n();
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Entry>();
@@ -84,6 +88,26 @@ const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
 const isSaving = ref(false);
 const showSaveAllDialog = ref(false);
+const contextOpen = ref(true);
+const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
+watch(
+  narrowWorkspace,
+  (narrow) => {
+    if (narrow) contextOpen.value = false;
+  },
+  { immediate: true },
+);
+const activeLocaleId = ref<string>();
+const activeLocaleName = computed(
+  () =>
+    localeOptions.value.find((item) => item.value === activeLocaleId.value)
+      ?.label ?? "",
+);
+
+function openContext(localeId: string) {
+  activeLocaleId.value = localeId;
+  contextOpen.value = true;
+}
 
 watchDebounced(
   search,
@@ -120,6 +144,20 @@ async function handleDeleted(id: string) {
 
 const defaultLocale = computed(() =>
   localeData.value?.locales?.find((locale) => locale.isDefault),
+);
+watch(
+  [selectedLocaleIds, () => defaultLocale.value?.id],
+  () => {
+    if (
+      !activeLocaleId.value ||
+      !selectedLocaleIds.value.includes(activeLocaleId.value)
+    ) {
+      activeLocaleId.value =
+        selectedLocaleIds.value.find((id) => id !== defaultLocale.value?.id) ??
+        selectedLocaleIds.value[0];
+    }
+  },
+  { deep: true },
 );
 const orderedSelectedLocaleIds = computed(() => {
   const id = defaultLocale.value?.id;
@@ -435,6 +473,7 @@ async function saveTranslations(
     }
 
     await refetch();
+    await queryClient.invalidateQueries({ queryKey: historyQueryKey });
   } finally {
     isSaving.value = false;
   }
@@ -464,7 +503,11 @@ async function saveTranslations(
   >
     <div class="locale-toolbar">
       <span class="text-sm font-medium">{{ t("entries.languages") }}</span>
-      <span v-if="isFetching" role="status" class="text-xs text-neutral-500">
+      <span
+        v-if="isFetching && !isSaving"
+        role="status"
+        class="text-xs text-neutral-500"
+      >
         {{ t("entries.refreshing") }}
       </span>
       <span v-else-if="error" role="alert" class="text-xs text-red-600">
@@ -497,7 +540,12 @@ async function saveTranslations(
         }}
       </Button>
     </div>
-    <div class="editor-panels">
+    <div
+      class="editor-panels"
+      :class="{
+        'with-context': contextOpen && activeLocaleId && selectedEntry,
+      }"
+    >
       <SplitView
         v-model:search="search"
         :items="splitViewItems"
@@ -567,6 +615,7 @@ async function saveTranslations(
                   ? 'rounded-lg border border-primary-200 bg-primary-50/50 p-3 dark:border-primary-800 dark:bg-primary-950/30'
                   : ''
               "
+              @focusin="activeLocaleId = localeId"
             >
               <div
                 class="mb-1 flex flex-wrap items-center justify-between gap-2"
@@ -589,6 +638,24 @@ async function saveTranslations(
                   >
                 </label>
                 <Button
+                  v-if="!contextOpen || activeLocaleId !== localeId"
+                  type="button"
+                  ghost
+                  icon="sidebar"
+                  :aria-label="
+                    t('context.openFor', {
+                      language:
+                        localeOptions.find(
+                          (locale) => locale.value === localeId,
+                        )?.label ?? '',
+                    })
+                  "
+                  @click="openContext(localeId)"
+                />
+                <span v-else class="text-xs text-primary-600">{{
+                  t("context.active")
+                }}</span>
+                <Button
                   v-if="localeId === defaultLocale?.id"
                   type="button"
                   ghost
@@ -606,12 +673,21 @@ async function saveTranslations(
                   localeOptions.find((locale) => locale.value === localeId)
                     ?.label
                 "
-                :disabled="isSaving"
+                :readonly="isSaving"
                 :model-value="currentEntryForms[String(localeId)] ?? ''"
                 :placeholder="t('entries.translationPlaceholder')"
                 @update:model-value="
                   setLocalizationForm(String(item.key), localeId, $event)
                 "
+              />
+              <EntryTerminologyHints
+                v-if="defaultLocale?.id && localeId !== defaultLocale.id"
+                :key="`${item.key}-${localeId}`"
+                :source-text="currentEntryForms[defaultLocale.id] ?? ''"
+                :target-locale-id="localeId"
+                :translation="currentEntryForms[localeId] ?? ''"
+                compact
+                @open="openContext(localeId)"
               />
             </div>
           </div>
@@ -675,6 +751,19 @@ async function saveTranslations(
           </div>
         </template>
       </SplitView>
+      <EntryContextPanel
+        v-if="contextOpen && activeLocaleId && selectedEntry"
+        class="entry-context"
+        :entry-id="String(selectedEntry.key)"
+        :locale-id="activeLocaleId"
+        :locale-name="activeLocaleName"
+        :source-text="
+          defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
+        "
+        :translation="currentEntryForms[activeLocaleId] ?? ''"
+        :is-default="activeLocaleId === defaultLocale?.id"
+        @close="contextOpen = false"
+      />
     </div>
     <div
       class="shrink-0 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
@@ -778,6 +867,7 @@ async function saveTranslations(
 }
 
 .editor-panels {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -786,10 +876,29 @@ async function saveTranslations(
 
 .entry-split-view {
   width: 100%;
-  grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  min-width: 0;
+  flex: 1;
   gap: 0;
   border: 0;
   border-radius: 0;
+}
+
+.entry-context {
+  flex: 0 0 320px;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .entry-context {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: min(340px, 100%);
+    z-index: 20;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.08);
+  }
 }
 
 .entry-split-view :deep(> *) {

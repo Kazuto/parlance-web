@@ -23,6 +23,7 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const queryClient = useQueryClient();
+const localeQueryKey = api.locales.get.getQueryKey();
 const selectedId = ref(String(route.params.id));
 const { data: localeData, pagination, error: listError } = useLocaleList();
 pagination.value.perPage = 100;
@@ -227,7 +228,7 @@ async function saveLocales(ids: string[]) {
       );
     }
     await queryClient.invalidateQueries({
-      queryKey: api.locales.get.getQueryKey(),
+      queryKey: localeQueryKey,
     });
   } finally {
     batchSaving.value = false;
@@ -336,7 +337,7 @@ async function handleDeleted(id: string) {
             <Input
               :id="`locale-name-${selectedId}-${language.code}`"
               v-model="form.names[language.code ?? '']"
-              :disabled="isSaving"
+              :readonly="isSaving"
               :aria-label="
                 t('locales.nameIn', {
                   language: language.name ?? language.code ?? '',

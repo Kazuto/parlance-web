@@ -18,9 +18,23 @@ import {
   type RestoreEntryRequest,
   RestoreEntryResponseSchema,
   RestoreEntryRequestSchema,
+  GetEntryHistoryRequestSchema,
+  GetEntryHistoryResponseSchema,
+  type GetEntryHistoryRequest,
 } from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
+  history: authedEndpoint.query(
+    (data: GetEntryHistoryRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/GetEntryHistory",
+      json: data,
+    }),
+    {
+      input: GetEntryHistoryRequestSchema,
+      output: GetEntryHistoryResponseSchema,
+    },
+  ),
   list: authedEndpoint.query(
     (data: ListEntriesRequest) => ({
       method: "post",

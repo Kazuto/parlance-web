@@ -18,9 +18,23 @@ import {
   type RestoreTerminologyRequest,
   RestoreTerminologyResponseSchema,
   RestoreTerminologyRequestSchema,
+  SuggestTerminologiesRequestSchema,
+  SuggestTerminologiesResponseSchema,
+  type SuggestTerminologiesRequest,
 } from "../schemas/parlance/v1/TerminologySchema";
 
 export const terminologies = {
+  suggest: authedEndpoint.query(
+    (data: SuggestTerminologiesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.TerminologyService/SuggestTerminologies",
+      json: data,
+    }),
+    {
+      input: SuggestTerminologiesRequestSchema,
+      output: SuggestTerminologiesResponseSchema,
+    },
+  ),
   list: authedEndpoint.query(
     (data: ListTerminologiesRequest) => ({
       method: "post",

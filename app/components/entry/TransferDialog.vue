@@ -15,6 +15,8 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ close: [] }>();
 const queryClient = useQueryClient();
+const entriesQueryKey = api.entries.list.getQueryKey();
+const localizationsQueryKey = api.localizations.list.getQueryKey();
 const importJson = useMutation(api.imports.json.use());
 const importPhp = useMutation(api.imports.php.use());
 const importPo = useMutation(api.imports.po.use());
@@ -129,10 +131,10 @@ async function handleSubmit() {
       result.value = response.result;
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: api.entries.list.getQueryKey(),
+          queryKey: entriesQueryKey,
         }),
         queryClient.invalidateQueries({
-          queryKey: api.localizations.list.getQueryKey(),
+          queryKey: localizationsQueryKey,
         }),
       ]);
     } else {
