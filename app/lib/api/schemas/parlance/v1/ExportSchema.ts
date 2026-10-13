@@ -57,3 +57,31 @@ export const ExportJsonResponseSchema = z.object({
     return z.string().nullish();
   },
 });
+export type ExportPoRequest = {
+  localeCode?: string | null;
+  scopeId?: string | null;
+};
+export const ExportPoRequestSchema = z.object({
+  get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type ExportPoResponse = {
+  format?: string | null;
+  content?: string | null;
+  filename?: string | null;
+};
+export const ExportPoResponseSchema = z.object({
+  get format(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get content(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get filename(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});

@@ -8,6 +8,8 @@ import { permissions } from "./endpoints/permissions";
 import { roles } from "./endpoints/roles";
 import { terminologies } from "./endpoints/terminologies";
 import { users } from "./endpoints/users";
+import { imports } from "./endpoints/imports";
+import { exports } from "./endpoints/exports";
 
 export const api = defineApi({
   auth,
@@ -19,6 +21,8 @@ export const api = defineApi({
   roles,
   terminologies,
   users,
+  imports,
+  exports,
 });
 
 export * from "./schemas";

@@ -76,6 +76,38 @@ export const ImportJsonResponseSchema = z.object({
     return ImportResultSchema.nullish();
   },
 });
+export type ImportPoRequest = {
+  localeId?: string | null;
+  scopeIds?: Array<string> | null;
+  fileContent?: string | null;
+  filename?: string | null;
+  mode?: ImportMode | null;
+};
+export const ImportPoRequestSchema = z.object({
+  get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get filename(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
+    return ImportModeSchema.nullish();
+  },
+});
+export type ImportPoResponse = {
+  result?: ImportResult | null;
+};
+export const ImportPoResponseSchema = z.object({
+  get result(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportResult>>> {
+    return ImportResultSchema.nullish();
+  },
+});
 export type ImportResult = {
   entriesCreated?: number | null;
   entriesUpdated?: number | null;

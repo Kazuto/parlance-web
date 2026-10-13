@@ -134,12 +134,16 @@ export const CreateEntryResponseSchema = z.object({
 export type UpdateEntryRequest = {
   id?: string | null;
   description?: string | null;
+  key?: string | null;
 };
 export const UpdateEntryRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
