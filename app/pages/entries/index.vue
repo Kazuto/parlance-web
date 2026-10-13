@@ -190,26 +190,61 @@ watch(
 
 // localizationForms keyed by entryId -> localeId -> translation
 const localizationForms = ref<Record<string, Record<string, string>>>({});
+const savedTranslations = ref<Record<string, Record<string, string>>>({});
 
-watchEffect(() => {
-  if (!data.value?.entries) return;
+watch(
+  () => data.value?.entries,
+  (entries) => {
+    for (const entry of entries ?? []) {
+      if (!entry.id) continue;
+      const saved = Object.fromEntries(
+        (entry.localizations ?? [])
+          .filter((localization) => !!localization.localeId)
+          .map((localization) => [
+            String(localization.localeId),
+            localization.translation ?? "",
+          ]),
+      );
+      const previous = savedTranslations.value[entry.id] ?? {};
+      const drafts = localizationForms.value[entry.id] ?? {};
+      const next = { ...saved };
+      for (const [localeId, value] of Object.entries(drafts)) {
+        if (value !== (previous[localeId] ?? "")) next[localeId] = value;
+      }
+      localizationForms.value[entry.id] = next;
+      savedTranslations.value[entry.id] = saved;
+    }
+  },
+  { immediate: true },
+);
 
-  localizationForms.value = Object.fromEntries(
-    data.value.entries
-      .filter((entry) => !!entry.id)
-      .map((entry: Entry) => [
-        entry.id,
-        Object.fromEntries(
-          (entry.localizations ?? [])
-            .filter((localization) => !!localization.localeId)
-            .map((localization: Localization) => [
-              String(localization.localeId),
-              localization.translation ?? "",
-            ]),
-        ),
-      ]),
+function isTranslationDirty(entryId: string, localeId: string) {
+  return (
+    (localizationForms.value[entryId]?.[localeId] ?? "") !==
+    (savedTranslations.value[entryId]?.[localeId] ?? "")
   );
+}
+
+function hasUnsavedTranslations(entryId: string) {
+  return Object.keys(localizationForms.value[entryId] ?? {}).some((localeId) =>
+    isTranslationDirty(entryId, localeId),
+  );
+}
+
+const unsavedLocaleIds = computed(() => {
+  const id = selectedEntry.value?.key;
+  return id == null
+    ? []
+    : Object.keys(localizationForms.value[String(id)] ?? {}).filter(
+        (localeId) => isTranslationDirty(String(id), localeId),
+      );
 });
+
+const selectedUnsavedLocaleIds = computed(() =>
+  selectedLocaleIds.value.filter((localeId) =>
+    unsavedLocaleIds.value.includes(localeId),
+  ),
+);
 
 const currentEntryForms = computed(() => {
   const key = selectedEntry.value?.key;
@@ -283,14 +318,17 @@ async function handleSave() {
   if (!entry?.id || isSaving.value) return;
 
   const entryId = entry.id;
-  const localeIds = [...selectedLocaleIds.value];
+  const localeIds = [...selectedUnsavedLocaleIds.value];
+  if (!localeIds.length) return;
+  const submitted = Object.fromEntries(
+    localeIds.map((id) => [id, localizationForms.value[entryId]?.[id] ?? ""]),
+  );
 
   isSaving.value = true;
   try {
     const results = await Promise.allSettled(
       localeIds.map((localeId) => {
-        const translation =
-          localizationForms.value[entryId]?.[String(localeId)] ?? "";
+        const translation = submitted[localeId] ?? "";
         const existing = entry.localizations?.find(
           (localization: Localization) =>
             localization.localeId === String(localeId),
@@ -307,6 +345,14 @@ async function handleSave() {
         }
       }),
     );
+
+    for (const [index, result] of results.entries()) {
+      const id = localeIds[index];
+      if (result.status === "fulfilled" && id) {
+        savedTranslations.value[entryId] ??= {};
+        savedTranslations.value[entryId][id] = submitted[id] ?? "";
+      }
+    }
 
     const failedLanguages = results.flatMap((result, index) => {
       if (result.status !== "rejected") return [];
@@ -399,6 +445,12 @@ async function handleSave() {
         <template #item="{ item }">
           <span class="flex min-w-0 w-full items-center justify-between gap-3">
             <span class="truncate" :title="item.label">{{ item.label }}</span>
+            <span
+              v-if="hasUnsavedTranslations(String(item.key))"
+              class="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-300"
+              title="Unsaved translations"
+              >Unsaved</span
+            >
             <Tooltip
               v-if="
                 selectedLocaleIds.some(
@@ -463,6 +515,11 @@ async function handleSave() {
                       ?.label
                   }}
                   <Badge v-if="localeId === defaultLocale?.id">Default</Badge>
+                  <span
+                    v-if="isTranslationDirty(String(item.key), localeId)"
+                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                    >Unsaved</span
+                  >
                 </label>
                 <Button
                   v-if="localeId === defaultLocale?.id"
@@ -511,11 +568,20 @@ async function handleSave() {
                 selectedLocaleIds.length === 1
                   ? "language selected"
                   : "languages selected"
-              }}</span
-            >
+              }}
+              <span
+                v-if="unsavedLocaleIds.length"
+                class="ml-2 text-amber-700 dark:text-amber-300"
+                >{{ unsavedLocaleIds.length }} unsaved{{
+                  unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+                    ? " (including hidden languages)"
+                    : ""
+                }}</span
+              >
+            </span>
             <Button
               primary
-              :disabled="!item || !selectedLocaleIds.length || isSaving"
+              :disabled="!item || !selectedUnsavedLocaleIds.length || isSaving"
               @click="handleSave"
             >
               {{ isSaving ? "Saving…" : "Save changes" }}
