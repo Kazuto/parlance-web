@@ -1,9 +1,11 @@
 import type { PageOptions } from "@thkzt/eunoia";
 
+export type AppPageOptions = PageOptions & { layout?: "workspace" };
+
 export const PAGE_OPTIONS_KEY = Symbol("pageOptions");
 
 export function usePageProvider() {
-  const options = ref<PageOptions>({
+  const options = ref<AppPageOptions>({
     title: "Placeholder. Please set a title in the page options.",
   });
 
@@ -12,8 +14,8 @@ export function usePageProvider() {
   return options;
 }
 
-export function usePage(pageOptions: MaybeRefOrGetter<PageOptions>) {
-  const options = inject<Ref<PageOptions>>(PAGE_OPTIONS_KEY);
+export function usePage(pageOptions: MaybeRefOrGetter<AppPageOptions>) {
+  const options = inject<Ref<AppPageOptions>>(PAGE_OPTIONS_KEY);
 
   watchEffect(() => {
     if (options) options.value = toValue(pageOptions);

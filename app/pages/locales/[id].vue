@@ -58,10 +58,7 @@ const splitViewItems = computed((): SplitViewItem[] => {
     .map((locale) => ({
       key: locale.code ?? "",
       label: `${locale.name}`,
-    }))
-    .filter((item) =>
-      item.label.toLowerCase().includes(search.value.toLowerCase()),
-    );
+    }));
 });
 
 watch(
@@ -105,13 +102,17 @@ async function handleUpdate() {
       <div class="space-y-4">
         <Input v-model="form.code"> Code </Input>
 
-        <div v-if="localeData?.locales">
+        <div
+          v-if="localeData?.locales"
+          class="flex h-[min(55dvh,600px)] min-h-0 flex-col"
+        >
           <p class="text-neutral-900 mb-2">Names</p>
           <SplitView
+            v-model:search="search"
             :items="splitViewItems"
             :selected="selectedLocale"
             searchable
-            @search="search = $event"
+            class="min-h-0 flex-1"
             @select="selectedLocale = $event"
           >
             <template #item="{ item }">
