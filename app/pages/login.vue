@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 const authStore = useAuthStore();
+const { t } = useI18n();
 const router = useRouter();
 
 const email = ref("");
@@ -25,7 +26,7 @@ async function handleLogin() {
   try {
     await authStore.login(email.value, password.value);
   } catch (err) {
-    error.value = err instanceof Error ? err.message : "Login failed";
+    error.value = err instanceof Error ? err.message : t("auth.loginFailed");
   } finally {
     loading.value = false;
   }
@@ -36,16 +37,17 @@ async function handleLogin() {
   <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <div class="w-full max-w-md space-y-8">
       <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-900">Parlance</h1>
-        <p class="mt-2 text-sm text-gray-600">Sign in to your account</p>
+        <h1 class="text-3xl font-bold text-gray-900">{{ t("app.name") }}</h1>
+        <p class="mt-2 text-sm text-gray-600">{{ t("auth.signInPrompt") }}</p>
       </div>
 
       <div class="bg-white p-8 rounded-lg shadow-md">
         <form class="space-y-6" @submit.prevent="handleLogin">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">
-              Email
+              {{ t("auth.email") }}
             </label>
+            <!-- prettier-ignore -->
             <input
               id="email"
               v-model="email"
@@ -53,7 +55,7 @@ async function handleLogin() {
               required
               autocomplete="email"
               class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
           </div>
 
           <div>
@@ -61,8 +63,9 @@ async function handleLogin() {
               for="password"
               class="block text-sm font-medium text-gray-700"
             >
-              Password
+              {{ t("auth.password") }}
             </label>
+            <!-- prettier-ignore -->
             <input
               id="password"
               v-model="password"
@@ -70,7 +73,7 @@ async function handleLogin() {
               required
               autocomplete="current-password"
               class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
           </div>
 
           <div
@@ -86,7 +89,9 @@ async function handleLogin() {
             class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {{
-              loading || authStore.isRefreshing ? "Signing in..." : "Sign in"
+              loading || authStore.isRefreshing
+                ? t("auth.signingIn")
+                : t("auth.signIn")
             }}
           </button>
         </form>

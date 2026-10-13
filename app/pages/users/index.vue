@@ -5,13 +5,14 @@ import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const router = useRouter();
+const { t } = useI18n();
 
 usePage({
   width: "wide",
-  title: "Users",
-  description: "Manage users and their roles",
+  title: t("nav.users"),
+  description: t("users.description"),
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
@@ -21,19 +22,19 @@ const { data, isLoading, error, refetch } = useUserList();
 
 const tableColumns: DataTableColumn<User>[] = [
   {
-    title: "Name",
+    title: t("common.name"),
     key: "name",
     sortable: true,
   },
   {
-    title: "Roles",
+    title: t("nav.roles"),
     key: "roles",
     sortable: true,
     value: (item: User) =>
       (item.roles ?? []).map((role: Role) => role.name).join(", "),
   },
   {
-    title: "Created",
+    title: t("common.created"),
     key: "createdAt",
     sortable: true,
     value: (item: User) =>
@@ -47,13 +48,15 @@ const tableItems = computed(() => data.value?.users ?? []);
 <template>
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">Loading users...</div>
+    <div class="text-neutral-600">{{ t("users.loading") }}</div>
   </div>
 
   <!-- Error State -->
   <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-    <p class="text-red-800">Failed to load users: {{ error.message }}</p>
-    <Button ghost @click="() => refetch()"> Try again </Button>
+    <p class="text-red-800">
+      {{ t("users.loadFailed", { error: error.message }) }}
+    </p>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
 
   <div v-else-if="data">
@@ -81,7 +84,9 @@ const tableItems = computed(() => data.value?.users ?? []);
           d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
         />
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-neutral-900">No users</h3>
+      <h3 class="mt-2 text-sm font-medium text-neutral-900">
+        {{ t("users.empty") }}
+      </h3>
     </Card>
   </div>
 </template>

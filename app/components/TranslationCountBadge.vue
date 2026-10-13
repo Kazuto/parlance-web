@@ -11,6 +11,7 @@ const props = defineProps<{
 }>();
 
 const { data } = useLocaleList();
+const { t } = useI18n();
 
 const localeCount = computed(() => data.value?.pagination?.total ?? 0);
 
@@ -23,7 +24,9 @@ const variant = computed(() => {
 
 <template>
   <Tooltip
-    :content="`Missing translations: ${item.missingKeys.join(', ')}`"
+    :content="
+      t('translationCount.missing', { languages: item.missingKeys.join(', ') })
+    "
     :disabled="!item.missingKeys.length"
     placement="top"
   >

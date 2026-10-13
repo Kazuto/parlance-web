@@ -51,6 +51,23 @@ npm run dev
 
 _To be added_
 
+## UI translations
+
+The app uses `@nuxtjs/i18n` with an English-only catalog in
+`i18n/locales/en.json`. Routes have no locale prefix and browser-language detection
+is disabled. There is no language switcher.
+
+Catalogs use flat dotted keys (`"entries.create": "Create Entry"`) and string
+values, making them directly compatible with Parlance's JSON import/export.
+Vue I18n's `flatJson` option is enabled to resolve these keys.
+
+Use `const { t } = useI18n()` in components and composables, with semantic keys
+such as `t("common.saveChanges")`. Keep complete sentences in the catalog and pass
+dynamic values as named parameters, for example
+`t("entries.created", { key: entryKey })`. Count-dependent messages use Vue I18n
+plural forms. API-provided content (entry keys, language names, translations, and
+server error messages) is displayed as returned by the backend.
+
 ## Generating API schemas
 
 The backend protobuf definitions are the source of truth for the API contract.

@@ -21,6 +21,7 @@ type LocaleForm = {
 };
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const queryClient = useQueryClient();
 const selectedId = ref(String(route.params.id));
 const { data: localeData, pagination, error: listError } = useLocaleList();
@@ -124,10 +125,10 @@ watch(
 usePage({
   width: "wide",
   layout: "workspace",
-  title: "Locales",
-  description: "Manage language names and locale settings",
+  title: t("nav.locales"),
+  description: t("locales.editorDescription"),
   backAction: {
-    content: "Back to locales overview",
+    content: t("nav.backLocales"),
     icon: "arrow-left",
     onClick: () => router.push("/locales"),
   },
@@ -174,7 +175,7 @@ async function saveLocales(ids: string[]) {
     ({ id, submitted }) => submitted.isDefault && !saved.value[id]?.isDefault,
   );
   if (newDefaults.length > 1) {
-    error.value = "Choose only one locale to set as default before saving all.";
+    error.value = t("locales.singleDefault");
     return;
   }
   // Save other locales first, then apply the new default last.
@@ -203,21 +204,25 @@ async function saveLocales(ids: string[]) {
         };
       } catch (cause) {
         failures.push(
-          `${submitted.code}: ${cause instanceof Error ? cause.message : "Failed to save locale"}`,
+          `${submitted.code}: ${cause instanceof Error ? cause.message : t("locales.saveFailed")}`,
         );
       }
     }
     if (failures.length) {
       error.value = failures.join("; ");
       toast.add(
-        `Saved ${changes.length - failures.length} of ${changes.length} locales. Failed: ${failures.join("; ")}`,
+        t("locales.partialSave", {
+          saved: changes.length - failures.length,
+          total: changes.length,
+          failures: failures.join("; "),
+        }),
         { variant: failures.length === changes.length ? "danger" : "warning" },
       );
     } else {
       toast.add(
         changes.length === 1
-          ? `Locale ${changes[0]!.submitted.code} saved`
-          : `${changes.length} locales saved`,
+          ? t("locales.saved", { code: changes[0]!.submitted.code })
+          : t("locales.savedMany", { count: changes.length }),
         { variant: "success" },
       );
     }
@@ -238,7 +243,7 @@ async function handleDeleted(id: string) {
 </script>
 
 <template>
-  <section class="locale-workspace" aria-label="Locale workspace">
+  <section class="locale-workspace" :aria-label="t('locales.workspace')">
     <SplitView
       v-model:search="search"
       :items="items"
@@ -253,7 +258,7 @@ async function handleDeleted(id: string) {
           <span
             v-if="changedFields(String(item.key))"
             class="shrink-0 text-xs text-amber-700 dark:text-amber-300"
-            >Unsaved</span
+            >{{ t("common.unsaved") }}</span
           >
           <Tooltip
             v-else-if="
@@ -265,7 +270,7 @@ async function handleDeleted(id: string) {
                     )?.names)?.[language.code ?? ''],
               )
             "
-            content="Missing names"
+            :content="t('locales.missingNames')"
           >
             <span class="h-2 w-2 shrink-0 rounded-full bg-rose-400" />
           </Tooltip>
@@ -275,11 +280,11 @@ async function handleDeleted(id: string) {
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
             <h2 class="flex flex-wrap items-center gap-2 font-semibold">
-              {{ selectedItem?.label ?? "Locale" }}
-              <Badge v-if="form?.isDefault">Default</Badge>
+              {{ selectedItem?.label ?? t("locales.locale") }}
+              <Badge v-if="form?.isDefault">{{ t("common.default") }}</Badge>
             </h2>
             <p class="mt-1 text-sm text-neutral-500">
-              How this language is named in each locale.
+              {{ t("locales.namesHint") }}
             </p>
           </div>
           <EntryActionsMenu
@@ -294,7 +299,7 @@ async function handleDeleted(id: string) {
       </template>
       <template #default>
         <p v-if="isLoading && !form" class="text-sm text-neutral-500">
-          Loading locale…
+          {{ t("locales.loadingOne") }}
         </p>
         <p
           v-else-if="loadError || listError"
@@ -318,22 +323,26 @@ async function handleDeleted(id: string) {
               class="mb-1 flex items-center gap-2 text-sm"
             >
               {{ language.name ?? language.code }}
-              <Badge v-if="language.isDefault">Default</Badge>
+              <Badge v-if="language.isDefault">{{ t("common.default") }}</Badge>
               <span
                 v-if="
                   (form.names[language.code ?? ''] ?? '') !==
                   (saved[selectedId]?.names[language.code ?? ''] ?? '')
                 "
                 class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                >Unsaved</span
+                >{{ t("common.unsaved") }}</span
               >
             </label>
             <Input
               :id="`locale-name-${selectedId}-${language.code}`"
               v-model="form.names[language.code ?? '']"
               :disabled="isSaving"
-              :aria-label="`Name in ${language.name ?? language.code}`"
-              placeholder="Enter language name"
+              :aria-label="
+                t('locales.nameIn', {
+                  language: language.name ?? language.code ?? '',
+                })
+              "
+              :placeholder="t('locales.namePlaceholder')"
             />
           </div>
         </div>
@@ -341,16 +350,20 @@ async function handleDeleted(id: string) {
       <template #footer>
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="text-sm text-neutral-500">
-            {{ languages.length }} languages
+            {{ t("common.languageCount", { count: languages.length }) }}
             <span
               v-if="currentUnsaved"
               class="ml-2 text-amber-700 dark:text-amber-300"
-              >{{ currentUnsaved }} unsaved</span
+              >{{ t("common.unsavedCount", { count: currentUnsaved }) }}</span
             >
             <span
               v-if="allUnsaved > currentUnsaved"
               class="ml-2 text-amber-700 dark:text-amber-300"
-              >{{ allUnsaved - currentUnsaved }} unsaved in other locales</span
+              >{{
+                t("locales.otherUnsaved", {
+                  count: allUnsaved - currentUnsaved,
+                })
+              }}</span
             >
             <p v-if="error" role="alert" class="mt-1 text-red-600">
               {{ error }}
@@ -363,15 +376,19 @@ async function handleDeleted(id: string) {
               :disabled="!unsavedLocaleIds.length || isSaving"
               @click="saveAllOpen = true"
             >
-              Save all{{
-                unsavedLocaleIds.length ? ` (${unsavedLocaleIds.length})` : ""
+              {{
+                unsavedLocaleIds.length
+                  ? t("common.saveAllCount", { count: unsavedLocaleIds.length })
+                  : t("common.saveAll")
               }}
             </Button>
             <Button
               primary
               :disabled="!currentUnsaved || isSaving"
               @click="saveChanges"
-              >{{ isSaving ? "Saving…" : "Save changes" }}</Button
+              >{{
+                isSaving ? t("common.saving") : t("common.saveChanges")
+              }}</Button
             >
           </div>
         </div>
@@ -380,42 +397,52 @@ async function handleDeleted(id: string) {
   </section>
   <Dialog
     :open="saveAllOpen"
-    title="Save all locales?"
+    :title="t('locales.saveAllTitle')"
     @close="saveAllOpen = false"
   >
     <p class="text-sm text-neutral-500">
-      Save {{ allUnsaved }} unsaved changes across
-      {{ unsavedLocaleIds.length }} locales, including locales not currently
-      selected?
+      {{
+        t("locales.saveAllConfirm", {
+          count: allUnsaved,
+          locales: unsavedLocaleIds.length,
+        })
+      }}
     </p>
     <div class="mt-6 flex justify-end gap-3">
-      <Button type="button" ghost @click="saveAllOpen = false">Cancel</Button>
+      <Button type="button" ghost @click="saveAllOpen = false">{{
+        t("common.cancel")
+      }}</Button>
       <Button
         type="button"
         primary
         :disabled="!unsavedLocaleIds.length || isSaving"
         @click="saveAll"
-        >Save all</Button
+        >{{ t("common.saveAll") }}</Button
       >
     </div>
   </Dialog>
-  <Dialog :open="editOpen" title="Edit Locale" @close="editOpen = false">
+  <Dialog
+    :open="editOpen"
+    :title="t('locales.editTitle')"
+    @close="editOpen = false"
+  >
     <form class="space-y-4" @submit.prevent="applyMetadata">
-      <Input v-model="metadata.code" required>Code</Input>
+      <Input v-model="metadata.code" required>{{ t("common.code") }}</Input>
       <Checkbox
         v-model="metadata.isDefault"
-        helper="This will be the fallback locale for translations"
-        >Set as default locale</Checkbox
+        :helper="t('locales.defaultHelp')"
+        >{{ t("locales.setDefault") }}</Checkbox
       >
       <p class="text-sm text-neutral-500">
-        These changes are applied to your draft. Use Save changes to persist
-        them.
+        {{ t("locales.draftHint") }}
       </p>
       <div class="flex justify-end gap-3">
-        <Button type="button" ghost @click="editOpen = false">Cancel</Button>
-        <Button type="submit" primary :disabled="!metadata.code.trim()"
-          >Apply changes</Button
-        >
+        <Button type="button" ghost @click="editOpen = false">{{
+          t("common.cancel")
+        }}</Button>
+        <Button type="submit" primary :disabled="!metadata.code.trim()">{{
+          t("common.applyChanges")
+        }}</Button>
       </div>
     </form>
   </Dialog>

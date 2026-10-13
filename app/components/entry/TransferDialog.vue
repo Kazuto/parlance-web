@@ -29,6 +29,7 @@ const file = ref<File>();
 const error = ref<string>();
 const result = ref<ImportResult>();
 const toast = useToast();
+const { t } = useI18n();
 const localeOptions = computed(() =>
   props.locales
     .filter((locale) => locale.id && locale.code && !locale.deletedAt)
@@ -38,9 +39,9 @@ const localeOptions = computed(() =>
     })),
 );
 const formatOptions = [
-  { label: "JSON (flat key/value pairs)", value: "json" },
-  { label: "PHP array", value: "php" },
-  { label: "Gettext PO (.po)", value: "po" },
+  { label: t("transfer.json"), value: "json" },
+  { label: t("transfer.php"), value: "php" },
+  { label: t("transfer.po"), value: "po" },
 ];
 const fileAccept = computed(() =>
   format.value === "json"
@@ -56,9 +57,9 @@ watch(format, () => {
   error.value = undefined;
 });
 const modeOptions = [
-  { label: "Create or update entries", value: "IMPORT_MODE_CREATE_OR_UPDATE" },
-  { label: "Create new entries only", value: "IMPORT_MODE_CREATE_ONLY" },
-  { label: "Update existing entries only", value: "IMPORT_MODE_UPDATE_ONLY" },
+  { label: t("transfer.upsert"), value: "IMPORT_MODE_CREATE_OR_UPDATE" },
+  { label: t("transfer.createOnly"), value: "IMPORT_MODE_CREATE_ONLY" },
+  { label: t("transfer.updateOnly"), value: "IMPORT_MODE_UPDATE_ONLY" },
 ];
 
 watch(
@@ -91,8 +92,7 @@ function encodeFile(value: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
-    reader.onerror = () =>
-      reject(new Error("Could not read the selected file."));
+    reader.onerror = () => reject(new Error(t("transfer.readFailed")));
     reader.readAsDataURL(value);
   });
 }
@@ -102,11 +102,11 @@ async function handleSubmit() {
   error.value = undefined;
   const locale = props.locales.find((item) => item.id === localeId.value);
   if (!locale?.id || !locale.code) {
-    error.value = "Select a language.";
+    error.value = t("transfer.languageRequired");
     return;
   }
   if (props.action === "import" && !file.value) {
-    error.value = "Select a file to import.";
+    error.value = t("transfer.fileRequired");
     return;
   }
   isPending.value = true;
@@ -125,8 +125,7 @@ async function handleSubmit() {
         : format.value === "php"
           ? importPhp.mutateAsync(input)
           : importJson.mutateAsync(input));
-      if (!response.result)
-        throw new Error("The server did not return an import result.");
+      if (!response.result) throw new Error(t("transfer.missingImportResult"));
       result.value = response.result;
       await Promise.all([
         queryClient.invalidateQueries({
@@ -144,7 +143,7 @@ async function handleSubmit() {
           ? exportPhp.mutateAsync(input)
           : exportJson.mutateAsync(input));
       if (response.content == null)
-        throw new Error("The server did not return export content.");
+        throw new Error(t("transfer.missingExportContent"));
       const url = URL.createObjectURL(
         new Blob([response.content], {
           type:
@@ -164,14 +163,18 @@ async function handleSubmit() {
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      toast.add("Translations exported", { variant: "success" });
+      toast.add(t("transfer.exported"), { variant: "success" });
       emit("close");
     }
   } catch (cause) {
     error.value =
       cause instanceof Error
         ? cause.message
-        : `Failed to ${props.action} entries.`;
+        : t(
+            props.action === "import"
+              ? "transfer.importFailed"
+              : "transfer.exportFailed",
+          );
   } finally {
     isPending.value = false;
   }
@@ -181,7 +184,9 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    :title="action === 'import' ? 'Import Entries' : 'Export Entries'"
+    :title="
+      t(action === 'import' ? 'transfer.importTitle' : 'transfer.exportTitle')
+    "
     :persistent="isPending"
     @close="handleClose"
   >
@@ -190,18 +195,18 @@ async function handleSubmit() {
         v-model="localeId"
         :options="localeOptions"
         :disabled="isPending"
-        placeholder="Select a language"
-        >Language</Select
+        :placeholder="t('transfer.selectLanguage')"
+        >{{ t("common.language") }}</Select
       >
-      <Select v-model="format" :options="formatOptions" :disabled="isPending"
-        >Format</Select
-      >
+      <Select v-model="format" :options="formatOptions" :disabled="isPending">{{
+        t("common.format")
+      }}</Select>
       <template v-if="action === 'import'">
-        <Select v-model="mode" :options="modeOptions" :disabled="isPending"
-          >Import behavior</Select
-        >
+        <Select v-model="mode" :options="modeOptions" :disabled="isPending">{{
+          t("transfer.behavior")
+        }}</Select>
         <label class="flex flex-col gap-2 text-sm">
-          Translation file
+          {{ t("transfer.file") }}
           <!-- prettier-ignore -->
           <input
             :key="`${action}-${format}-${open}`"
@@ -213,22 +218,16 @@ async function handleSubmit() {
           >
         </label>
         <p v-if="format === 'po'" class="text-sm text-neutral-500">
-          PO files must use UTF-8, with entry keys in msgid and translations in
-          msgstr. Empty translations and obsolete entries are skipped.
-          Contextual, plural, fuzzy, and duplicate entries are reported as
-          failures.
+          {{ t("transfer.poImportHelp") }}
         </p>
         <p v-else class="text-sm text-neutral-500">
-          JSON must be a flat object of translation keys and string values. PHP
-          must contain a translation array.
+          {{ t("transfer.importHelp") }}
         </p>
       </template>
       <p v-else class="text-sm text-neutral-500">
-        Download all available translations for this language, across all
-        entries and scopes.
+        {{ t("transfer.exportHelp") }}
         <template v-if="format === 'po'">
-          PO exports use entry keys as msgid and include language metadata,
-          description comments, and untranslated entries with empty msgstr.
+          {{ t("transfer.poExportHelp") }}
         </template>
       </p>
       <div
@@ -237,10 +236,14 @@ async function handleSubmit() {
         class="space-y-2 rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-700"
       >
         <p>
-          Created: {{ result.entriesCreated ?? 0 }} · Updated:
-          {{ result.entriesUpdated ?? 0 }} · Skipped:
-          {{ result.entriesSkipped ?? 0 }} · Failed:
-          {{ result.entriesFailed ?? 0 }}
+          {{
+            t("transfer.summary", {
+              created: result.entriesCreated ?? 0,
+              updated: result.entriesUpdated ?? 0,
+              skipped: result.entriesSkipped ?? 0,
+              failed: result.entriesFailed ?? 0,
+            })
+          }}
         </p>
         <ul
           v-if="result.errors?.length"
@@ -258,7 +261,7 @@ async function handleSubmit() {
           ghost
           :disabled="isPending"
           @click="handleClose"
-          >{{ result ? "Close" : "Cancel" }}</Button
+          >{{ result ? t("common.close") : t("common.cancel") }}</Button
         >
         <Button
           type="submit"
@@ -266,10 +269,10 @@ async function handleSubmit() {
           :disabled="isPending || !localeOptions.length"
           >{{
             isPending
-              ? "Processing…"
+              ? t("common.processing")
               : action === "import"
-                ? "Import entries"
-                : "Download export"
+                ? t("entries.import")
+                : t("transfer.download")
           }}</Button
         >
       </div>

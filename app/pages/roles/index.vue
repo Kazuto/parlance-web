@@ -10,13 +10,14 @@ import { useRoleList } from "~/composables/role/useRoleList";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const router = useRouter();
+const { t } = useI18n();
 
 usePage({
   width: "wide",
-  title: "Roles",
-  description: "Manage roles and permissions",
+  title: t("nav.roles"),
+  description: t("roles.description"),
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
@@ -26,20 +27,20 @@ const { data, isLoading, error, refetch } = useRoleList();
 
 const tableColumns: DataTableColumn<Role>[] = [
   {
-    title: "Name",
+    title: t("common.name"),
     key: "name",
     sortable: true,
   },
   {
-    title: "Description",
+    title: t("common.description"),
     key: "description",
   },
   {
-    title: "Permissions",
+    title: t("common.permissions"),
     key: "permissions",
   },
   {
-    title: "Created",
+    title: t("common.created"),
     key: "createdAt",
     sortable: true,
   },
@@ -51,13 +52,15 @@ const tableItems = computed(() => data.value?.roles ?? []);
 <template>
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">Loading roles...</div>
+    <div class="text-neutral-600">{{ t("roles.loading") }}</div>
   </div>
 
   <!-- Error State -->
   <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-    <p class="text-red-800">Failed to load roles: {{ error.message }}</p>
-    <Button ghost @click="() => refetch()"> Try again </Button>
+    <p class="text-red-800">
+      {{ t("roles.loadFailed", { error: error.message }) }}
+    </p>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
 
   <div v-else-if="data">
@@ -95,7 +98,9 @@ const tableItems = computed(() => data.value?.roles ?? []);
           d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
         />
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-neutral-900">No roles</h3>
+      <h3 class="mt-2 text-sm font-medium text-neutral-900">
+        {{ t("roles.empty") }}
+      </h3>
     </Card>
   </div>
 </template>

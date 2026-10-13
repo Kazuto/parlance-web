@@ -12,26 +12,27 @@ import {
 } from "@thkzt/eunoia";
 
 const { user, logout } = useAuthStore();
+const { t } = useI18n();
 
 const route = useRoute();
 
 const sidebarCollapsed = ref(false);
 
 const onMenuSelect = (label: string) => {
-  if (label === "Sign Out") logout();
+  if (label === t("nav.signOut")) logout();
 };
 
 const menuItems: MenuItem[] = [
-  { label: "Dashboard", to: "/", icon: "house-simple" },
-  { label: "Locales", to: "/locales", icon: "globe-simple" },
-  { label: "Entries", to: "/entries", icon: "book" },
-  { label: "Terminologies", to: "/terminologies", icon: "tag-simple" },
-  { label: "Roles", to: "/roles", icon: "group" },
-  { label: "Users", to: "/users", icon: "users" },
+  { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
+  { label: t("nav.locales"), to: "/locales", icon: "globe-simple" },
+  { label: t("nav.entries"), to: "/entries", icon: "book" },
+  { label: t("nav.terminologies"), to: "/terminologies", icon: "tag-simple" },
+  { label: t("nav.roles"), to: "/roles", icon: "group" },
+  { label: t("nav.users"), to: "/users", icon: "users" },
 ];
 
 const userMenuItems: UserMenuItem[] = [
-  { label: "Sign Out", icon: "sign-out", variant: "danger" },
+  { label: t("nav.signOut"), icon: "sign-out", variant: "danger" },
 ];
 
 const toastStack = useTemplateRef("toastStack");
@@ -68,7 +69,7 @@ const headerOptions = computed(() => {
           v-if="isDashboard"
           class="text-xl font-bold text-neutral-900 dark:text-neutral-100"
         >
-          Dashboard
+          {{ t("nav.dashboard") }}
         </h1>
       </template>
 

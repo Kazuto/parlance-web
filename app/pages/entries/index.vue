@@ -18,6 +18,7 @@ import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
 const router = useRouter();
+const { t } = useI18n();
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Entry>();
 const editDialogItem = ref<Entry>();
@@ -39,27 +40,27 @@ function openTransfer(action: "import" | "export") {
 usePage({
   width: "wide",
   layout: "workspace",
-  title: "Entries",
-  description: "Manage translation entries and content",
+  title: t("nav.entries"),
+  description: t("entries.description"),
   primaryAction: {
-    content: "Create Entry",
+    content: t("entries.create"),
     icon: "plus",
     onClick: () => (showCreateDialog.value = true),
   },
   secondaryActions: [
     {
-      content: "Import entries",
+      content: t("entries.import"),
       icon: "upload",
       onClick: () => openTransfer("import"),
     },
     {
-      content: "Export entries",
+      content: t("entries.export"),
       icon: "download",
       onClick: () => openTransfer("export"),
     },
   ],
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
@@ -347,14 +348,17 @@ async function handleSave() {
       localeId,
       translation: localizationForms.value[entryId]?.[localeId] ?? "",
     })),
-    `Translations for ${entry.key}`,
+    t("entries.translationLabel", { key: entry.key ?? "" }),
   );
 }
 
 async function handleSaveAll() {
   if (isSaving.value) return;
   showSaveAllDialog.value = false;
-  await saveTranslations([...allUnsavedTranslations.value], "Translations");
+  await saveTranslations(
+    [...allUnsavedTranslations.value],
+    t("entries.translations"),
+  );
 }
 
 async function saveTranslations(
@@ -418,10 +422,14 @@ async function saveTranslations(
     });
     const failed = failedLanguages.length;
     if (failed === 0) {
-      toast.add(`${label} saved`, { variant: "success" });
+      toast.add(t("entries.saved", { label }), { variant: "success" });
     } else {
       toast.add(
-        `Saved ${results.length - failed} of ${results.length} translations. Failed: ${failedLanguages.join(", ")}`,
+        t("entries.partialSave", {
+          saved: results.length - failed,
+          total: results.length,
+          failures: failedLanguages.join(", "),
+        }),
         { variant: failed === results.length ? "danger" : "warning" },
       );
     }
@@ -435,32 +443,34 @@ async function saveTranslations(
 
 <template>
   <div v-if="isLoading && !data" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">Loading entries...</div>
+    <div class="text-neutral-600">{{ t("entries.loading") }}</div>
   </div>
 
   <div
     v-else-if="error && !data"
     class="bg-red-50 border border-red-200 rounded-lg p-4"
   >
-    <p class="text-red-800">Failed to load entries: {{ error.message }}</p>
-    <Button ghost @click="() => refetch()">Try again</Button>
+    <p class="text-red-800">
+      {{ t("entries.loadFailed", { error: error.message }) }}
+    </p>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
 
   <section
     v-else-if="data"
     class="entry-workspace"
-    aria-label="Translation workspace"
+    :aria-label="t('entries.workspace')"
     :aria-busy="isFetching"
   >
     <div class="locale-toolbar">
-      <span class="text-sm font-medium">Languages to translate</span>
+      <span class="text-sm font-medium">{{ t("entries.languages") }}</span>
       <span v-if="isFetching" role="status" class="text-xs text-neutral-500">
-        Refreshing entries…
+        {{ t("entries.refreshing") }}
       </span>
       <span v-else-if="error" role="alert" class="text-xs text-red-600">
-        Could not refresh entries.
+        {{ t("entries.refreshFailed") }}
         <button type="button" class="underline" @click="() => refetch()">
-          Retry
+          {{ t("common.retry") }}
         </button>
       </span>
       <div class="locale-selector">
@@ -468,9 +478,9 @@ async function saveTranslations(
           v-model="selectedLocaleIds"
           multiple
           :disabled="isSaving"
-          aria-label="Languages to translate"
+          :aria-label="t('entries.languages')"
           :options="localeOptions"
-          placeholder="Select locales to translate"
+          :placeholder="t('entries.selectLocales')"
         />
       </div>
       <Button
@@ -482,8 +492,8 @@ async function saveTranslations(
       >
         {{
           allLanguagesSelected
-            ? "Deselect all languages"
-            : "Select all languages"
+            ? t("entries.deselectAll")
+            : t("entries.selectAll")
         }}
       </Button>
     </div>
@@ -502,8 +512,8 @@ async function saveTranslations(
             <span
               v-if="hasUnsavedTranslations(String(item.key))"
               class="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-300"
-              title="Unsaved translations"
-              >Unsaved</span
+              :title="t('entries.unsavedTranslations')"
+              >{{ t("common.unsaved") }}</span
             >
             <Tooltip
               v-if="
@@ -513,11 +523,11 @@ async function saveTranslations(
                     !getLocalizationForm(String(item.key), localeId),
                 )
               "
-              content="Missing translations"
+              :content="t('entries.missingTranslations')"
             >
               <span
                 class="h-2 w-2 shrink-0 rounded-full bg-rose-400"
-                aria-label="Missing translations"
+                :aria-label="t('entries.missingTranslations')"
               />
             </Tooltip>
           </span>
@@ -526,7 +536,7 @@ async function saveTranslations(
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
               <h2 class="break-words font-semibold">
-                {{ item?.label ?? "Select an entry" }}
+                {{ item?.label ?? t("entries.selectEntry") }}
               </h2>
               <p
                 v-if="selectedEntryData?.description"
@@ -569,11 +579,13 @@ async function saveTranslations(
                     localeOptions.find((locale) => locale.value === localeId)
                       ?.label
                   }}
-                  <Badge v-if="localeId === defaultLocale?.id">Default</Badge>
+                  <Badge v-if="localeId === defaultLocale?.id">{{
+                    t("common.default")
+                  }}</Badge>
                   <span
                     v-if="isTranslationDirty(String(item.key), localeId)"
                     class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                    >Unsaved</span
+                    >{{ t("common.unsaved") }}</span
                   >
                 </label>
                 <Button
@@ -585,7 +597,7 @@ async function saveTranslations(
                   :disabled="!canFillEmptyTranslations"
                   @click="fillEmptyTranslations"
                 >
-                  Copy to empty languages
+                  {{ t("entries.copyEmpty") }}
                 </Button>
               </div>
               <Textarea
@@ -596,7 +608,7 @@ async function saveTranslations(
                 "
                 :disabled="isSaving"
                 :model-value="currentEntryForms[String(localeId)] ?? ''"
-                :placeholder="`Enter translation`"
+                :placeholder="t('entries.translationPlaceholder')"
                 @update:model-value="
                   setLocalizationForm(String(item.key), localeId, $event)
                 "
@@ -610,26 +622,29 @@ async function saveTranslations(
           >
             {{
               item
-                ? "Select one or more languages above to start translating."
-                : "Select an entry to start translating."
+                ? t("entries.selectLanguagesHint")
+                : t("entries.selectEntryHint")
             }}
           </div>
         </template>
         <template #footer="{ item }">
           <div class="flex items-center justify-between gap-3">
             <span class="text-sm text-neutral-500"
-              >{{ selectedLocaleIds.length }}
-              {{
-                selectedLocaleIds.length === 1
-                  ? "language selected"
-                  : "languages selected"
+              >{{
+                t(
+                  "entries.selectedLanguages",
+                  { count: selectedLocaleIds.length },
+                  selectedLocaleIds.length,
+                )
               }}
               <span
                 v-if="unsavedLocaleIds.length"
                 class="ml-2 text-amber-700 dark:text-amber-300"
-                >{{ unsavedLocaleIds.length }} unsaved{{
+                >{{
+                  t("common.unsavedCount", { count: unsavedLocaleIds.length })
+                }}{{
                   unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-                    ? " (including hidden languages)"
+                    ? t("common.hiddenLanguages")
                     : ""
                 }}</span
               >
@@ -641,7 +656,11 @@ async function saveTranslations(
                 :disabled="!allUnsavedCount || isSaving"
                 @click="showSaveAllDialog = true"
               >
-                Save all{{ allUnsavedCount ? ` (${allUnsavedCount})` : "" }}
+                {{
+                  allUnsavedCount
+                    ? t("common.saveAllCount", { count: allUnsavedCount })
+                    : t("common.saveAll")
+                }}
               </Button>
               <Button
                 primary
@@ -650,7 +669,7 @@ async function saveTranslations(
                 "
                 @click="handleSave"
               >
-                {{ isSaving ? "Saving…" : "Save changes" }}
+                {{ isSaving ? t("common.saving") : t("common.saveChanges") }}
               </Button>
             </div>
           </div>
@@ -674,24 +693,29 @@ async function saveTranslations(
   </section>
   <Dialog
     :open="showSaveAllDialog"
-    title="Save all translations?"
+    :title="t('entries.saveAllTitle')"
     @close="showSaveAllDialog = false"
   >
     <p class="text-sm text-neutral-500">
-      Save {{ allUnsavedCount }} unsaved translations across
-      {{ new Set(allUnsavedTranslations.map((change) => change.entryId)).size }}
-      entries, including languages and entries not currently visible?
+      {{
+        t("entries.saveAllConfirm", {
+          count: allUnsavedCount,
+          entries: new Set(
+            allUnsavedTranslations.map((change) => change.entryId),
+          ).size,
+        })
+      }}
     </p>
     <div class="mt-6 flex justify-end gap-3">
-      <Button type="button" ghost @click="showSaveAllDialog = false"
-        >Cancel</Button
-      >
+      <Button type="button" ghost @click="showSaveAllDialog = false">{{
+        t("common.cancel")
+      }}</Button>
       <Button
         type="button"
         primary
         :disabled="!allUnsavedCount || isSaving"
         @click="handleSaveAll"
-        >Save all</Button
+        >{{ t("common.saveAll") }}</Button
       >
     </div>
   </Dialog>

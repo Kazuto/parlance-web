@@ -11,13 +11,14 @@ import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
 const router = useRouter();
+const { t } = useI18n();
 
 usePage({
   width: "wide",
-  title: "Terminologies",
-  description: "Manage glossary and terminology",
+  title: t("nav.terminologies"),
+  description: t("terminologies.description"),
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
@@ -50,23 +51,23 @@ const localeOptions = computed(() =>
 
 const tableColumns: DataTableColumn<Terminology>[] = [
   {
-    title: "Term",
+    title: t("terminologies.term"),
     key: "term",
     sortable: true,
   },
   {
-    title: "Description",
+    title: t("common.description"),
     key: "description",
     sortable: true,
   },
   {
-    title: "Definition",
+    title: t("terminologies.definition"),
     key: "definition",
     sortable: true,
     value: (item: Terminology) => findTranslation(item),
   },
   {
-    title: "Created",
+    title: t("common.created"),
     key: "createdAt",
     sortable: true,
     value: (item: Terminology) =>
@@ -88,15 +89,15 @@ const tableItems = computed(() => data.value?.terminologies ?? []);
 <template>
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">Loading terminologies...</div>
+    <div class="text-neutral-600">{{ t("terminologies.loading") }}</div>
   </div>
 
   <!-- Error State -->
   <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
     <p class="text-red-800">
-      Failed to load terminologies: {{ error.message }}
+      {{ t("terminologies.loadFailed", { error: error.message }) }}
     </p>
-    <Button ghost @click="() => refetch()"> Try again </Button>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
 
   <div v-else-if="data">
@@ -129,7 +130,7 @@ const tableItems = computed(() => data.value?.terminologies ?? []);
         />
       </svg>
       <h3 class="mt-2 text-sm font-medium text-neutral-900">
-        No terminologies
+        {{ t("terminologies.empty") }}
       </h3>
     </Card>
   </div>

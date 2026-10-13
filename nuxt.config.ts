@@ -4,7 +4,21 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/icon", "@pinia/nuxt"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/fonts",
+    "@nuxt/icon",
+    "@pinia/nuxt",
+    "@nuxtjs/i18n",
+  ],
+
+  i18n: {
+    strategy: "no_prefix",
+    defaultLocale: "en",
+    locales: [{ code: "en", language: "en", name: "English", file: "en.json" }],
+    detectBrowserLanguage: false,
+    vueI18n: "./i18n.config.ts",
+  },
 
   css: ["./app/assets/css/main.css"],
 

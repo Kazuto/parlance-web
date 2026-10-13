@@ -12,6 +12,7 @@ const destroyLocale = localeStore.destroy.mutateAsync;
 const isPending = computed(() => localeStore.destroy.isPending);
 
 const toast = useToast();
+const { t } = useI18n();
 
 async function handleSubmit() {
   if (!props.item || isPending.value) return;
@@ -23,10 +24,12 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(`Locale ${props.item?.name} deleted`, { variant: "success" });
+        toast.add(t("locales.deleted", { name: props.item?.name ?? "" }), {
+          variant: "success",
+        });
       },
       onError: () => {
-        toast.add(`Failed to delete locale: ${props.item?.name}`, {
+        toast.add(t("locales.deleteFailed", { name: props.item?.name ?? "" }), {
           variant: "danger",
         });
       },
@@ -53,13 +56,13 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="`Delete Locale: ${props.item?.name}`"
+    :title="t('locales.deleteTitle', { name: props.item?.name ?? '' })"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"
   >
     <p class="text-sm text-neutral-500">
-      Are you sure you want to delete this locale?
+      {{ t("locales.deleteConfirm") }}
     </p>
   </ConfirmDialog>
 </template>

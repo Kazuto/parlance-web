@@ -9,6 +9,7 @@ const deleteEntry = entryStore.destroy.mutateAsync;
 const isPending = computed(() => entryStore.destroy.isPending);
 const error = ref<string>();
 const toast = useToast();
+const { t } = useI18n();
 watch(
   () => props.open,
   () => {
@@ -26,12 +27,14 @@ async function handleSubmit() {
   error.value = undefined;
   try {
     await deleteEntry({ id: entry.id });
-    toast.add(`Entry ${entry.key} deleted`, { variant: "success" });
+    toast.add(t("entries.deleted", { key: entry.key ?? "" }), {
+      variant: "success",
+    });
     emit("deleted", entry.id);
     emit("close");
   } catch (cause) {
     error.value =
-      cause instanceof Error ? cause.message : "Failed to delete entry.";
+      cause instanceof Error ? cause.message : t("entries.deleteFailed");
   }
 }
 </script>
@@ -39,22 +42,25 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    :title="`Delete Entry: ${item?.key ?? ''}`"
+    :title="t('entries.deleteTitle', { key: item?.key ?? '' })"
     :persistent="isPending"
     @close="handleClose"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <p class="text-sm text-neutral-500">
-        Are you sure you want to delete this entry? It will be removed from the
-        active entry list.
+        {{ t("entries.deleteConfirm") }}
       </p>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
       <div class="flex items-center justify-end gap-3 pt-4">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose"
-          >Cancel</Button
+        <Button
+          type="button"
+          ghost
+          :disabled="isPending"
+          @click="handleClose"
+          >{{ t("common.cancel") }}</Button
         >
         <Button type="submit" destructive :disabled="isPending">{{
-          isPending ? "Deleting…" : "Delete Entry"
+          isPending ? t("common.deleting") : t("entries.delete")
         }}</Button>
       </div>
     </form>

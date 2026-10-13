@@ -18,18 +18,19 @@ const { data, filter, pagination, isFetching, error, refetch } =
 filter.value.includeDeleted = true;
 
 const router = useRouter();
+const { t } = useI18n();
 
 usePage({
   width: "wide",
-  title: "Locales",
-  description: "Manage languages and regional variants for your translations",
+  title: t("nav.locales"),
+  description: t("locales.description"),
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
   primaryAction: {
-    content: "Create Locale",
+    content: t("locales.create"),
     icon: "plus",
     onClick: () => (showDialog.value = true),
   },
@@ -37,27 +38,27 @@ usePage({
 
 const tableColumns: DataTableColumn<Locale>[] = [
   {
-    title: "Code",
+    title: t("common.code"),
     key: "code",
     sortable: true,
   },
   {
-    title: "Name",
+    title: t("common.name"),
     key: "name",
     sortable: true,
   },
   {
-    title: "Status",
+    title: t("common.status"),
     key: "translations",
     sortable: true,
   },
   {
-    title: "Created",
+    title: t("common.created"),
     key: "createdAt",
     sortable: true,
   },
   {
-    title: "Updated",
+    title: t("common.updated"),
     key: "updatedAt",
     sortable: true,
   },
@@ -79,13 +80,15 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
 <template>
   <!-- Loading State -->
   <div v-if="isFetching" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">Loading locales...</div>
+    <div class="text-neutral-600">{{ t("locales.loading") }}</div>
   </div>
 
   <!-- Error State -->
   <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-    <p class="text-red-800">Failed to load locales: {{ error.message }}</p>
-    <Button ghost @click="() => refetch()"> Try again </Button>
+    <p class="text-red-800">
+      {{ t("locales.loadFailed", { error: error.message }) }}
+    </p>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
 
   <!-- Locales List -->
@@ -103,7 +106,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
             <span>{{ item.name }}</span>
             <Tooltip
               v-if="item.isDefault"
-              content="Default"
+              :content="t('common.default')"
               placement="top"
               class="inline-flex"
             >
@@ -132,14 +135,21 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
             <Button
               ghost
               icon="eye"
+              :aria-label="t('locales.view')"
               @click="() => router.push(`/locales/${item.id}`)"
             />
-            <Button destructive icon="trash" @click="deleteDialogItem = item" />
+            <Button
+              destructive
+              icon="trash"
+              :aria-label="t('locales.delete')"
+              @click="deleteDialogItem = item"
+            />
           </div>
           <div v-else class="flex items-center justify-end gap-2">
             <Button
               ghost
               icon="arrow-counter-clockwise"
+              :aria-label="t('locales.restore')"
               @click="restoreDialogItem = item"
             />
           </div>
@@ -169,9 +179,11 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
           d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
         />
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-neutral-900">No locales</h3>
+      <h3 class="mt-2 text-sm font-medium text-neutral-900">
+        {{ t("locales.empty") }}
+      </h3>
       <p class="mt-1 text-sm text-neutral-500">
-        Get started by creating a new locale.
+        {{ t("locales.emptyHint") }}
       </p>
       <div class="mt-6">
         <button
@@ -179,7 +191,7 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
           @click="showDialog = true"
         >
-          Create Locale
+          {{ t("locales.create") }}
         </button>
       </div>
     </Card>

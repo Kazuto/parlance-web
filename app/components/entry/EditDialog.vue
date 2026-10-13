@@ -10,6 +10,7 @@ const error = ref<string>();
 const entryStore = useEntryStore();
 const isPending = computed(() => entryStore.update.isPending);
 const toast = useToast();
+const { t } = useI18n();
 
 watch(
   () => props.open,
@@ -29,7 +30,7 @@ async function handleSubmit() {
   if (!props.item?.id || isPending.value) return;
   error.value = undefined;
   if (!key.value.trim()) {
-    error.value = "Entry key is required.";
+    error.value = t("entries.keyRequired");
     return;
   }
   try {
@@ -38,39 +39,50 @@ async function handleSubmit() {
       key: key.value.trim(),
       description: description.value.trim(),
     });
-    toast.add(`Entry ${key.value.trim()} updated`, { variant: "success" });
+    toast.add(t("entries.updated", { key: key.value.trim() }), {
+      variant: "success",
+    });
     if (response.entry?.id) emit("updated", response.entry);
     emit("close");
   } catch (cause) {
     error.value =
-      cause instanceof Error ? cause.message : "Failed to update entry.";
+      cause instanceof Error ? cause.message : t("entries.updateFailed");
   }
 }
 </script>
 
 <template>
-  <Dialog :open title="Edit Entry" :persistent="isPending" @close="handleClose">
+  <Dialog
+    :open
+    :title="t('entries.editTitle')"
+    :persistent="isPending"
+    @close="handleClose"
+  >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
         v-model="key"
         required
         :disabled="isPending"
-        placeholder="e.g., button.save"
-        >Key</Input
+        :placeholder="t('entries.keyExample')"
+        >{{ t("common.key") }}</Input
       >
       <Textarea
         v-model="description"
         :disabled="isPending"
-        placeholder="Add context for translators"
-        >Description (optional)</Textarea
+        :placeholder="t('entries.contextPlaceholder')"
+        >{{ t("entries.optionalDescription") }}</Textarea
       >
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
       <div class="flex items-center justify-end gap-3 pt-4">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose"
-          >Cancel</Button
+        <Button
+          type="button"
+          ghost
+          :disabled="isPending"
+          @click="handleClose"
+          >{{ t("common.cancel") }}</Button
         >
         <Button type="submit" primary :disabled="isPending">{{
-          isPending ? "Saving…" : "Save entry"
+          isPending ? t("common.saving") : t("entries.saveEntry")
         }}</Button>
       </div>
     </form>

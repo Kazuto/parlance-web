@@ -3,11 +3,13 @@ services:
     container_name: parlance-frontend
     image: oven/bun:latest # since you're using Bun
     working_dir: /app
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     command: sh -c "bun install && bun run dev"
     ports:
-      - "3000:3000"
+      - "1337:1337"
       - "24678:24678"
     environment:
+      - HOME=/tmp
       - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://localhost:8080}
     volumes:
       - .:/app

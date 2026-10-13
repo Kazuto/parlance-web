@@ -4,6 +4,7 @@ import { useEntryList } from "~/composables/entry/useEntryList";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const { data: localesData, isLoading: isLocalesLoading } = useLocaleList();
 
@@ -15,38 +16,38 @@ const entryCount = computed(() => entriesData.value?.pagination?.total ?? 0);
 
 usePage(() => ({
   width: "wide",
-  title: `Welcome back, ${authStore.user?.name}!`,
-  description: "Here's what you can do in Parlance today.",
+  title: t("dashboard.welcome", { name: authStore.user?.name ?? "" }),
+  description: t("dashboard.description"),
 }));
 
 const cards = [
   {
-    title: "Locales",
-    description: "Manage languages and regional variants",
+    title: t("nav.locales"),
+    description: t("dashboard.localesDescription"),
     icon: "🌍",
     href: "/locales",
     permission: "read_locale",
     color: "primary",
   },
   {
-    title: "Entries",
-    description: "Manage translation entries and content",
+    title: t("nav.entries"),
+    description: t("dashboard.entriesDescription"),
     icon: "📝",
     href: "/entries",
     permission: "read_entry",
     color: "green",
   },
   {
-    title: "Terminology",
-    description: "Manage glossary and terminology",
+    title: t("nav.terminology"),
+    description: t("dashboard.terminologyDescription"),
     icon: "📚",
     href: "/terminologies",
     permission: "read_terminology",
     color: "purple",
   },
   {
-    title: "Users",
-    description: "Manage users and permissions",
+    title: t("nav.users"),
+    description: t("dashboard.usersDescription"),
     icon: "👥",
     href: "/users",
     permission: "read_user",
@@ -65,7 +66,7 @@ const visibleCards = computed(() =>
   <!-- Quick Stats -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <DashboardMetricCard
-      title="Total Locales"
+      :title="t('dashboard.totalLocales')"
       :loading="isLocalesLoading"
       :description="localesCount.toString()"
     >
@@ -87,7 +88,7 @@ const visibleCards = computed(() =>
     </DashboardMetricCard>
 
     <DashboardMetricCard
-      title="Total Entries"
+      :title="t('dashboard.totalEntries')"
       :loading="isEntriesLoading"
       :description="entryCount.toString()"
     >
@@ -108,7 +109,7 @@ const visibleCards = computed(() =>
       </template>
     </DashboardMetricCard>
 
-    <DashboardMetricCard title="Pending" description="0">
+    <DashboardMetricCard :title="t('dashboard.pending')" description="0">
       <template #icon>
         <svg
           class="w-6 h-6 text-yellow-600"
@@ -126,7 +127,7 @@ const visibleCards = computed(() =>
       </template>
     </DashboardMetricCard>
 
-    <DashboardMetricCard title="Completed" description="0">
+    <DashboardMetricCard :title="t('dashboard.completed')" description="0">
       <template #icon>
         <svg
           class="w-6 h-6 text-purple-600"
@@ -147,7 +148,9 @@ const visibleCards = computed(() =>
 
   <!-- Quick Actions -->
   <div class="mb-8">
-    <h2 class="text-xl font-semibold text-neutral-900 mb-4">Quick Access</h2>
+    <h2 class="text-xl font-semibold text-neutral-900 mb-4">
+      {{ t("dashboard.quickAccess") }}
+    </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <NuxtLink
         v-for="card in visibleCards"
@@ -170,7 +173,7 @@ const visibleCards = computed(() =>
           <div
             class="mt-4 flex items-center text-primary-600 text-sm font-medium"
           >
-            <span>Open</span>
+            <span>{{ t("common.open") }}</span>
             <svg
               class="w-4 h-4 ml-1"
               fill="none"
@@ -195,18 +198,19 @@ const visibleCards = computed(() =>
       class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center"
     >
       <p class="text-yellow-800">
-        You don't have permission to access any sections yet. Please contact
-        your administrator.
+        {{ t("dashboard.noAccess") }}
       </p>
     </div>
   </div>
 
   <!-- Recent Activity (Placeholder) -->
   <div>
-    <h2 class="text-xl font-semibold text-neutral-900 mb-4">Recent Activity</h2>
+    <h2 class="text-xl font-semibold text-neutral-900 mb-4">
+      {{ t("dashboard.recentActivity") }}
+    </h2>
     <Card>
       <p class="text-neutral-500 text-center py-8">
-        No recent activity to display
+        {{ t("dashboard.noActivity") }}
       </p>
     </Card>
   </div>

@@ -15,6 +15,7 @@ const { create } = useLocaleStore();
 const { mutateAsync: createLocale, isPending } = create;
 
 const toast = useToast();
+const { t } = useI18n();
 
 function resetForm() {
   code.value = "";
@@ -27,7 +28,7 @@ async function handleSubmit() {
   error.value = undefined;
 
   if (!code.value || !nameEn.value) {
-    error.value = "Code and name are required";
+    error.value = t("locales.createRequired");
     return;
   }
 
@@ -41,12 +42,15 @@ async function handleSubmit() {
     },
     {
       onSuccess: (response: CreateLocaleResponse) => {
-        toast.add(`Locale ${response.locale?.name ?? nameEn.value} created`, {
-          variant: "success",
-        });
+        toast.add(
+          t("locales.created", { name: response.locale?.name ?? nameEn.value }),
+          {
+            variant: "success",
+          },
+        );
       },
       onError: () => {
-        toast.add(`Failed to create locale: ${nameEn.value}`, {
+        toast.add(t("locales.createFailed", { name: nameEn.value }), {
           variant: "danger",
         });
       },
@@ -70,7 +74,7 @@ function handleClose() {
 </script>
 
 <template>
-  <Dialog :open title="Create Locale" @close="handleClose">
+  <Dialog :open :title="t('locales.create')" @close="handleClose">
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <!-- Code -->
       <div>
@@ -78,11 +82,11 @@ function handleClose() {
           v-model="code"
           type="text"
           required
-          placeholder="e.g., en-US, de-DE, fr-FR"
+          :placeholder="t('locales.codeExample')"
           :disabled="isPending"
-          helper="ISO language code (e.g., en, de) or language-region code (e.g., en-US, de-DE)"
+          :helper="t('locales.codeHelp')"
         >
-          Code
+          {{ t("common.code") }}
         </Input>
       </div>
 
@@ -92,11 +96,11 @@ function handleClose() {
           v-model="nameEn"
           type="text"
           required
-          placeholder="e.g., English, German, French"
-          helper="Display name for this locale"
+          :placeholder="t('locales.nameExample')"
+          :helper="t('locales.nameHelp')"
           :disabled="isPending"
         >
-          Name (English)
+          {{ t("locales.englishName") }}
         </Input>
       </div>
 
@@ -104,9 +108,9 @@ function handleClose() {
       <Checkbox
         v-model="isDefault"
         :disabled="isPending"
-        helper="This will be the fallback locale for translations"
+        :helper="t('locales.defaultHelp')"
       >
-        <template #description> Set as default locale </template>
+        <template #description>{{ t("locales.setDefault") }}</template>
       </Checkbox>
 
       <!-- Error -->
@@ -117,10 +121,10 @@ function handleClose() {
       <!-- Footer -->
       <div class="flex items-center justify-end gap-3 pt-4">
         <Button ghost :disabled="isPending" @click="handleClose">
-          Cancel
+          {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending">
-          {{ isPending ? "Creating..." : "Create Locale" }}
+          {{ isPending ? t("common.creating") : t("locales.create") }}
         </Button>
       </div>
     </form>

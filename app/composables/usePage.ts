@@ -5,8 +5,9 @@ export type AppPageOptions = PageOptions & { layout?: "workspace" };
 export const PAGE_OPTIONS_KEY = Symbol("pageOptions");
 
 export function usePageProvider() {
+  const { t } = useI18n();
   const options = ref<AppPageOptions>({
-    title: "Placeholder. Please set a title in the page options.",
+    title: t("app.pagePlaceholder"),
   });
 
   provide(PAGE_OPTIONS_KEY, options);

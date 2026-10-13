@@ -11,6 +11,7 @@ const { restore } = useLocaleStore();
 const { mutateAsync: restoreLocale, isPending } = restore;
 
 const toast = useToast();
+const { t } = useI18n();
 
 async function handleSubmit() {
   if (!props.item) return;
@@ -21,14 +22,17 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(`Locale ${props.item?.name} restored`, {
+        toast.add(t("locales.restored", { name: props.item?.name ?? "" }), {
           variant: "success",
         });
       },
       onError: () => {
-        toast.add(`Failed to restore locale: ${props.item?.name}`, {
-          variant: "danger",
-        });
+        toast.add(
+          t("locales.restoreFailed", { name: props.item?.name ?? "" }),
+          {
+            variant: "danger",
+          },
+        );
       },
     },
   );
@@ -50,13 +54,13 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="`Restore Locale: ${props.item?.name}`"
+    :title="t('locales.restoreTitle', { name: props.item?.name ?? '' })"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"
   >
     <p class="text-sm text-neutral-500">
-      Are you sure you want to restore this locale?
+      {{ t("locales.restoreConfirm") }}
     </p>
   </ConfirmDialog>
 </template>

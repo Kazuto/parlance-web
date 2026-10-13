@@ -11,6 +11,7 @@ const entryStore = useEntryStore();
 const createEntry = entryStore.create.mutateAsync;
 const isPending = computed(() => entryStore.create.isPending);
 const toast = useToast();
+const { t } = useI18n();
 
 watch(
   () => props.open,
@@ -31,7 +32,7 @@ async function handleSubmit() {
   if (isPending.value) return;
   error.value = undefined;
   if (!key.value.trim()) {
-    error.value = "Entry key is required.";
+    error.value = t("entries.keyRequired");
     return;
   }
   try {
@@ -39,12 +40,14 @@ async function handleSubmit() {
       key: key.value.trim(),
       description: description.value.trim(),
     });
-    toast.add(`Entry ${key.value.trim()} created`, { variant: "success" });
+    toast.add(t("entries.created", { key: key.value.trim() }), {
+      variant: "success",
+    });
     if (response.entry?.id) emit("created", response.entry);
     emit("close");
   } catch (cause) {
     error.value =
-      cause instanceof Error ? cause.message : "Failed to create entry.";
+      cause instanceof Error ? cause.message : t("entries.createFailed");
   }
 }
 </script>
@@ -52,7 +55,7 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    title="Create Entry"
+    :title="t('entries.create')"
     :persistent="isPending"
     @close="handleClose"
   >
@@ -61,24 +64,28 @@ async function handleSubmit() {
         v-model="key"
         required
         :disabled="isPending"
-        placeholder="e.g., button.save"
+        :placeholder="t('entries.keyExample')"
       >
-        Key
+        {{ t("common.key") }}
       </Input>
       <Textarea
         v-model="description"
         :disabled="isPending"
-        placeholder="Add context for translators"
+        :placeholder="t('entries.contextPlaceholder')"
       >
-        Description (optional)
+        {{ t("entries.optionalDescription") }}
       </Textarea>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
       <div class="flex items-center justify-end gap-3 pt-4">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose"
-          >Cancel</Button
+        <Button
+          type="button"
+          ghost
+          :disabled="isPending"
+          @click="handleClose"
+          >{{ t("common.cancel") }}</Button
         >
         <Button type="submit" primary :disabled="isPending">{{
-          isPending ? "Creating…" : "Create Entry"
+          isPending ? t("common.creating") : t("entries.create")
         }}</Button>
       </div>
     </form>

@@ -12,12 +12,13 @@ const props = withDefaults(
 );
 
 const date = computed(() => new Date(props.timestamp));
+const { locale } = useI18n();
 const {
   relative,
   date: dateStr,
   time,
 } = useRelativeTime(date, {
-  locale: "en",
+  locale: locale.value,
   interval: props.interval,
 });
 
