@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Pagination } from "@thkzt/eunoia";
+import { Button, Pagination, Tabs } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
@@ -13,7 +13,11 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
-const tab = ref<"terminology" | "history">("terminology");
+const tab = ref("terminology");
+const tabs = computed(() => [
+  { value: "terminology", label: t("context.terminology") },
+  { value: "history", label: t("context.history") },
+]);
 const page = ref(1);
 const entryId = computed(() => props.entryId);
 const options = api.entries.history.use({
@@ -43,9 +47,7 @@ const history = computed(() =>
     class="flex h-full min-h-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
     :aria-label="t('context.title')"
   >
-    <header
-      class="shrink-0 border-b border-neutral-200 p-4 dark:border-neutral-700"
-    >
+    <header class="shrink-0 px-4 pt-4">
       <div class="flex items-center justify-between gap-2">
         <div class="min-w-0">
           <p class="text-xs text-neutral-500">{{ t("context.title") }}</p>
@@ -59,32 +61,14 @@ const history = computed(() =>
           @click="emit('close')"
         />
       </div>
-      <div
-        class="mt-3 flex gap-2"
-        role="tablist"
-        :aria-label="t('context.title')"
-      >
-        <button
-          v-for="name in ['terminology', 'history'] as const"
-          :key="name"
-          type="button"
-          role="tab"
-          :aria-selected="tab === name"
-          class="cursor-pointer rounded-md px-3 py-2 text-sm"
-          :class="
-            tab === name
-              ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
-              : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-          "
-          @click="tab = name"
-        >
-          {{ t(`context.${name}`) }}
-        </button>
-      </div>
     </header>
-    <div
-      class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
-      role="tabpanel"
+    <Tabs
+      v-model="tab"
+      :items="tabs"
+      :aria-label="t('context.title')"
+      class="flex min-h-0 flex-1 flex-col"
+      list-class="shrink-0 border-b border-neutral-200 px-4 pt-3 pb-4 dark:border-neutral-700"
+      panel-class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
     >
       <template v-if="tab === 'terminology'">
         <p v-if="isDefault" class="text-sm text-neutral-500">
@@ -178,6 +162,6 @@ const history = computed(() =>
           @update:current="page = $event"
         />
       </template>
-    </div>
+    </Tabs>
   </aside>
 </template>
