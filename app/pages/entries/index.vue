@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   Button,
-  Select,
   SplitView,
   type SplitViewItem,
   Textarea,
@@ -9,8 +8,10 @@ import {
   Pagination,
   Badge,
   Dialog,
+  Chip,
 } from "@thkzt/eunoia";
 import { useEntryList } from "~/composables/entry/useEntryList";
+import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { watchDebounced, useMediaQuery } from "@vueuse/core";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
@@ -72,7 +73,7 @@ const {
   refetch,
   pagination: entryPagination,
   filter,
-  scopeId,
+  scopeIds,
   translationStatus,
   targetLocaleIds,
 } = useEntryList(100);
@@ -95,7 +96,7 @@ watch(
   },
   { deep: true },
 );
-watch([scopeId, translationStatus], () => {
+watch([scopeIds, translationStatus], () => {
   entryPagination.value.page = 1;
 });
 const selectedEntry = ref<SplitViewItem>();
@@ -132,8 +133,68 @@ watchDebounced(
   { debounce: 350 },
 );
 
+useEntryFilterQuery({
+  locales: computed(() => localeData.value?.locales),
+  localeIds: selectedLocaleIds,
+  scopeIds,
+  status: translationStatus,
+  search,
+});
+filter.value.search = search.value || undefined;
+
+const defaultLocaleIds = computed(() => {
+  const locales = localeData.value?.locales ?? [];
+  const id = (locales.find((locale) => locale.isDefault) ?? locales[0])?.id;
+  return id ? [id] : [];
+});
+const languagesFiltered = computed(
+  () =>
+    selectedLocaleIds.value.length !== defaultLocaleIds.value.length ||
+    selectedLocaleIds.value.some((id) => !defaultLocaleIds.value.includes(id)),
+);
+const activeFilterCount = computed(
+  () =>
+    Number(languagesFiltered.value) +
+    Number(scopeIds.value.length > 0) +
+    Number(!!translationStatus.value),
+);
+const selectedLanguageLabels = computed(() =>
+  orderedSelectedLocaleIds.value
+    .map((id) => localeOptions.value.find((locale) => locale.value === id))
+    .filter((locale) => !!locale)
+    .map((locale) => locale.label),
+);
+const MAX_LISTED_LANGUAGES = 3;
+const languageSummary = computed(() => {
+  const labels = selectedLanguageLabels.value;
+  if (!labels.length) return t("entries.selectLocales");
+  if (labels.length > 1 && labels.length === localeOptions.value.length)
+    return t("entries.allLanguages");
+  const listed = labels.slice(0, MAX_LISTED_LANGUAGES).join(", ");
+  const hidden = labels.length - MAX_LISTED_LANGUAGES;
+  return `${t("entries.languagesShort")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
+});
+const selectedScopes = computed(() =>
+  scopeIds.value.map((id) => ({
+    id,
+    label: scopeOptions.value.find((scope) => scope.value === id)?.label ?? id,
+  })),
+);
+const selectedStatusLabel = computed(
+  () =>
+    statusOptions.value.find(
+      (option) => option.value === translationStatus.value,
+    )?.label ?? "",
+);
+
+function clearFilters() {
+  selectedLocaleIds.value = [...defaultLocaleIds.value];
+  scopeIds.value = [];
+  translationStatus.value = "";
+}
+
 async function handleCreated(entry: Entry) {
-  scopeId.value = "";
+  scopeIds.value = [];
   translationStatus.value = "";
   search.value = "";
   filter.value.search = "";
@@ -193,20 +254,6 @@ const localeOptions = computed(
       })) ?? [],
 );
 
-const allLanguagesSelected = computed(
-  () =>
-    localeOptions.value.length > 0 &&
-    localeOptions.value.every((locale) =>
-      selectedLocaleIds.value.includes(locale.value),
-    ),
-);
-
-function toggleAllLanguages() {
-  selectedLocaleIds.value = allLanguagesSelected.value
-    ? []
-    : localeOptions.value.map((locale) => locale.value);
-}
-
 const splitViewItems = computed((): SplitViewItem[] => {
   if (!data.value?.entries) return [];
 
@@ -229,21 +276,6 @@ watch(
   (items) => {
     if (!items.some((item) => item.key === selectedEntry.value?.key)) {
       selectedEntry.value = items[0];
-    }
-  },
-  { immediate: true },
-);
-
-const hasInitializedLocales = ref(false);
-watch(
-  localeData,
-  (response) => {
-    if (hasInitializedLocales.value || !response?.locales?.length) return;
-    const locale =
-      response.locales.find((item) => item.isDefault) ?? response.locales[0];
-    if (locale?.id) {
-      selectedLocaleIds.value = [locale.id];
-      hasInitializedLocales.value = true;
     }
   },
   { immediate: true },
@@ -517,78 +549,62 @@ async function saveTranslations(
     :aria-label="t('entries.workspace')"
     :aria-busy="isFetching"
   >
-    <div class="locale-toolbar">
-      <span class="text-sm font-medium">{{ t("entries.languages") }}</span>
+    <div
+      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
+    >
+      <EntryFiltersPopover
+        v-model:locale-ids="selectedLocaleIds"
+        v-model:scope-ids="scopeIds"
+        v-model:status="translationStatus"
+        :locale-options="localeOptions"
+        :scope-options="scopeOptions"
+        :status-options="statusOptions"
+        :active-count="activeFilterCount"
+        :disabled="isSaving"
+        @clear="clearFilters"
+      />
+      <Chip
+        dense
+        variant="secondary"
+        :title="selectedLanguageLabels.join(', ')"
+      >
+        {{ languageSummary }}
+      </Chip>
+      <Chip
+        v-for="scope in selectedScopes"
+        :key="scope.id"
+        dense
+        variant="secondary"
+        removable
+        @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
+      >
+        {{ scope.label }}
+      </Chip>
+      <Chip
+        v-if="translationStatus"
+        dense
+        variant="secondary"
+        removable
+        @remove="translationStatus = ''"
+      >
+        {{ selectedStatusLabel }}
+      </Chip>
+      <span v-if="scopeError" class="text-xs text-red-600">{{
+        t("scopes.loadFailed")
+      }}</span>
       <span
         v-if="isFetching && !isSaving"
         role="status"
-        class="text-xs text-neutral-500"
+        class="ml-auto text-xs text-neutral-500"
       >
         {{ t("entries.refreshing") }}
       </span>
-      <span v-else-if="error" role="alert" class="text-xs text-red-600">
+      <span v-else-if="error" role="alert" class="ml-auto text-xs text-red-600">
         {{ t("entries.refreshFailed") }}
         <button type="button" class="underline" @click="() => refetch()">
           {{ t("common.retry") }}
         </button>
       </span>
-      <div class="locale-selector">
-        <Select
-          v-model="selectedLocaleIds"
-          teleport-to="body"
-          multiple
-          :disabled="isSaving"
-          :aria-label="t('entries.languages')"
-          :options="localeOptions"
-          :placeholder="t('entries.selectLocales')"
-        />
-      </div>
-      <Button
-        type="button"
-        ghost
-        dense
-        :disabled="isSaving || !localeOptions.length"
-        @click="toggleAllLanguages"
-      >
-        {{
-          allLanguagesSelected
-            ? t("entries.deselectAll")
-            : t("entries.selectAll")
-        }}
-      </Button>
-    </div>
-    <div
-      class="flex shrink-0 flex-wrap items-center gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-700"
-    >
-      <span class="text-sm font-medium">{{ t("entries.filters") }}</span>
-      <div class="w-52 max-w-full">
-        <Select
-          v-model="scopeId"
-          teleport-to="body"
-          :options="[{ label: t('scopes.all'), value: '' }, ...scopeOptions]"
-          :aria-label="t('scopes.title')"
-          :disabled="isSaving"
-        />
-      </div>
-      <div class="w-52 max-w-full">
-        <Select
-          v-model="translationStatus"
-          teleport-to="body"
-          :options="statusOptions"
-          :aria-label="t('entries.translationStatus')"
-          :disabled="isSaving"
-        />
-      </div>
-      <span class="text-xs text-neutral-500">{{
-        t(
-          selectedLocaleIds.length
-            ? "entries.filterSelectedHelp"
-            : "entries.filterAllHelp",
-        )
-      }}</span>
-      <span v-if="scopeError" class="text-xs text-red-600">{{
-        t("scopes.loadFailed")
-      }}</span>
     </div>
     <div
       class="editor-panels"
@@ -908,26 +924,6 @@ async function saveTranslations(
   background: var(--color-white);
 }
 
-.locale-toolbar {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid var(--color-neutral-200);
-}
-
-.locale-selector {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Keep selected chips inside a bounded control; the dropdown remains outside it. */
-.locale-selector :deep([role="combobox"]) {
-  max-height: 6rem;
-  overflow-y: auto;
-}
-
 .editor-panels {
   position: relative;
   display: flex;
@@ -968,13 +964,6 @@ async function saveTranslations(
 }
 
 @media (max-width: 640px) {
-  .locale-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-    padding: 0.75rem;
-  }
-
   .entry-split-view {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 150px minmax(0, 1fr);
@@ -983,10 +972,6 @@ async function saveTranslations(
 
 :global(.dark) .entry-workspace {
   background: var(--color-neutral-800);
-  border-color: var(--color-neutral-700);
-}
-
-:global(.dark) .locale-toolbar {
   border-color: var(--color-neutral-700);
 }
 </style>
