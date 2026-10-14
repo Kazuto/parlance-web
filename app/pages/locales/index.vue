@@ -24,11 +24,6 @@ usePage({
   width: "wide",
   title: t("nav.locales"),
   description: t("locales.description"),
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
   primaryAction: {
     content: t("locales.create"),
     icon: "plus",

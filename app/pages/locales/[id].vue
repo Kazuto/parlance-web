@@ -128,11 +128,6 @@ usePage({
   layout: "workspace",
   title: t("nav.locales"),
   description: t("locales.editorDescription"),
-  backAction: {
-    content: t("nav.backLocales"),
-    icon: "arrow-left",
-    onClick: () => router.push("/locales"),
-  },
 });
 
 function selectLocale(item: SplitViewItem) {

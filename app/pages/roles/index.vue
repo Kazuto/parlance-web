@@ -9,18 +9,12 @@ import {
 import { useRoleList } from "~/composables/role/useRoleList";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
-const router = useRouter();
 const { t } = useI18n();
 
 usePage({
   width: "wide",
   title: t("nav.roles"),
   description: t("roles.description"),
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
 });
 
 const { data, isLoading, error, refetch } = useRoleList();

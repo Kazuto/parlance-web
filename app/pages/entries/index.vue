@@ -19,7 +19,6 @@ import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
-const router = useRouter();
 const queryClient = useQueryClient();
 const historyQueryKey = api.entries.history.getQueryKey();
 const { t } = useI18n();
@@ -63,11 +62,6 @@ usePage({
       onClick: () => openTransfer("export"),
     },
   ],
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
 });
 
 const {

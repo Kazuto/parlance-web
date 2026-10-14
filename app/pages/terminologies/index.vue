@@ -10,18 +10,12 @@ import { useTerminologyList } from "~/composables/terminology/useTerminologyList
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
-const router = useRouter();
 const { t } = useI18n();
 
 usePage({
   width: "wide",
   title: t("nav.terminologies"),
   description: t("terminologies.description"),
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
 });
 
 const { data, isLoading, error, refetch } = useTerminologyList();

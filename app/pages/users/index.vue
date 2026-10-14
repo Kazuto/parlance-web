@@ -4,18 +4,12 @@ import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
-const router = useRouter();
 const { t } = useI18n();
 
 usePage({
   width: "wide",
   title: t("nav.users"),
   description: t("users.description"),
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
 });
 
 const { data, isLoading, error, refetch } = useUserList();
