@@ -65,6 +65,7 @@ export type ListEntriesRequest = {
   filter?: FilterRequest | null;
   translationStatus?: string | null;
   targetLocaleIds?: Array<string> | null;
+  scopeIds?: Array<string> | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -85,6 +86,9 @@ export const ListEntriesRequestSchema = z.object({
   get targetLocaleIds(): z.ZodOptional<
     z.ZodNullable<z.ZodType<Array<string>>>
   > {
+    return z.array(z.string()).nullish();
+  },
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
   },
 });

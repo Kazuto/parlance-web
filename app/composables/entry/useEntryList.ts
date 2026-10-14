@@ -13,7 +13,7 @@ export function useEntryList(perPage = 10) {
     order: undefined,
     includeDeleted: false,
   });
-  const scopeId = ref("");
+  const scopeIds = ref<string[]>([]);
   const translationStatus = ref("");
   const targetLocaleIds = ref<string[]>([]);
 
@@ -21,7 +21,7 @@ export function useEntryList(perPage = 10) {
     ...api.entries.list.use({
       pagination,
       filter,
-      scopeId,
+      scopeIds,
       translationStatus,
       targetLocaleIds,
     }),
@@ -37,7 +37,7 @@ export function useEntryList(perPage = 10) {
     refetch,
     pagination,
     filter,
-    scopeId,
+    scopeIds,
     translationStatus,
     targetLocaleIds,
   };
