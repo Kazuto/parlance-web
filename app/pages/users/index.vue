@@ -1,18 +1,42 @@
 <script setup lang="ts">
-import { Button, Card, DataTable, type DataTableColumn } from "@thkzt/eunoia";
+import {
+  Badge,
+  Button,
+  Card,
+  DataTable,
+  Pagination,
+  type DataTableColumn,
+} from "@thkzt/eunoia";
 import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
-import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const { t } = useI18n();
+
+const router = useRouter();
+
+const showDialog = ref(false);
+const deleteDialogItem = ref<User | undefined>(undefined);
+const restoreDialogItem = ref<User | undefined>(undefined);
 
 usePage({
   width: "wide",
   title: t("nav.users"),
   description: t("users.description"),
+  backAction: {
+    content: "Back to Dashboard",
+    onClick: () => router.push("/"),
+    icon: "arrow-left",
+  },
+  primaryAction: {
+    content: "Create User",
+    icon: "plus",
+    onClick: () => (showDialog.value = true),
+  },
 });
 
-const { data, isLoading, error, refetch } = useUserList();
+const { data, filter, pagination, isFetching, error, refetch } = useUserList();
+
+filter.value.includeDeleted = true;
 
 const tableColumns: DataTableColumn<User>[] = [
   {
@@ -24,15 +48,16 @@ const tableColumns: DataTableColumn<User>[] = [
     title: t("nav.roles"),
     key: "roles",
     sortable: true,
-    value: (item: User) =>
-      (item.roles ?? []).map((role: Role) => role.name).join(", "),
   },
   {
     title: t("common.created"),
     key: "createdAt",
     sortable: true,
-    value: (item: User) =>
-      item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "",
+  },
+  {
+    title: "Updated",
+    key: "updatedAt",
+    sortable: true,
   },
 ];
 
@@ -41,7 +66,7 @@ const tableItems = computed(() => data.value?.users ?? []);
 
 <template>
   <!-- Loading State -->
-  <div v-if="isLoading" class="flex items-center justify-center py-12">
+  <div v-if="isFetching" class="flex items-center justify-center py-12">
     <div class="text-neutral-600">{{ t("users.loading") }}</div>
   </div>
 
@@ -55,12 +80,57 @@ const tableItems = computed(() => data.value?.users ?? []);
 
   <div v-else-if="data">
     <!-- Table -->
-    <Card class="overflow-x-auto">
-      <DataTable :columns="tableColumns" :items="tableItems">
+    <Card>
+      <DataTable
+        :columns="tableColumns"
+        :items="tableItems"
+        :loading="isFetching"
+        :loading-rows="data.users.length"
+        :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
+      >
+        <template #roles="{ item }">
+          <div class="flex items-center gap-2">
+            <Badge v-for="role in item.roles" :key="role.id" dense>
+              {{ role.name }}
+            </Badge>
+          </div>
+        </template>
         <template #createdAt="{ item }">
           <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
+        <template #updatedAt="{ item }">
+          <RelativeTime :timestamp="item.updatedAt" />
+        </template>
+        <template #actions="{ item }">
+          <div
+            v-if="!item.deletedAt"
+            class="flex items-center justify-end gap-2"
+          >
+            <Button
+              ghost
+              icon="eye"
+              @click="() => router.push(`/users/${item.id}`)"
+            />
+            <Button destructive icon="trash" @click="deleteDialogItem = item" />
+          </div>
+          <div v-else class="flex items-center justify-end gap-2">
+            <Button
+              ghost
+              icon="arrow-counter-clockwise"
+              @click="restoreDialogItem = item"
+            />
+          </div>
+        </template>
       </DataTable>
+
+      <Pagination
+        v-model:current="pagination.page"
+        class="mt-4"
+        :per-page="pagination.perPage"
+        :total="data?.pagination?.totalPages ?? 0"
+        @update:current="pagination.page = $event"
+        @update:per-page="pagination.perPage = $event"
+      />
     </Card>
 
     <!-- Empty State -->
@@ -83,4 +153,16 @@ const tableItems = computed(() => data.value?.users ?? []);
       </h3>
     </Card>
   </div>
+
+  <UserCreateDialog :open="showDialog" @close="showDialog = false" />
+  <UserDeleteDialog
+    :item="deleteDialogItem"
+    :open="deleteDialogItem !== undefined"
+    @close="deleteDialogItem = undefined"
+  />
+  <UserRestoreDialog
+    :item="restoreDialogItem"
+    :open="restoreDialogItem !== undefined"
+    @close="restoreDialogItem = undefined"
+  />
 </template>
