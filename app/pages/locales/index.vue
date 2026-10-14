@@ -156,8 +156,10 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
           </div>
         </template>
       </DataTable>
+
       <Pagination
         :current="pagination.page ?? 1"
+        class="mt-4"
         :per-page="pagination.perPage ?? 20"
         :total="data?.pagination?.totalPages ?? 0"
         @update:current="pagination.page = $event"

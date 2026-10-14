@@ -85,12 +85,16 @@ const tableItems = computed(() => data.value?.users ?? []);
         :columns="tableColumns"
         :items="tableItems"
         :loading="isFetching"
-        :loading-rows="data.users.length"
+        :loading-rows="data.users?.length ?? 0"
         :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
       >
         <template #roles="{ item }">
           <div class="flex items-center gap-2">
-            <Badge v-for="role in item.roles" :key="role.id" dense>
+            <Badge
+              v-for="(role, index) in item.roles"
+              :key="role.id ?? `role-${index}`"
+              dense
+            >
               {{ role.name }}
             </Badge>
           </div>
@@ -99,7 +103,7 @@ const tableItems = computed(() => data.value?.users ?? []);
           <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
         </template>
         <template #updatedAt="{ item }">
-          <RelativeTime :timestamp="item.updatedAt" />
+          <RelativeTime v-if="item.updatedAt" :timestamp="item.updatedAt" />
         </template>
         <template #actions="{ item }">
           <div
@@ -124,9 +128,9 @@ const tableItems = computed(() => data.value?.users ?? []);
       </DataTable>
 
       <Pagination
-        v-model:current="pagination.page"
+        :current="pagination.page ?? 1"
         class="mt-4"
-        :per-page="pagination.perPage"
+        :per-page="pagination.perPage ?? 10"
         :total="data?.pagination?.totalPages ?? 0"
         @update:current="pagination.page = $event"
         @update:per-page="pagination.perPage = $event"

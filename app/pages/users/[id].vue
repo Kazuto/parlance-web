@@ -2,7 +2,7 @@
 import { Button, Card, Input, Select } from "@thkzt/eunoia";
 import { useRoleList } from "~/composables/role/useRoleList";
 import { useUserGet } from "~/composables/user/useUserGet";
-import type { Role } from "~/lib/api/schemas/RoleSchema";
+import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const route = useRoute();
 const router = useRouter();
@@ -44,9 +44,9 @@ const form = ref({
 
 const rolesOptions = computed(
   () =>
-    rolesData.value?.roles.map((role: Role) => ({
-      label: role.name,
-      value: role.id,
+    rolesData.value?.roles?.map((role: Role) => ({
+      label: role.name ?? "",
+      value: role.id ?? "",
     })) ?? [],
 );
 
@@ -55,11 +55,12 @@ watch(
   (newData) => {
     if (!newData?.user) return;
     form.value = {
-      name: newData.user.name,
-      email: newData.user.email,
+      name: newData.user.name ?? "",
+      email: newData.user.email ?? "",
       password: "",
       passwordConfirm: "",
-      roles: newData.user.roles.map((role) => role.id),
+      roles:
+        newData.user.roles?.map((role) => role.id ?? "").filter(Boolean) ?? [],
     };
   },
   { immediate: true },
@@ -85,7 +86,7 @@ async function handleUpdate() {
       name: form.value.name,
       email: form.value.email,
       ...(form.value.password ? { password: form.value.password } : {}),
-      role_ids: form.value.roles,
+      roleIds: form.value.roles,
     },
     {
       onSuccess: async () => {

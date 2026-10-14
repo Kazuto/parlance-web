@@ -45,7 +45,7 @@ async function handleSubmit() {
     },
     {
       onSuccess: (response: CreateUserResponse) => {
-        toast.add(`User ${response.user.name} created`, {
+        toast.add(`User ${response.user?.name ?? form.value.name} created`, {
           variant: "success",
         });
       },

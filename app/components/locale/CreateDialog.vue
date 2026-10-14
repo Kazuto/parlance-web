@@ -6,9 +6,12 @@ defineProps<{
   open: boolean;
 }>();
 
-const code = ref("");
-const nameEn = ref("");
-const isDefault = ref(false);
+const form = ref({
+  code: "",
+  names: {} as Record<string, string>,
+  isDefault: false,
+});
+
 const error = ref<string>();
 
 const { create } = useLocaleStore();
@@ -18,39 +21,42 @@ const toast = useToast();
 const { t } = useI18n();
 
 function resetForm() {
-  code.value = "";
-  nameEn.value = "";
-  isDefault.value = false;
+  form.value = {
+    code: "",
+    names: {} as Record<string, string>,
+    isDefault: false,
+  };
+
   error.value = undefined;
 }
 
 async function handleSubmit() {
   error.value = undefined;
 
-  if (!code.value || !nameEn.value) {
+  if (!form.value.code || !form.value.names.en) {
     error.value = t("locales.createRequired");
     return;
   }
 
   await createLocale(
     {
-      code: code.value,
-      names: {
-        en: nameEn.value,
-      },
-      isDefault: isDefault.value,
+      code: form.value.code,
+      names: form.value.names,
+      isDefault: form.value.isDefault,
     },
     {
       onSuccess: (response: CreateLocaleResponse) => {
         toast.add(
-          t("locales.created", { name: response.locale?.name ?? nameEn.value }),
+          t("locales.created", {
+            name: response.locale?.name ?? form.value.names.en,
+          }),
           {
             variant: "success",
           },
         );
       },
       onError: () => {
-        toast.add(t("locales.createFailed", { name: nameEn.value }), {
+        toast.add(t("locales.createFailed", { name: form.value.names.en }), {
           variant: "danger",
         });
       },
@@ -76,44 +82,37 @@ function handleClose() {
 <template>
   <Dialog :open :title="t('locales.create')" @close="handleClose">
     <form class="space-y-4" @submit.prevent="handleSubmit">
-      <!-- Code -->
-      <div>
-        <Input
-          v-model="code"
-          type="text"
-          required
-          :placeholder="t('locales.codeExample')"
-          :disabled="isPending"
-          :helper="t('locales.codeHelp')"
-        >
-          {{ t("common.code") }}
-        </Input>
-      </div>
+      <Input
+        v-model="form.code"
+        type="text"
+        required
+        :placeholder="t('locales.codeExample')"
+        :disabled="isPending"
+        :helper="t('locales.codeHelp')"
+        maxlength="10"
+      >
+        {{ t("common.code") }}
+      </Input>
 
-      <!-- Name (English) -->
-      <div>
-        <Input
-          v-model="nameEn"
-          type="text"
-          required
-          :placeholder="t('locales.nameExample')"
-          :helper="t('locales.nameHelp')"
-          :disabled="isPending"
-        >
-          {{ t("locales.englishName") }}
-        </Input>
-      </div>
+      <Input
+        v-model="form.names.en"
+        type="text"
+        required
+        :placeholder="t('locales.nameExample')"
+        :helper="t('locales.nameHelp')"
+        :disabled="isPending"
+      >
+        {{ t("locales.englishName") }}
+      </Input>
 
-      <!-- Is Default -->
       <Checkbox
-        v-model="isDefault"
+        v-model="form.isDefault"
         :disabled="isPending"
         :helper="t('locales.defaultHelp')"
       >
         <template #description>{{ t("locales.setDefault") }}</template>
       </Checkbox>
 
-      <!-- Error -->
       <div v-if="error" class="rounded-md bg-red-50 border border-red-200 p-3">
         <p class="text-sm text-red-800">{{ error }}</p>
       </div>
