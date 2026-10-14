@@ -6,7 +6,7 @@
     "schemas:generate": "node scripts/generate-schemas.mjs",
     "schemas:check": "node scripts/generate-schemas.mjs --check",
     "build": "nuxt build",
-    "dev": "nuxt dev -p 1337",
+    "dev": "nuxt dev",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "eslint:check": "eslint --cache --cache-strategy content",

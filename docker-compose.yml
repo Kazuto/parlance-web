@@ -6,7 +6,7 @@ services:
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     command: sh -c "bun install && bun run dev"
     ports:
-      - "1337:1337"
+      - "3000:3000"
       - "24678:24678"
     environment:
       - HOME=/tmp
