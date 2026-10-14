@@ -164,6 +164,26 @@ const selectedLanguageLabels = computed(() =>
     .filter((locale) => !!locale)
     .map((locale) => locale.label),
 );
+const copiedKey = ref<string>();
+let copiedKeyTimer: ReturnType<typeof setTimeout> | undefined;
+async function copyKey(key: string) {
+  try {
+    await navigator.clipboard.writeText(key);
+  } catch {
+    return;
+  }
+  copiedKey.value = key;
+  clearTimeout(copiedKeyTimer);
+  copiedKeyTimer = setTimeout(() => (copiedKey.value = undefined), 1500);
+}
+
+function toggleScopeFilter(id: string) {
+  if (isSaving.value) return;
+  scopeIds.value = scopeIds.value.includes(id)
+    ? scopeIds.value.filter((scopeId) => scopeId !== id)
+    : [...scopeIds.value, id];
+}
+
 const MAX_LISTED_LANGUAGES = 3;
 const languageSummary = computed(() => {
   const labels = selectedLanguageLabels.value;
@@ -649,25 +669,71 @@ async function saveTranslations(
         <template #header="{ item }">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <h2 class="break-words font-semibold">
-                {{ item?.label ?? t("entries.selectEntry") }}
-              </h2>
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 class="min-w-0 font-mono font-semibold break-all">
+                  <Tooltip
+                    v-if="item?.label"
+                    :content="
+                      t(
+                        copiedKey === item.label
+                          ? 'terminologyHints.copied'
+                          : 'entries.copyKey',
+                      )
+                    "
+                  >
+                    <button
+                      type="button"
+                      class="cursor-pointer rounded-sm text-left transition-colors hover:text-primary-600 focus-visible:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:hover:text-primary-400 dark:focus-visible:text-primary-400"
+                      :aria-label="`${item.label} – ${t('entries.copyKey')}`"
+                      @click="copyKey(item.label)"
+                    >
+                      {{ item.label }}
+                    </button>
+                  </Tooltip>
+                  <template v-else>{{ t("entries.selectEntry") }}</template>
+                </h2>
+                <div
+                  v-if="selectedEntryData?.scopes?.length"
+                  class="flex flex-wrap gap-1"
+                >
+                  <Chip
+                    v-for="scope in selectedEntryData.scopes"
+                    :key="scope.id ?? undefined"
+                    dense
+                    :variant="
+                      scope.id && scopeIds.includes(scope.id)
+                        ? 'primary'
+                        : 'secondary'
+                    "
+                    :title="
+                      t(
+                        scope.id && scopeIds.includes(scope.id)
+                          ? 'entries.unfilterByScope'
+                          : 'entries.filterByScope',
+                        { scope: scope.name },
+                      )
+                    "
+                    class="cursor-pointer"
+                    @click="scope.id && toggleScopeFilter(scope.id)"
+                    >{{ scope.name }}</Chip
+                  >
+                </div>
+                <button
+                  v-else-if="selectedEntryData"
+                  type="button"
+                  class="text-xs text-neutral-400 hover:text-neutral-600 hover:underline dark:hover:text-neutral-300"
+                  :disabled="isSaving"
+                  @click="editDialogItem = selectedEntryData"
+                >
+                  {{ t("entries.noScopes") }}
+                </button>
+              </div>
               <p
                 v-if="selectedEntryData?.description"
                 class="mt-1 line-clamp-2 text-sm text-neutral-500"
               >
                 {{ selectedEntryData.description }}
               </p>
-              <div
-                v-if="selectedEntryData?.scopes?.length"
-                class="mt-2 flex flex-wrap gap-1"
-              >
-                <Badge
-                  v-for="scope in selectedEntryData.scopes"
-                  :key="scope.id ?? undefined"
-                  >{{ scope.name }}</Badge
-                >
-              </div>
             </div>
             <EntryActionsMenu
               v-if="selectedEntryData"
