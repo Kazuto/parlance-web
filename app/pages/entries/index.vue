@@ -5,14 +5,15 @@ import {
   type SplitViewItem,
   Textarea,
   Tooltip,
-  Pagination,
   Badge,
   Dialog,
   Chip,
+  Icon,
+  Input,
 } from "@thkzt/eunoia";
-import { useEntryList } from "~/composables/entry/useEntryList";
+import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
-import { watchDebounced, useMediaQuery } from "@vueuse/core";
+import { watchDebounced, useMediaQuery, useEventListener } from "@vueuse/core";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
@@ -28,7 +29,17 @@ const deleteDialogItem = ref<Entry>();
 const editDialogItem = ref<Entry>();
 
 function handleEntryUpdated(entry: Entry) {
-  if (entry.id) knownEntries.value[entry.id] = entry;
+  if (entry.id) {
+    // Keep the loaded localizations; saving relies on them to update, not duplicate.
+    const known = knownEntries.value[entry.id];
+    knownEntries.value[entry.id] = {
+      ...entry,
+      localizations: entry.localizations?.length
+        ? entry.localizations
+        : known?.localizations,
+    };
+    if (entry.id === selectedEntryId.value) refetchDetail();
+  }
   if (entry.id && selectedEntry.value?.key === entry.id) {
     selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
   }
@@ -67,16 +78,20 @@ usePage({
 
 const {
   data,
+  entries: feedEntries,
+  total: entryTotal,
   isLoading,
   isFetching,
+  isFetchingNextPage,
+  hasNextPage,
+  fetchNextPage,
   error,
   refetch,
-  pagination: entryPagination,
-  filter,
+  search: feedSearch,
   scopeIds,
   translationStatus,
   targetLocaleIds,
-} = useEntryList(100);
+} = useEntryFeed(100);
 const { options: scopeOptions, error: scopeError } = useScopeOptions();
 const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
@@ -92,13 +107,9 @@ watch(
   selectedLocaleIds,
   (ids) => {
     targetLocaleIds.value = [...ids];
-    if (translationStatus.value) entryPagination.value.page = 1;
   },
   { deep: true },
 );
-watch([scopeIds, translationStatus], () => {
-  entryPagination.value.page = 1;
-});
 const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
 const isSaving = ref(false);
@@ -127,11 +138,38 @@ function openContext(localeId: string) {
 watchDebounced(
   search,
   (value) => {
-    filter.value.search = value;
-    entryPagination.value.page = 1;
+    feedSearch.value = value;
   },
   { debounce: 350 },
 );
+
+const searchField = useTemplateRef<HTMLElement>("searchField");
+
+function isEditable(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+  );
+}
+
+// "/" focuses the search from anywhere outside a text field, as in most dev tools.
+useEventListener("keydown", (event: KeyboardEvent) => {
+  if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey)
+    return;
+  if (isEditable(event.target)) return;
+  const input = searchField.value?.querySelector("input");
+  if (!input) return;
+  event.preventDefault();
+  input.focus();
+  input.select();
+});
+
+function onSearchKeydown(event: KeyboardEvent) {
+  if (event.key !== "Escape" || !search.value) return;
+  event.preventDefault();
+  search.value = "";
+}
 
 useEntryFilterQuery({
   locales: computed(() => localeData.value?.locales),
@@ -140,7 +178,7 @@ useEntryFilterQuery({
   status: translationStatus,
   search,
 });
-filter.value.search = search.value || undefined;
+feedSearch.value = search.value || undefined;
 
 const defaultLocaleIds = computed(() => {
   const locales = localeData.value?.locales ?? [];
@@ -213,29 +251,33 @@ function clearFilters() {
   translationStatus.value = "";
 }
 
+// A new entry sits at its alphabetical place, which may not be loaded yet; keep it
+// selected until the user picks something else instead of falling back to the top.
+const pinnedEntryId = ref<string>();
+
 async function handleCreated(entry: Entry) {
   scopeIds.value = [];
   translationStatus.value = "";
   search.value = "";
-  filter.value.search = "";
-  filter.value.sort = "created_at";
-  filter.value.order = "desc";
-  entryPagination.value.page = 1;
-  await refetch();
-  selectedEntry.value = { key: entry.id ?? "", label: entry.key ?? "" };
+  feedSearch.value = undefined;
+  if (!entry.id) return;
+  knownEntries.value[entry.id] = entry;
+  pinnedEntryId.value = entry.id;
+  selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
+}
+
+function selectEntry(item: SplitViewItem) {
+  if (isSaving.value) return;
+  pinnedEntryId.value = undefined;
+  selectedEntry.value = item;
 }
 
 async function handleDeleted(id: string) {
   Reflect.deleteProperty(localizationForms.value, id);
   Reflect.deleteProperty(savedTranslations.value, id);
   Reflect.deleteProperty(knownEntries.value, id);
+  pinnedEntryId.value = undefined;
   selectedEntry.value = undefined;
-  if (
-    (data.value?.entries?.length ?? 0) <= 1 &&
-    (entryPagination.value.page ?? 1) > 1
-  ) {
-    entryPagination.value.page = (entryPagination.value.page ?? 1) - 1;
-  }
   await refetch();
 }
 
@@ -274,32 +316,42 @@ const localeOptions = computed(
       })) ?? [],
 );
 
-const splitViewItems = computed((): SplitViewItem[] => {
-  if (!data.value?.entries) return [];
-
-  return data.value.entries
+const splitViewItems = computed((): SplitViewItem[] =>
+  feedEntries.value
     .filter((entry) => !!entry.id)
     .map((entry: Entry) => ({
       key: entry.id ?? "",
       label: entry.key ?? "",
-    }));
-});
-
-const selectedEntryData = computed(() =>
-  data.value?.entries?.find(
-    (entry: Entry) => entry.id === selectedEntry.value?.key,
-  ),
+      missingLocaleIds: entry.missingLocaleIds ?? [],
+    })),
 );
+
+function isMissingTranslations(item: SplitViewItem) {
+  const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
+  return selectedLocaleIds.value.some((id) => missing.includes(id));
+}
 
 watch(
   splitViewItems,
   (items) => {
-    if (!items.some((item) => item.key === selectedEntry.value?.key)) {
+    const id = selectedEntry.value?.key;
+    if (id !== undefined && id === pinnedEntryId.value) return;
+    if (!items.some((item) => item.key === id)) {
       selectedEntry.value = items[0];
     }
   },
   { immediate: true },
 );
+
+const selectedEntryId = computed(() =>
+  selectedEntry.value ? String(selectedEntry.value.key) : undefined,
+);
+const {
+  data: detailData,
+  isLoading: isDetailLoading,
+  error: detailError,
+  refetch: refetchDetail,
+} = useEntryDetail(selectedEntryId);
 
 // localizationForms keyed by entryId -> localeId -> translation
 const localizationForms = ref<Record<string, Record<string, string>>>({});
@@ -307,9 +359,9 @@ const savedTranslations = ref<Record<string, Record<string, string>>>({});
 const knownEntries = ref<Record<string, Entry>>({});
 
 watch(
-  () => data.value?.entries,
-  (entries) => {
-    for (const entry of entries ?? []) {
+  () => detailData.value?.entry,
+  (detail) => {
+    for (const entry of detail ? [detail] : []) {
       if (!entry.id) continue;
       knownEntries.value[entry.id] = {
         ...entry,
@@ -374,6 +426,17 @@ const allUnsavedTranslations = computed(() =>
 const allUnsavedCount = computed(() => allUnsavedTranslations.value.length);
 registerUnsavedChanges("entry-translations", allUnsavedCount, isSaving);
 
+const selectedEntryData = computed(() =>
+  selectedEntryId.value ? knownEntries.value[selectedEntryId.value] : undefined,
+);
+// Hold the editor until the first load so typing can't race the saved values.
+const isEditorLoading = computed(
+  () =>
+    !!selectedEntryId.value &&
+    !selectedEntryData.value &&
+    isDetailLoading.value,
+);
+
 const currentEntryForms = computed(() => {
   const key = selectedEntry.value?.key;
 
@@ -409,13 +472,6 @@ function fillEmptyTranslations() {
   for (const localeId of emptySelectedLocaleIds.value) {
     setLocalizationForm(String(entryId), localeId, source);
   }
-}
-
-function getLocalizationForm(entryId: string, localeId: string): string {
-  const result =
-    localizationForms.value[String(entryId)]?.[String(localeId)] ?? "";
-
-  return result;
 }
 
 function setLocalizationForm(
@@ -540,8 +596,11 @@ async function saveTranslations(
       );
     }
 
-    await refetch();
-    await queryClient.invalidateQueries({ queryKey: historyQueryKey });
+    await Promise.all([
+      refetch(),
+      refetchDetail(),
+      queryClient.invalidateQueries({ queryKey: historyQueryKey }),
+    ]);
   } finally {
     isSaving.value = false;
   }
@@ -572,6 +631,20 @@ async function saveTranslations(
     <div
       class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
+      <div ref="searchField" class="w-full sm:w-72" @keydown="onSearchKeydown">
+        <Input
+          v-model="search"
+          dense
+          type="search"
+          :placeholder="t('entries.searchKeys')"
+          :aria-label="t('entries.searchKeys')"
+          :title="t('entries.searchShortcut')"
+        >
+          <template #prepend>
+            <Icon name="magnifying-glass" size="sm" />
+          </template>
+        </Input>
+      </div>
       <EntryFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
         v-model:scope-ids="scopeIds"
@@ -613,7 +686,7 @@ async function saveTranslations(
         t("scopes.loadFailed")
       }}</span>
       <span
-        v-if="isFetching && !isSaving"
+        v-if="isFetching && !isFetchingNextPage && !isSaving"
         role="status"
         class="ml-auto text-xs text-neutral-500"
       >
@@ -621,7 +694,11 @@ async function saveTranslations(
       </span>
       <span v-else-if="error" role="alert" class="ml-auto text-xs text-red-600">
         {{ t("entries.refreshFailed") }}
-        <button type="button" class="underline" @click="() => refetch()">
+        <button
+          type="button"
+          class="cursor-pointer underline"
+          @click="() => refetch()"
+        >
           {{ t("common.retry") }}
         </button>
       </span>
@@ -633,13 +710,30 @@ async function saveTranslations(
       }"
     >
       <SplitView
-        v-model:search="search"
         :items="splitViewItems"
         :selected="selectedEntry"
-        searchable
+        virtual
+        :has-more="hasNextPage"
+        :loading="isFetchingNextPage"
+        :total="entryTotal"
         class="entry-split-view"
-        @select="!isSaving && (selectedEntry = $event)"
+        @select="selectEntry"
+        @end-reached="fetchNextPage()"
       >
+        <template #listFooter>
+          <p
+            v-if="isFetchingNextPage"
+            role="status"
+            class="px-4 py-2 text-xs text-neutral-500"
+          >
+            {{ t("entries.loadingMore") }}
+          </p>
+        </template>
+        <template #empty>
+          <p class="px-4 py-2 text-sm text-neutral-500">
+            {{ t("entries.noMatches") }}
+          </p>
+        </template>
         <template #item="{ item }">
           <span class="flex min-w-0 w-full items-center justify-between gap-3">
             <span class="truncate" :title="item.label">{{ item.label }}</span>
@@ -652,10 +746,7 @@ async function saveTranslations(
             <Tooltip
               v-if="
                 !hasUnsavedTranslations(String(item.key)) &&
-                selectedLocaleIds.some(
-                  (localeId) =>
-                    !getLocalizationForm(String(item.key), localeId),
-                )
+                isMissingTranslations(item)
               "
               :content="t('entries.missingTranslations')"
             >
@@ -721,7 +812,7 @@ async function saveTranslations(
                 <button
                   v-else-if="selectedEntryData"
                   type="button"
-                  class="text-xs text-neutral-400 hover:text-neutral-600 hover:underline dark:hover:text-neutral-300"
+                  class="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600 hover:underline dark:hover:text-neutral-300"
                   :disabled="isSaving"
                   @click="editDialogItem = selectedEntryData"
                 >
@@ -746,7 +837,24 @@ async function saveTranslations(
         </template>
         <template #default="{ item }">
           <div
-            v-if="item && selectedLocaleIds.length > 0"
+            v-if="item && isEditorLoading"
+            role="status"
+            class="flex h-full items-center justify-center text-sm text-neutral-500"
+          >
+            {{ t("entries.loadingEntry") }}
+          </div>
+          <div
+            v-else-if="item && detailError && !selectedEntryData"
+            role="alert"
+            class="flex h-full flex-col items-center justify-center gap-2 text-sm text-red-600"
+          >
+            {{ t("entries.entryLoadFailed") }}
+            <Button ghost dense @click="() => refetchDetail()">{{
+              t("common.retry")
+            }}</Button>
+          </div>
+          <div
+            v-else-if="item && selectedLocaleIds.length > 0"
             class="mx-auto flex w-full flex-col gap-6"
           >
             <div
@@ -847,53 +955,6 @@ async function saveTranslations(
             }}
           </div>
         </template>
-        <template #footer="{ item }">
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-sm text-neutral-500"
-              >{{
-                t(
-                  "entries.selectedLanguages",
-                  { count: selectedLocaleIds.length },
-                  selectedLocaleIds.length,
-                )
-              }}
-              <span
-                v-if="unsavedLocaleIds.length"
-                class="ml-2 text-amber-700 dark:text-amber-300"
-                >{{
-                  t("common.unsavedCount", { count: unsavedLocaleIds.length })
-                }}{{
-                  unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-                    ? t("common.hiddenLanguages")
-                    : ""
-                }}</span
-              >
-            </span>
-            <div class="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                ghost
-                :disabled="!allUnsavedCount || isSaving"
-                @click="showSaveAllDialog = true"
-              >
-                {{
-                  allUnsavedCount
-                    ? t("common.saveAllCount", { count: allUnsavedCount })
-                    : t("common.saveAll")
-                }}
-              </Button>
-              <Button
-                primary
-                :disabled="
-                  !item || !selectedUnsavedLocaleIds.length || isSaving
-                "
-                @click="handleSave"
-              >
-                {{ isSaving ? t("common.saving") : t("common.saveChanges") }}
-              </Button>
-            </div>
-          </div>
-        </template>
       </SplitView>
       <EntryContextPanel
         v-if="contextOpen && activeLocaleId && selectedEntry"
@@ -910,18 +971,53 @@ async function saveTranslations(
       />
     </div>
     <div
-      class="shrink-0 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
+      class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
-      <Pagination
-        :current="entryPagination.page ?? 1"
-        :per-page="entryPagination.perPage ?? 10"
-        :total="data.pagination?.totalPages ?? 0"
-        @update:current="entryPagination.page = $event"
-        @update:per-page="
-          entryPagination.perPage = $event;
-          entryPagination.page = 1;
-        "
-      />
+      <span class="text-sm text-neutral-500">
+        <template v-if="entryTotal !== undefined"
+          >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+        </template>
+        {{
+          t(
+            "entries.selectedLanguages",
+            { count: selectedLocaleIds.length },
+            selectedLocaleIds.length,
+          )
+        }}
+        <span
+          v-if="unsavedLocaleIds.length"
+          class="ml-2 text-amber-700 dark:text-amber-300"
+          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+          }}{{
+            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+              ? t("common.hiddenLanguages")
+              : ""
+          }}</span
+        >
+      </span>
+      <div class="flex shrink-0 items-center gap-2">
+        <Button
+          type="button"
+          ghost
+          :disabled="!allUnsavedCount || isSaving"
+          @click="showSaveAllDialog = true"
+        >
+          {{
+            allUnsavedCount
+              ? t("common.saveAllCount", { count: allUnsavedCount })
+              : t("common.saveAll")
+          }}
+        </Button>
+        <Button
+          primary
+          :disabled="
+            !selectedEntryData || !selectedUnsavedLocaleIds.length || isSaving
+          "
+          @click="handleSave"
+        >
+          {{ isSaving ? t("common.saving") : t("common.saveChanges") }}
+        </Button>
+      </div>
     </div>
   </section>
   <Dialog

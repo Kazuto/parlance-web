@@ -23,6 +23,7 @@ export type Entry = {
   updatedBy?: string | null;
   localizations?: Array<Localization> | null;
   scopes?: Array<Scope> | null;
+  missingLocaleIds?: Array<string> | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -57,6 +58,11 @@ export const EntrySchema = z.object({
   get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Scope>>>> {
     return z.array(ScopeSchema).nullish();
   },
+  get missingLocaleIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
+  },
 });
 export type ListEntriesRequest = {
   scopeId?: string | null;
@@ -66,6 +72,8 @@ export type ListEntriesRequest = {
   translationStatus?: string | null;
   targetLocaleIds?: Array<string> | null;
   scopeIds?: Array<string> | null;
+  cursor?: string | null;
+  summary?: boolean | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -91,10 +99,17 @@ export const ListEntriesRequestSchema = z.object({
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
   },
+  get cursor(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get summary(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ListEntriesResponse = {
   entries?: Array<Entry> | null;
   pagination?: PaginationResponse | null;
+  nextCursor?: string | null;
 };
 export const ListEntriesResponseSchema = z.object({
   get entries(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Entry>>>> {
@@ -104,6 +119,9 @@ export const ListEntriesResponseSchema = z.object({
     z.ZodNullable<z.ZodType<PaginationResponse>>
   > {
     return PaginationResponseSchema.nullish();
+  },
+  get nextCursor(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type GetEntryRequest = {

@@ -11,6 +11,7 @@ import {
   DeleteEntryRequestSchema,
   DeleteEntryResponseSchema,
   type ListEntriesRequest,
+  type ListEntriesResponse,
   type GetEntryRequest,
   type CreateEntryRequest,
   type UpdateEntryRequest,
@@ -44,6 +45,26 @@ export const entries = {
     {
       input: ListEntriesRequestSchema,
       output: ListEntriesResponseSchema,
+    },
+  ),
+
+  // ListEntries paged by key cursor, for lists that load more as they scroll.
+  feed: authedEndpoint.infiniteQuery(
+    (data: ListEntriesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/ListEntries",
+      json: data,
+    }),
+    {
+      input: ListEntriesRequestSchema,
+      output: ListEntriesResponseSchema,
+      initialPageParam: "",
+      getNextPageParam: (lastPage: ListEntriesResponse) =>
+        lastPage.nextCursor || undefined,
+      withPageParam: (data: ListEntriesRequest, cursor: string) => ({
+        ...data,
+        cursor: cursor || undefined,
+      }),
     },
   ),
 

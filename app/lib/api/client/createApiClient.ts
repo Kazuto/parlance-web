@@ -1,10 +1,12 @@
 import ky, { type Options as KyOptions } from "ky";
 import type { OperationValidationError } from "./utils/validation";
 import type { MiddlewareFunction } from "./operations";
+import { InfiniteQueryOperation } from "./operations/infiniteQuery";
 import { MutateOperation } from "./operations/mutate";
 import { QueryOperation } from "./operations/query";
 
 export type ApiClient = {
+  infiniteQuery: ReturnType<(typeof InfiniteQueryOperation)["create"]>;
   mutate: ReturnType<(typeof MutateOperation)["create"]>;
   query: ReturnType<(typeof QueryOperation)["create"]>;
   use: (middlewareFunction: MiddlewareFunction) => ApiClient;
@@ -20,6 +22,11 @@ export function createApiClient(
   const kyInstance = ky.extend({ retry: 0, ...kyOptions });
 
   return {
+    infiniteQuery: InfiniteQueryOperation.create(
+      kyInstance,
+      middlewares,
+      onValidationError,
+    ),
     mutate: MutateOperation.create(kyInstance, middlewares, onValidationError),
     query: QueryOperation.create(kyInstance, middlewares, onValidationError),
     use: (
