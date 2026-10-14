@@ -88,7 +88,9 @@ watch(() => props.disabled, close);
       @click="toggle"
     >
       {{ t("entries.filters") }}
-      <Badge v-if="activeCount" class="ml-1">{{ activeCount }}</Badge>
+      <Badge v-if="activeCount" dense pill class="ml-1">{{
+        activeCount
+      }}</Badge>
     </Button>
   </div>
   <Teleport to="body">
