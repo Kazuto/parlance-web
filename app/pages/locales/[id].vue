@@ -424,11 +424,9 @@ async function handleDeleted(id: string) {
   >
     <form class="space-y-4" @submit.prevent="applyMetadata">
       <Input v-model="metadata.code" required>{{ t("common.code") }}</Input>
-      <Checkbox
-        v-model="metadata.isDefault"
-        :helper="t('locales.defaultHelp')"
-        >{{ t("locales.setDefault") }}</Checkbox
-      >
+      <Checkbox v-model="metadata.isDefault" :helper="t('locales.defaultHelp')">
+        <template #description>{{ t("locales.setDefault") }}</template>
+      </Checkbox>
       <p class="text-sm text-neutral-500">
         {{ t("locales.draftHint") }}
       </p>
