@@ -3,7 +3,32 @@ import type {
   FilterRequest,
   PaginationRequest,
 } from "~/lib/api/schemas/parlance/v1/CommonSchema";
+import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 import { api } from "~/lib/api";
+
+export function groupPermissionsByResource(permissions: Permission[]) {
+  const grouped: Record<string, Permission[]> = {};
+
+  permissions.forEach((permission: Permission) => {
+    const resource = permission.resource || "other";
+    if (!grouped[resource]) {
+      grouped[resource] = [];
+    }
+    grouped[resource].push(permission);
+  });
+
+  // Sort permissions within each group by action
+  Object.keys(grouped).forEach((resource) => {
+    const group = grouped[resource];
+    if (group) {
+      group.sort((a: Permission, b: Permission) =>
+        (a.action || "").localeCompare(b.action || ""),
+      );
+    }
+  });
+
+  return grouped;
+}
 
 export function usePermissionList() {
   const pagination = ref<PaginationRequest>({ perPage: 10, page: 1 });
