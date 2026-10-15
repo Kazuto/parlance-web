@@ -21,9 +21,23 @@ import {
   SuggestTerminologiesRequestSchema,
   SuggestTerminologiesResponseSchema,
   type SuggestTerminologiesRequest,
+  GetDefinitionHistoryRequestSchema,
+  GetDefinitionHistoryResponseSchema,
+  type GetDefinitionHistoryRequest,
 } from "../schemas/parlance/v1/TerminologySchema";
 
 export const terminologies = {
+  history: authedEndpoint.query(
+    (data: GetDefinitionHistoryRequest) => ({
+      method: "post",
+      url: "/parlance.v1.TerminologyService/GetDefinitionHistory",
+      json: data,
+    }),
+    {
+      input: GetDefinitionHistoryRequestSchema,
+      output: GetDefinitionHistoryResponseSchema,
+    },
+  ),
   suggest: authedEndpoint.query(
     (data: SuggestTerminologiesRequest) => ({
       method: "post",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Pagination, Tabs } from "@thkzt/eunoia";
+import { Pagination } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
@@ -43,34 +43,14 @@ const history = computed(() =>
 </script>
 
 <template>
-  <aside
-    class="flex h-full min-h-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
-    :aria-label="t('context.title')"
+  <BaseContextPanel
+    v-model:tab="tab"
+    :locale-name="localeName"
+    :tabs="tabs"
+    @close="emit('close')"
   >
-    <header class="shrink-0 px-4 pt-4">
-      <div class="flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <p class="text-xs text-neutral-500">{{ t("context.title") }}</p>
-          <h3 class="truncate font-semibold">{{ localeName }}</h3>
-        </div>
-        <Button
-          type="button"
-          ghost
-          icon="x"
-          :aria-label="t('context.close')"
-          @click="emit('close')"
-        />
-      </div>
-    </header>
-    <Tabs
-      v-model="tab"
-      :items="tabs"
-      :aria-label="t('context.title')"
-      class="flex min-h-0 flex-1 flex-col"
-      list-class="shrink-0 border-b border-neutral-200 px-4 pt-3 pb-4 dark:border-neutral-700"
-      panel-class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
-    >
-      <template v-if="tab === 'terminology'">
+    <template #default="{ tab: currentTab }">
+      <template v-if="currentTab === 'terminology'">
         <p v-if="isDefault" class="text-sm text-neutral-500">
           {{ t("context.defaultHint") }}
         </p>
@@ -162,6 +142,6 @@ const history = computed(() =>
           @update:current="page = $event"
         />
       </template>
-    </Tabs>
-  </aside>
+    </template>
+  </BaseContextPanel>
 </template>

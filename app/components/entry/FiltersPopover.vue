@@ -132,7 +132,7 @@ watch(() => props.disabled, close);
           <template #description>{{ t("entries.allLanguages") }}</template>
         </Checkbox>
         <div
-          class="flex max-h-48 flex-col gap-2 overflow-y-auto border-t border-neutral-200 pt-2 dark:border-neutral-700"
+          class="flex flex-col gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-700"
         >
           <Checkbox
             v-for="locale in localeOptions"

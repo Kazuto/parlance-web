@@ -624,7 +624,7 @@ async function saveTranslations(
 
   <section
     v-else-if="data"
-    class="entry-workspace"
+    class="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
     :aria-label="t('entries.workspace')"
     :aria-busy="isFetching"
   >
@@ -703,12 +703,7 @@ async function saveTranslations(
         </button>
       </span>
     </div>
-    <div
-      class="editor-panels"
-      :class="{
-        'with-context': contextOpen && activeLocaleId && selectedEntry,
-      }"
-    >
+    <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
         :items="splitViewItems"
         :selected="selectedEntry"
@@ -716,7 +711,7 @@ async function saveTranslations(
         :has-more="hasNextPage"
         :loading="isFetchingNextPage"
         :total="entryTotal"
-        class="entry-split-view"
+        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectEntry"
         @end-reached="fetchNextPage()"
       >
@@ -868,7 +863,7 @@ async function saveTranslations(
               @focusin="activeLocaleId = localeId"
             >
               <div
-                class="mb-1 flex flex-wrap items-center justify-between gap-2"
+                class="flex flex-wrap items-center h-10 justify-between gap-2"
               >
                 <label
                   :for="`entry-${item.key}-${localeId}`"
@@ -914,9 +909,13 @@ async function saveTranslations(
                     "
                     @click="openContext(localeId)"
                   />
-                  <span v-else class="text-xs text-primary-600">{{
-                    t("context.active")
-                  }}</span>
+                  <span
+                    v-else
+                    class="inline-flex shrink-0 items-center gap-2 rounded-md text-xs font-medium text-primary-600"
+                    aria-live="polite"
+                  >
+                    {{ t("context.active") }}
+                  </span>
                 </div>
               </div>
               <Textarea
@@ -958,7 +957,7 @@ async function saveTranslations(
       </SplitView>
       <EntryContextPanel
         v-if="contextOpen && activeLocaleId && selectedEntry"
-        class="entry-context"
+        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
         :entry-id="String(selectedEntry.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
@@ -1074,66 +1073,7 @@ async function saveTranslations(
 </template>
 
 <style scoped>
-.entry-workspace {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: 0.75rem;
-  background: var(--color-white);
-}
-
-.editor-panels {
-  position: relative;
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.entry-split-view {
-  width: 100%;
-  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
-  min-width: 0;
-  flex: 1;
-  gap: 0;
-  border: 0;
-  border-radius: 0;
-}
-
-.entry-context {
-  flex: 0 0 320px;
-  min-width: 0;
-}
-
-@media (max-width: 1100px) {
-  .entry-context {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: min(340px, 100%);
-    z-index: 20;
-    box-shadow: -8px 0 24px rgb(0 0 0 / 0.08);
-  }
-}
-
-.entry-split-view :deep(> *) {
+.editor-split-view :deep(> *) {
   grid-column: span 1;
-}
-
-@media (max-width: 640px) {
-  .entry-split-view {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 150px minmax(0, 1fr);
-  }
-}
-
-:global(.dark) .entry-workspace {
-  background: var(--color-neutral-800);
-  border-color: var(--color-neutral-700);
 }
 </style>
