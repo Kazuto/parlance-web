@@ -110,17 +110,22 @@ const tableItems = computed(() => data.value?.users ?? []);
             v-if="!item.deletedAt"
             class="flex items-center justify-end gap-2"
           >
-            <Button
-              ghost
+            <BaseIconButton
               icon="eye"
+              :label="t('users.view')"
               @click="() => router.push(`/users/${item.id}`)"
             />
-            <Button destructive icon="trash" @click="deleteDialogItem = item" />
+            <BaseIconButton
+              icon="trash"
+              destructive
+              :label="t('users.delete')"
+              @click="deleteDialogItem = item"
+            />
           </div>
           <div v-else class="flex items-center justify-end gap-2">
-            <Button
-              ghost
+            <BaseIconButton
               icon="arrow-counter-clockwise"
+              :label="t('users.restore')"
               @click="restoreDialogItem = item"
             />
           </div>

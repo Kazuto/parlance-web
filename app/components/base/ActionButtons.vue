@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Button } from "@thkzt/eunoia";
-
 defineProps<{
   disabled?: boolean;
+  editLabel?: string;
+  deleteLabel?: string;
 }>();
 
 defineEmits<{
@@ -15,19 +15,17 @@ const { t } = useI18n();
 
 <template>
   <div class="flex gap-2">
-    <Button
-      ghost
+    <BaseIconButton
       icon="pencil-simple"
-      :disabled="disabled"
-      :aria-label="t('common.edit')"
+      :label="editLabel ?? t('common.edit')"
+      :disabled
       @click="$emit('edit')"
     />
-    <Button
-      destructive
-      ghost
+    <BaseIconButton
       icon="trash"
-      :disabled="disabled"
-      :aria-label="t('common.delete')"
+      destructive
+      :label="deleteLabel ?? t('common.delete')"
+      :disabled
       @click="$emit('delete')"
     />
   </div>

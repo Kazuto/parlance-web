@@ -665,10 +665,12 @@ async function saveDefinitions(
                 {{ selectedTerminologyData.description }}
               </p>
             </div>
-            <TerminologyActionsMenu
+            <BaseActionButtons
               v-if="selectedTerminologyData"
               :key="selectedTerminologyData.id ?? undefined"
               :disabled="isSaving"
+              :edit-label="t('terminologies.edit')"
+              :delete-label="t('terminologies.delete')"
               @edit="editDialogItem = selectedTerminologyData"
               @delete="deleteDialogItem = selectedTerminologyData"
             />

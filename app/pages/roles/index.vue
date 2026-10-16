@@ -190,14 +190,13 @@ const tableItems = computed(() => data.value?.roles ?? []);
         </template>
 
         <template #actions="{ item }">
-          <div class="flex items-center justify-end gap-2">
-            <Button ghost @click="openEdit(item)">
-              {{ t("common.edit") }}
-            </Button>
-            <Button ghost @click="openDelete(item)">
-              {{ t("common.delete") }}
-            </Button>
-          </div>
+          <BaseActionButtons
+            class="justify-end"
+            :edit-label="t('roles.edit')"
+            :delete-label="t('roles.delete')"
+            @edit="openEdit(item)"
+            @delete="openDelete(item)"
+          />
         </template>
       </DataTable>
     </Card>

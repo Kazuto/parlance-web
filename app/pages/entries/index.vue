@@ -821,10 +821,12 @@ async function saveTranslations(
                 {{ selectedEntryData.description }}
               </p>
             </div>
-            <EntryActionsMenu
+            <BaseActionButtons
               v-if="selectedEntryData"
               :key="selectedEntryData.id ?? undefined"
               :disabled="isSaving"
+              :edit-label="t('entries.edit')"
+              :delete-label="t('actions.deleteEntry')"
               @edit="editDialogItem = selectedEntryData"
               @delete="deleteDialogItem = selectedEntryData"
             />

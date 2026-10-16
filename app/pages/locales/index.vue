@@ -133,24 +133,22 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
             v-if="!item.deletedAt"
             class="flex items-center justify-end gap-2"
           >
-            <Button
-              ghost
+            <BaseIconButton
               icon="eye"
-              :aria-label="t('locales.view')"
+              :label="t('locales.view')"
               @click="() => router.push(`/locales/${item.id}`)"
             />
-            <Button
-              destructive
+            <BaseIconButton
               icon="trash"
-              :aria-label="t('locales.delete')"
+              destructive
+              :label="t('locales.delete')"
               @click="deleteDialogItem = item"
             />
           </div>
           <div v-else class="flex items-center justify-end gap-2">
-            <Button
-              ghost
+            <BaseIconButton
               icon="arrow-counter-clockwise"
-              :aria-label="t('locales.restore')"
+              :label="t('locales.restore')"
               @click="restoreDialogItem = item"
             />
           </div>

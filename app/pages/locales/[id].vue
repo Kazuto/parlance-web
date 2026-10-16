@@ -283,11 +283,12 @@ async function handleDeleted(id: string) {
               {{ t("locales.namesHint") }}
             </p>
           </div>
-          <EntryActionsMenu
+          <BaseActionButtons
             v-if="form"
             :key="selectedId"
-            subject="locale"
             :disabled="isSaving || isLoading"
+            :edit-label="t('locales.edit')"
+            :delete-label="t('locales.delete')"
             @edit="openEdit"
             @delete="deleteItem = data?.locale ?? undefined"
           />
