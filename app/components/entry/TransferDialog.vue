@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Dialog, Select } from "@thkzt/eunoia";
+import { Button, Dialog, Dropzone, Select } from "@thkzt/eunoia";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
@@ -86,10 +86,9 @@ function handleClose() {
   if (!isPending.value) emit("close");
 }
 
-function selectFile(event: Event) {
-  file.value = (event.target as HTMLInputElement).files?.[0];
+watch(file, () => {
   result.value = undefined;
-}
+});
 
 function encodeFile(value: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -220,24 +219,15 @@ async function handleSubmit() {
           :disabled="isPending"
           >{{ t("transfer.behavior") }}</Select
         >
-        <label class="flex flex-col gap-2 text-sm">
-          {{ t("transfer.file") }}
-          <!-- prettier-ignore -->
-          <input
-            :key="`${action}-${format}-${open}`"
-            type="file"
-            :accept="fileAccept"
-            :disabled="isPending"
-            required
-            @change="selectFile"
-          >
-        </label>
-        <p v-if="format === 'po'" class="text-sm text-neutral-500">
-          {{ t("transfer.poImportHelp") }}
-        </p>
-        <p v-else class="text-sm text-neutral-500">
-          {{ t("transfer.importHelp") }}
-        </p>
+        <Dropzone
+          v-model="file"
+          :accept="fileAccept"
+          :disabled="isPending"
+          :helper="
+            t(format === 'po' ? 'transfer.poImportHelp' : 'transfer.importHelp')
+          "
+          >{{ t("transfer.file") }}</Dropzone
+        >
       </template>
       <p v-else class="text-sm text-neutral-500">
         {{ t("transfer.exportHelp") }}
