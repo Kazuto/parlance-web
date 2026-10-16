@@ -18,6 +18,9 @@ const route = useRoute();
 
 const sidebarCollapsed = ref(false);
 
+// The header lines its title and actions up with the page column inside <main>.
+const mainEl = useTemplateRef<HTMLElement>("mainEl");
+
 const onMenuSelect = (label: string) => {
   if (label === t("nav.signOut")) logout();
 };
@@ -46,12 +49,15 @@ const toastStack = useTemplateRef("toastStack");
 provide("toastStack", toastStack);
 
 const pageOptions = usePageProvider();
+
 const isDashboard = computed(() => route.path === "/");
 const isWorkspace = computed(() => pageOptions.value.layout === "workspace");
+
 const libraryPageOptions = computed(() => {
   const { layout: _layout, ...options } = pageOptions.value;
   return options;
 });
+
 const headerOptions = computed(() => {
   if (isDashboard.value) return {};
   const {
@@ -68,7 +74,12 @@ const headerOptions = computed(() => {
     class="flex h-dvh overflow-hidden flex-col bg-neutral-100 font-sans dark:bg-neutral-950"
   >
     <!-- Header -->
-    <Header v-bind="headerOptions" class="shrink-0">
+    <Header
+      v-bind="headerOptions"
+      :width="pageOptions.width"
+      :align-to="mainEl"
+      class="shrink-0"
+    >
       <template #left>
         <SidebarToggle v-model:collapsed="sidebarCollapsed" />
         <h1
@@ -96,6 +107,7 @@ const headerOptions = computed(() => {
       </Sidebar>
 
       <main
+        ref="mainEl"
         class="min-w-0 flex-1 mx-auto"
         :class="isWorkspace ? 'overflow-hidden' : 'overflow-y-auto'"
       >
@@ -119,7 +131,8 @@ const headerOptions = computed(() => {
   height: 100%;
   min-height: 0;
   gap: 1.25rem;
-  padding: 1.5rem;
+  /* Only the vertical padding: the side padding comes from Page, which the header aligns with. */
+  padding-block: 1.5rem;
   overflow: hidden;
 }
 
@@ -133,7 +146,7 @@ const headerOptions = computed(() => {
 
 @media (max-width: 640px) {
   .workspace-page {
-    padding: 0.75rem;
+    padding-block: 0.75rem;
     gap: 0.75rem;
   }
 }
