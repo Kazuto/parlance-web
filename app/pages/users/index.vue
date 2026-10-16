@@ -15,6 +15,7 @@ const { t } = useI18n();
 const router = useRouter();
 
 const showDialog = ref(false);
+const editDialogItem = ref<User>();
 const deleteDialogItem = ref<User | undefined>(undefined);
 const restoreDialogItem = ref<User | undefined>(undefined);
 
@@ -23,12 +24,12 @@ usePage({
   title: t("nav.users"),
   description: t("users.description"),
   backAction: {
-    content: "Back to Dashboard",
+    content: t("nav.backDashboard"),
     onClick: () => router.push("/"),
     icon: "arrow-left",
   },
   primaryAction: {
-    content: "Create User",
+    content: t("users.create"),
     icon: "plus",
     onClick: () => (showDialog.value = true),
   },
@@ -110,16 +111,11 @@ const tableItems = computed(() => data.value?.users ?? []);
             v-if="!item.deletedAt"
             class="flex items-center justify-end gap-2"
           >
-            <BaseIconButton
-              icon="eye"
-              :label="t('users.view')"
-              @click="() => router.push(`/users/${item.id}`)"
-            />
-            <BaseIconButton
-              icon="trash"
-              destructive
-              :label="t('users.delete')"
-              @click="deleteDialogItem = item"
+            <BaseActionButtons
+              :edit-label="t('users.edit')"
+              :delete-label="t('users.delete')"
+              @edit="editDialogItem = item"
+              @delete="deleteDialogItem = item"
             />
           </div>
           <div v-else class="flex items-center justify-end gap-2">
@@ -163,7 +159,12 @@ const tableItems = computed(() => data.value?.users ?? []);
     </Card>
   </div>
 
-  <UserCreateDialog :open="showDialog" @close="showDialog = false" />
+  <UserFormDialog :open="showDialog" @close="showDialog = false" />
+  <UserFormDialog
+    :open="!!editDialogItem"
+    :user="editDialogItem"
+    @close="editDialogItem = undefined"
+  />
   <UserDeleteDialog
     :item="deleteDialogItem"
     :open="deleteDialogItem !== undefined"
