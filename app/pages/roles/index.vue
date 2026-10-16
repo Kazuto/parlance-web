@@ -20,6 +20,7 @@ usePage({
   width: "extra-wide",
   title: t("nav.roles"),
   description: t("roles.description"),
+  showHeader: false,
   primaryAction: {
     content: t("roles.create"),
     icon: "plus",

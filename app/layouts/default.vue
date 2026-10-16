@@ -50,21 +50,21 @@ provide("toastStack", toastStack);
 
 const pageOptions = usePageProvider();
 
-const isDashboard = computed(() => route.path === "/");
 const isWorkspace = computed(() => pageOptions.value.layout === "workspace");
 
 const libraryPageOptions = computed(() => {
   const { layout: _layout, ...options } = pageOptions.value;
+
   return options;
 });
 
 const headerOptions = computed(() => {
-  if (isDashboard.value) return {};
   const {
     width: _width,
     showHeader: _showHeader,
     ...options
   } = libraryPageOptions.value;
+
   return options;
 });
 </script>
@@ -82,12 +82,6 @@ const headerOptions = computed(() => {
     >
       <template #left>
         <SidebarToggle v-model:collapsed="sidebarCollapsed" />
-        <h1
-          v-if="isDashboard"
-          class="text-xl font-bold text-neutral-900 dark:text-neutral-100"
-        >
-          {{ t("nav.dashboard") }}
-        </h1>
       </template>
 
       <template #right>
@@ -113,7 +107,6 @@ const headerOptions = computed(() => {
       >
         <Page
           v-bind="libraryPageOptions"
-          :show-header="isDashboard"
           :class="{ 'workspace-page': isWorkspace }"
         >
           <slot />

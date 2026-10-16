@@ -25,6 +25,7 @@ usePage({
   width: "extra-wide",
   title: t("nav.scopes"),
   description: t("scopes.description"),
+  showHeader: false,
   primaryAction: {
     content: t("scopes.create"),
     icon: "plus",

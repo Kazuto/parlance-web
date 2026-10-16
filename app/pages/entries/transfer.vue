@@ -29,6 +29,7 @@ usePage({
   width: "extra-wide",
   title: t("transfer.pageTitle"),
   description: t("transfer.pageDescription"),
+  showHeader: false,
 });
 </script>
 

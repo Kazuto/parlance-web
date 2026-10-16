@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card } from "@thkzt/eunoia";
+import { Card, Headline, Text } from "@thkzt/eunoia";
 import { useEntryList } from "~/composables/entry/useEntryList";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 
@@ -15,9 +15,10 @@ const { data: entriesData, isLoading: isEntriesLoading } = useEntryList();
 const entryCount = computed(() => entriesData.value?.pagination?.total ?? 0);
 
 usePage(() => ({
-  width: "wide",
-  title: t("dashboard.welcome", { name: authStore.user?.name ?? "" }),
+  width: "extra-wide",
+  title: t("dashboard.title"),
   description: t("dashboard.description"),
+  showHeader: false,
 }));
 
 const cards = [
@@ -63,6 +64,16 @@ const visibleCards = computed(() =>
 </script>
 
 <template>
+  <div class="mb-8">
+    <Headline :level="3">
+      {{ t("dashboard.greeting.title", { name: authStore.user?.name ?? "" }) }}
+    </Headline>
+
+    <Text muted size="sm" class="truncate">
+      {{ t("dashboard.greeting.description") }}
+    </Text>
+  </div>
+
   <!-- Quick Stats -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <DashboardMetricCard

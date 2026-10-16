@@ -128,6 +128,7 @@ usePage({
   layout: "workspace",
   title: t("nav.locales"),
   description: t("locales.editorDescription"),
+  showHeader: false,
 });
 
 function selectLocale(item: SplitViewItem) {

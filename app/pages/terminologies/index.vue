@@ -29,6 +29,7 @@ usePage({
   layout: "workspace",
   title: t("nav.terminologies"),
   description: t("terminologies.description"),
+  showHeader: false,
   primaryAction: {
     content: t("terminologies.create"),
     icon: "plus",

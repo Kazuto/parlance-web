@@ -21,6 +21,7 @@ usePage({
   width: "extra-wide",
   title: t("nav.users"),
   description: t("users.description"),
+  showHeader: false,
   primaryAction: {
     content: t("users.create"),
     icon: "plus",

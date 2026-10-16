@@ -56,6 +56,7 @@ usePage({
   layout: "workspace",
   title: t("nav.entries"),
   description: t("entries.description"),
+  showHeader: false,
   primaryAction: {
     content: t("entries.create"),
     icon: "plus",

@@ -24,6 +24,7 @@ usePage({
   width: "extra-wide",
   title: t("nav.locales"),
   description: t("locales.description"),
+  showHeader: false,
   primaryAction: {
     content: t("locales.create"),
     icon: "plus",
