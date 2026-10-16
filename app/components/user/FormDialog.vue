@@ -86,7 +86,7 @@ async function handleSubmit() {
         email,
         // An empty password keeps the current one.
         ...(form.value.password ? { password: form.value.password } : {}),
-        roleIds: form.value.roleIds,
+        roles: { ids: form.value.roleIds },
       });
       toast.add(t("users.updated", { name }), { variant: "success" });
     } else {
@@ -94,7 +94,7 @@ async function handleSubmit() {
         name,
         email,
         password: form.value.password,
-        roleIds: form.value.roleIds,
+        roles: { ids: form.value.roleIds },
       });
       toast.add(t("users.created", { name }), { variant: "success" });
     }

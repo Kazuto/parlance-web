@@ -849,12 +849,12 @@ async function saveDefinitions(
     </div>
   </section>
 
-  <TerminologyCreateDialog
+  <TerminologyFormDialog
     :open="showCreateDialog"
     @close="showCreateDialog = false"
     @created="handleCreated"
   />
-  <TerminologyEditDialog
+  <TerminologyFormDialog
     :open="!!editDialogItem"
     :item="editDialogItem"
     @close="editDialogItem = undefined"

@@ -1049,7 +1049,7 @@ async function saveTranslations(
       >
     </div>
   </Dialog>
-  <EntryEditDialog
+  <EntryFormDialog
     :open="!!editDialogItem"
     :item="editDialogItem"
     @close="editDialogItem = undefined"
@@ -1061,7 +1061,7 @@ async function saveTranslations(
     :locales="localeData?.locales ?? []"
     @close="showTransferDialog = false"
   />
-  <EntryCreateDialog
+  <EntryFormDialog
     :open="showCreateDialog"
     @close="showCreateDialog = false"
     @created="handleCreated"

@@ -5,8 +5,13 @@ import { api } from "~/lib/api";
 import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
+// Without a role the dialog creates one; with a role it edits that role.
 const props = defineProps<{ open: boolean; role?: Role }>();
-const emit = defineEmits<{ close: []; updated: [role: Role] }>();
+const emit = defineEmits<{
+  close: [];
+  created: [role: Role];
+  updated: [role: Role];
+}>();
 
 const { t } = useI18n();
 const toast = useToast();
@@ -93,22 +98,24 @@ function isResourceGroupIndeterminate(resource: string) {
 }
 
 const roleStore = useRoleStore();
-const updateRole = roleStore.update.mutateAsync;
-const isPending = computed(() => roleStore.update.isPending);
+const isEdit = computed(() => !!props.role);
+const isPending = computed(
+  () => roleStore.create.isPending || roleStore.update.isPending,
+);
 
 watch(
   () => props.open,
   (open) => {
-    if (open && props.role) {
-      name.value = props.role.name || "";
-      description.value = props.role.description || "";
-      permissionIds.value =
-        props.role.permissions
-          ?.map((p) => p.id)
-          .filter((id): id is string => !!id) || [];
-      error.value = undefined;
-    }
+    if (!open) return;
+    name.value = props.role?.name ?? "";
+    description.value = props.role?.description ?? "";
+    permissionIds.value =
+      props.role?.permissions
+        ?.map((permission) => permission.id)
+        .filter((id): id is string => !!id) ?? [];
+    error.value = undefined;
   },
+  { immediate: true },
 );
 
 function handleClose() {
@@ -116,7 +123,7 @@ function handleClose() {
 }
 
 async function handleSubmit() {
-  if (isPending.value || !props.role) return;
+  if (isPending.value) return;
   error.value = undefined;
 
   if (!name.value.trim()) {
@@ -124,23 +131,34 @@ async function handleSubmit() {
     return;
   }
 
+  const input = {
+    name: name.value.trim(),
+    description: description.value.trim(),
+    permissions: { ids: permissionIds.value },
+  };
   try {
-    const response = await updateRole({
-      id: props.role.id,
-      name: name.value.trim(),
-      description: description.value.trim(),
-      permissionIds: permissionIds.value,
-    });
-
-    toast.add(t("roles.updated", { name: name.value.trim() }), {
-      variant: "success",
-    });
-
-    if (response.role) emit("updated", response.role);
+    if (props.role) {
+      const response = await roleStore.update.mutateAsync({
+        id: props.role.id,
+        ...input,
+      });
+      toast.add(t("roles.updated", { name: input.name }), {
+        variant: "success",
+      });
+      if (response.role) emit("updated", response.role);
+    } else {
+      const response = await roleStore.create.mutateAsync(input);
+      toast.add(t("roles.created", { name: input.name }), {
+        variant: "success",
+      });
+      if (response.role) emit("created", response.role);
+    }
     emit("close");
   } catch (cause) {
     error.value =
-      cause instanceof Error ? cause.message : t("roles.updateFailed");
+      cause instanceof Error
+        ? cause.message
+        : t(isEdit.value ? "roles.updateFailed" : "roles.createFailed");
   }
 }
 </script>
@@ -148,7 +166,7 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    :title="t('roles.edit')"
+    :title="t(isEdit ? 'roles.edit' : 'roles.create')"
     :persistent="isPending"
     @close="handleClose"
   >
@@ -244,7 +262,11 @@ async function handleSubmit() {
           {{ t("common.cancel") }}
         </Button>
         <Button type="submit" primary :disabled="isPending">
-          {{ isPending ? t("common.saving") : t("common.save") }}
+          {{
+            isPending
+              ? t(isEdit ? "common.saving" : "common.creating")
+              : t(isEdit ? "common.save" : "roles.create")
+          }}
         </Button>
       </div>
     </form>

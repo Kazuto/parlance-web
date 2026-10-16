@@ -11,8 +11,6 @@ import { useRoleList } from "~/composables/role/useRoleList";
 import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
-import CreateDialog from "~/components/role/CreateDialog.vue";
-import EditDialog from "~/components/role/EditDialog.vue";
 import DeleteDialog from "~/components/role/DeleteDialog.vue";
 import ViewPermissionsDialog from "~/components/role/ViewPermissionsDialog.vue";
 
@@ -231,8 +229,8 @@ const tableItems = computed(() => data.value?.roles ?? []);
   </div>
 
   <!-- Dialogs -->
-  <CreateDialog :open="createDialogOpen" @close="createDialogOpen = false" />
-  <EditDialog
+  <RoleFormDialog :open="createDialogOpen" @close="createDialogOpen = false" />
+  <RoleFormDialog
     :open="editDialogOpen"
     :role="selectedRole"
     @close="editDialogOpen = false"

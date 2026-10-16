@@ -2,8 +2,13 @@
 import { Button, Dialog, Input, Textarea, Select } from "@thkzt/eunoia";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 
+// Without an item the dialog creates an entry; with an item it edits it.
 const props = defineProps<{ open: boolean; item?: Entry }>();
-const emit = defineEmits<{ close: []; updated: [entry: Entry] }>();
+const emit = defineEmits<{
+  close: [];
+  created: [entry: Entry];
+  updated: [entry: Entry];
+}>();
 const key = ref("");
 const description = ref("");
 const scopeIds = ref<string[]>([]);
@@ -12,6 +17,8 @@ const {
   error: scopeError,
   isFetching: scopesLoading,
 } = useScopeOptions();
+// Keep the entry's own scopes selectable even if the scope list doesn't include them,
+// so saving doesn't silently drop them.
 const scopeOptions = computed(() => [
   ...availableScopes.value,
   ...(props.item?.scopes ?? [])
@@ -27,7 +34,10 @@ const scopeOptions = computed(() => [
 ]);
 const error = ref<string>();
 const entryStore = useEntryStore();
-const isPending = computed(() => entryStore.update.isPending);
+const isEdit = computed(() => !!props.item);
+const isPending = computed(
+  () => entryStore.create.isPending || entryStore.update.isPending,
+);
 const toast = useToast();
 const { t } = useI18n();
 
@@ -42,6 +52,7 @@ watch(
     );
     error.value = undefined;
   },
+  { immediate: true },
 );
 
 function handleClose() {
@@ -49,27 +60,43 @@ function handleClose() {
 }
 
 async function handleSubmit() {
-  if (!props.item?.id || isPending.value) return;
+  if (isPending.value) return;
   error.value = undefined;
-  if (!key.value.trim()) {
+  const trimmedKey = key.value.trim();
+  if (!trimmedKey) {
     error.value = t("entries.keyRequired");
     return;
   }
   try {
-    const response = await entryStore.update.mutateAsync({
-      id: props.item.id,
-      key: key.value.trim(),
-      description: description.value.trim(),
-      scopes: { ids: scopeIds.value },
-    });
-    toast.add(t("entries.updated", { key: key.value.trim() }), {
-      variant: "success",
-    });
-    if (response.entry?.id) emit("updated", response.entry);
+    if (props.item) {
+      if (!props.item.id) return;
+      const response = await entryStore.update.mutateAsync({
+        id: props.item.id,
+        key: trimmedKey,
+        description: description.value.trim(),
+        scopes: { ids: scopeIds.value },
+      });
+      toast.add(t("entries.updated", { key: trimmedKey }), {
+        variant: "success",
+      });
+      if (response.entry?.id) emit("updated", response.entry);
+    } else {
+      const response = await entryStore.create.mutateAsync({
+        key: trimmedKey,
+        description: description.value.trim(),
+        scopes: { ids: scopeIds.value },
+      });
+      toast.add(t("entries.created", { key: trimmedKey }), {
+        variant: "success",
+      });
+      if (response.entry?.id) emit("created", response.entry);
+    }
     emit("close");
   } catch (cause) {
     error.value =
-      cause instanceof Error ? cause.message : t("entries.updateFailed");
+      cause instanceof Error
+        ? cause.message
+        : t(isEdit.value ? "entries.updateFailed" : "entries.createFailed");
   }
 }
 </script>
@@ -77,7 +104,7 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    :title="t('entries.editTitle')"
+    :title="t(isEdit ? 'entries.editTitle' : 'entries.create')"
     :persistent="isPending"
     @close="handleClose"
   >
@@ -87,14 +114,16 @@ async function handleSubmit() {
         required
         :disabled="isPending"
         :placeholder="t('entries.keyExample')"
-        >{{ t("common.key") }}</Input
       >
+        {{ t("common.key") }}
+      </Input>
       <Textarea
         v-model="description"
         :disabled="isPending"
         :placeholder="t('entries.contextPlaceholder')"
-        >{{ t("entries.optionalDescription") }}</Textarea
       >
+        {{ t("entries.optionalDescription") }}
+      </Textarea>
       <Select
         v-model="scopeIds"
         teleport-to="body"
@@ -117,7 +146,9 @@ async function handleSubmit() {
           >{{ t("common.cancel") }}</Button
         >
         <Button type="submit" primary :disabled="isPending">{{
-          isPending ? t("common.saving") : t("entries.saveEntry")
+          isPending
+            ? t(isEdit ? "common.saving" : "common.creating")
+            : t(isEdit ? "entries.saveEntry" : "entries.create")
         }}</Button>
       </div>
     </form>

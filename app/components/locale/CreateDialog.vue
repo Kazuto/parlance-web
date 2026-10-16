@@ -41,7 +41,7 @@ async function handleSubmit() {
   await createLocale(
     {
       code: form.value.code,
-      names: form.value.names,
+      names: { values: form.value.names },
       isDefault: form.value.isDefault,
     },
     {
