@@ -29,11 +29,6 @@ usePage({
   width: "narrow",
   title: t("transfer.pageTitle"),
   description: t("transfer.pageDescription"),
-  backAction: {
-    content: t("nav.backEntries"),
-    onClick: () => router.push("/entries"),
-    icon: "arrow-left",
-  },
 });
 </script>
 

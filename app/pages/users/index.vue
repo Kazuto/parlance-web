@@ -12,8 +12,6 @@ import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
 const { t } = useI18n();
 
-const router = useRouter();
-
 const showDialog = ref(false);
 const editDialogItem = ref<User>();
 const deleteDialogItem = ref<User | undefined>(undefined);
@@ -23,11 +21,6 @@ usePage({
   width: "wide",
   title: t("nav.users"),
   description: t("users.description"),
-  backAction: {
-    content: t("nav.backDashboard"),
-    onClick: () => router.push("/"),
-    icon: "arrow-left",
-  },
   primaryAction: {
     content: t("users.create"),
     icon: "plus",
