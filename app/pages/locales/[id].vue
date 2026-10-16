@@ -124,7 +124,7 @@ watch(
 );
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   layout: "workspace",
   title: t("nav.locales"),
   description: t("locales.editorDescription"),
@@ -423,11 +423,7 @@ async function handleDeleted(id: string) {
       >
     </div>
   </Dialog>
-  <Dialog
-    :open="editOpen"
-    :title="t('locales.editTitle')"
-    @close="editOpen = false"
-  >
+  <Dialog :open="editOpen" :title="t('locales.edit')" @close="editOpen = false">
     <form class="space-y-4" @submit.prevent="applyMetadata">
       <Input v-model="metadata.code" required>{{ t("common.code") }}</Input>
       <Checkbox v-model="metadata.isDefault" :helper="t('locales.defaultHelp')">

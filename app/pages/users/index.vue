@@ -18,7 +18,7 @@ const deleteDialogItem = ref<User | undefined>(undefined);
 const restoreDialogItem = ref<User | undefined>(undefined);
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   title: t("nav.users"),
   description: t("users.description"),
   primaryAction: {

@@ -116,7 +116,6 @@ const headerOptions = computed(() => {
 <style scoped>
 .workspace-page {
   width: 100%;
-  max-width: 1680px;
   height: 100%;
   min-height: 0;
   gap: 1.25rem;

@@ -17,9 +17,14 @@ import ViewPermissionsDialog from "~/components/role/ViewPermissionsDialog.vue";
 const { t } = useI18n();
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   title: t("nav.roles"),
   description: t("roles.description"),
+  primaryAction: {
+    content: t("roles.create"),
+    icon: "plus",
+    onClick: () => (createDialogOpen.value = true),
+  },
 });
 
 const { data, isLoading, error, refetch, filter } = useRoleList();
@@ -102,20 +107,14 @@ const tableItems = computed(() => data.value?.roles ?? []);
 </script>
 
 <template>
-  <!-- Header with Search and Create -->
-  <div class="flex flex-col sm:flex-row gap-4 mb-6">
-    <div class="flex-1">
-      <Input
-        v-model="searchQuery"
-        type="search"
-        :placeholder="t('roles.searchRoles')"
-        class="max-w-md"
-      />
-    </div>
-    <Button primary @click="createDialogOpen = true">
-      {{ t("roles.create") }}
-    </Button>
-  </div>
+  <Card class="mb-4">
+    <Input
+      v-model="searchQuery"
+      type="search"
+      :placeholder="t('roles.searchRoles')"
+      :aria-label="t('roles.searchRoles')"
+    />
+  </Card>
 
   <!-- Loading State -->
   <div v-if="isLoading" class="flex items-center justify-center py-12">

@@ -53,7 +53,7 @@ function openTransfer(action: "import" | "export") {
 }
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   layout: "workspace",
   title: t("nav.entries"),
   description: t("entries.description"),

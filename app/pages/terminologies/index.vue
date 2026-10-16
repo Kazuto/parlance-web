@@ -26,7 +26,7 @@ const deleteDialogItem = ref<Terminology>();
 const editDialogItem = ref<Terminology>();
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   layout: "workspace",
   title: t("nav.terminologies"),
   description: t("terminologies.description"),

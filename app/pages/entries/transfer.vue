@@ -26,7 +26,7 @@ const tabs = computed(() =>
 );
 
 usePage({
-  width: "narrow",
+  width: "extra-wide",
   title: t("transfer.pageTitle"),
   description: t("transfer.pageDescription"),
 });
@@ -46,7 +46,7 @@ usePage({
     </p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </div>
-  <Card v-else>
+  <Card v-else class="max-w-2xl">
     <Tabs
       v-model="action"
       :items="tabs"

@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   DataTable,
-  Icon,
   Input,
   Pagination,
   type DataTableColumn,
@@ -23,7 +22,7 @@ const deleteDialogItem = ref<Scope>();
 const restoreDialogItem = ref<Scope>();
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   title: t("nav.scopes"),
   description: t("scopes.description"),
   primaryAction: {
@@ -53,18 +52,18 @@ const tableItems = computed(() => data.value?.scopes ?? []);
 </script>
 
 <template>
-  <div class="mb-6 max-w-md">
-    <Input
-      v-model="search"
-      type="search"
-      :placeholder="t('scopes.search')"
-      :aria-label="t('scopes.search')"
-    >
-      <template #prepend>
-        <Icon name="magnifying-glass" size="sm" />
-      </template>
-    </Input>
-  </div>
+  <Card class="mb-4">
+    <div class="flex gap-4 items-center">
+      <div class="flex-1">
+        <Input
+          v-model="search"
+          type="search"
+          :placeholder="t('scopes.search')"
+          :aria-label="t('scopes.search')"
+        />
+      </div>
+    </div>
+  </Card>
 
   <div
     v-if="isFetching && !data"

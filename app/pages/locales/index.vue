@@ -21,7 +21,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 usePage({
-  width: "wide",
+  width: "extra-wide",
   title: t("nav.locales"),
   description: t("locales.description"),
   primaryAction: {

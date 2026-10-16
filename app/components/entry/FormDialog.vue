@@ -104,7 +104,7 @@ async function handleSubmit() {
 <template>
   <Dialog
     :open
-    :title="t(isEdit ? 'entries.editTitle' : 'entries.create')"
+    :title="t(isEdit ? 'entries.edit' : 'entries.create')"
     :persistent="isPending"
     @close="handleClose"
   >
