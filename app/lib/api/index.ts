@@ -11,6 +11,7 @@ import { users } from "./endpoints/users";
 import { imports } from "./endpoints/imports";
 import { exports } from "./endpoints/exports";
 import { scopes } from "./endpoints/scopes";
+import { activity } from "./endpoints/activity";
 
 export const api = defineApi({
   auth,
@@ -25,6 +26,7 @@ export const api = defineApi({
   imports,
   exports,
   scopes,
+  activity,
 });
 
 export * from "./schemas";

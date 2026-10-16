@@ -64,7 +64,7 @@ const visibleCards = computed(() =>
 </script>
 
 <template>
-  <div class="mb-8">
+  <div class="mt-4 mb-8">
     <Headline :level="3">
       {{ t("dashboard.greeting.title", { name: authStore.user?.name ?? "" }) }}
     </Headline>
@@ -214,15 +214,8 @@ const visibleCards = computed(() =>
     </div>
   </div>
 
-  <!-- Recent Activity (Placeholder) -->
+  <!-- Recent Activity -->
   <div>
-    <h2 class="text-xl font-semibold text-neutral-900 mb-4">
-      {{ t("dashboard.recentActivity") }}
-    </h2>
-    <Card>
-      <p class="text-neutral-500 text-center py-8">
-        {{ t("dashboard.noActivity") }}
-      </p>
-    </Card>
+    <DashboardRecentActivity v-if="can('read_entry')" />
   </div>
 </template>

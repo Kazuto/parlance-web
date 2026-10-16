@@ -112,7 +112,9 @@ function clearFilters() {
 }
 
 const selectedTerminology = ref<SplitViewItem>();
-const search = ref("");
+// Links (e.g. from the dashboard activity) can open the page with a search via ?q=.
+const route = useRoute();
+const search = ref(typeof route.query.q === "string" ? route.query.q : "");
 const isSaving = ref(false);
 const contextOpen = ref(false);
 const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
