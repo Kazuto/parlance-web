@@ -32,6 +32,7 @@ const menuItems: MenuItem[] = [
     icon: "arrows-down-up",
   },
   { label: t("nav.terminologies"), to: "/terminologies", icon: "tag-simple" },
+  { label: t("nav.scopes"), to: "/scopes", icon: "stack" },
   { label: t("nav.roles"), to: "/roles", icon: "shield" },
   { label: t("nav.users"), to: "/users", icon: "users" },
 ];

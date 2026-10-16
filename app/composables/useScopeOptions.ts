@@ -3,7 +3,9 @@ import { api } from "~/lib/api";
 
 export function useScopeOptions() {
   const pagination = ref({ page: 1, perPage: 100 });
-  const collected = ref<Record<string, { label: string; value: string }>>({});
+  const collected = ref<
+    Record<string, { label: string; value: string; color?: string }>
+  >({});
   const { data, error, isFetching } = useQuery(
     api.scopes.list.use({ pagination }),
   );
@@ -16,6 +18,7 @@ export function useScopeOptions() {
           collected.value[scope.id] = {
             label: scope.name ?? scope.slug ?? scope.id,
             value: scope.id,
+            color: scope.color ?? undefined,
           };
       }
       if (pagination.value.page < (response.pagination?.totalPages ?? 1))

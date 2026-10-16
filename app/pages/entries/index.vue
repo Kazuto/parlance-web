@@ -233,10 +233,10 @@ const languageSummary = computed(() => {
   return `${t("entries.languagesShort")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
 });
 const selectedScopes = computed(() =>
-  scopeIds.value.map((id) => ({
-    id,
-    label: scopeOptions.value.find((scope) => scope.value === id)?.label ?? id,
-  })),
+  scopeIds.value.map((id) => {
+    const option = scopeOptions.value.find((scope) => scope.value === id);
+    return { id, label: option?.label ?? id, color: option?.color };
+  }),
 );
 const selectedStatusLabel = computed(
   () =>
@@ -663,16 +663,16 @@ async function saveTranslations(
       >
         {{ languageSummary }}
       </Chip>
-      <Chip
+      <ScopeChip
         v-for="scope in selectedScopes"
         :key="scope.id"
         dense
-        variant="secondary"
         removable
+        :color="scope.color"
         @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
       >
         {{ scope.label }}
-      </Chip>
+      </ScopeChip>
       <Chip
         v-if="translationStatus"
         dense
@@ -782,15 +782,12 @@ async function saveTranslations(
                   v-if="selectedEntryData?.scopes?.length"
                   class="flex flex-wrap gap-1"
                 >
-                  <Chip
+                  <ScopeChip
                     v-for="scope in selectedEntryData.scopes"
                     :key="scope.id ?? undefined"
                     dense
-                    :variant="
-                      scope.id && scopeIds.includes(scope.id)
-                        ? 'primary'
-                        : 'secondary'
-                    "
+                    :color="scope.color"
+                    :active="!!scope.id && scopeIds.includes(scope.id)"
                     :title="
                       t(
                         scope.id && scopeIds.includes(scope.id)
@@ -801,7 +798,7 @@ async function saveTranslations(
                     "
                     class="cursor-pointer"
                     @click="scope.id && toggleScopeFilter(scope.id)"
-                    >{{ scope.name }}</Chip
+                    >{{ scope.name }}</ScopeChip
                   >
                 </div>
                 <button
