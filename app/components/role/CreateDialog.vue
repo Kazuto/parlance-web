@@ -122,11 +122,10 @@ async function handleSubmit() {
   }
 
   try {
-    const permissions = permissionIds.value.map((id) => ({ id }));
     const response = await createRole({
       name: name.value.trim(),
       description: description.value.trim(),
-      permissions,
+      permissionIds: permissionIds.value,
     });
 
     toast.add(t("roles.created", { name: name.value.trim() }), {

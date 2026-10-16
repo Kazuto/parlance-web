@@ -89,7 +89,7 @@ export const GetRoleResponseSchema = z.object({
 export type CreateRoleRequest = {
   name?: string | null;
   description?: string | null;
-  permissions?: Array<Permission> | null;
+  permissionIds?: Array<string> | null;
 };
 export const CreateRoleRequestSchema = z.object({
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -98,10 +98,8 @@ export const CreateRoleRequestSchema = z.object({
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get permissions(): z.ZodOptional<
-    z.ZodNullable<z.ZodType<Array<Permission>>>
-  > {
-    return z.array(PermissionSchema).nullish();
+  get permissionIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type CreateRoleResponse = {
@@ -116,7 +114,7 @@ export type UpdateRoleRequest = {
   id?: string | null;
   name?: string | null;
   description?: string | null;
-  permissions?: Array<Permission> | null;
+  permissionIds?: Array<string> | null;
 };
 export const UpdateRoleRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -128,10 +126,8 @@ export const UpdateRoleRequestSchema = z.object({
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get permissions(): z.ZodOptional<
-    z.ZodNullable<z.ZodType<Array<Permission>>>
-  > {
-    return z.array(PermissionSchema).nullish();
+  get permissionIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type UpdateRoleResponse = {

@@ -125,12 +125,11 @@ async function handleSubmit() {
   }
 
   try {
-    const permissions = permissionIds.value.map((id) => ({ id }));
     const response = await updateRole({
       id: props.role.id,
       name: name.value.trim(),
       description: description.value.trim(),
-      permissions,
+      permissionIds: permissionIds.value,
     });
 
     toast.add(t("roles.updated", { name: name.value.trim() }), {

@@ -97,6 +97,7 @@ export type CreateUserRequest = {
   password?: string | null;
   name?: string | null;
   locale?: string | null;
+  roleIds?: Array<string> | null;
 };
 export const CreateUserRequestSchema = z.object({
   get email(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -110,6 +111,9 @@ export const CreateUserRequestSchema = z.object({
   },
   get locale(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get roleIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type CreateUserResponse = {
