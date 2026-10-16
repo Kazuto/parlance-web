@@ -708,7 +708,7 @@ async function saveDefinitions(
               "
             >
               <div
-                class="mb-1 flex flex-wrap items-center justify-between gap-2"
+                class="flex flex-wrap items-center h-10 justify-between gap-2"
               >
                 <label
                   :for="`terminology-${item.key}-${localeId}`"
@@ -756,7 +756,7 @@ async function saveDefinitions(
                   />
                   <span
                     v-else
-                    class="inline-flex h-8 shrink-0 items-center gap-2 rounded-md py-2 text-sm font-medium text-primary-600"
+                    class="inline-flex shrink-0 items-center gap-2 rounded-md text-xs font-medium text-primary-600"
                     aria-live="polite"
                   >
                     {{ t("context.active") }}
