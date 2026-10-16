@@ -8,12 +8,11 @@ import {
   Badge,
   Dialog,
   Chip,
-  Icon,
   Input,
 } from "@thkzt/eunoia";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
-import { watchDebounced, useMediaQuery, useEventListener } from "@vueuse/core";
+import { watchDebounced, useMediaQuery } from "@vueuse/core";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
@@ -142,28 +141,6 @@ watchDebounced(
   },
   { debounce: 350 },
 );
-
-const searchField = useTemplateRef<HTMLElement>("searchField");
-
-function isEditable(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
-  );
-}
-
-// "/" focuses the search from anywhere outside a text field, as in most dev tools.
-useEventListener("keydown", (event: KeyboardEvent) => {
-  if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey)
-    return;
-  if (isEditable(event.target)) return;
-  const input = searchField.value?.querySelector("input");
-  if (!input) return;
-  event.preventDefault();
-  input.focus();
-  input.select();
-});
 
 function onSearchKeydown(event: KeyboardEvent) {
   if (event.key !== "Escape" || !search.value) return;
@@ -631,7 +608,7 @@ async function saveTranslations(
     <div
       class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
-      <div ref="searchField" class="w-full sm:w-72" @keydown="onSearchKeydown">
+      <div class="w-full sm:w-72" @keydown="onSearchKeydown">
         <Input
           v-model="search"
           dense
@@ -639,11 +616,8 @@ async function saveTranslations(
           :placeholder="t('entries.searchKeys')"
           :aria-label="t('entries.searchKeys')"
           :title="t('entries.searchShortcut')"
-        >
-          <template #prepend>
-            <Icon name="magnifying-glass" size="sm" />
-          </template>
-        </Input>
+          shortcut="/"
+        />
       </div>
       <EntryFiltersPopover
         v-model:locale-ids="selectedLocaleIds"

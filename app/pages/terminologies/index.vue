@@ -5,7 +5,6 @@ import {
   type SplitViewItem,
   Textarea,
   Badge,
-  Icon,
   Input,
   Chip,
   Tooltip,
@@ -14,7 +13,7 @@ import {
   useTerminologyDetail,
   useTerminologyFeed,
 } from "~/composables/terminology/useTerminologyFeed";
-import { watchDebounced, useMediaQuery, useEventListener } from "@vueuse/core";
+import { watchDebounced, useMediaQuery } from "@vueuse/core";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
@@ -142,27 +141,6 @@ watchDebounced(
   },
   { debounce: 350 },
 );
-
-const searchField = useTemplateRef<HTMLElement>("searchField");
-
-function isEditable(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
-  );
-}
-
-useEventListener("keydown", (event: KeyboardEvent) => {
-  if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey)
-    return;
-  if (isEditable(event.target)) return;
-  const input = searchField.value?.querySelector("input");
-  if (!input) return;
-  event.preventDefault();
-  input.focus();
-  input.select();
-});
 
 function onSearchKeydown(event: KeyboardEvent) {
   if (event.key !== "Escape" || !search.value) return;
@@ -571,18 +549,15 @@ async function saveDefinitions(
     <div
       class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
-      <div ref="searchField" class="w-full sm:w-72" @keydown="onSearchKeydown">
+      <div class="w-full sm:w-72" @keydown="onSearchKeydown">
         <Input
           v-model="search"
           dense
           type="search"
           :placeholder="t('terminologies.searchTerms')"
           :aria-label="t('terminologies.searchTerms')"
-        >
-          <template #prepend>
-            <Icon name="magnifying-glass" size="sm" />
-          </template>
-        </Input>
+          shortcut="/"
+        />
       </div>
       <TerminologyFiltersPopover
         v-model:locale-ids="selectedLocaleIds"

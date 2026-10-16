@@ -60,6 +60,7 @@ const tableItems = computed(() => data.value?.scopes ?? []);
           type="search"
           :placeholder="t('scopes.search')"
           :aria-label="t('scopes.search')"
+          shortcut="/"
         />
       </div>
     </div>

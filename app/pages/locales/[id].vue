@@ -250,6 +250,7 @@ async function handleDeleted(id: string) {
       :items="items"
       :selected="selectedItem"
       searchable
+      search-shortcut="/"
       class="locale-split-view"
       @select="selectLocale"
     >

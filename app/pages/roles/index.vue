@@ -113,6 +113,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
       type="search"
       :placeholder="t('roles.searchRoles')"
       :aria-label="t('roles.searchRoles')"
+      shortcut="/"
     />
   </Card>
 

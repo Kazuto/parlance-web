@@ -67,5 +67,6 @@
   "eunoia.pagination.go-to": "Go to page {page}",
   "eunoia.dropzone.drop-file": "Drop file here",
   "eunoia.dropzone.drop-or-browse": "Drop file here or click to browse",
-  "eunoia.dropzone.remove-file": "Remove file"
+  "eunoia.dropzone.remove-file": "Remove file",
+  "eunoia.split-view.search": "Search…"
 }
