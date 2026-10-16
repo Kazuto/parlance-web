@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   FilterRequestSchema,
   type FilterRequest,
+  IdSelectionSchema,
+  type IdSelection,
   PaginationRequestSchema,
   type PaginationRequest,
   PaginationResponseSchema,
@@ -89,7 +91,7 @@ export const GetRoleResponseSchema = z.object({
 export type CreateRoleRequest = {
   name?: string | null;
   description?: string | null;
-  permissionIds?: Array<string> | null;
+  permissions?: IdSelection | null;
 };
 export const CreateRoleRequestSchema = z.object({
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -98,8 +100,8 @@ export const CreateRoleRequestSchema = z.object({
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get permissionIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
+  get permissions(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type CreateRoleResponse = {
@@ -114,7 +116,7 @@ export type UpdateRoleRequest = {
   id?: string | null;
   name?: string | null;
   description?: string | null;
-  permissionIds?: Array<string> | null;
+  permissions?: IdSelection | null;
 };
 export const UpdateRoleRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -126,8 +128,8 @@ export const UpdateRoleRequestSchema = z.object({
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get permissionIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
+  get permissions(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type UpdateRoleResponse = {

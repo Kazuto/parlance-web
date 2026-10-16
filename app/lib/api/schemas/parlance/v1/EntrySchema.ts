@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   FilterRequestSchema,
   type FilterRequest,
+  IdSelectionSchema,
+  type IdSelection,
   PaginationRequestSchema,
   type PaginationRequest,
   PaginationResponseSchema,
@@ -142,18 +144,18 @@ export const GetEntryResponseSchema = z.object({
 });
 export type CreateEntryRequest = {
   key?: string | null;
-  scopeIds?: Array<string> | null;
   description?: string | null;
+  scopes?: IdSelection | null;
 };
 export const CreateEntryRequestSchema = z.object({
   get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
-  },
   get description(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type CreateEntryResponse = {
@@ -168,7 +170,7 @@ export type UpdateEntryRequest = {
   id?: string | null;
   description?: string | null;
   key?: string | null;
-  scopes?: EntryScopeSelection | null;
+  scopes?: IdSelection | null;
 };
 export const UpdateEntryRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -180,16 +182,8 @@ export const UpdateEntryRequestSchema = z.object({
   get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<EntryScopeSelection>>> {
-    return EntryScopeSelectionSchema.nullish();
-  },
-});
-export type EntryScopeSelection = {
-  ids?: Array<string> | null;
-};
-export const EntryScopeSelectionSchema = z.object({
-  get ids(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
+  get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type UpdateEntryResponse = {

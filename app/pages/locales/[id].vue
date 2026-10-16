@@ -185,7 +185,12 @@ async function saveLocales(ids: string[]) {
   try {
     for (const { id, submitted } of changes) {
       try {
-        const response = await store.update.mutateAsync({ id, ...submitted });
+        const response = await store.update.mutateAsync({
+          id,
+          code: submitted.code,
+          isDefault: submitted.isDefault,
+          names: { values: submitted.names },
+        });
         const locale = response.locale;
         saved.value[id] = locale
           ? {

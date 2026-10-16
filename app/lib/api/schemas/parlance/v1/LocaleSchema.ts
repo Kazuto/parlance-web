@@ -8,6 +8,8 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
+  StringMapSchema,
+  type StringMap,
 } from "./CommonSchema";
 export type Locale = {
   id?: string | null;
@@ -89,18 +91,18 @@ export const GetLocaleResponseSchema = z.object({
 });
 export type CreateLocaleRequest = {
   code?: string | null;
-  names?: Record<string, string> | null;
   isDefault?: boolean | null;
+  names?: StringMap | null;
 };
 export const CreateLocaleRequestSchema = z.object({
   get code(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<Record<string, string>>>> {
-    return z.record(z.string(), z.string()).nullish();
-  },
   get isDefault(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
+    return StringMapSchema.nullish();
   },
 });
 export type CreateLocaleResponse = {
@@ -114,8 +116,8 @@ export const CreateLocaleResponseSchema = z.object({
 export type UpdateLocaleRequest = {
   id?: string | null;
   code?: string | null;
-  names?: Record<string, string> | null;
   isDefault?: boolean | null;
+  names?: StringMap | null;
 };
 export const UpdateLocaleRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -124,11 +126,11 @@ export const UpdateLocaleRequestSchema = z.object({
   get code(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<Record<string, string>>>> {
-    return z.record(z.string(), z.string()).nullish();
-  },
   get isDefault(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
+    return StringMapSchema.nullish();
   },
 });
 export type UpdateLocaleResponse = {

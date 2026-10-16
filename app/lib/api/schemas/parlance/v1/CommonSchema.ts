@@ -55,3 +55,21 @@ export const FilterRequestSchema = z.object({
 });
 export type Empty = Record<string, never>;
 export const EmptySchema = z.object({});
+export type IdSelection = {
+  ids?: Array<string> | null;
+};
+export const IdSelectionSchema = z.object({
+  get ids(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type StringMap = {
+  values?: Record<string, string> | null;
+};
+export const StringMapSchema = z.object({
+  get values(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Record<string, string>>>
+  > {
+    return z.record(z.string(), z.string()).nullish();
+  },
+});

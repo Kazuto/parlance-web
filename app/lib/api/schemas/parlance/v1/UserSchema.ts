@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   FilterRequestSchema,
   type FilterRequest,
+  IdSelectionSchema,
+  type IdSelection,
   PaginationRequestSchema,
   type PaginationRequest,
   PaginationResponseSchema,
@@ -97,7 +99,7 @@ export type CreateUserRequest = {
   password?: string | null;
   name?: string | null;
   locale?: string | null;
-  roleIds?: Array<string> | null;
+  roles?: IdSelection | null;
 };
 export const CreateUserRequestSchema = z.object({
   get email(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -112,8 +114,8 @@ export const CreateUserRequestSchema = z.object({
   get locale(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get roleIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
+  get roles(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type CreateUserResponse = {
@@ -129,10 +131,10 @@ export type UpdateUserRequest = {
   email?: string | null;
   name?: string | null;
   password?: string | null;
-  roleIds?: Array<string> | null;
   locale?: string | null;
   avatar?: string | null;
   avatarMime?: string | null;
+  roles?: IdSelection | null;
 };
 export const UpdateUserRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -147,9 +149,6 @@ export const UpdateUserRequestSchema = z.object({
   get password(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get roleIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
-    return z.array(z.string()).nullish();
-  },
   get locale(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
@@ -158,6 +157,9 @@ export const UpdateUserRequestSchema = z.object({
   },
   get avatarMime(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get roles(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
   },
 });
 export type UpdateUserResponse = {
