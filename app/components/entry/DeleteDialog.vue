@@ -47,7 +47,7 @@ async function handleSubmit() {
     @close="handleClose"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
-      <p class="text-sm text-neutral-500">
+      <p class="text-sm text-neutral-700 dark:text-neutral-200">
         {{ t("entries.deleteConfirm") }}
       </p>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>

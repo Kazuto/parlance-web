@@ -22,8 +22,12 @@ const tab = defineModel<string | undefined>("tab");
     <header class="shrink-0 px-4 pt-4">
       <div class="flex items-center justify-between gap-2">
         <div class="min-w-0">
-          <p class="text-xs text-neutral-500">{{ t("context.title") }}</p>
-          <h3 class="truncate font-semibold">{{ localeName }}</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">
+            {{ t("context.title") }}
+          </p>
+          <h3 class="truncate font-semibold dark:text-neutral-100">
+            {{ localeName }}
+          </h3>
         </div>
         <Button
           type="button"

@@ -81,7 +81,10 @@ const tableItems = computed(() => data.value?.users ?? []);
         :items="tableItems"
         :loading="isFetching"
         :loading-rows="data.users?.length ?? 0"
-        :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
+        :row-class="
+          (item) =>
+            item.deletedAt ? 'text-neutral-400 dark:text-neutral-400' : ''
+        "
       >
         <template #roles="{ item }">
           <div class="flex items-center gap-2">

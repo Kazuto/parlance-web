@@ -587,7 +587,9 @@ async function saveTranslations(
 
 <template>
   <div v-if="isLoading && !data" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">{{ t("entries.loading") }}</div>
+    <div class="text-neutral-600 dark:text-neutral-400">
+      {{ t("entries.loading") }}
+    </div>
   </div>
 
   <div
@@ -663,7 +665,7 @@ async function saveTranslations(
       <span
         v-if="isFetching && !isFetchingNextPage && !isSaving"
         role="status"
-        class="ml-auto text-xs text-neutral-500"
+        class="ml-auto text-xs text-neutral-500 dark:text-neutral-400"
       >
         {{ t("entries.refreshing") }}
       </span>
@@ -694,13 +696,13 @@ async function saveTranslations(
           <p
             v-if="isFetchingNextPage"
             role="status"
-            class="px-4 py-2 text-xs text-neutral-500"
+            class="px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400"
           >
             {{ t("entries.loadingMore") }}
           </p>
         </template>
         <template #empty>
-          <p class="px-4 py-2 text-sm text-neutral-500">
+          <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
             {{ t("entries.noMatches") }}
           </p>
         </template>
@@ -728,7 +730,7 @@ async function saveTranslations(
           </span>
         </template>
         <template #header="{ item }">
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center justify-between gap-4">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <h2 class="min-w-0 font-mono font-semibold break-all">
@@ -788,7 +790,7 @@ async function saveTranslations(
               </div>
               <p
                 v-if="selectedEntryData?.description"
-                class="mt-1 line-clamp-2 text-sm text-neutral-500"
+                class="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
               >
                 {{ selectedEntryData.description }}
               </p>
@@ -808,7 +810,7 @@ async function saveTranslations(
           <div
             v-if="item && isEditorLoading"
             role="status"
-            class="flex h-full items-center justify-center text-sm text-neutral-500"
+            class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
           >
             {{ t("entries.loadingEntry") }}
           </div>
@@ -919,7 +921,7 @@ async function saveTranslations(
 
           <div
             v-else
-            class="flex h-full items-center justify-center text-center text-neutral-500 text-sm"
+            class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
           >
             {{
               item
@@ -946,7 +948,7 @@ async function saveTranslations(
     <div
       class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
-      <span class="text-sm text-neutral-500">
+      <span class="text-sm text-neutral-500 dark:text-neutral-400">
         <template v-if="entryTotal !== undefined"
           >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
         </template>
@@ -998,7 +1000,7 @@ async function saveTranslations(
     :title="t('entries.saveAllTitle')"
     @close="showSaveAllDialog = false"
   >
-    <p class="text-sm text-neutral-500">
+    <p class="text-sm text-neutral-500 dark:text-neutral-400">
       {{
         t("entries.saveAllConfirm", {
           count: allUnsavedCount,

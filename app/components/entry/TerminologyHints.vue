@@ -110,12 +110,15 @@ async function copyTerm(term: string) {
         }}</span>
       </template>
     </div>
-    <p v-if="panel && !source" class="text-sm text-neutral-500">
+    <p
+      v-if="panel && !source"
+      class="text-sm text-neutral-500 dark:text-neutral-400"
+    >
       {{ t("context.sourceRequired") }}
     </p>
     <p
       v-else-if="panel && !suggestions.length && !isFetching && !error"
-      class="text-sm text-neutral-500"
+      class="text-sm text-neutral-500 dark:text-neutral-400"
     >
       {{ t("context.noTerms") }}
     </p>
@@ -163,7 +166,7 @@ async function copyTerm(term: string) {
         class="rounded-md border border-neutral-200 p-3 dark:border-neutral-700"
       >
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="text-sm font-medium">
+          <p class="text-sm font-medium dark:text-neutral-100">
             {{ suggestion.terminology?.term }} →
             {{ suggestion.targetTranslation }}
           </p>
@@ -184,11 +187,11 @@ async function copyTerm(term: string) {
         </div>
         <p
           v-if="suggestion.terminology?.description"
-          class="mt-2 whitespace-pre-wrap text-neutral-500"
+          class="mt-2 whitespace-pre-wrap text-neutral-500 dark:text-neutral-400"
         >
           {{ suggestion.terminology.description }}
         </p>
-        <p class="mt-2 text-neutral-500">
+        <p class="mt-2 text-neutral-500 dark:text-neutral-400">
           {{
             t(
               termUsed(suggestion.targetTranslation ?? "")
@@ -199,9 +202,10 @@ async function copyTerm(term: string) {
         </p>
         <NuxtLink
           to="/terminologies"
-          class="mt-2 inline-block text-primary-600 underline"
-          >{{ t("terminologyHints.glossary") }}</NuxtLink
+          class="mt-2 inline-block text-primary-600 underline dark:text-primary-400"
         >
+          {{ t("terminologyHints.glossary") }}
+        </NuxtLink>
         <p v-if="copyError" role="alert" class="mt-2 text-red-600">
           {{ t("terminologyHints.copyFailed") }}
         </p>

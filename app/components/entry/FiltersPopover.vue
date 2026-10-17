@@ -107,7 +107,9 @@ watch(() => props.disabled, close);
       @keydown="onKeydown"
     >
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium">{{ t("entries.filters") }}</span>
+        <span class="text-sm font-medium dark:text-neutral-100">{{
+          t("entries.filters")
+        }}</span>
         <Button
           type="button"
           ghost
@@ -120,7 +122,9 @@ watch(() => props.disabled, close);
       </div>
 
       <fieldset class="flex flex-col gap-2">
-        <legend class="mb-2 text-xs font-medium text-neutral-500">
+        <legend
+          class="mb-2 text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >
           {{ t("entries.languages") }}
         </legend>
         <Checkbox
@@ -147,9 +151,10 @@ watch(() => props.disabled, close);
       </fieldset>
 
       <label class="flex flex-col gap-1">
-        <span class="text-xs font-medium text-neutral-500">{{
-          t("scopes.title")
-        }}</span>
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("scopes.title") }}</span
+        >
         <Select
           :model-value="scopeIds"
           dense
@@ -164,16 +169,17 @@ watch(() => props.disabled, close);
       </label>
 
       <label class="flex flex-col gap-1">
-        <span class="text-xs font-medium text-neutral-500">{{
-          t("entries.translationStatus")
-        }}</span>
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("entries.translationStatus") }}</span
+        >
         <Select
           v-model="status"
           dense
           :options="statusOptions"
           :aria-label="t('entries.translationStatus')"
         />
-        <span class="text-xs text-neutral-500">{{
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
           t(
             localeIds.length
               ? "entries.filterSelectedHelp"

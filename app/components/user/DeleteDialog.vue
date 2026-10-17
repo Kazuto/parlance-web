@@ -54,7 +54,7 @@ function handleClose() {
     @close="handleClose"
     @confirm="handleSubmit"
   >
-    <p class="text-sm text-neutral-500">
+    <p class="text-sm text-neutral-700 dark:text-neutral-200">
       Are you sure you want to delete this user?
     </p>
   </ConfirmDialog>

@@ -189,35 +189,37 @@ async function handleSubmit() {
       </Textarea>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-neutral-700">
+        <label
+          class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+        >
           {{ t("common.permissions") }}
         </label>
 
         <div
           v-if="permissionsLoading"
-          class="text-sm text-neutral-500 p-4 text-center"
+          class="text-sm text-neutral-500 dark:text-neutral-400 p-4 text-center"
         >
           Loading permissions...
         </div>
 
         <div
           v-else-if="permissionError"
-          class="text-sm text-red-600 bg-red-50 p-3 rounded"
+          class="text-sm text-red-600 bg-red-50 dark:bg-red-950/30 p-3 rounded"
         >
           Failed to load permissions
         </div>
 
         <div
           v-else-if="resourceKeys.length"
-          class="border border-neutral-200 rounded-lg max-h-96 overflow-y-auto"
+          class="border border-neutral-200 dark:border-neutral-700 rounded-lg max-h-96 overflow-y-auto"
         >
           <div
             v-for="resource in resourceKeys"
             :key="resource"
-            class="border-b border-neutral-200 last:border-0"
+            class="border-b border-neutral-200 dark:border-neutral-700 last:border-0"
           >
             <div
-              class="sticky top-0 bg-neutral-50 px-4 py-2 border-b border-neutral-200"
+              class="sticky top-0 bg-neutral-50 dark:bg-neutral-800 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700"
             >
               <Checkbox
                 :model-value="isResourceGroupChecked(resource)"
@@ -250,7 +252,7 @@ async function handleSubmit() {
 
         <div
           v-else
-          class="text-sm text-neutral-500 p-4 text-center border border-neutral-200 rounded-lg"
+          class="text-sm text-neutral-500 dark:text-neutral-400 p-4 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg"
         >
           {{ t("roles.noPermissions") }}
         </div>

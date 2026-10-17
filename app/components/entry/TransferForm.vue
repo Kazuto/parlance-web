@@ -224,7 +224,10 @@ async function handleSubmit() {
       <p v-if="scopeError" role="alert" class="text-xs text-red-600">
         {{ t("scopes.loadFailed") }}
       </p>
-      <p v-else-if="action === 'import'" class="text-xs text-neutral-500">
+      <p
+        v-else-if="action === 'import'"
+        class="text-xs text-neutral-500 dark:text-neutral-400"
+      >
         {{ t("transfer.importScopeHelp") }}
       </p>
     </div>
@@ -246,7 +249,7 @@ async function handleSubmit() {
         >{{ t("transfer.file") }}</Dropzone
       >
     </template>
-    <p v-else class="text-sm text-neutral-500">
+    <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">
       {{
         selectedScopeNames
           ? t("transfer.exportScopeHelp", { scopes: selectedScopeNames })

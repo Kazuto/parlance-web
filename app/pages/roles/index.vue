@@ -141,7 +141,9 @@ const tableItems = computed(() => data.value?.roles ?? []);
               v-if="getPermissionSummary(item.permissions)"
               class="flex flex-wrap gap-1 items-center"
             >
-              <span class="text-xs text-neutral-500 capitalize">
+              <span
+                class="text-xs text-neutral-500 dark:text-neutral-400 capitalize"
+              >
                 {{ getPermissionSummary(item.permissions)!.firstResource }}:
               </span>
               <Badge
@@ -159,7 +161,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
                     0 ||
                   getPermissionSummary(item.permissions)!.remainingCount > 0
                 "
-                class="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium cursor-pointer"
                 @click="openViewPermissions(item)"
               >
                 {{
@@ -171,7 +173,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
                 }}
               </button>
             </div>
-            <div class="text-xs text-neutral-400">
+            <div class="text-xs text-neutral-400 dark:text-neutral-400">
               {{
                 t("roles.permissionsCount", {
                   count: item.permissions.length,
@@ -179,7 +181,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
               }}
             </div>
           </div>
-          <span v-else class="text-sm text-neutral-400">
+          <span v-else class="text-sm text-neutral-400 dark:text-neutral-400">
             {{ t("roles.noPermissions") }}
           </span>
         </template>

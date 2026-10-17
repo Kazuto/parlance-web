@@ -51,7 +51,10 @@ const history = computed(() =>
   >
     <template #default="{ tab: currentTab }">
       <template v-if="currentTab === 'terminology'">
-        <p v-if="isDefault" class="text-sm text-neutral-500">
+        <p
+          v-if="isDefault"
+          class="text-sm text-neutral-500 dark:text-neutral-400"
+        >
           {{ t("context.defaultHint") }}
         </p>
         <EntryTerminologyHints
@@ -64,13 +67,13 @@ const history = computed(() =>
         />
       </template>
       <template v-else>
-        <p class="mb-3 text-xs text-neutral-500">
+        <p class="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
           {{ t("context.historyHint") }}
         </p>
         <p
           v-if="isFetching && !data"
           role="status"
-          class="text-sm text-neutral-500"
+          class="text-sm text-neutral-500 dark:text-neutral-400"
         >
           {{ t("context.loadingHistory") }}
         </p>
@@ -85,7 +88,10 @@ const history = computed(() =>
           </button>
         </p>
         <template v-else>
-          <p v-if="!history.length" class="text-sm text-neutral-500">
+          <p
+            v-if="!history.length"
+            class="text-sm text-neutral-500 dark:text-neutral-400"
+          >
             {{ t("context.noHistory") }}
           </p>
           <ol class="space-y-3">
@@ -95,7 +101,7 @@ const history = computed(() =>
               class="rounded-md border border-neutral-200 p-3 dark:border-neutral-700"
             >
               <div
-                class="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500"
+                class="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
               >
                 <span>{{
                   ["created", "updated", "deleted"].includes(item.action ?? "")
@@ -108,7 +114,7 @@ const history = computed(() =>
                 />
               </div>
               <p
-                class="mt-2 truncate text-xs text-neutral-500"
+                class="mt-2 truncate text-xs text-neutral-500 dark:text-neutral-400"
                 :title="
                   item.user?.name ||
                   item.user?.email ||
@@ -127,7 +133,9 @@ const history = computed(() =>
                   })
                 }}
               </p>
-              <p class="mt-2 whitespace-pre-wrap break-words text-sm">
+              <p
+                class="mt-2 whitespace-pre-wrap break-words text-sm dark:text-neutral-200"
+              >
                 {{ item.translation || t("context.emptyTranslation") }}
               </p>
             </li>

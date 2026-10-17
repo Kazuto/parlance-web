@@ -530,7 +530,9 @@ async function saveDefinitions(
 
 <template>
   <div v-if="isLoading && !data" class="flex items-center justify-center py-12">
-    <div class="text-neutral-600">{{ t("terminologies.loading") }}</div>
+    <div class="text-neutral-600 dark:text-neutral-400">
+      {{ t("terminologies.loading") }}
+    </div>
   </div>
 
   <div
@@ -579,7 +581,7 @@ async function saveDefinitions(
       <span
         v-if="isFetching && !isSaving"
         role="status"
-        class="ml-auto text-xs text-neutral-500"
+        class="ml-auto text-xs text-neutral-500 dark:text-neutral-400"
       >
         {{ t("common.refreshing") }}
       </span>
@@ -603,7 +605,7 @@ async function saveDefinitions(
         @select="selectTerminology"
       >
         <template #empty>
-          <p class="px-4 py-2 text-sm text-neutral-500">
+          <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
             {{ t("terminologies.noMatches") }}
           </p>
         </template>
@@ -631,14 +633,14 @@ async function saveDefinitions(
           </span>
         </template>
         <template #header="{ item }">
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center justify-between gap-4">
             <div class="min-w-0">
               <h2 class="min-w-0 font-semibold break-all">
                 {{ item?.label ?? t("terminologies.selectTerminology") }}
               </h2>
               <p
                 v-if="selectedTerminologyData?.description"
-                class="mt-1 line-clamp-2 text-sm text-neutral-500"
+                class="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
               >
                 {{ selectedTerminologyData.description }}
               </p>
@@ -658,7 +660,7 @@ async function saveDefinitions(
           <div
             v-if="item && isEditorLoading"
             role="status"
-            class="flex h-full items-center justify-center text-sm text-neutral-500"
+            class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
           >
             {{ t("terminologies.loadingTerminology") }}
           </div>
@@ -760,7 +762,7 @@ async function saveDefinitions(
 
           <div
             v-else
-            class="flex h-full items-center justify-center text-center text-neutral-500 text-sm"
+            class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
           >
             {{
               item
@@ -782,7 +784,7 @@ async function saveDefinitions(
     <div
       class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
     >
-      <span class="text-sm text-neutral-500">
+      <span class="text-sm text-neutral-500 dark:text-neutral-400">
         <template v-if="terminologyTotal !== undefined"
           >{{
             t(

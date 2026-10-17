@@ -1,18 +1,43 @@
 <script setup lang="ts">
 import { Card, Headline, Text } from "@thkzt/eunoia";
-import { useEntryList } from "~/composables/entry/useEntryList";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
+import { useQuery } from "@tanstack/vue-query";
+import { api } from "~/lib/api";
 
 const authStore = useAuthStore();
 const { t } = useI18n();
 
-const { data: localesData, isLoading: isLocalesLoading } = useLocaleList();
+// Get stats from backend
+const { data: statsData, isLoading: isStatsLoading } = useQuery({
+  ...api.stats.get.use({}),
+});
 
-const localesCount = computed(() => localesData.value?.pagination?.total ?? 0);
+const localesCount = computed(() => statsData.value?.totalLocales ?? 0);
+const entryCount = computed(() => statsData.value?.totalEntries ?? 0);
+const missingCount = computed(() => statsData.value?.missingTranslations ?? 0);
+const completedCount = computed(
+  () => statsData.value?.fullyTranslatedEntries ?? 0,
+);
 
-const { data: entriesData, isLoading: isEntriesLoading } = useEntryList();
+// Build URLs with all locales selected
+const allLocaleCodes = computed(
+  () =>
+    statsData.value?.byLocale
+      ?.map((locale) => locale.localeCode)
+      .filter(Boolean)
+      .join(",") || "",
+);
 
-const entryCount = computed(() => entriesData.value?.pagination?.total ?? 0);
+const missingUrl = computed(() => {
+  return allLocaleCodes.value
+    ? `/entries?status=missing&locales=${allLocaleCodes.value}`
+    : "/entries?status=missing";
+});
+
+const completeUrl = computed(() => {
+  return allLocaleCodes.value
+    ? `/entries?status=complete&locales=${allLocaleCodes.value}`
+    : "/entries?status=complete";
+});
 
 usePage(() => ({
   width: "extra-wide",
@@ -78,12 +103,12 @@ const visibleCards = computed(() =>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <DashboardMetricCard
       :title="t('dashboard.totalLocales')"
-      :loading="isLocalesLoading"
+      :loading="isStatsLoading"
       :description="localesCount.toString()"
     >
       <template #icon>
         <svg
-          class="w-6 h-6 text-primary-600"
+          class="w-6 h-6 text-primary-600 dark:text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -100,12 +125,12 @@ const visibleCards = computed(() =>
 
     <DashboardMetricCard
       :title="t('dashboard.totalEntries')"
-      :loading="isEntriesLoading"
+      :loading="isStatsLoading"
       :description="entryCount.toString()"
     >
       <template #icon>
         <svg
-          class="w-6 h-6 text-green-600"
+          class="w-6 h-6 text-green-600 dark:text-green-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -120,10 +145,14 @@ const visibleCards = computed(() =>
       </template>
     </DashboardMetricCard>
 
-    <DashboardMetricCard :title="t('dashboard.pending')" description="0">
+    <DashboardMetricCard
+      :title="t('dashboard.missing')"
+      :description="missingCount.toString()"
+      :to="missingUrl"
+    >
       <template #icon>
         <svg
-          class="w-6 h-6 text-yellow-600"
+          class="w-6 h-6 text-yellow-600 dark:text-yellow-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -138,10 +167,14 @@ const visibleCards = computed(() =>
       </template>
     </DashboardMetricCard>
 
-    <DashboardMetricCard :title="t('dashboard.completed')" description="0">
+    <DashboardMetricCard
+      :title="t('dashboard.completed')"
+      :description="completedCount.toString()"
+      :to="completeUrl"
+    >
       <template #icon>
         <svg
-          class="w-6 h-6 text-purple-600"
+          class="w-6 h-6 text-purple-600 dark:text-purple-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -159,7 +192,9 @@ const visibleCards = computed(() =>
 
   <!-- Quick Actions -->
   <div class="mb-8">
-    <h2 class="text-xl font-semibold text-neutral-900 mb-4">
+    <h2
+      class="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4"
+    >
       {{ t("dashboard.quickAccess") }}
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -167,7 +202,7 @@ const visibleCards = computed(() =>
         v-for="card in visibleCards"
         :key="card.href"
         :to="card.href"
-        class="group transition-all rounded-lg border-2 border-transparent hover:border-primary-500"
+        class="group transition-all rounded-lg border-2 border-transparent hover:border-primary-500 dark:hover:border-primary-600"
       >
         <Card class="h-full">
           <div class="flex items-start">
@@ -175,14 +210,16 @@ const visibleCards = computed(() =>
               {{ card.icon }}
             </div>
           </div>
-          <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+          <h3
+            class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
+          >
             {{ card.title }}
           </h3>
-          <p class="text-sm text-neutral-600">
+          <p class="text-sm text-neutral-600 dark:text-neutral-400">
             {{ card.description }}
           </p>
           <div
-            class="mt-4 flex items-center text-primary-600 text-sm font-medium"
+            class="mt-4 flex items-center text-primary-600 dark:text-primary-400 text-sm font-medium"
           >
             <span>{{ t("common.open") }}</span>
             <svg
@@ -206,9 +243,9 @@ const visibleCards = computed(() =>
     <!-- No Access Message -->
     <div
       v-if="visibleCards.length === 0"
-      class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center"
+      class="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center"
     >
-      <p class="text-yellow-800">
+      <p class="text-yellow-800 dark:text-yellow-200">
         {{ t("dashboard.noAccess") }}
       </p>
     </div>

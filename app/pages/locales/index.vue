@@ -101,7 +101,10 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
         :items="tableItems"
         :loading="isFetching && !data"
         :loading-rows="tableItems.length"
-        :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
+        :row-class="
+          (item) =>
+            item.deletedAt ? 'text-neutral-400 dark:text-neutral-400' : ''
+        "
       >
         <template #name="{ item }">
           <div class="flex items-center gap-2">

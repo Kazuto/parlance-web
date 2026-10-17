@@ -103,7 +103,9 @@ watch(() => props.disabled, close);
       @keydown="onKeydown"
     >
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium">{{ t("entries.filters") }}</span>
+        <span class="text-sm font-medium dark:text-neutral-100">{{
+          t("entries.filters")
+        }}</span>
         <Button
           type="button"
           ghost
@@ -116,7 +118,9 @@ watch(() => props.disabled, close);
       </div>
 
       <fieldset class="flex flex-col gap-2">
-        <legend class="mb-2 text-xs font-medium text-neutral-500">
+        <legend
+          class="mb-2 text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >
           {{ t("entries.languages") }}
         </legend>
         <Checkbox

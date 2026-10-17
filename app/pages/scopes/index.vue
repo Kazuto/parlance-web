@@ -92,7 +92,10 @@ const tableItems = computed(() => data.value?.scopes ?? []);
       :items="tableItems"
       :loading="isFetching && !data"
       :loading-rows="tableItems.length"
-      :row-class="(item) => (item.deletedAt ? 'text-neutral-400' : '')"
+      :row-class="
+        (item) =>
+          item.deletedAt ? 'text-neutral-400 dark:text-neutral-400' : ''
+      "
     >
       <template #name="{ item }">
         <span class="flex items-center gap-2">
@@ -108,9 +111,10 @@ const tableItems = computed(() => data.value?.scopes ?? []);
         <code class="text-xs">{{ item.slug }}</code>
       </template>
       <template #description="{ item }">
-        <span class="line-clamp-2 text-sm text-neutral-500">{{
-          item.description
-        }}</span>
+        <span
+          class="line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
+          >{{ item.description }}</span
+        >
       </template>
       <template #createdAt="{ item }">
         <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
@@ -137,7 +141,10 @@ const tableItems = computed(() => data.value?.scopes ?? []);
       <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
         {{ search ? t("scopes.noMatches") : t("scopes.empty") }}
       </p>
-      <p v-if="!search" class="mt-1 text-sm text-neutral-500">
+      <p
+        v-if="!search"
+        class="mt-1 text-sm text-neutral-500 dark:text-neutral-400"
+      >
         {{ t("scopes.emptyHint") }}
       </p>
     </div>
