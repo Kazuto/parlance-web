@@ -5,16 +5,20 @@ import {
   Header,
   Menu,
   UserMenu,
+  ThemeToggle,
   type MenuItem,
   type UserMenuItem,
   ToastStack,
   Page,
+  useTheme,
 } from "@thkzt/eunoia";
 
 const { user, logout } = useAuthStore();
 const { t } = useI18n();
 
 const route = useRoute();
+
+useTheme();
 
 const sidebarCollapsed = ref(false);
 
@@ -85,6 +89,7 @@ const headerOptions = computed(() => {
       </template>
 
       <template #right>
+        <ThemeToggle />
         <UserMenu
           v-if="user"
           :name="user.name ?? undefined"

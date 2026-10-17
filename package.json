@@ -19,13 +19,14 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@nuxt/a11y": "1.0.0-alpha.1",
     "@nuxt/fonts": "0.13.0",
     "@nuxt/icon": "2.2.1",
     "@nuxtjs/i18n": "^10.6.0",
     "@pinia/nuxt": "0.11.3",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/vue-query": "^5.100.9",
-    "@thkzt/eunoia": "0.0.1-beta.47",
+    "@thkzt/eunoia": "^0.0.1-beta.57",
     "@vueuse/core": "^14.3.0",
     "jwt-decode": "^4.0.0",
     "ky": "^2.0.2",

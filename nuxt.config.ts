@@ -4,12 +4,23 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: "en",
+      },
+      title: "Parlance",
+    },
+  },
+
   modules: [
     "@nuxt/eslint",
     "@nuxt/fonts",
     "@nuxt/icon",
     "@pinia/nuxt",
     "@nuxtjs/i18n",
+    "@nuxt/a11y",
   ],
 
   i18n: {
