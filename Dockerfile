@@ -18,7 +18,7 @@ RUN bun run nuxt prepare
 RUN bun run build
 
 # Runtime stage
-FROM oven/bun:latest
+FROM oven/bun:latest AS runtime
 WORKDIR /app
 
 # Copy built application
