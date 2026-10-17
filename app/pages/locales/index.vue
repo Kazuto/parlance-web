@@ -15,7 +15,10 @@ import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 const { data, filter, pagination, isFetching, error, refetch } =
   useLocaleList();
 
-filter.value.includeDeleted = true;
+const { can } = usePermission();
+
+// Only show deleted locales to users with permanent_delete_locale permission
+filter.value.includeDeleted = can.value("permanent_delete_locale");
 
 const router = useRouter();
 const { t } = useI18n();
@@ -71,6 +74,7 @@ const tableItems = computed(() => {
 const showDialog = ref(false);
 const deleteDialogItem = ref<Locale | undefined>(undefined);
 const restoreDialogItem = ref<Locale | undefined>(undefined);
+const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
 </script>
 
 <template>
@@ -155,6 +159,13 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
               :label="t('locales.restore')"
               @click="restoreDialogItem = item"
             />
+            <BaseIconButton
+              v-if="can('permanent_delete_locale')"
+              icon="x-circle"
+              destructive
+              :label="t('locales.permanentDelete')"
+              @click="permanentDeleteDialogItem = item"
+            />
           </div>
         </template>
       </DataTable>
@@ -212,5 +223,10 @@ const restoreDialogItem = ref<Locale | undefined>(undefined);
     :item="restoreDialogItem"
     :open="restoreDialogItem !== undefined"
     @close="restoreDialogItem = undefined"
+  />
+  <LocalePermanentDeleteDialog
+    :item="permanentDeleteDialogItem"
+    :open="permanentDeleteDialogItem !== undefined"
+    @close="permanentDeleteDialogItem = undefined"
   />
 </template>

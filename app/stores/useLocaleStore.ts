@@ -33,10 +33,18 @@ export const useLocaleStore = defineStore("localeStore", () => {
     },
   });
 
+  const permanentDelete = useMutation({
+    ...api.locales.destroy.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return {
     create,
     update,
     destroy,
     restore,
+    permanentDelete,
   };
 });

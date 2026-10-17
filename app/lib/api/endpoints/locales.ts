@@ -23,6 +23,9 @@ import {
   type RestoreLocaleRequest,
   RestoreLocaleRequestSchema,
   RestoreLocaleResponseSchema,
+  type DestroyLocaleRequest,
+  DestroyLocaleRequestSchema,
+  DestroyLocaleResponseSchema,
 } from "../schemas/parlance/v1/LocaleSchema";
 
 export const locales = {
@@ -95,6 +98,18 @@ export const locales = {
     {
       input: RestoreLocaleRequestSchema,
       output: RestoreLocaleResponseSchema,
+    },
+  ),
+
+  destroy: authedEndpoint.mutate(
+    (data: DestroyLocaleRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocaleService/DestroyLocale",
+      json: data,
+    }),
+    {
+      input: DestroyLocaleRequestSchema,
+      output: DestroyLocaleResponseSchema,
     },
   ),
 

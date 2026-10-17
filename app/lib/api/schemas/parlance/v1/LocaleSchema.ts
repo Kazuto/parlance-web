@@ -167,6 +167,16 @@ export const RestoreLocaleResponseSchema = z.object({
     return LocaleSchema.nullish();
   },
 });
+export type DestroyLocaleRequest = {
+  id?: string | null;
+};
+export const DestroyLocaleRequestSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type DestroyLocaleResponse = Record<string, never>;
+export const DestroyLocaleResponseSchema = z.object({});
 export type GetDefaultLocaleRequest = Record<string, never>;
 export const GetDefaultLocaleRequestSchema = z.object({});
 export type GetDefaultLocaleResponse = {
