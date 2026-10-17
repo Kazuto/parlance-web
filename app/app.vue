@@ -1,6 +1,13 @@
+<script setup lang="ts">
+const { initializeLocale } = useLocalePreference();
+
+onMounted(() => {
+  initializeLocale();
+});
+</script>
+
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
