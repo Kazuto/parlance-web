@@ -11,6 +11,9 @@ RUN bun install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# Generate Nuxt types and prepare
+RUN bun run nuxt prepare
+
 # Build the application
 RUN bun run build
 
