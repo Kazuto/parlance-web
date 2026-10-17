@@ -59,7 +59,11 @@ function subjectLink(item: ActivityItem) {
     <Switch v-model="onlyMine" dense>{{ t("activity.onlyMine") }}</Switch>
   </div>
   <Card>
-    <p v-if="isLoading" role="status" class="py-8 text-center text-neutral-500">
+    <p
+      v-if="isLoading"
+      role="status"
+      class="py-8 text-center text-neutral-500 dark:text-neutral-400"
+    >
       {{ t("activity.loading") }}
     </p>
     <div
@@ -72,7 +76,10 @@ function subjectLink(item: ActivityItem) {
         t("common.retry")
       }}</Button>
     </div>
-    <p v-else-if="!items.length" class="py-8 text-center text-neutral-500">
+    <p
+      v-else-if="!items.length"
+      class="py-8 text-center text-neutral-500 dark:text-neutral-400"
+    >
       {{ onlyMine ? t("activity.noOwnActivity") : t("dashboard.noActivity") }}
     </p>
     <ul
@@ -114,7 +121,7 @@ function subjectLink(item: ActivityItem) {
           </i18n-t>
           <RelativeTime
             v-if="item.changedAt"
-            class="text-xs text-neutral-500"
+            class="text-xs text-neutral-500 dark:text-neutral-400"
             :timestamp="item.changedAt"
           />
         </div>

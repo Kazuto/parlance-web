@@ -140,7 +140,7 @@
   "dashboard.greeting.description": "Here's what you can do in Parlance today.",
   "dashboard.totalLocales": "Total locales",
   "dashboard.totalEntries": "Total entries",
-  "dashboard.pending": "Pending",
+  "dashboard.missing": "Missing translations",
   "dashboard.completed": "Completed",
   "dashboard.quickAccess": "Quick access",
   "dashboard.recentActivity": "Recent activity",
