@@ -26,10 +26,14 @@ const sidebarCollapsed = ref(false);
 const mainEl = useTemplateRef<HTMLElement>("mainEl");
 
 const onMenuSelect = (label: string) => {
-  if (label === t("nav.signOut")) logout();
+  if (label === t("nav.signOut")) {
+    logout();
+  } else if (label === t("nav.settings")) {
+    navigateTo("/settings");
+  }
 };
 
-const menuItems: MenuItem[] = [
+const menuItems = computed<MenuItem[]>(() => [
   { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
   { label: t("nav.locales"), to: "/locales", icon: "globe-simple" },
   { label: t("nav.entries"), to: "/entries", icon: "book" },
@@ -42,11 +46,12 @@ const menuItems: MenuItem[] = [
   { label: t("nav.scopes"), to: "/scopes", icon: "stack" },
   { label: t("nav.roles"), to: "/roles", icon: "shield" },
   { label: t("nav.users"), to: "/users", icon: "users" },
-];
+]);
 
-const userMenuItems: UserMenuItem[] = [
+const userMenuItems = computed<UserMenuItem[]>(() => [
+  { label: t("nav.settings"), icon: "gear", to: "/settings" },
   { label: t("nav.signOut"), icon: "sign-out", variant: "danger" },
-];
+]);
 
 const toastStack = useTemplateRef("toastStack");
 

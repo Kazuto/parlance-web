@@ -17,7 +17,7 @@ const editDialogItem = ref<User>();
 const deleteDialogItem = ref<User | undefined>(undefined);
 const restoreDialogItem = ref<User | undefined>(undefined);
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   title: t("nav.users"),
   description: t("users.description"),
@@ -27,7 +27,7 @@ usePage({
     icon: "plus",
     onClick: () => (showDialog.value = true),
   },
-});
+}));
 
 const { data, filter, pagination, isFetching, error, refetch } = useUserList();
 

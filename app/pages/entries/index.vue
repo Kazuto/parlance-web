@@ -51,7 +51,7 @@ function openTransfer(action: "import" | "export") {
   showTransferDialog.value = true;
 }
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   layout: "workspace",
   title: t("nav.entries"),
@@ -74,7 +74,7 @@ usePage({
       onClick: () => openTransfer("export"),
     },
   ],
-});
+}));
 
 const {
   data,

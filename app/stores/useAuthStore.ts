@@ -212,6 +212,10 @@ export const useAuthStore = defineStore("authStore", () => {
     token: token.value,
   });
 
+  function setUser(userData: User | undefined) {
+    user.value = userData;
+  }
+
   return {
     isLoggedIn,
     isLoggedOut,
@@ -224,6 +228,7 @@ export const useAuthStore = defineStore("authStore", () => {
     refresh,
     refreshToken: readonly(refreshToken),
     setToken,
+    setUser,
     token: readonly(token),
     user: readonly(user),
   };

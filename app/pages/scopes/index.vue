@@ -21,7 +21,7 @@ const editDialogItem = ref<Scope>();
 const deleteDialogItem = ref<Scope>();
 const restoreDialogItem = ref<Scope>();
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   title: t("nav.scopes"),
   description: t("scopes.description"),
@@ -31,7 +31,7 @@ usePage({
     icon: "plus",
     onClick: () => (createDialogOpen.value = true),
   },
-});
+}));
 
 const search = ref("");
 watchDebounced(

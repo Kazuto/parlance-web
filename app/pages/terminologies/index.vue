@@ -24,7 +24,7 @@ const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Terminology>();
 const editDialogItem = ref<Terminology>();
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   layout: "workspace",
   title: t("nav.terminologies"),
@@ -35,7 +35,7 @@ usePage({
     icon: "plus",
     onClick: () => (showCreateDialog.value = true),
   },
-});
+}));
 
 const {
   data,

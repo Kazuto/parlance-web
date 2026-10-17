@@ -383,5 +383,11 @@
   "transfer.importTab": "Import",
   "transfer.exportTab": "Export",
   "unsaved.leaveConfirm": "You have {count} unsaved change. Leave this page and discard it? | You have {count} unsaved change. Leave this page and discard it? | You have {count} unsaved changes. Leave this page and discard them?",
-  "translationCount.missing": "Missing translations: {languages}"
+  "translationCount.missing": "Missing translations: {languages}",
+  "settings.title": "Settings",
+  "settings.description": "Manage your user preferences",
+  "settings.uiLanguage": "User interface language",
+  "settings.uiLanguageDescription": "Choose the language for menus, buttons and interface text",
+  "settings.localeUpdateFailed": "Failed to save language preference",
+  "nav.settings": "Settings"
 }

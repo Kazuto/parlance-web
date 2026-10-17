@@ -23,7 +23,7 @@ filter.value.includeDeleted = can.value("permanent_delete_locale");
 const router = useRouter();
 const { t } = useI18n();
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   title: t("nav.locales"),
   description: t("locales.description"),
@@ -33,7 +33,7 @@ usePage({
     icon: "plus",
     onClick: () => (showDialog.value = true),
   },
-});
+}));
 
 const tableColumns: DataTableColumn<Locale>[] = [
   {

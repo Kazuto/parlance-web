@@ -16,7 +16,7 @@ import ViewPermissionsDialog from "~/components/role/ViewPermissionsDialog.vue";
 
 const { t } = useI18n();
 
-usePage({
+usePage(() => ({
   width: "extra-wide",
   title: t("nav.roles"),
   description: t("roles.description"),
@@ -26,7 +26,7 @@ usePage({
     icon: "plus",
     onClick: () => (createDialogOpen.value = true),
   },
-});
+}));
 
 const { data, isLoading, error, refetch, filter } = useRoleList();
 
