@@ -32,8 +32,8 @@ const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 const file = ref<File>();
 const error = ref<string>();
 const result = ref<ImportResult>();
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 const localeOptions = computed(() =>
   props.locales
     .filter((locale) => locale.id && locale.code && !locale.deletedAt)
@@ -175,10 +175,11 @@ async function handleSubmit() {
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      toast.add(t("transfer.exported"), { variant: "success" });
+      showSuccess(t("transfer.exported"));
       emit("exported");
     }
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message

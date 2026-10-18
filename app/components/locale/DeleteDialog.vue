@@ -11,8 +11,8 @@ const localeStore = useLocaleStore();
 const destroyLocale = localeStore.destroy.mutateAsync;
 const isPending = computed(() => localeStore.destroy.isPending);
 
-const toast = useToast();
 const { t } = useI18n();
+const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
   if (!props.item || isPending.value) return;
@@ -24,14 +24,10 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(t("locales.deleted", { name: props.item?.name ?? "" }), {
-          variant: "success",
-        });
+        showSuccess(t("locales.deleted", { name: props.item?.name ?? "" }));
       },
-      onError: () => {
-        toast.add(t("locales.deleteFailed", { name: props.item?.name ?? "" }), {
-          variant: "danger",
-        });
+      onError: (error) => {
+        showError(error);
       },
     },
   );

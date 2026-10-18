@@ -424,7 +424,7 @@ const { create: createDefinitionEndpoint, update: updateDefinitionEndpoint } =
 const { mutateAsync: createDefinition } = createDefinitionEndpoint;
 const { mutateAsync: updateDefinition } = updateDefinitionEndpoint;
 
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleSave() {
   const terminology = selectedTerminologyData.value;
@@ -509,16 +509,18 @@ async function saveDefinitions(
     });
     const failed = failedLanguages.length;
     if (failed === 0) {
-      toast.add(t("terminologies.saved", { label }), { variant: "success" });
+      showSuccess(t("terminologies.saved", { label }));
     } else {
-      toast.add(
-        t("terminologies.partialSave", {
-          saved: results.length - failed,
-          total: results.length,
-          failures: failedLanguages.join(", "),
-        }),
-        { variant: failed === results.length ? "danger" : "warning" },
-      );
+      const message = t("terminologies.partialSave", {
+        saved: results.length - failed,
+        total: results.length,
+        failures: failedLanguages.join(", "),
+      });
+      if (failed === results.length) {
+        showError(message);
+      } else {
+        showSuccess(message);
+      }
     }
 
     await Promise.all([refetch(), refetchDetail()]);

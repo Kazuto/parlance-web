@@ -10,25 +10,18 @@ const emit = defineEmits<{ close: []; deleted: [id: string] }>();
 
 const terminologyStore = useTerminologyStore();
 const { mutateAsync: deleteTerminology, isPending } = terminologyStore.destroy;
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleConfirm() {
   if (!props.item?.id || isPending) return;
   try {
     await deleteTerminology({ id: props.item.id });
-    toast.add(t("terminologies.deleted", { term: props.item.term ?? "" }), {
-      variant: "success",
-    });
+    showSuccess(t("terminologies.deleted", { term: props.item.term ?? "" }));
     emit("deleted", props.item.id);
     emit("close");
-  } catch {
-    toast.add(
-      t("terminologies.deleteFailed", { term: props.item.term ?? "" }),
-      {
-        variant: "danger",
-      },
-    );
+  } catch (error) {
+    showError(error as Error);
   }
 }
 

@@ -8,8 +8,8 @@ const entryStore = useEntryStore();
 const deleteEntry = entryStore.destroy.mutateAsync;
 const isPending = computed(() => entryStore.destroy.isPending);
 const error = ref<string>();
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 watch(
   () => props.open,
   () => {
@@ -27,12 +27,11 @@ async function handleSubmit() {
   error.value = undefined;
   try {
     await deleteEntry({ id: entry.id });
-    toast.add(t("entries.deleted", { key: entry.key ?? "" }), {
-      variant: "success",
-    });
+    showSuccess(t("entries.deleted", { key: entry.key ?? "" }));
     emit("deleted", entry.id);
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error ? cause.message : t("entries.deleteFailed");
   }

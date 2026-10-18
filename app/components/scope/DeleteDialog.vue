@@ -6,18 +6,18 @@ const props = defineProps<{ open: boolean; item?: Scope }>();
 const emit = defineEmits<{ close: [] }>();
 const scopeStore = useScopeStore();
 const isPending = computed(() => scopeStore.destroy.isPending);
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleConfirm() {
   if (!props.item?.id || isPending.value) return;
   const name = props.item.name ?? "";
   try {
     await scopeStore.destroy.mutateAsync({ id: props.item.id });
-    toast.add(t("scopes.deleted", { name }), { variant: "success" });
+    showSuccess(t("scopes.deleted", { name }));
     emit("close");
-  } catch {
-    toast.add(t("scopes.deleteFailed", { name }), { variant: "danger" });
+  } catch (error) {
+    showError(error as Error);
   }
 }
 

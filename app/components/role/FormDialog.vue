@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 
 const name = ref("");
 const description = ref("");
@@ -142,19 +142,16 @@ async function handleSubmit() {
         id: props.role.id,
         ...input,
       });
-      toast.add(t("roles.updated", { name: input.name }), {
-        variant: "success",
-      });
+      showSuccess(t("roles.updated", { name: input.name }));
       if (response.role) emit("updated", response.role);
     } else {
       const response = await roleStore.create.mutateAsync(input);
-      toast.add(t("roles.created", { name: input.name }), {
-        variant: "success",
-      });
+      showSuccess(t("roles.created", { name: input.name }));
       if (response.role) emit("created", response.role);
     }
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message

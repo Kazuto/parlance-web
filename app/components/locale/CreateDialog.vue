@@ -17,8 +17,8 @@ const error = ref<string>();
 const { create } = useLocaleStore();
 const { mutateAsync: createLocale, isPending } = create;
 
-const toast = useToast();
 const { t } = useI18n();
+const { showError, showSuccess } = useErrorHelper();
 
 function resetForm() {
   form.value = {
@@ -46,19 +46,14 @@ async function handleSubmit() {
     },
     {
       onSuccess: (response: CreateLocaleResponse) => {
-        toast.add(
+        showSuccess(
           t("locales.created", {
             name: response.locale?.name ?? form.value.names.en,
           }),
-          {
-            variant: "success",
-          },
         );
       },
-      onError: () => {
-        toast.add(t("locales.createFailed", { name: form.value.names.en }), {
-          variant: "danger",
-        });
+      onError: (error) => {
+        showError(error);
       },
     },
   );

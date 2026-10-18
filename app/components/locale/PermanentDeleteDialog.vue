@@ -11,8 +11,8 @@ const localeStore = useLocaleStore();
 const permanentDeleteLocale = localeStore.permanentDelete.mutateAsync;
 const isPending = computed(() => localeStore.permanentDelete.isPending);
 
-const toast = useToast();
 const { t } = useI18n();
+const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
   if (!props.item || isPending.value) return;
@@ -24,20 +24,12 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(
+        showSuccess(
           t("locales.permanentlyDeleted", { name: props.item?.name ?? "" }),
-          {
-            variant: "success",
-          },
         );
       },
-      onError: () => {
-        toast.add(
-          t("locales.permanentDeleteFailed", { name: props.item?.name ?? "" }),
-          {
-            variant: "danger",
-          },
-        );
+      onError: (error) => {
+        showError(error);
       },
     },
   );

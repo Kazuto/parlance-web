@@ -10,7 +10,7 @@ const props = defineProps<{
 const { destroy } = useUserStore();
 const { mutateAsync: destroyUser, isPending } = destroy;
 
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleSubmit() {
   if (!props.item) return;
@@ -21,12 +21,10 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(`User ${props.item?.name} deleted`, { variant: "success" });
+        showSuccess(`User ${props.item?.name} deleted`);
       },
-      onError: () => {
-        toast.add(`Failed to delete user: ${props.item?.name}`, {
-          variant: "danger",
-        });
+      onError: (error) => {
+        showError(error);
       },
     },
   );

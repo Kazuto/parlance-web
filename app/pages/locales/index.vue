@@ -22,6 +22,7 @@ filter.value.includeDeleted = can.value("permanent_delete_locale");
 
 const router = useRouter();
 const { t } = useI18n();
+const { getErrorMessage } = useErrorHelper();
 
 usePage(() => ({
   width: "extra-wide",
@@ -89,12 +90,25 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
   <!-- Error State -->
   <div
     v-else-if="error && !data"
-    class="bg-red-50 border border-red-200 rounded-lg p-4"
+    class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4"
   >
-    <p class="text-red-800">
-      {{ t("locales.loadFailed", { error: error.message }) }}
-    </p>
-    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
+    <div class="flex items-start gap-3">
+      <Icon
+        name="warning-circle"
+        class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+      />
+      <div class="flex-1">
+        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+          {{ t("locales.loadFailed") }}
+        </h3>
+        <p class="mt-1 text-sm text-red-700 dark:text-red-300">
+          {{ getErrorMessage(error) }}
+        </p>
+        <Button ghost class="mt-3" @click="() => refetch()">
+          {{ t("common.tryAgain") }}
+        </Button>
+      </div>
+    </div>
   </div>
 
   <!-- Locales List -->
@@ -168,6 +182,40 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
             />
           </div>
         </template>
+
+        <template #empty>
+          <div class="flex flex-col items-center py-12">
+            <svg
+              class="h-12 w-12 text-neutral-400 dark:text-neutral-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+              />
+            </svg>
+            <h3
+              class="mt-4 text-sm font-medium text-neutral-900 dark:text-neutral-100"
+            >
+              {{ t("locales.empty") }}
+            </h3>
+            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {{ t("locales.emptyHint") }}
+            </p>
+            <Button
+              v-can="'create_locale'"
+              primary
+              class="mt-6"
+              @click="showDialog = true"
+            >
+              {{ t("locales.create") }}
+            </Button>
+          </div>
+        </template>
       </DataTable>
 
       <Pagination
@@ -178,38 +226,6 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
         @update:current="pagination.page = $event"
         @update:per-page="pagination.perPage = $event"
       />
-    </Card>
-
-    <!-- Empty State -->
-    <Card v-if="tableItems.length === 0">
-      <svg
-        class="mx-auto h-12 w-12 text-neutral-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-        />
-      </svg>
-      <h3 class="mt-2 text-sm font-medium text-neutral-900">
-        {{ t("locales.empty") }}
-      </h3>
-      <p class="mt-1 text-sm text-neutral-500">
-        {{ t("locales.emptyHint") }}
-      </p>
-      <div class="mt-6">
-        <button
-          v-can="'create_locale'"
-          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-          @click="showDialog = true"
-        >
-          {{ t("locales.create") }}
-        </button>
-      </div>
     </Card>
   </div>
 

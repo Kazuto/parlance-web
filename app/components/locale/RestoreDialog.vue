@@ -10,8 +10,8 @@ const props = defineProps<{
 const { restore } = useLocaleStore();
 const { mutateAsync: restoreLocale, isPending } = restore;
 
-const toast = useToast();
 const { t } = useI18n();
+const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
   if (!props.item) return;
@@ -22,17 +22,10 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(t("locales.restored", { name: props.item?.name ?? "" }), {
-          variant: "success",
-        });
+        showSuccess(t("locales.restored", { name: props.item?.name ?? "" }));
       },
-      onError: () => {
-        toast.add(
-          t("locales.restoreFailed", { name: props.item?.name ?? "" }),
-          {
-            variant: "danger",
-          },
-        );
+      onError: (error) => {
+        showError(error);
       },
     },
   );

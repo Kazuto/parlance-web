@@ -18,8 +18,8 @@ const isEdit = computed(() => !!props.item);
 const isPending = computed(
   () => scopeStore.create.isPending || scopeStore.update.isPending,
 );
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 const colorInvalid = computed(
   () => !!form.value.color && !HEX_COLOR.test(form.value.color),
 );
@@ -87,13 +87,14 @@ async function handleSubmit() {
     if (props.item) {
       if (!props.item.id) return;
       await scopeStore.update.mutateAsync({ id: props.item.id, ...input });
-      toast.add(t("scopes.updated", { name }), { variant: "success" });
+      showSuccess(t("scopes.updated", { name }));
     } else {
       await scopeStore.create.mutateAsync(input);
-      toast.add(t("scopes.created", { name }), { variant: "success" });
+      showSuccess(t("scopes.created", { name }));
     }
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message

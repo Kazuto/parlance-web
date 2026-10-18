@@ -7,7 +7,7 @@ import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 const props = defineProps<{ open: boolean; user?: User }>();
 const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 const userStore = useUserStore();
 const isEdit = computed(() => !!props.user);
 const isPending = computed(
@@ -88,7 +88,7 @@ async function handleSubmit() {
         ...(form.value.password ? { password: form.value.password } : {}),
         roles: { ids: form.value.roleIds },
       });
-      toast.add(t("users.updated", { name }), { variant: "success" });
+      showSuccess(t("users.updated", { name }));
     } else {
       await userStore.create.mutateAsync({
         name,
@@ -96,10 +96,11 @@ async function handleSubmit() {
         password: form.value.password,
         roles: { ids: form.value.roleIds },
       });
-      toast.add(t("users.created", { name }), { variant: "success" });
+      showSuccess(t("users.created", { name }));
     }
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message

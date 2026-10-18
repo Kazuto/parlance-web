@@ -10,7 +10,7 @@ const props = defineProps<{
 const { restore } = useUserStore();
 const { mutateAsync: restoreUser, isPending } = restore;
 
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleSubmit() {
   if (!props.item) return;
@@ -21,14 +21,10 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(`User ${props.item?.name} restored`, {
-          variant: "success",
-        });
+        showSuccess(`User ${props.item?.name} restored`);
       },
-      onError: () => {
-        toast.add(`Failed to restore user: ${props.item?.name}`, {
-          variant: "danger",
-        });
+      onError: (error) => {
+        showError(error);
       },
     },
   );

@@ -12,7 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 const { destroy } = useRoleStore();
 const { mutateAsync: destroyRole, isPending } = destroy;
 
@@ -25,14 +25,10 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        toast.add(t("roles.deleted", { name: props.role?.name }), {
-          variant: "success",
-        });
+        showSuccess(t("roles.deleted", { name: props.role?.name }));
       },
-      onError: () => {
-        toast.add(t("roles.deleteFailed", { name: props.role?.name }), {
-          variant: "danger",
-        });
+      onError: (error) => {
+        showError(error);
       },
     },
   );

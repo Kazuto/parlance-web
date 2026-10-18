@@ -6,7 +6,7 @@ import type { LocaleObject } from "@nuxtjs/i18n";
 
 const { t, locale, locales, setLocale } = useI18n();
 const authStore = useAuthStore();
-const toast = useToast();
+const { showError } = useErrorHelper();
 
 usePage(() => ({
   width: "wide",
@@ -52,7 +52,7 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
     await setLocale(previousLocale as LocaleObject["code"]);
 
     console.error("Failed to save locale preference:", error);
-    toast.add(t("settings.localeUpdateFailed"), { variant: "danger" });
+    showError(error as Error);
   }
 };
 </script>

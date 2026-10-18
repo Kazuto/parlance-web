@@ -473,7 +473,7 @@ const {
 const { mutateAsync: createLocalization } = createLocalizationEndpoint;
 const { mutateAsync: updateLocalization } = updateLocalizationEndpoint;
 
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 
 async function handleSave() {
   const entry = selectedEntryData.value;
@@ -562,16 +562,18 @@ async function saveTranslations(
     });
     const failed = failedLanguages.length;
     if (failed === 0) {
-      toast.add(t("entries.saved", { label }), { variant: "success" });
+      showSuccess(t("entries.saved", { label }));
     } else {
-      toast.add(
-        t("entries.partialSave", {
-          saved: results.length - failed,
-          total: results.length,
-          failures: failedLanguages.join(", "),
-        }),
-        { variant: failed === results.length ? "danger" : "warning" },
-      );
+      const message = t("entries.partialSave", {
+        saved: results.length - failed,
+        total: results.length,
+        failures: failedLanguages.join(", "),
+      });
+      if (failed === results.length) {
+        showError(message);
+      } else {
+        showSuccess(message); // Partial success still shows as success with warning details
+      }
     }
 
     await Promise.all([

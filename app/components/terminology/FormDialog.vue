@@ -21,8 +21,8 @@ const isEdit = computed(() => !!props.item);
 const isPending = computed(
   () => terminologyStore.create.isPending || terminologyStore.update.isPending,
 );
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 
 watch(
   () => props.open,
@@ -57,15 +57,16 @@ async function handleSubmit() {
         id: props.item.id,
         ...input,
       });
-      toast.add(t("terminologies.updated", { term }), { variant: "success" });
+      showSuccess(t("terminologies.updated", { term }));
       if (response.terminology) emit("updated", response.terminology);
     } else {
       const response = await terminologyStore.create.mutateAsync(input);
-      toast.add(t("terminologies.created", { term }), { variant: "success" });
+      showSuccess(t("terminologies.created", { term }));
       if (response.terminology?.id) emit("created", response.terminology);
     }
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message

@@ -36,7 +36,7 @@ const store = useLocaleStore();
 const batchSaving = ref(false);
 const isSaving = computed(() => batchSaving.value || store.update.isPending);
 const saveAllOpen = ref(false);
-const toast = useToast();
+const { showSuccess, showError } = useErrorHelper();
 const search = ref("");
 const drafts = ref<Record<string, LocaleForm>>({});
 const saved = ref<Record<string, LocaleForm>>({});
@@ -212,20 +212,21 @@ async function saveLocales(ids: string[]) {
     }
     if (failures.length) {
       error.value = failures.join("; ");
-      toast.add(
-        t("locales.partialSave", {
-          saved: changes.length - failures.length,
-          total: changes.length,
-          failures: failures.join("; "),
-        }),
-        { variant: failures.length === changes.length ? "danger" : "warning" },
-      );
+      const message = t("locales.partialSave", {
+        saved: changes.length - failures.length,
+        total: changes.length,
+        failures: failures.join("; "),
+      });
+      if (failures.length === changes.length) {
+        showError(message);
+      } else {
+        showSuccess(message);
+      }
     } else {
-      toast.add(
+      showSuccess(
         changes.length === 1
           ? t("locales.saved", { code: changes[0]!.submitted.code })
           : t("locales.savedMany", { count: changes.length }),
-        { variant: "success" },
       );
     }
     await queryClient.invalidateQueries({

@@ -38,8 +38,8 @@ const isEdit = computed(() => !!props.item);
 const isPending = computed(
   () => entryStore.create.isPending || entryStore.update.isPending,
 );
-const toast = useToast();
 const { t } = useI18n();
+const { showSuccess, showError } = useErrorHelper();
 
 watch(
   () => props.open,
@@ -76,9 +76,7 @@ async function handleSubmit() {
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
       });
-      toast.add(t("entries.updated", { key: trimmedKey }), {
-        variant: "success",
-      });
+      showSuccess(t("entries.updated", { key: trimmedKey }));
       if (response.entry?.id) emit("updated", response.entry);
     } else {
       const response = await entryStore.create.mutateAsync({
@@ -86,13 +84,12 @@ async function handleSubmit() {
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
       });
-      toast.add(t("entries.created", { key: trimmedKey }), {
-        variant: "success",
-      });
+      showSuccess(t("entries.created", { key: trimmedKey }));
       if (response.entry?.id) emit("created", response.entry);
     }
     emit("close");
   } catch (cause) {
+    showError(cause as Error);
     error.value =
       cause instanceof Error
         ? cause.message
