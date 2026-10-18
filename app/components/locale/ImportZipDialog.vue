@@ -15,8 +15,10 @@ const { t } = useI18n();
 const { showError, showSuccess } = useErrorHelper();
 const { importZip, isPending } = useZipImport();
 
-const file = ref<File | null>(null);
+const file = ref<File | undefined>(undefined);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
+
+const hasFile = computed(() => !!file.value);
 
 const modeOptions = [
   {
@@ -37,14 +39,6 @@ const modeOptions = [
   },
 ];
 
-function handleFileSelect(files: File[]) {
-  if (files.length > 0 && files[0]) {
-    file.value = files[0];
-  } else {
-    file.value = null;
-  }
-}
-
 async function handleSubmit() {
   if (!file.value) {
     showError(t("import.fileRequired"));
@@ -52,7 +46,7 @@ async function handleSubmit() {
   }
 
   try {
-    const result = await importZip(file.value!, [], mode.value);
+    const result = await importZip(file.value, [], mode.value);
 
     const totalProcessed = result.results?.length ?? 0;
     const created = result.totalCreated ?? 0;
@@ -86,7 +80,7 @@ async function handleSubmit() {
 
 function handleClose() {
   if (!isPending.value) {
-    file.value = null;
+    file.value = undefined;
     emit("close");
   }
 }
@@ -101,11 +95,11 @@ function handleClose() {
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Dropzone
+        v-model="file"
         :label="t('import.zip.file')"
         :description="t('import.zip.description')"
         accept=".zip,application/zip"
         :disabled="isPending"
-        @update:files="handleFileSelect"
       />
 
       <Select v-model="mode" :options="modeOptions" :disabled="isPending">
@@ -116,7 +110,7 @@ function handleClose() {
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
-        <Button type="submit" primary :disabled="isPending || !file">
+        <Button type="submit" primary :disabled="isPending || !hasFile">
           {{ isPending ? t("import.importing") : t("import.zip.import") }}
         </Button>
       </div>

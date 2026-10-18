@@ -147,10 +147,10 @@ function handleClose() {
 
       <!-- Footer -->
       <div class="flex items-center justify-end gap-3 pt-4">
-        <Button ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
-        <Button primary :disabled="isPending">
+        <Button type="submit" primary :disabled="isPending">
           {{ isPending ? t("common.creating") : t("locales.create") }}
         </Button>
       </div>
