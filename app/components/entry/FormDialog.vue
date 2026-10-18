@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Textarea, Select } from "@thkzt/eunoia";
+import {
+  Button,
+  Dialog,
+  Input,
+  Textarea,
+  Select,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 
 // Without an item the dialog creates an entry; with an item it edits it.
@@ -12,6 +19,16 @@ const emit = defineEmits<{
 const key = ref("");
 const description = ref("");
 const scopeIds = ref<string[]>([]);
+const { placeholder: keyPlaceholder } = useTypingPlaceholder([
+  "button.save",
+  "login.title",
+  "error.not_found",
+  "welcome.message",
+  "menu.settings",
+  "form.submit",
+  "user.profile",
+  "nav.home",
+]);
 const {
   options: availableScopes,
   error: scopeError,
@@ -110,7 +127,7 @@ async function handleSubmit() {
         v-model="key"
         required
         :disabled="isPending"
-        :placeholder="t('entries.keyExample')"
+        :placeholder="keyPlaceholder"
       >
         {{ t("common.key") }}
       </Input>

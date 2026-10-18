@@ -10,8 +10,8 @@ const router = useRouter();
 const setupClient = useSetupClient();
 
 const adminEmail = ref("");
-const adminPassword = ref("cooler123d");
-const adminPasswordConfirm = ref("cooler123d");
+const adminPassword = ref("");
+const adminPasswordConfirm = ref("");
 const adminName = ref("");
 const error = ref<string>();
 const loading = ref(false);

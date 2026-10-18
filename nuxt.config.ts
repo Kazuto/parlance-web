@@ -73,6 +73,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ["@thkzt/eunoia"],
+    },
     server: {
       hmr: {
         port: 24678,

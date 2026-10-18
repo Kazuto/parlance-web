@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Textarea } from "@thkzt/eunoia";
+import {
+  Button,
+  Dialog,
+  Input,
+  Textarea,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
 // Without an item the dialog creates a terminology; with an item it edits it.
@@ -23,6 +29,16 @@ const isPending = computed(
 );
 const { t } = useI18n();
 const { showSuccess, showError } = useErrorHelper();
+const { placeholder: termPlaceholder } = useTypingPlaceholder([
+  "API",
+  "Dashboard",
+  "UI",
+  "Authentication",
+  "Database",
+  "Endpoint",
+  "Repository",
+  "Interface",
+]);
 
 watch(
   () => props.open,
@@ -91,7 +107,7 @@ async function handleSubmit() {
         v-model="form.term"
         required
         :disabled="isPending"
-        :placeholder="t('terminologies.termExample')"
+        :placeholder="termPlaceholder"
       >
         {{ t("terminologies.term") }}
       </Input>

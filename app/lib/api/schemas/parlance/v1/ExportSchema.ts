@@ -85,3 +85,27 @@ export const ExportPoResponseSchema = z.object({
     return z.string().nullish();
   },
 });
+export type ExportZipRequest = {
+  scopeIds?: Array<string> | null;
+};
+export const ExportZipRequestSchema = z.object({
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type ExportZipResponse = {
+  format?: string | null;
+  content?: string | null;
+  filename?: string | null;
+};
+export const ExportZipResponseSchema = z.object({
+  get format(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get content(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get filename(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});

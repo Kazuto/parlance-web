@@ -9,6 +9,9 @@ import {
   ImportPoRequestSchema,
   ImportPoResponseSchema,
   type ImportPoRequest,
+  ImportZipRequestSchema,
+  ImportZipResponseSchema,
+  type ImportZipRequest,
 } from "../schemas/parlance/v1/ImportSchema";
 
 export const imports = {
@@ -35,5 +38,13 @@ export const imports = {
       json: data,
     }),
     { input: ImportPhpRequestSchema, output: ImportPhpResponseSchema },
+  ),
+  importZip: authedEndpoint.mutate(
+    (data: ImportZipRequest) => ({
+      method: "post",
+      url: "/parlance.v1.ImportService/ImportZip",
+      json: data,
+    }),
+    { input: ImportZipRequestSchema, output: ImportZipResponseSchema },
   ),
 };

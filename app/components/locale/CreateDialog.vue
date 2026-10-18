@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Button, Checkbox, Dialog, Input } from "@thkzt/eunoia";
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  Input,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import type { CreateLocaleResponse } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 defineProps<{
@@ -19,6 +25,33 @@ const { mutateAsync: createLocale, isPending } = create;
 
 const { t } = useI18n();
 const { showError, showSuccess } = useErrorHelper();
+
+const { placeholder: codePlaceholder } = useTypingPlaceholder([
+  "en-US",
+  "de-DE",
+  "fr-FR",
+  "es-ES",
+  "ja-JP",
+  "zh-CN",
+  "pt-PT",
+  "it-IT",
+  "nl-NL",
+  "pl-PL",
+  "ru-RU",
+]);
+const { placeholder: namePlaceholder } = useTypingPlaceholder([
+  "English",
+  "German",
+  "French",
+  "Spanish",
+  "Japanese",
+  "Chinese",
+  "Portuguese",
+  "Italian",
+  "Dutch",
+  "Polish",
+  "Russian",
+]);
 
 function resetForm() {
   form.value = {
@@ -81,7 +114,7 @@ function handleClose() {
         v-model="form.code"
         type="text"
         required
-        :placeholder="t('locales.codeExample')"
+        :placeholder="codePlaceholder"
         :disabled="isPending"
         :helper="t('locales.codeHelp')"
         maxlength="10"
@@ -93,7 +126,7 @@ function handleClose() {
         v-model="form.names.en"
         type="text"
         required
-        :placeholder="t('locales.nameExample')"
+        :placeholder="namePlaceholder"
         :helper="t('locales.nameHelp')"
         :disabled="isPending"
       >

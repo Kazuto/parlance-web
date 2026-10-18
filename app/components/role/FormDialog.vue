@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Textarea, Checkbox } from "@thkzt/eunoia";
+import {
+  Button,
+  Dialog,
+  Input,
+  Textarea,
+  Checkbox,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
@@ -15,6 +22,14 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const { showSuccess, showError } = useErrorHelper();
+const { placeholder: namePlaceholder } = useTypingPlaceholder([
+  "Translator",
+  "Reviewer",
+  "Admin",
+  "Developer",
+  "Editor",
+  "Manager",
+]);
 
 const name = ref("");
 const description = ref("");
@@ -172,7 +187,7 @@ async function handleSubmit() {
         v-model="name"
         required
         :disabled="isPending"
-        :placeholder="t('roles.nameExample')"
+        :placeholder="namePlaceholder"
       >
         {{ t("common.name") }}
       </Input>

@@ -10,6 +10,7 @@ import {
   Pagination,
 } from "@thkzt/eunoia";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
+import { useZipExport } from "~/composables/export/useZipExport";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const { data, filter, pagination, isFetching, error, refetch } =
@@ -22,7 +23,18 @@ filter.value.includeDeleted = can.value("permanent_delete_locale");
 
 const router = useRouter();
 const { t } = useI18n();
-const { getErrorMessage } = useErrorHelper();
+const { getErrorMessage, showSuccess, showError } = useErrorHelper();
+const { exportZip, isPending: isExporting } = useZipExport();
+const showImportDialog = ref(false);
+
+async function handleExportZip() {
+  try {
+    await exportZip();
+    showSuccess(t("export.zip.success"));
+  } catch (error) {
+    showError(error as Error);
+  }
+}
 
 usePage(() => ({
   width: "extra-wide",
@@ -34,6 +46,19 @@ usePage(() => ({
     icon: "plus",
     onClick: () => (showDialog.value = true),
   },
+  secondaryActions: [
+    {
+      content: t("import.zip.import"),
+      icon: "upload",
+      onClick: () => (showImportDialog.value = true),
+    },
+    {
+      content: t("export.zip.export"),
+      icon: "download",
+      onClick: handleExportZip,
+      loading: isExporting.value,
+    },
+  ],
 }));
 
 const tableColumns: DataTableColumn<Locale>[] = [
@@ -244,5 +269,9 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
     :item="permanentDeleteDialogItem"
     :open="permanentDeleteDialogItem !== undefined"
     @close="permanentDeleteDialogItem = undefined"
+  />
+  <LocaleImportZipDialog
+    :open="showImportDialog"
+    @close="showImportDialog = false"
   />
 </template>

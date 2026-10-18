@@ -144,3 +144,61 @@ export const ImportErrorSchema = z.object({
     return z.string().nullish();
   },
 });
+export type ImportZipRequest = {
+  fileContent?: string | null;
+  scopeIds?: Array<string> | null;
+  mode?: ImportMode | null;
+};
+export const ImportZipRequestSchema = z.object({
+  get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
+    return ImportModeSchema.nullish();
+  },
+});
+export type ImportZipResponse = {
+  results?: Array<LocaleImportResult> | null;
+  totalCreated?: number | null;
+  totalUpdated?: number | null;
+  totalSkipped?: number | null;
+  totalFailed?: number | null;
+};
+export const ImportZipResponseSchema = z.object({
+  get results(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<LocaleImportResult>>>
+  > {
+    return z.array(LocaleImportResultSchema).nullish();
+  },
+  get totalCreated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get totalUpdated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get totalSkipped(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get totalFailed(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type LocaleImportResult = {
+  localeCode?: string | null;
+  result?: ImportResult | null;
+  error?: string | null;
+};
+export const LocaleImportResultSchema = z.object({
+  get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get result(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportResult>>> {
+    return ImportResultSchema.nullish();
+  },
+  get error(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});

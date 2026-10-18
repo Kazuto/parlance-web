@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Select } from "@thkzt/eunoia";
+import {
+  Button,
+  Dialog,
+  Input,
+  Select,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import { useRoleList } from "~/composables/role/useRoleList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
@@ -15,6 +21,21 @@ const isPending = computed(
 );
 const { data: rolesData, pagination: rolesPagination } = useRoleList();
 rolesPagination.value.perPage = 100;
+
+const { placeholder: namePlaceholder } = useTypingPlaceholder([
+  "Jane Doe",
+  "John Smith",
+  "Alex Johnson",
+  "Maria Garcia",
+  "Wei Chen",
+]);
+const { placeholder: emailPlaceholder } = useTypingPlaceholder([
+  "jane.doe@example.com",
+  "john.smith@example.com",
+  "alex.johnson@example.com",
+  "maria.garcia@example.com",
+  "wei.chen@example.com",
+]);
 
 const form = ref({
   name: "",
@@ -122,7 +143,7 @@ async function handleSubmit() {
         required
         autocomplete="off"
         :disabled="isPending"
-        :placeholder="t('users.namePlaceholder')"
+        :placeholder="namePlaceholder"
       >
         {{ t("common.name") }}
       </Input>
@@ -132,7 +153,7 @@ async function handleSubmit() {
         required
         autocomplete="off"
         :disabled="isPending"
-        :placeholder="t('users.emailPlaceholder')"
+        :placeholder="emailPlaceholder"
       >
         {{ t("users.email") }}
       </Input>

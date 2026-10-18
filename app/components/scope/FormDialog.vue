@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Button, Dialog, Input, Textarea } from "@thkzt/eunoia";
+import {
+  Button,
+  Dialog,
+  Input,
+  Textarea,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
 
 // Without an item the dialog creates a scope; with an item it edits it.
@@ -23,6 +29,22 @@ const { showSuccess, showError } = useErrorHelper();
 const colorInvalid = computed(
   () => !!form.value.color && !HEX_COLOR.test(form.value.color),
 );
+const { placeholder: namePlaceholder } = useTypingPlaceholder([
+  "Backend",
+  "Frontend",
+  "Marketing",
+  "Mobile",
+  "Admin",
+  "Public",
+]);
+const { placeholder: slugPlaceholder } = useTypingPlaceholder([
+  "backend",
+  "frontend",
+  "marketing",
+  "mobile",
+  "admin",
+  "public",
+]);
 
 function slugify(value: string) {
   return value
@@ -115,7 +137,7 @@ async function handleSubmit() {
         v-model="form.name"
         required
         :disabled="isPending"
-        :placeholder="t('scopes.namePlaceholder')"
+        :placeholder="namePlaceholder"
       >
         {{ t("common.name") }}
       </Input>
@@ -123,7 +145,7 @@ async function handleSubmit() {
         :model-value="form.slug"
         required
         :disabled="isPending"
-        :placeholder="t('scopes.slugPlaceholder')"
+        :placeholder="slugPlaceholder"
         :helper="t('scopes.slugHelp')"
         @update:model-value="updateSlug"
       >
