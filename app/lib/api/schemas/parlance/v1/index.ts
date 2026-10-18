@@ -11,6 +11,7 @@ export * from "./LocalizationSchema";
 export * from "./PermissionSchema";
 export * from "./RoleSchema";
 export * from "./ScopeSchema";
+export * from "./SetupSchema";
 export * from "./StatsSchema";
 export * from "./TerminologySchema";
 export * from "./UserSchema";

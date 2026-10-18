@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Input, Button, Card, useTypingPlaceholder } from "@thkzt/eunoia";
 definePageMeta({
   layout: "auth",
 });
@@ -11,6 +12,13 @@ const email = ref("");
 const password = ref("");
 const error = ref<string>();
 const loading = ref(false);
+
+const { placeholder: emailPlaceholder } = useTypingPlaceholder([
+  "admin@company.com",
+  "hello@startup.io",
+  "contact@business.org",
+  "team@project.dev",
+]);
 
 // Redirect if already logged in
 watchEffect(() => {
@@ -41,39 +49,31 @@ async function handleLogin() {
         <p class="mt-2 text-sm text-gray-600">{{ t("auth.signInPrompt") }}</p>
       </div>
 
-      <div class="bg-white p-8 rounded-lg shadow-md">
+      <Card>
         <form class="space-y-6" @submit.prevent="handleLogin">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              {{ t("auth.email") }}
-            </label>
-            <!-- prettier-ignore -->
-            <input
+            <Input
               id="email"
               v-model="email"
               type="email"
               required
+              :placeholder="emailPlaceholder"
               autocomplete="email"
-              class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
+              {{ t("auth.email") }}
+            </Input>
           </div>
 
           <div>
-            <label
-              for="password"
-              class="block text-sm font-medium text-gray-700"
-            >
-              {{ t("auth.password") }}
-            </label>
-            <!-- prettier-ignore -->
-            <input
+            <Input
               id="password"
               v-model="password"
               type="password"
               required
               autocomplete="current-password"
-              class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
+              {{ t("auth.password") }}
+            </Input>
           </div>
 
           <div
@@ -83,19 +83,20 @@ async function handleLogin() {
             <p class="text-sm text-red-800">{{ error }}</p>
           </div>
 
-          <button
+          <Button
             type="submit"
             :disabled="loading || authStore.isRefreshing"
-            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            primary
+            class="w-full justify-center"
           >
             {{
               loading || authStore.isRefreshing
                 ? t("auth.signingIn")
                 : t("auth.signIn")
             }}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   </div>
 </template>
