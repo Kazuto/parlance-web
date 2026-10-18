@@ -189,21 +189,21 @@ async function handleSubmit() {
       </Select>
 
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
-
-      <div class="flex items-center justify-end gap-3 pt-4">
-        <Button
-          type="button"
-          ghost
-          :disabled="isPending"
-          @click="handleClose"
-          >{{ t("common.cancel") }}</Button
-        >
-        <Button type="submit" primary :disabled="isPending">{{
-          isPending
-            ? t(isEdit ? "common.saving" : "common.creating")
-            : t(isEdit ? "common.save" : "users.create")
-        }}</Button>
-      </div>
     </form>
+
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
+        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+          {{ t("common.cancel") }}
+        </Button>
+        <Button primary :disabled="isPending" @click="handleSubmit">
+          {{
+            isPending
+              ? t(isEdit ? "common.saving" : "common.creating")
+              : t(isEdit ? "common.save" : "users.create")
+          }}
+        </Button>
+      </div>
+    </template>
   </Dialog>
 </template>

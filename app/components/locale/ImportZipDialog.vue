@@ -105,15 +105,17 @@ function handleClose() {
       <Select v-model="mode" :options="modeOptions" :disabled="isPending">
         {{ t("import.mode") }}
       </Select>
+    </form>
 
-      <div class="flex items-center justify-end gap-3 pt-4">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
-        <Button type="submit" primary :disabled="isPending || !hasFile">
+        <Button primary :disabled="isPending || !hasFile" @click="handleSubmit">
           {{ isPending ? t("import.importing") : t("import.zip.import") }}
         </Button>
       </div>
-    </form>
+    </template>
   </Dialog>
 </template>

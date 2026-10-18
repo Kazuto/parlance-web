@@ -144,16 +144,17 @@ function handleClose() {
       <div v-if="error" class="rounded-md bg-red-50 border border-red-200 p-3">
         <p class="text-sm text-red-800">{{ error }}</p>
       </div>
+    </form>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-end gap-3 pt-4">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
-        <Button type="submit" primary :disabled="isPending">
+        <Button primary :disabled="isPending" @click="handleSubmit">
           {{ isPending ? t("common.creating") : t("locales.create") }}
         </Button>
       </div>
-    </form>
+    </template>
   </Dialog>
 </template>

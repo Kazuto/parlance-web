@@ -45,23 +45,20 @@ async function handleSubmit() {
     :persistent="isPending"
     @close="handleClose"
   >
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <p class="text-sm text-neutral-700 dark:text-neutral-200">
-        {{ t("entries.deleteConfirm") }}
-      </p>
-      <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
-      <div class="flex items-center justify-end gap-3 pt-4">
-        <Button
-          type="button"
-          ghost
-          :disabled="isPending"
-          @click="handleClose"
-          >{{ t("common.cancel") }}</Button
-        >
-        <Button type="submit" destructive :disabled="isPending">{{
-          isPending ? t("common.deleting") : t("entries.delete")
-        }}</Button>
+    <p class="text-sm text-neutral-700 dark:text-neutral-200">
+      {{ t("entries.deleteConfirm") }}
+    </p>
+    <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
+
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
+        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+          {{ t("common.cancel") }}
+        </Button>
+        <Button destructive :disabled="isPending" @click="handleSubmit">
+          {{ isPending ? t("common.deleting") : t("entries.delete") }}
+        </Button>
       </div>
-    </form>
+    </template>
   </Dialog>
 </template>

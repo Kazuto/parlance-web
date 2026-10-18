@@ -30,7 +30,7 @@ const resourceKeys = computed(() =>
     :title="t('roles.allPermissions', { name: role?.name || '' })"
     @close="emit('close')"
   >
-    <div class="space-y-4 max-h-96 overflow-y-auto">
+    <div class="space-y-4 max-h-96">
       <div v-if="!role?.permissions?.length" class="text-center py-8">
         <p class="text-neutral-500 dark:text-neutral-400">
           {{ t("roles.noPermissions") }}
@@ -40,7 +40,7 @@ const resourceKeys = computed(() =>
       <div
         v-for="resource in resourceKeys"
         :key="resource"
-        class="border-b border-neutral-200 dark:border-neutral-700 last:border-0 pb-3 last:pb-0"
+        class="border-b border-neutral-200 dark:border-neutral-700 last:border-0 pb-3"
       >
         <h3
           class="font-medium text-sm text-neutral-700 dark:text-neutral-300 mb-2 capitalize"
@@ -59,10 +59,10 @@ const resourceKeys = computed(() =>
       </div>
     </div>
 
-    <div
-      class="flex justify-end pt-4 border-t border-neutral-200 dark:border-neutral-700 mt-4"
-    >
-      <Button ghost @click="emit('close')">{{ t("common.close") }}</Button>
-    </div>
+    <template #footer>
+      <div class="flex justify-end">
+        <Button ghost @click="emit('close')">{{ t("common.close") }}</Button>
+      </div>
+    </template>
   </Dialog>
 </template>

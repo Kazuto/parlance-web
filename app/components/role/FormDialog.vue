@@ -228,7 +228,7 @@ async function handleSubmit() {
           <div
             v-for="resource in resourceKeys"
             :key="resource"
-            class="border-b border-neutral-200 dark:border-neutral-700 last:border-0"
+            class="relative border-b border-neutral-200 dark:border-neutral-700 last:border-0"
           >
             <div
               class="sticky top-0 bg-neutral-50 dark:bg-neutral-800 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700"
@@ -270,12 +270,19 @@ async function handleSubmit() {
         </div>
       </div>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
+    </form>
 
-      <div class="flex items-center justify-end gap-3 pt-4">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
-        <Button type="submit" primary :disabled="isPending">
+        <Button
+          type="submit"
+          primary
+          :disabled="isPending"
+          @click="handleSubmit"
+        >
           {{
             isPending
               ? t(isEdit ? "common.saving" : "common.creating")
@@ -283,6 +290,6 @@ async function handleSubmit() {
           }}
         </Button>
       </div>
-    </form>
+    </template>
   </Dialog>
 </template>
