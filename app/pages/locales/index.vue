@@ -166,7 +166,7 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
         </template>
         <template #translations="{ item }">
           <div class="flex items-center gap-2">
-            <TranslationCountBadge :item />
+            <LocaleTranslationCountBadge :item />
           </div>
         </template>
         <template #createdAt="{ item }">
