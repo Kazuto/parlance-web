@@ -6,6 +6,7 @@ definePageMeta({
 
 const authStore = useAuthStore();
 const { t } = useI18n();
+const { extractErrorCode, getErrorMessage } = useErrorHelper();
 const router = useRouter();
 
 const email = ref("");
@@ -34,7 +35,12 @@ async function handleLogin() {
   try {
     await authStore.login(email.value, password.value);
   } catch (err) {
-    error.value = err instanceof Error ? err.message : t("auth.loginFailed");
+    // Only show server errors with a known code; anything else (e.g. the API being
+    // unreachable) stays a generic message.
+    error.value =
+      err instanceof Error && extractErrorCode(err)
+        ? getErrorMessage(err)
+        : t("auth.loginFailed");
   } finally {
     loading.value = false;
   }

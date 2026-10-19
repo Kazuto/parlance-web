@@ -1,7 +1,25 @@
+import { isHTTPError } from "ky";
 import { createApiClient } from "./client";
 
 const baseClient = createApiClient({
   baseUrl: "",
+  hooks: {
+    // Use the server's message ("[ERROR_CODE] message") instead of ky's
+    // "Request failed with status code …", so useErrorHelper can localize it.
+    beforeError: [
+      ({ error }) => {
+        if (
+          isHTTPError(error) &&
+          typeof error.data === "object" &&
+          error.data !== null &&
+          "message" in error.data
+        ) {
+          error.message = String(error.data.message);
+        }
+        return error;
+      },
+    ],
+  },
   onValidationError: (error) => {
     console.error(error);
   },
