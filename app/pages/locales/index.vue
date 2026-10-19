@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   DataTable,
   type DataTableColumn,
   Button,
@@ -113,28 +114,13 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
   </div>
 
   <!-- Error State -->
-  <div
-    v-else-if="error && !data"
-    class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4"
-  >
-    <div class="flex items-start gap-3">
-      <Icon
-        name="warning-circle"
-        class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
-      />
-      <div class="flex-1">
-        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-          {{ t("locales.loadFailed") }}
-        </h3>
-        <p class="mt-1 text-sm text-red-700 dark:text-red-300">
-          {{ getErrorMessage(error) }}
-        </p>
-        <Button ghost class="mt-3" @click="() => refetch()">
-          {{ t("common.tryAgain") }}
-        </Button>
-      </div>
-    </div>
-  </div>
+  <Alert v-else-if="error && !data" variant="danger" persistent>
+    <p class="font-medium">{{ t("locales.loadFailed") }}</p>
+    <p class="mt-1">{{ getErrorMessage(error) }}</p>
+    <Button ghost class="mt-3" @click="() => refetch()">
+      {{ t("common.tryAgain") }}
+    </Button>
+  </Alert>
 
   <!-- Locales List -->
   <div v-else-if="data">

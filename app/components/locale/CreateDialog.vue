@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Button,
   Checkbox,
   Dialog,
@@ -141,9 +142,9 @@ function handleClose() {
         <template #description>{{ t("locales.setDefault") }}</template>
       </Checkbox>
 
-      <div v-if="error" class="rounded-md bg-red-50 border border-red-200 p-3">
-        <p class="text-sm text-red-800">{{ error }}</p>
-      </div>
+      <Alert v-if="error" variant="danger" dense persistent>
+        {{ error }}
+      </Alert>
     </form>
 
     <template #footer>

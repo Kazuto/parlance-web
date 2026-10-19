@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Input, Button, Card, useTypingPlaceholder } from "@thkzt/eunoia";
+import {
+  Alert,
+  Input,
+  Button,
+  Card,
+  useTypingPlaceholder,
+} from "@thkzt/eunoia";
 definePageMeta({
   layout: "auth",
 });
@@ -82,12 +88,9 @@ async function handleLogin() {
             </Input>
           </div>
 
-          <div
-            v-if="error"
-            class="rounded-md bg-red-50 border border-red-200 p-4"
-          >
-            <p class="text-sm text-red-800">{{ error }}</p>
-          </div>
+          <Alert v-if="error" variant="danger" persistent>
+            {{ error }}
+          </Alert>
 
           <Button
             type="submit"

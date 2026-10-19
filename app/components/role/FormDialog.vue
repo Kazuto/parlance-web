@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Button,
   Dialog,
   Input,
@@ -214,12 +215,9 @@ async function handleSubmit() {
           Loading permissions...
         </div>
 
-        <div
-          v-else-if="permissionError"
-          class="text-sm text-red-600 bg-red-50 dark:bg-red-950/30 p-3 rounded"
-        >
+        <Alert v-else-if="permissionError" variant="danger" dense persistent>
           Failed to load permissions
-        </div>
+        </Alert>
 
         <div
           v-else-if="resourceKeys.length"

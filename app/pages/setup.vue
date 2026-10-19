@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Input, useTypingPlaceholder } from "@thkzt/eunoia";
+import { Alert, Button, Input, useTypingPlaceholder } from "@thkzt/eunoia";
 
 definePageMeta({
   layout: "auth",
@@ -133,12 +133,9 @@ async function handleSetup() {
             {{ t("setup.confirmPassword") }}
           </Input>
 
-          <div
-            v-if="error"
-            class="rounded-md bg-red-50 border border-red-200 p-4"
-          >
-            <p class="text-sm text-red-800">{{ error }}</p>
-          </div>
+          <Alert v-if="error" variant="danger" persistent>
+            {{ error }}
+          </Alert>
 
           <Button
             type="submit"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, Tabs } from "@thkzt/eunoia";
+import { Alert, Button, Card, Tabs } from "@thkzt/eunoia";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 
 type Action = "import" | "export";
@@ -37,16 +37,10 @@ usePage(() => ({
   <div v-if="isLoading && !data" class="py-12 text-center text-neutral-600">
     {{ t("locales.loading") }}
   </div>
-  <div
-    v-else-if="error && !data"
-    role="alert"
-    class="rounded-lg border border-red-200 bg-red-50 p-4"
-  >
-    <p class="text-red-800">
-      {{ t("locales.loadFailed", { error: error.message }) }}
-    </p>
+  <Alert v-else-if="error && !data" variant="danger" persistent>
+    <p>{{ t("locales.loadFailed", { error: error.message }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
-  </div>
+  </Alert>
   <Card v-else class="max-w-2xl">
     <Tabs
       v-model="action"

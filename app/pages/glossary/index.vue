@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Button,
   SplitView,
   type SplitViewItem,
@@ -553,15 +554,10 @@ async function saveDefinitions(
     </div>
   </div>
 
-  <div
-    v-else-if="error && !data"
-    class="bg-red-50 border border-red-200 rounded-lg p-4"
-  >
-    <p class="text-red-800">
-      {{ t("terminologies.loadFailed", { error: error.message }) }}
-    </p>
+  <Alert v-else-if="error && !data" variant="danger" persistent>
+    <p>{{ t("terminologies.loadFailed", { error: error.message }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
-  </div>
+  </Alert>
 
   <section
     v-else-if="data"

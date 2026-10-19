@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -124,12 +125,10 @@ const tableItems = computed(() => data.value?.roles ?? []);
   </div>
 
   <!-- Error State -->
-  <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-    <p class="text-red-800">
-      {{ t("roles.loadFailed", { error: error.message }) }}
-    </p>
+  <Alert v-else-if="error" variant="danger" persistent>
+    <p>{{ t("roles.loadFailed", { error: error.message }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
-  </div>
+  </Alert>
 
   <div v-else-if="data">
     <!-- Table -->

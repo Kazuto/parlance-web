@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Button,
   Card,
   DataTable,
@@ -74,16 +75,10 @@ const tableItems = computed(() => data.value?.scopes ?? []);
     <div class="text-neutral-600">{{ t("scopes.loading") }}</div>
   </div>
 
-  <div
-    v-else-if="error && !data"
-    role="alert"
-    class="rounded-lg border border-red-200 bg-red-50 p-4"
-  >
-    <p class="text-red-800">
-      {{ t("scopes.listFailed", { error: error.message }) }}
-    </p>
+  <Alert v-else-if="error && !data" variant="danger" persistent>
+    <p>{{ t("scopes.listFailed", { error: error.message }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
-  </div>
+  </Alert>
 
   <Card v-else-if="data">
     <DataTable
