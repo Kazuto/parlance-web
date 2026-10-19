@@ -4,17 +4,25 @@ export function useLocalePreference() {
   const { locale, locales, setLocale } = useI18n();
   const authStore = useAuthStore();
 
-  // Initialize locale from user profile or localStorage
+  // First supported locale from the browser's languages, matching "de-AT" to "de"
+  const browserLocale = () =>
+    (navigator.languages ?? [navigator.language])
+      .map((language) => language.toLowerCase().split("-")[0])
+      .find((code) => locales.value.some((l) => l.code === code));
+
+  // Initialize locale from user profile, localStorage or the browser
   const initializeLocale = () => {
     let preferredLocale: string | undefined;
 
-    // Priority: user profile > localStorage > default
+    // Priority: user profile > localStorage > browser language > default
     if (authStore.user?.locale) {
       preferredLocale = authStore.user.locale;
     } else if (typeof window !== "undefined") {
       const stored = localStorage.getItem("preferred-locale");
       if (stored) {
         preferredLocale = stored;
+      } else {
+        preferredLocale = browserLocale();
       }
     }
 
