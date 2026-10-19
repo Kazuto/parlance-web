@@ -40,7 +40,7 @@ function whereLabel(item: ActivityItem) {
 function subjectLink(item: ActivityItem) {
   if ((item.subjectCount ?? 0) !== 1 || !item.subjectLabel) return undefined;
   if (isDefinition(item))
-    return { path: "/terminologies", query: { q: item.subjectLabel } };
+    return { path: "/glossary", query: { q: item.subjectLabel } };
   return {
     path: "/entries",
     query: {

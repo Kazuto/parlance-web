@@ -250,7 +250,43 @@ function selectEntry(item: SplitViewItem) {
   selectedEntry.value = item;
 }
 
+// Entries ticked in the list for bulk scope edits. Kept across filter changes so
+// entries can be gathered from several searches.
+const { can } = usePermission();
+const canBulkEdit = computed(() => can.value("update_entry"));
+const MAX_BULK_ENTRIES = 1000;
+const checkedEntryIds = ref<string[]>([]);
+const showScopesDialog = ref(false);
+const bulkLimitReached = computed(
+  () => checkedEntryIds.value.length > MAX_BULK_ENTRIES,
+);
+const allLoadedChecked = computed(
+  () =>
+    splitViewItems.value.length > 0 &&
+    splitViewItems.value.every((item) =>
+      checkedEntryIds.value.includes(String(item.key)),
+    ),
+);
+
+function checkAllLoaded() {
+  checkedEntryIds.value = [
+    ...new Set([
+      ...checkedEntryIds.value,
+      ...splitViewItems.value.map((item) => String(item.key)),
+    ]),
+  ];
+}
+
+function handleScopesUpdated(entryIds: string[]) {
+  checkedEntryIds.value = [];
+  if (selectedEntryId.value && entryIds.includes(selectedEntryId.value))
+    refetchDetail();
+}
+
 async function handleDeleted(id: string) {
+  checkedEntryIds.value = checkedEntryIds.value.filter(
+    (entryId) => entryId !== id,
+  );
   Reflect.deleteProperty(localizationForms.value, id);
   Reflect.deleteProperty(savedTranslations.value, id);
   Reflect.deleteProperty(knownEntries.value, id);
@@ -682,6 +718,53 @@ async function saveTranslations(
         </button>
       </span>
     </div>
+    <div
+      v-if="checkedEntryIds.length"
+      class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-primary-200 bg-primary-50/60 px-4 py-1.5 text-sm text-neutral-900 dark:border-primary-800 dark:bg-primary-950/30 dark:text-neutral-100"
+      role="region"
+      :aria-label="t('entries.bulkActions')"
+    >
+      <span class="font-medium" aria-live="polite">{{
+        t(
+          "entries.bulkSelected",
+          { count: checkedEntryIds.length },
+          checkedEntryIds.length,
+        )
+      }}</span>
+      <Button
+        v-if="!allLoadedChecked"
+        type="button"
+        ghost
+        dense
+        :disabled="isSaving"
+        @click="checkAllLoaded"
+      >
+        {{ t("entries.bulkSelectLoaded", { count: splitViewItems.length }) }}
+      </Button>
+      <Button
+        type="button"
+        ghost
+        dense
+        :disabled="isSaving"
+        @click="checkedEntryIds = []"
+      >
+        {{ t("entries.bulkClear") }}
+      </Button>
+      <span v-if="bulkLimitReached" role="alert" class="text-xs text-red-600">
+        {{ t("entries.bulkLimit", { max: MAX_BULK_ENTRIES }) }}
+      </span>
+      <Button
+        type="button"
+        primary
+        dense
+        icon="stack"
+        class="ml-auto"
+        :disabled="isSaving || bulkLimitReached"
+        @click="showScopesDialog = true"
+      >
+        {{ t("entries.bulkEditScopes") }}
+      </Button>
+    </div>
     <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
         :items="splitViewItems"
@@ -690,9 +773,12 @@ async function saveTranslations(
         :has-more="hasNextPage"
         :loading="isFetchingNextPage"
         :total="entryTotal"
+        :selectable="canBulkEdit"
+        :selection="checkedEntryIds"
         class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectEntry"
         @end-reached="fetchNextPage()"
+        @update:selection="checkedEntryIds = $event.map(String)"
       >
         <template #listFooter>
           <p
@@ -1030,6 +1116,12 @@ async function saveTranslations(
     :item="editDialogItem"
     @close="editDialogItem = undefined"
     @updated="handleEntryUpdated"
+  />
+  <EntryScopesDialog
+    :open="showScopesDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showScopesDialog = false"
+    @updated="handleScopesUpdated"
   />
   <EntryTransferDialog
     :open="showTransferDialog"

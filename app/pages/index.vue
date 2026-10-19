@@ -64,10 +64,10 @@ const cards = [
     color: "green",
   },
   {
-    title: t("nav.terminology"),
+    title: t("nav.glossary"),
     description: t("dashboard.terminologyDescription"),
     icon: "📚",
-    href: "/terminologies",
+    href: "/glossary",
     permission: "read_terminology",
     color: "purple",
   },

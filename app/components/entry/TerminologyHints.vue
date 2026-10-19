@@ -201,7 +201,7 @@ async function copyTerm(term: string) {
           }}
         </p>
         <NuxtLink
-          to="/terminologies"
+          to="/glossary"
           class="mt-2 inline-block text-primary-600 underline dark:text-primary-400"
         >
           {{ t("terminologyHints.glossary") }}

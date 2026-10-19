@@ -22,6 +22,9 @@ import {
   GetEntryHistoryRequestSchema,
   GetEntryHistoryResponseSchema,
   type GetEntryHistoryRequest,
+  UpdateEntriesScopesRequestSchema,
+  UpdateEntriesScopesResponseSchema,
+  type UpdateEntriesScopesRequest,
 } from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
@@ -101,6 +104,18 @@ export const entries = {
     {
       input: UpdateEntryRequestSchema,
       output: UpdateEntryResponseSchema,
+    },
+  ),
+
+  updateScopes: authedEndpoint.mutate(
+    (data: UpdateEntriesScopesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/UpdateEntriesScopes",
+      json: data,
+    }),
+    {
+      input: UpdateEntriesScopesRequestSchema,
+      output: UpdateEntriesScopesResponseSchema,
     },
   ),
 

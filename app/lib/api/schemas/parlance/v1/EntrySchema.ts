@@ -194,6 +194,24 @@ export const UpdateEntryResponseSchema = z.object({
     return EntrySchema.nullish();
   },
 });
+export type UpdateEntriesScopesRequest = {
+  entryIds?: Array<string> | null;
+  addScopeIds?: Array<string> | null;
+  removeScopeIds?: Array<string> | null;
+};
+export const UpdateEntriesScopesRequestSchema = z.object({
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get addScopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get removeScopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type UpdateEntriesScopesResponse = Record<string, never>;
+export const UpdateEntriesScopesResponseSchema = z.object({});
 export type DeleteEntryRequest = {
   id?: string | null;
 };

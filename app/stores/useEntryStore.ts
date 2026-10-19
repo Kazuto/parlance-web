@@ -5,6 +5,7 @@ export const useEntryStore = defineStore("entryStore", () => {
   const queryClient = useQueryClient();
   const queryKey = api.entries.list.getQueryKey();
   const feedQueryKey = api.entries.feed.getQueryKey();
+  const detailQueryKey = api.entries.get.getQueryKey();
 
   const create = useMutation({
     ...api.entries.create.use(),
@@ -19,6 +20,15 @@ export const useEntryStore = defineStore("entryStore", () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
+    },
+  });
+
+  const updateScopes = useMutation({
+    ...api.entries.updateScopes.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: detailQueryKey });
     },
   });
 
@@ -41,6 +51,7 @@ export const useEntryStore = defineStore("entryStore", () => {
   return {
     create,
     update,
+    updateScopes,
     destroy,
     restore,
   };
