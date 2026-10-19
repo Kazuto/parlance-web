@@ -63,16 +63,32 @@ const defaultLocaleIds = computed(() => {
 });
 
 const selectedLocaleIds = ref<string[]>([]);
+const storedFilters = useStoredFilters();
 
-// Initialize selectedLocaleIds once when locales are loaded
+// Initialize selectedLocaleIds once when locales are loaded, with the languages
+// last picked here or on the entries page.
 watch(
   () => localeData.value?.locales,
   (locales) => {
     if (locales && selectedLocaleIds.value.length === 0) {
-      selectedLocaleIds.value = [...defaultLocaleIds.value];
+      const stored = localeIdsFromCodes(locales, storedFilters.languages.value);
+      selectedLocaleIds.value = stored.length
+        ? stored
+        : [...defaultLocaleIds.value];
     }
   },
   { immediate: true },
+);
+
+watch(
+  selectedLocaleIds,
+  (ids) => {
+    const locales = localeData.value?.locales ?? [];
+    storedFilters.languages.value = ids
+      .map((id) => locales.find((locale) => locale.id === id)?.code)
+      .filter((code): code is string => !!code);
+  },
+  { deep: true },
 );
 
 watch(

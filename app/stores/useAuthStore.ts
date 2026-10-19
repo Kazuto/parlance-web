@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/vue-query";
-import { useLocalStorage, useNow } from "@vueuse/core";
+import { useNow } from "@vueuse/core";
 import { jwtDecode as _jwtDecode } from "jwt-decode";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 import { api } from "~/lib/api";
@@ -30,17 +30,14 @@ export const useAuthStore = defineStore("authStore", () => {
   const timer = ref<ReturnType<typeof setTimeout>>();
   const isRefreshing = ref(false);
 
-  const token = useLocalStorage<string | undefined>(
-    "parlance-token",
-    undefined,
-  );
+  const token = useLocalStorage<string | undefined>("token", undefined);
 
   const refreshToken = useLocalStorage<string | undefined>(
-    "parlance-refreshToken",
+    "refreshToken",
     undefined,
   );
 
-  const user = useLocalStorage<User | undefined>("parlance-user", undefined, {
+  const user = useLocalStorage<User | undefined>("user", undefined, {
     serializer: {
       read: (v: string) => (v ? JSON.parse(v) : undefined),
       write: (v: User | undefined) => JSON.stringify(v),

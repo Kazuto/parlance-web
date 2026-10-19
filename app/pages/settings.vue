@@ -6,6 +6,7 @@ import type { LocaleObject } from "@nuxtjs/i18n";
 
 const { t, locale, locales, setLocale } = useI18n();
 const authStore = useAuthStore();
+const storedLocale = useLocalStorage("preferred-locale", "");
 const { showError } = useErrorHelper();
 
 usePage(() => ({
@@ -31,9 +32,7 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
     await setLocale(localeCode);
 
     // Store in localStorage as fallback
-    if (typeof window !== "undefined") {
-      localStorage.setItem("preferred-locale", localeCode);
-    }
+    storedLocale.value = localeCode;
 
     // Save to backend if user is logged in
     if (authStore.user?.id) {
