@@ -58,6 +58,18 @@ export default defineNuxtConfig({
 
   css: ["./app/assets/css/main.css"],
 
+  // @nuxt/fonts only loads weight 400 by default; without the other weights the browser
+  // fakes bold text by smearing the regular glyphs, which looks blurry or "glowing".
+  fonts: {
+    families: [
+      {
+        name: "Nunito Sans",
+        weights: [400, 500, 600, 700],
+        styles: ["normal", "italic"],
+      },
+    ],
+  },
+
   typescript: {
     typeCheck: true,
   },
