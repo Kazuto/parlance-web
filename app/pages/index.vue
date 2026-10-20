@@ -202,9 +202,12 @@ const visibleCards = computed(() =>
         v-for="card in visibleCards"
         :key="card.href"
         :to="card.href"
-        class="group transition-all rounded-lg border-2 border-transparent hover:border-primary-500 dark:hover:border-primary-600"
+        class="group rounded-[24px] squircle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
       >
-        <Card class="h-full">
+        <!-- The hover border is drawn on the card, so it follows the card's squircle corners. -->
+        <Card
+          class="h-full transition-shadow group-hover:shadow-[inset_0_0_0_2px_var(--color-primary-500)] dark:group-hover:shadow-[inset_0_0_0_2px_var(--color-primary-600)]"
+        >
           <div class="flex items-start">
             <div class="text-4xl mb-3">
               {{ card.icon }}
