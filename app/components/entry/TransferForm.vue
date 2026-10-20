@@ -33,12 +33,13 @@ const file = ref<File>();
 const error = ref<string>();
 const result = ref<ImportResult>();
 const { t } = useI18n();
+const localeName = useLocaleName();
 const { showSuccess, showError } = useErrorHelper();
 const localeOptions = computed(() =>
   props.locales
     .filter((locale) => locale.id && locale.code && !locale.deletedAt)
     .map((locale) => ({
-      label: `${locale.name ?? locale.code} (${locale.code})`,
+      label: `${localeName(locale)} (${locale.code})`,
       value: locale.id ?? "",
     })),
 );

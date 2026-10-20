@@ -21,6 +21,7 @@ type LocaleForm = {
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const localeName = useLocaleName();
 const queryClient = useQueryClient();
 const localeQueryKey = api.locales.get.getQueryKey();
 const selectedId = ref(String(route.params.id));
@@ -52,13 +53,13 @@ const languages = computed(() =>
 const items = computed<SplitViewItem[]>(() =>
   languages.value
     .filter((locale) =>
-      `${locale.name} ${locale.code}`
+      `${localeName(locale)} ${locale.code}`
         .toLowerCase()
         .includes(search.value.toLowerCase()),
     )
     .map((locale) => ({
       key: locale.id!,
-      label: `${locale.name ?? locale.code} (${locale.code})`,
+      label: `${localeName(locale)} (${locale.code})`,
     })),
 );
 const selectedItem = computed<SplitViewItem | undefined>(() => {
@@ -69,7 +70,7 @@ const selectedItem = computed<SplitViewItem | undefined>(() => {
   return locale
     ? {
         key: selectedId.value,
-        label: `${locale.name ?? locale.code} (${locale.code})`,
+        label: `${localeName(locale)} (${locale.code})`,
       }
     : undefined;
 });
@@ -342,7 +343,7 @@ async function handleDeleted(id: string) {
             :key="language.id ?? undefined"
             v-model="form.names[language.code ?? '']"
             :input-id="`locale-name-${selectedId}-${language.code}`"
-            :locale-name="language.name ?? language.code ?? ''"
+            :locale-name="localeName(language)"
             :locale-code="language.code ?? ''"
             :is-default="!!language.isDefault"
             :translated="!!(form.names[language.code ?? ''] ?? '').trim()"

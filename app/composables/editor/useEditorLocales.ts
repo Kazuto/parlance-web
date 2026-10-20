@@ -10,6 +10,7 @@ export function useEditorLocales(
   selectedLocaleIds: Ref<string[]>,
 ) {
   const { t } = useI18n();
+  const localeName = useLocaleName();
 
   const defaultLocale = computed(() =>
     toValue(locales)?.find((locale) => locale.isDefault),
@@ -29,7 +30,7 @@ export function useEditorLocales(
         ?.filter((locale) => !!locale.id)
         .toSorted((a, b) => Number(!!b.isDefault) - Number(!!a.isDefault))
         .map((locale) => ({
-          label: locale.name ?? locale.code ?? "",
+          label: localeName(locale),
           value: locale.id ?? "",
           code: locale.code ?? "",
         })) ?? [],

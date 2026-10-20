@@ -67,53 +67,35 @@ const contextButtonClass = computed(() => {
       class="flex min-w-0 flex-col gap-1"
       :class="{ 'max-sm:col-span-2': !withoutContext }"
     >
-      <div class="flex max-w-full min-w-0 items-center gap-1.5 self-start">
-        <label
-          :for="inputId"
-          class="group inline-flex min-w-0 cursor-pointer items-center gap-1.5"
-        >
-          <span
-            class="size-1.5 shrink-0 rounded-full"
-            :class="
+      <label
+        :for="inputId"
+        class="group inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 self-start"
+      >
+        <span
+          class="size-1.5 shrink-0 rounded-full"
+          :class="
+            translated
+              ? 'bg-green-400 dark:bg-green-300'
+              : 'bg-red-400 dark:bg-rose-300'
+          "
+          :title="
+            t(
               translated
-                ? 'bg-green-400 dark:bg-green-300'
-                : 'bg-red-400 dark:bg-rose-300'
-            "
-            :title="
-              t(
-                translated
-                  ? 'entries.filterComplete'
-                  : 'entries.missingTranslations',
-              )
-            "
-          />
-          <span
-            class="truncate text-[13px] font-bold transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-300"
-            >{{ localeName }}</span
-          >
-          <span
-            class="shrink-0 font-mono text-[10px] text-neutral-500 dark:text-neutral-400"
-            >{{ localeCode }}</span
-          >
-        </label>
-        <template v-if="dirty">
-          <span
-            class="shrink-0 text-[10.5px] font-semibold text-yellow-700 dark:text-amber-300"
-            >{{ t("common.unsaved") }}</span
-          >
-          <Tooltip :content="t('common.revert')">
-            <button
-              type="button"
-              class="grid size-5 shrink-0 cursor-pointer place-items-center rounded-[100%] text-yellow-700 superellipse hover:bg-yellow-50 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-400/15"
-              :disabled="readonly"
-              :aria-label="t('common.revertFor', { language: localeName })"
-              @click="emit('revert')"
-            >
-              <Icon name="arrow-counter-clockwise" size="xs" />
-            </button>
-          </Tooltip>
-        </template>
-      </div>
+                ? 'entries.filterComplete'
+                : 'entries.missingTranslations',
+            )
+          "
+        />
+        <span
+          class="truncate text-[13px] font-bold transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-300"
+          >{{ localeName }}</span
+        >
+        <span
+          class="shrink-0 font-mono text-[10px] text-neutral-500 dark:text-neutral-400"
+          >{{ localeCode }}</span
+        >
+        <span v-if="dirty" class="sr-only">({{ t("common.unsaved") }})</span>
+      </label>
       <span
         v-if="isDefault"
         class="pl-3 text-[10.5px] font-bold text-primary-600 dark:text-primary-300"
@@ -123,16 +105,38 @@ const contextButtonClass = computed(() => {
         <slot name="meta" />
       </div>
     </div>
-    <textarea
-      :id="inputId"
-      v-model="value"
-      :readonly
-      :placeholder
-      rows="1"
-      class="min-h-[38px] w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
-      :class="fieldClass"
-      @focus="emit('focus')"
-    />
+    <!-- Unsaved changes mark the field itself: a yellow border and, like an input
+         append, a revert button aligned with the first line. -->
+    <div class="relative min-w-0">
+      <textarea
+        :id="inputId"
+        v-model="value"
+        :readonly
+        :placeholder
+        rows="1"
+        class="block min-h-[38px] w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
+        :class="[
+          fieldClass,
+          dirty && 'pr-10 ring-1 ring-yellow-500 dark:ring-amber-300/70',
+        ]"
+        @focus="emit('focus')"
+      />
+      <Tooltip
+        v-if="dirty"
+        :content="t('common.revert')"
+        class="absolute top-[9px] right-2"
+      >
+        <button
+          type="button"
+          class="grid size-5 cursor-pointer place-items-center rounded-[100%] text-yellow-700 superellipse hover:bg-yellow-50 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-400/15"
+          :disabled="readonly"
+          :aria-label="t('common.revertFor', { language: localeName })"
+          @click="emit('revert')"
+        >
+          <Icon name="arrow-counter-clockwise" size="xs" />
+        </button>
+      </Tooltip>
+    </div>
     <div v-if="!withoutContext" class="flex flex-col items-center gap-1">
       <BaseIconButton
         icon="sidebar"
