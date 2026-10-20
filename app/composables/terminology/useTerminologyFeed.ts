@@ -50,6 +50,7 @@ export function useTerminologyDetail(id: Ref<string | undefined>) {
   const options = api.terminologies.get.use(
     computed(() => ({ id: id.value ?? "" })),
   );
+
   return useQuery({
     ...options,
     enabled: computed(() => toValue(options.enabled) && !!id.value),

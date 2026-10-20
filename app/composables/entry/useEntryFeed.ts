@@ -36,6 +36,7 @@ export function useEntryFeed(perPage = 100) {
   const entries = computed<Entry[]>(
     () => query.data.value?.pages.flatMap((page) => page.entries ?? []) ?? [],
   );
+
   // Only the first page counts; later cursor pages skip the count query.
   const total = computed(
     () => query.data.value?.pages[0]?.pagination?.total ?? undefined,
@@ -55,6 +56,7 @@ export function useEntryFeed(perPage = 100) {
 /** The full entry (localizations and scopes) for the editor. */
 export function useEntryDetail(id: Ref<string | undefined>) {
   const options = api.entries.get.use(computed(() => ({ id: id.value ?? "" })));
+
   return useQuery({
     ...options,
     enabled: computed(() => toValue(options.enabled) && !!id.value),

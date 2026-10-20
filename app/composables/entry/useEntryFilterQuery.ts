@@ -45,9 +45,11 @@ export function useEntryFilterQuery({
     : (stored.entries.value.scopes ?? []).filter(
         (id) => typeof id === "string" && !!id,
       );
+
   const initialStatus = fromLink
     ? first(initialQuery.status)
     : String(stored.entries.value.status ?? "");
+
   status.value = STATUSES.includes(initialStatus) ? initialStatus : "";
   search.value = first(initialQuery.q);
 
@@ -61,6 +63,7 @@ export function useEntryFilterQuery({
   // so an unresolved `locales` param is not overwritten by the empty selection.
   const localesReady = ref(false);
   const scope = getCurrentScope();
+
   watch(
     locales,
     (list) => {

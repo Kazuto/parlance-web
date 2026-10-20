@@ -7,6 +7,7 @@ export function useForwardedAttrs() {
 
   const forwardedAttrs = computed(() => {
     const { class: _, ...rest } = attrs;
+
     return rest;
   });
 

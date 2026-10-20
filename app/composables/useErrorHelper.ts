@@ -12,6 +12,7 @@ export function useErrorHelper() {
   function extractErrorCode(error: Error | string): string | null {
     const message = typeof error === "string" ? error : error.message;
     const match = message.match(/^\[([A-Z_]+)\]/);
+
     return match?.[1] ?? null;
   }
 
@@ -52,6 +53,7 @@ export function useErrorHelper() {
     },
   ) {
     const message = getErrorMessage(error);
+
     addToast(message, {
       variant: "danger",
       dismissible: options?.dismissible ?? true,

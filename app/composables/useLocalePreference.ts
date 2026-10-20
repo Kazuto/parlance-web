@@ -19,11 +19,9 @@ export function useLocalePreference() {
     if (authStore.user?.locale) {
       preferredLocale = authStore.user.locale;
     } else if (typeof window !== "undefined") {
-      if (storedLocale.value) {
-        preferredLocale = storedLocale.value;
-      } else {
-        preferredLocale = browserLocale();
-      }
+      preferredLocale = storedLocale.value
+        ? storedLocale.value
+        : browserLocale();
     }
 
     // Apply the preferred locale if it's valid

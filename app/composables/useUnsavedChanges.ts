@@ -4,15 +4,18 @@ export function useUnsavedChanges() {
     "unsaved-changes",
     () => ({}),
   );
+
   const count = computed(() =>
     Object.values(sources.value).reduce(
       (total, source) => total + source.count,
       0,
     ),
   );
+
   const saving = computed(() =>
     Object.values(sources.value).some((source) => source.saving),
   );
+
   return { sources, count, saving };
 }
 
@@ -22,6 +25,7 @@ export function registerUnsavedChanges(
   saving: Ref<boolean>,
 ) {
   const state = useUnsavedChanges();
+
   watch(
     [count, saving],
     ([count, saving]) => {
@@ -29,6 +33,7 @@ export function registerUnsavedChanges(
     },
     { immediate: true, flush: "sync" },
   );
+
   onScopeDispose(() => {
     Reflect.deleteProperty(state.sources.value, id);
   });
