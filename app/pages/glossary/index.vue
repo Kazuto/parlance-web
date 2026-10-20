@@ -108,7 +108,7 @@ const selectedTerminology = ref<SplitViewItem>();
 const route = useRoute();
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
 const isSaving = ref(false);
-const contextOpen = ref(false);
+const contextOpen = ref(true);
 const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
 watch(
   narrowWorkspace,
@@ -136,6 +136,20 @@ function toggleContext(localeId: string) {
 function onRowFocus(localeId: string) {
   if (contextOpen.value) activeLocaleId.value = localeId;
 }
+
+// The panel starts on the source language, like the rows are ordered.
+watch(
+  [selectedLocaleIds, () => defaultLocale.value?.id],
+  () => {
+    if (
+      !activeLocaleId.value ||
+      !selectedLocaleIds.value.includes(activeLocaleId.value)
+    ) {
+      activeLocaleId.value = orderedSelectedLocaleIds.value[0];
+    }
+  },
+  { deep: true },
+);
 
 watchDebounced(
   search,
