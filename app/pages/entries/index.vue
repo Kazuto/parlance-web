@@ -4,13 +4,12 @@ import {
   Button,
   SplitView,
   type SplitViewItem,
-  Textarea,
   Tooltip,
-  Badge,
   Dialog,
   Chip,
   Input,
 } from "@thkzt/eunoia";
+import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { watchDebounced, useMediaQuery } from "@vueuse/core";
@@ -18,7 +17,6 @@ import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
-import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
 const queryClient = useQueryClient();
@@ -116,6 +114,7 @@ const search = ref("");
 const isSaving = ref(false);
 const showSaveAllDialog = ref(false);
 const contextOpen = ref(true);
+const contextTab = ref("terminology");
 const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
 watch(
   narrowWorkspace,
@@ -126,14 +125,27 @@ watch(
 );
 const activeLocaleId = ref<string>();
 const activeLocaleName = computed(
-  () =>
-    localeOptions.value.find((item) => item.value === activeLocaleId.value)
-      ?.label ?? "",
+  () => localeOption(activeLocaleId.value)?.label ?? "",
 );
 
-function openContext(localeId: string) {
+function openContext(localeId: string, tab?: string) {
   activeLocaleId.value = localeId;
+  if (tab) contextTab.value = tab;
   contextOpen.value = true;
+}
+
+// The row button toggles: on the language already shown it closes the panel.
+function toggleContext(localeId: string) {
+  if (contextOpen.value && activeLocaleId.value === localeId) {
+    contextOpen.value = false;
+    return;
+  }
+  openContext(localeId);
+}
+
+// Typing in another language moves an open panel along, without opening it.
+function onRowFocus(localeId: string) {
+  if (contextOpen.value) activeLocaleId.value = localeId;
 }
 
 watchDebounced(
@@ -159,27 +171,21 @@ useEntryFilterQuery({
 });
 feedSearch.value = search.value || undefined;
 
-const defaultLocaleIds = computed(() => {
-  const locales = localeData.value?.locales ?? [];
-  const id = (locales.find((locale) => locale.isDefault) ?? locales[0])?.id;
-  return id ? [id] : [];
-});
-const languagesFiltered = computed(
-  () =>
-    selectedLocaleIds.value.length !== defaultLocaleIds.value.length ||
-    selectedLocaleIds.value.some((id) => !defaultLocaleIds.value.includes(id)),
-);
+const {
+  defaultLocale,
+  defaultLocaleIds,
+  localeOptions,
+  localeOption,
+  orderedSelectedLocaleIds,
+  selectedLanguageLabels,
+  languageSummary,
+  languagesFiltered,
+} = useEditorLocales(() => localeData.value?.locales, selectedLocaleIds);
 const activeFilterCount = computed(
   () =>
     Number(languagesFiltered.value) +
     Number(scopeIds.value.length > 0) +
     Number(!!translationStatus.value),
-);
-const selectedLanguageLabels = computed(() =>
-  orderedSelectedLocaleIds.value
-    .map((id) => localeOptions.value.find((locale) => locale.value === id))
-    .filter((locale) => !!locale)
-    .map((locale) => locale.label),
 );
 const copiedKey = ref<string>();
 let copiedKeyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -201,16 +207,6 @@ function toggleScopeFilter(id: string) {
     : [...scopeIds.value, id];
 }
 
-const MAX_LISTED_LANGUAGES = 3;
-const languageSummary = computed(() => {
-  const labels = selectedLanguageLabels.value;
-  if (!labels.length) return t("entries.selectLocales");
-  if (labels.length > 1 && labels.length === localeOptions.value.length)
-    return t("entries.allLanguages");
-  const listed = labels.slice(0, MAX_LISTED_LANGUAGES).join(", ");
-  const hidden = labels.length - MAX_LISTED_LANGUAGES;
-  return `${t("entries.languagesShort")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
-});
 const selectedScopes = computed(() =>
   scopeIds.value.map((id) => {
     const option = scopeOptions.value.find((scope) => scope.value === id);
@@ -296,9 +292,7 @@ async function handleDeleted(id: string) {
   await refetch();
 }
 
-const defaultLocale = computed(() =>
-  localeData.value?.locales?.find((locale) => locale.isDefault),
-);
+// The panel starts on the source language, like the rows are ordered.
 watch(
   [selectedLocaleIds, () => defaultLocale.value?.id],
   () => {
@@ -306,29 +300,10 @@ watch(
       !activeLocaleId.value ||
       !selectedLocaleIds.value.includes(activeLocaleId.value)
     ) {
-      activeLocaleId.value =
-        selectedLocaleIds.value.find((id) => id !== defaultLocale.value?.id) ??
-        selectedLocaleIds.value[0];
+      activeLocaleId.value = orderedSelectedLocaleIds.value[0];
     }
   },
   { deep: true },
-);
-const orderedSelectedLocaleIds = computed(() => {
-  const id = defaultLocale.value?.id;
-  return id && selectedLocaleIds.value.includes(id)
-    ? [id, ...selectedLocaleIds.value.filter((localeId) => localeId !== id)]
-    : selectedLocaleIds.value;
-});
-
-const localeOptions = computed(
-  () =>
-    localeData.value?.locales
-      ?.filter((locale) => !!locale.id)
-      .toSorted((a, b) => Number(!!b.isDefault) - Number(!!a.isDefault))
-      .map((locale: Locale) => ({
-        label: locale.name ?? locale.code ?? "",
-        value: locale.id ?? "",
-      })) ?? [],
 );
 
 const splitViewItems = computed((): SplitViewItem[] =>
@@ -341,9 +316,9 @@ const splitViewItems = computed((): SplitViewItem[] =>
     })),
 );
 
-function isMissingTranslations(item: SplitViewItem) {
+function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
-  return selectedLocaleIds.value.some((id) => missing.includes(id));
+  return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
 }
 
 watch(
@@ -441,6 +416,26 @@ const allUnsavedTranslations = computed(() =>
 const allUnsavedCount = computed(() => allUnsavedTranslations.value.length);
 registerUnsavedChanges("entry-translations", allUnsavedCount, isSaving);
 
+const showDiscardDialog = ref(false);
+
+function discardChanges() {
+  showDiscardDialog.value = false;
+  for (const entryId of Object.keys(localizationForms.value)) {
+    localizationForms.value[entryId] = {
+      ...(savedTranslations.value[entryId] ?? {}),
+    };
+  }
+}
+
+// Changes on the open entry go right away; others are out of sight, so confirm.
+function requestDiscardAll() {
+  const onlyCurrent = allUnsavedTranslations.value.every(
+    (change) => change.entryId === selectedEntryId.value,
+  );
+  if (onlyCurrent) discardChanges();
+  else showDiscardDialog.value = true;
+}
+
 const selectedEntryData = computed(() =>
   selectedEntryId.value ? knownEntries.value[selectedEntryId.value] : undefined,
 );
@@ -459,6 +454,14 @@ const currentEntryForms = computed(() => {
 
   return localizationForms.value[key] ?? {};
 });
+
+// Counts what is typed, not only what is saved, so the header follows along.
+const translatedCount = computed(
+  () =>
+    selectedLocaleIds.value.filter((id) =>
+      (currentEntryForms.value[id] ?? "").trim(),
+    ).length,
+);
 
 const emptySelectedLocaleIds = computed(() =>
   selectedLocaleIds.value.filter(
@@ -594,7 +597,7 @@ async function saveTranslations(
       if (!change) return [];
       const { entryId, localeId } = change;
       return [
-        `${knownEntries.value[entryId]?.key ?? entryId}: ${localeOptions.value.find((locale) => locale.value === localeId)?.label ?? localeId}`,
+        `${knownEntries.value[entryId]?.key ?? entryId}: ${localeOption(localeId)?.label ?? localeId}`,
       ];
     });
     const failed = failedLanguages.length;
@@ -638,14 +641,14 @@ async function saveTranslations(
 
   <section
     v-else-if="data"
-    class="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
+    class="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden rounded-[28px] border border-neutral-200 bg-white squircle dark:border-white/5 dark:bg-neutral-900"
     :aria-label="t('entries.workspace')"
     :aria-busy="isFetching"
   >
     <div
-      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
+      class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
-      <div class="w-full sm:w-72" @keydown="onSearchKeydown">
+      <div class="w-full sm:w-56" @keydown="onSearchKeydown">
         <Input
           v-model="search"
           dense
@@ -771,7 +774,7 @@ async function saveTranslations(
         :total="entryTotal"
         :selectable="canBulkEdit"
         :selection="checkedEntryIds"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
+        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectEntry"
         @end-reached="fetchNextPage()"
         @update:selection="checkedEntryIds = $event.map(String)"
@@ -791,27 +794,18 @@ async function saveTranslations(
           </p>
         </template>
         <template #item="{ item }">
-          <span class="flex min-w-0 w-full items-center justify-between gap-3">
-            <span class="truncate" :title="item.label">{{ item.label }}</span>
-            <span
-              v-if="hasUnsavedTranslations(String(item.key))"
-              class="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-300"
-              :title="t('entries.unsavedTranslations')"
-              >{{ t("common.unsaved") }}</span
-            >
-            <Tooltip
-              v-if="
-                !hasUnsavedTranslations(String(item.key)) &&
-                isMissingTranslations(item)
-              "
-              :content="t('entries.missingTranslations')"
-            >
-              <span
-                class="h-2 w-2 shrink-0 rounded-full bg-rose-400"
-                :aria-label="t('entries.missingTranslations')"
-              />
-            </Tooltip>
-          </span>
+          <EditorListItem
+            :label="item.label"
+            :missing-count="missingCount(item)"
+            :unsaved="hasUnsavedTranslations(String(item.key))"
+            :missing-label="
+              t(
+                'entries.missingCount',
+                { count: missingCount(item) },
+                missingCount(item),
+              )
+            "
+          />
         </template>
         <template #header="{ item }">
           <div class="flex items-center justify-between gap-4">
@@ -879,15 +873,35 @@ async function saveTranslations(
                 {{ selectedEntryData.description }}
               </p>
             </div>
-            <BaseActionButtons
+            <div
               v-if="selectedEntryData"
-              :key="selectedEntryData.id ?? undefined"
-              :disabled="isSaving"
-              :edit-label="t('entries.edit')"
-              :delete-label="t('actions.deleteEntry')"
-              @edit="editDialogItem = selectedEntryData"
-              @delete="deleteDialogItem = selectedEntryData"
-            />
+              class="flex shrink-0 items-center gap-2"
+            >
+              <span
+                class="mr-1.5 text-[11.5px] font-semibold whitespace-nowrap text-neutral-500 dark:text-neutral-400"
+                >{{
+                  t("entries.translatedCount", {
+                    done: translatedCount,
+                    total: selectedLocaleIds.length,
+                  })
+                }}</span
+              >
+              <BaseIconButton
+                icon="pencil-simple"
+                :label="t('entries.edit')"
+                :disabled="isSaving"
+                class="bg-neutral-100 dark:bg-white/5"
+                @click="editDialogItem = selectedEntryData"
+              />
+              <BaseIconButton
+                icon="trash"
+                destructive
+                :label="t('actions.deleteEntry')"
+                :disabled="isSaving"
+                class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
+                @click="deleteDialogItem = selectedEntryData"
+              />
+            </div>
           </div>
         </template>
         <template #default="{ item }">
@@ -910,97 +924,49 @@ async function saveTranslations(
           </div>
           <div
             v-else-if="item && selectedLocaleIds.length > 0"
-            class="mx-auto flex w-full flex-col gap-6"
+            class="flex w-full flex-col gap-0.5 rounded-[22px] bg-neutral-100 p-1 squircle dark:bg-neutral-950"
           >
-            <div
+            <EditorTranslationRow
               v-for="localeId in orderedSelectedLocaleIds"
               :key="localeId"
-              :class="
-                localeId === defaultLocale?.id
-                  ? 'rounded-lg border border-primary-200 bg-primary-50/50 p-3 dark:border-primary-800 dark:bg-primary-950/30'
-                  : ''
+              :input-id="`entry-${item.key}-${localeId}`"
+              :locale-name="localeOption(localeId)?.label ?? localeId"
+              :locale-code="localeOption(localeId)?.code ?? ''"
+              :is-default="localeId === defaultLocale?.id"
+              :translated="!!(currentEntryForms[localeId] ?? '').trim()"
+              :dirty="isTranslationDirty(String(item.key), localeId)"
+              :active="contextOpen && activeLocaleId === localeId"
+              :readonly="isSaving"
+              :placeholder="t('entries.translationPlaceholder')"
+              :model-value="currentEntryForms[localeId] ?? ''"
+              @update:model-value="
+                setLocalizationForm(String(item.key), localeId, $event)
               "
-              @focusin="activeLocaleId = localeId"
+              @focus="onRowFocus(localeId)"
+              @revert="
+                setLocalizationForm(
+                  String(item.key),
+                  localeId,
+                  savedTranslations[String(item.key)]?.[localeId] ?? '',
+                )
+              "
+              @open-context="toggleContext(localeId)"
             >
-              <div
-                class="flex flex-wrap items-center h-10 justify-between gap-2"
-              >
-                <label
-                  :for="`entry-${item.key}-${localeId}`"
-                  class="flex items-center gap-2 text-sm"
-                >
-                  {{
-                    localeOptions.find((locale) => locale.value === localeId)
-                      ?.label
-                  }}
-                  <Badge v-if="localeId === defaultLocale?.id">{{
-                    t("common.default")
-                  }}</Badge>
-                  <span
-                    v-if="isTranslationDirty(String(item.key), localeId)"
-                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                    >{{ t("common.unsaved") }}</span
-                  >
-                </label>
-                <div class="flex items-center gap-2">
-                  <Button
-                    v-if="localeId === defaultLocale?.id"
-                    type="button"
-                    ghost
-                    dense
-                    icon="copy"
-                    :disabled="!canFillEmptyTranslations"
-                    @click="fillEmptyTranslations"
-                  >
-                    {{ t("entries.copyEmpty") }}
-                  </Button>
-                  <Button
-                    v-if="!contextOpen || activeLocaleId !== localeId"
-                    type="button"
-                    ghost
-                    icon="sidebar"
-                    :aria-label="
-                      t('context.openFor', {
-                        language:
-                          localeOptions.find(
-                            (locale) => locale.value === localeId,
-                          )?.label ?? '',
-                      })
-                    "
-                    @click="openContext(localeId)"
-                  />
-                  <span
-                    v-else
-                    class="inline-flex shrink-0 items-center gap-2 rounded-md text-xs font-medium text-primary-600"
-                    aria-live="polite"
-                  >
-                    {{ t("context.active") }}
-                  </span>
-                </div>
-              </div>
-              <Textarea
-                :id="`entry-${item.key}-${localeId}`"
-                :aria-label="
-                  localeOptions.find((locale) => locale.value === localeId)
-                    ?.label
-                "
-                :readonly="isSaving"
-                :model-value="currentEntryForms[String(localeId)] ?? ''"
-                :placeholder="t('entries.translationPlaceholder')"
-                @update:model-value="
-                  setLocalizationForm(String(item.key), localeId, $event)
-                "
-              />
-              <EntryTerminologyHints
-                v-if="defaultLocale?.id && localeId !== defaultLocale.id"
-                :key="`${item.key}-${localeId}`"
-                :source-text="currentEntryForms[defaultLocale.id] ?? ''"
-                :target-locale-id="localeId"
-                :translation="currentEntryForms[localeId] ?? ''"
-                compact
-                @open="openContext(localeId)"
-              />
-            </div>
+              <template v-if="defaultLocale?.id" #meta>
+                <EditorCopyEmptyChip
+                  v-if="localeId === defaultLocale.id"
+                  :disabled="!canFillEmptyTranslations"
+                  @click="fillEmptyTranslations"
+                />
+                <EntryTermChip
+                  v-else
+                  :source-text="currentEntryForms[defaultLocale.id] ?? ''"
+                  :locale-id="localeId"
+                  :translation="currentEntryForms[localeId] ?? ''"
+                  @open="openContext(localeId, 'terminology')"
+                />
+              </template>
+            </EditorTranslationRow>
           </div>
 
           <div
@@ -1017,10 +983,12 @@ async function saveTranslations(
       </SplitView>
       <EntryContextPanel
         v-if="contextOpen && activeLocaleId && selectedEntry"
-        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
+        v-model:tab="contextTab"
+        class="flex-[0_0_280px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
         :entry-id="String(selectedEntry.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
+        :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
         :source-text="
           defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
         "
@@ -1030,9 +998,9 @@ async function saveTranslations(
       />
     </div>
     <div
-      class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
+      class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <span class="text-sm text-neutral-500 dark:text-neutral-400">
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">
         <template v-if="entryTotal !== undefined"
           >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
         </template>
@@ -1045,7 +1013,7 @@ async function saveTranslations(
         }}
         <span
           v-if="unsavedLocaleIds.length"
-          class="ml-2 text-amber-700 dark:text-amber-300"
+          class="ml-2 text-yellow-700 dark:text-amber-300"
           >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
           }}{{
             unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
@@ -1055,6 +1023,14 @@ async function saveTranslations(
         >
       </span>
       <div class="flex shrink-0 items-center gap-2">
+        <Button
+          type="button"
+          ghost
+          :disabled="!allUnsavedCount || isSaving"
+          @click="requestDiscardAll"
+        >
+          {{ t("common.discardAll") }}
+        </Button>
         <Button
           type="button"
           ghost
@@ -1107,6 +1083,12 @@ async function saveTranslations(
       >
     </div>
   </Dialog>
+  <EditorDiscardDialog
+    :open="showDiscardDialog"
+    :count="allUnsavedCount"
+    @close="showDiscardDialog = false"
+    @confirm="discardChanges"
+  />
   <EntryFormDialog
     :open="!!editDialogItem"
     :item="editDialogItem"

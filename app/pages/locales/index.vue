@@ -124,7 +124,7 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
 
   <!-- Locales List -->
   <div v-else-if="data">
-    <Card>
+    <Card dense>
       <DataTable
         :columns="tableColumns"
         :items="tableItems"

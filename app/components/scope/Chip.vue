@@ -14,20 +14,35 @@ const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const tint = computed(() => {
   const color = props.color && HEX_COLOR.test(props.color) ? props.color : "";
   if (!color) return undefined;
+  // Strengths come from --tint/--edge, set per color mode by tintClass.
   return {
-    backgroundColor: `color-mix(in srgb, ${color} ${props.active ? 30 : 14}%, transparent)`,
-    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} ${props.active ? 100 : 45}%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${color} var(--tint), transparent)`,
+    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} var(--edge), transparent)`,
     "--scope-color": color,
   };
+});
+
+// Light mode needs a softer tint than dark to look equally calm.
+const tintClass = computed(() => {
+  if (!tint.value) return undefined;
+  return [
+    props.active
+      ? "[--edge:80%] [--tint:22%] dark:[--edge:100%] dark:[--tint:30%]"
+      : "[--edge:30%] [--tint:10%] dark:[--edge:45%] dark:[--tint:14%]",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 focus-visible:outline-solid",
+  ];
 });
 </script>
 
 <template>
+  <!-- The tint's inline box-shadow hides the Chip's focus ring (also a box-shadow),
+       so tinted chips show keyboard focus with an outline instead. -->
   <Chip
     :variant="active && !tint ? 'primary' : 'secondary'"
     :dense
     :removable
     :style="tint"
+    :class="tintClass"
   >
     <span
       v-if="tint"

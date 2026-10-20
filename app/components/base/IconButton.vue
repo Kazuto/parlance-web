@@ -10,6 +10,7 @@ defineProps<{
   label: string;
   destructive?: boolean;
   disabled?: boolean;
+  dense?: boolean;
 }>();
 </script>
 
@@ -20,6 +21,7 @@ defineProps<{
       type="button"
       ghost
       :destructive
+      :dense
       :icon
       :disabled
       :aria-label="label"

@@ -54,7 +54,7 @@ const tableItems = computed(() => data.value?.scopes ?? []);
 </script>
 
 <template>
-  <Card class="mb-4">
+  <Card dense class="mb-4">
     <div class="flex gap-4 items-center">
       <div class="flex-1">
         <Input
@@ -80,7 +80,7 @@ const tableItems = computed(() => data.value?.scopes ?? []);
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
 
-  <Card v-else-if="data">
+  <Card v-else-if="data" dense>
     <DataTable
       v-if="tableItems.length"
       :columns="tableColumns"

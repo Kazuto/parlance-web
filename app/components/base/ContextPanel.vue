@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Tabs } from "@thkzt/eunoia";
+import { Tabs } from "@thkzt/eunoia";
 
 defineProps<{
   localeName: string;
@@ -16,24 +16,26 @@ const tab = defineModel<string | undefined>("tab");
 
 <template>
   <aside
-    class="flex h-full min-h-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
+    class="flex h-full min-h-0 flex-col border-l border-neutral-200 bg-white dark:border-white/5 dark:bg-neutral-900"
     :aria-label="t('context.title')"
   >
-    <header class="shrink-0 px-4 pt-4">
-      <div class="flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <p class="text-xs text-neutral-500 dark:text-neutral-400">
+    <header class="shrink-0 px-[18px] pt-[18px]">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex min-w-0 flex-col gap-0.5">
+          <p
+            class="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400"
+          >
             {{ t("context.title") }}
           </p>
-          <h3 class="truncate font-semibold dark:text-neutral-100">
+          <h3 class="truncate text-[15px] font-bold dark:text-neutral-50">
             {{ localeName }}
           </h3>
         </div>
-        <Button
-          type="button"
-          ghost
+        <BaseIconButton
+          dense
           icon="x"
-          :aria-label="t('context.close')"
+          :label="t('context.close')"
+          class="bg-neutral-100 dark:bg-white/5"
           @click="emit('close')"
         />
       </div>
@@ -42,14 +44,18 @@ const tab = defineModel<string | undefined>("tab");
       v-if="tabs && tabs.length"
       v-model="tab"
       :items="tabs"
+      dense
       :aria-label="t('context.title')"
       class="flex min-h-0 flex-1 flex-col"
-      list-class="shrink-0 border-b border-neutral-200 px-4 pt-3 pb-4 dark:border-neutral-700"
-      panel-class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
+      list-class="mx-[18px] mt-4 shrink-0"
+      panel-class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-4"
     >
       <slot :tab="tab" />
     </Tabs>
-    <div v-else class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+    <div
+      v-else
+      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-4"
+    >
       <slot :tab="tab" />
     </div>
   </aside>

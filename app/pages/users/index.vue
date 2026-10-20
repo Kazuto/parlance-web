@@ -74,7 +74,7 @@ const tableItems = computed(() => data.value?.users ?? []);
 
   <div v-else-if="data">
     <!-- Table -->
-    <Card>
+    <Card dense>
       <DataTable
         :columns="tableColumns"
         :items="tableItems"

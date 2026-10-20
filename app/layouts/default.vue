@@ -80,39 +80,42 @@ const headerOptions = computed(() => {
 
 <template>
   <div
-    class="flex h-dvh overflow-hidden flex-col bg-neutral-100 font-sans dark:bg-neutral-950"
+    class="flex h-dvh overflow-hidden bg-neutral-100 font-sans dark:bg-neutral-950"
   >
-    <!-- Header -->
-    <Header
-      v-bind="headerOptions"
-      :width="pageOptions.width"
-      :align-to="mainEl"
-      class="shrink-0"
+    <!-- Sidebar runs full height; its toggle sits at the top of it. -->
+    <Sidebar
+      v-model:collapsed="sidebarCollapsed"
+      class="border-neutral-200 bg-transparent dark:border-white/5 dark:bg-transparent"
     >
-      <template #left>
+      <div class="flex px-3 pt-3.5 pb-1">
         <SidebarToggle v-model:collapsed="sidebarCollapsed" />
-      </template>
+      </div>
+      <Menu class="p-3 pt-1" :items="menuItems" :current-path="route.path" />
+    </Sidebar>
 
-      <template #right>
-        <ThemeToggle />
-        <UserMenu
-          v-if="user"
-          :name="user.name ?? undefined"
-          :items="userMenuItems"
-          @select="onMenuSelect"
-        />
-      </template>
-    </Header>
-
-    <!-- Body: Sidebar + Main -->
-    <div class="flex min-h-0 flex-1 overflow-hidden">
-      <Sidebar v-model:collapsed="sidebarCollapsed">
-        <Menu class="p-3" :items="menuItems" :current-path="route.path" />
-      </Sidebar>
+    <!-- Header + Main -->
+    <div class="flex min-w-0 flex-1 flex-col">
+      <Header
+        v-bind="headerOptions"
+        transparent
+        :width="pageOptions.width"
+        :align-to="mainEl"
+        class="shrink-0"
+      >
+        <template #right>
+          <ThemeToggle />
+          <UserMenu
+            v-if="user"
+            :name="user.name ?? undefined"
+            :items="userMenuItems"
+            @select="onMenuSelect"
+          />
+        </template>
+      </Header>
 
       <main
         ref="mainEl"
-        class="min-w-0 flex-1 mx-auto"
+        class="min-h-0 min-w-0 flex-1"
         :class="isWorkspace ? 'overflow-hidden' : 'overflow-y-auto'"
       >
         <Page
@@ -135,7 +138,6 @@ const headerOptions = computed(() => {
   min-height: 0;
   gap: 1.25rem;
   /* Only the vertical padding: the side padding comes from Page, which the header aligns with. */
-  padding-block: 1.5rem;
   overflow: hidden;
 }
 
@@ -149,7 +151,6 @@ const headerOptions = computed(() => {
 
 @media (max-width: 640px) {
   .workspace-page {
-    padding-block: 0.75rem;
     gap: 0.75rem;
   }
 }

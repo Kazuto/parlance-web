@@ -109,7 +109,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
 </script>
 
 <template>
-  <Card class="mb-4">
+  <Card dense class="mb-4">
     <Input
       v-model="searchQuery"
       type="search"
@@ -132,7 +132,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
 
   <div v-else-if="data">
     <!-- Table -->
-    <Card class="overflow-x-auto">
+    <Card dense class="overflow-x-auto">
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #permissions="{ item }">
           <div v-if="item.permissions?.length" class="space-y-1">

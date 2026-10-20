@@ -4,12 +4,10 @@ import {
   Button,
   SplitView,
   type SplitViewItem,
-  Textarea,
-  Badge,
   Input,
   Chip,
-  Tooltip,
 } from "@thkzt/eunoia";
+import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import {
   useTerminologyDetail,
   useTerminologyFeed,
@@ -17,7 +15,6 @@ import {
 import { watchDebounced, useMediaQuery } from "@vueuse/core";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
-import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type { Definition } from "~/lib/api/schemas/parlance/v1/DefinitionSchema";
 
 const { t } = useI18n();
@@ -53,17 +50,17 @@ const {
 const { data: localeData, pagination } = useLocaleList();
 pagination.value.perPage = 100;
 
-const defaultLocale = computed(() =>
-  localeData.value?.locales?.find((locale) => locale.isDefault),
-);
-
-const defaultLocaleIds = computed(() => {
-  const locales = localeData.value?.locales ?? [];
-  const id = (locales.find((locale) => locale.isDefault) ?? locales[0])?.id;
-  return id ? [id] : [];
-});
-
 const selectedLocaleIds = ref<string[]>([]);
+const {
+  defaultLocale,
+  defaultLocaleIds,
+  localeOptions,
+  localeOption,
+  orderedSelectedLocaleIds,
+  selectedLanguageLabels,
+  languageSummary,
+  languagesFiltered,
+} = useEditorLocales(() => localeData.value?.locales, selectedLocaleIds);
 const storedFilters = useStoredFilters();
 
 // Initialize selectedLocaleIds once when locales are loaded, with the languages
@@ -100,29 +97,7 @@ watch(
   { deep: true },
 );
 
-const languagesFiltered = computed(
-  () =>
-    selectedLocaleIds.value.length !== defaultLocaleIds.value.length ||
-    selectedLocaleIds.value.some((id) => !defaultLocaleIds.value.includes(id)),
-);
 const activeFilterCount = computed(() => Number(languagesFiltered.value));
-const selectedLanguageLabels = computed(() =>
-  orderedSelectedLocaleIds.value
-    .map((id) => localeOptions.value.find((locale) => locale.value === id))
-    .filter((locale) => !!locale)
-    .map((locale) => locale.label),
-);
-
-const MAX_LISTED_LANGUAGES = 3;
-const languageSummary = computed(() => {
-  const labels = selectedLanguageLabels.value;
-  if (!labels.length) return t("entries.selectLocales");
-  if (labels.length > 1 && labels.length === localeOptions.value.length)
-    return t("entries.allLanguages");
-  const listed = labels.slice(0, MAX_LISTED_LANGUAGES).join(", ");
-  const hidden = labels.length - MAX_LISTED_LANGUAGES;
-  return `${t("entries.languagesShort")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
-});
 
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
@@ -144,14 +119,22 @@ watch(
 );
 const activeLocaleId = ref<string>();
 const activeLocaleName = computed(
-  () =>
-    localeOptions.value.find((item) => item.value === activeLocaleId.value)
-      ?.label ?? "",
+  () => localeOption(activeLocaleId.value)?.label ?? "",
 );
 
-function openContext(localeId: string) {
+// The row button toggles: on the language already shown it closes the panel.
+function toggleContext(localeId: string) {
+  if (contextOpen.value && activeLocaleId.value === localeId) {
+    contextOpen.value = false;
+    return;
+  }
   activeLocaleId.value = localeId;
   contextOpen.value = true;
+}
+
+// Typing in another language moves an open panel along, without opening it.
+function onRowFocus(localeId: string) {
+  if (contextOpen.value) activeLocaleId.value = localeId;
 }
 
 watchDebounced(
@@ -199,24 +182,6 @@ async function handleDeleted(id: string) {
   await refetch();
 }
 
-const orderedSelectedLocaleIds = computed(() => {
-  const id = defaultLocale.value?.id;
-  return id && selectedLocaleIds.value.includes(id)
-    ? [id, ...selectedLocaleIds.value.filter((localeId) => localeId !== id)]
-    : selectedLocaleIds.value;
-});
-
-const localeOptions = computed(
-  () =>
-    localeData.value?.locales
-      ?.filter((locale) => !!locale.id)
-      .toSorted((a, b) => Number(!!b.isDefault) - Number(!!a.isDefault))
-      .map((locale: Locale) => ({
-        label: locale.name ?? locale.code ?? "",
-        value: locale.id ?? "",
-      })) ?? [],
-);
-
 const knownTerminologies = ref<Record<string, Terminology>>({});
 
 const splitViewItems = computed((): SplitViewItem[] => {
@@ -252,9 +217,9 @@ const splitViewItems = computed((): SplitViewItem[] => {
     });
 });
 
-function isMissingDefinitions(item: SplitViewItem) {
+function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
-  return selectedLocaleIds.value.some((id) => missing.includes(id));
+  return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
 }
 
 watch(
@@ -374,6 +339,26 @@ const allUnsavedDefinitions = computed(() =>
 const allUnsavedCount = computed(() => allUnsavedDefinitions.value.length);
 registerUnsavedChanges("terminology-definitions", allUnsavedCount, isSaving);
 
+const showDiscardDialog = ref(false);
+
+function discardChanges() {
+  showDiscardDialog.value = false;
+  for (const terminologyId of Object.keys(definitionForms.value)) {
+    definitionForms.value[terminologyId] = {
+      ...(savedDefinitions.value[terminologyId] ?? {}),
+    };
+  }
+}
+
+// Changes on the open term go right away; others are out of sight, so confirm.
+function requestDiscardAll() {
+  const onlyCurrent = allUnsavedDefinitions.value.every(
+    (change) => change.terminologyId === selectedTerminologyId.value,
+  );
+  if (onlyCurrent) discardChanges();
+  else showDiscardDialog.value = true;
+}
+
 const selectedTerminologyData = computed(() =>
   selectedTerminologyId.value
     ? knownTerminologies.value[selectedTerminologyId.value]
@@ -392,6 +377,14 @@ const currentTerminologyForms = computed(() => {
   if (!key) return {};
   return definitionForms.value[key] ?? {};
 });
+
+// Counts what is typed, not only what is saved, so the header follows along.
+const definedCount = computed(
+  () =>
+    selectedLocaleIds.value.filter((id) =>
+      (currentTerminologyForms.value[id] ?? "").trim(),
+    ).length,
+);
 
 const emptySelectedLocaleIds = computed(() =>
   selectedLocaleIds.value.filter(
@@ -521,7 +514,7 @@ async function saveDefinitions(
       if (!change) return [];
       const { terminologyId, localeId } = change;
       return [
-        `${knownTerminologies.value[terminologyId]?.term ?? terminologyId}: ${localeOptions.value.find((locale) => locale.value === localeId)?.label ?? localeId}`,
+        `${knownTerminologies.value[terminologyId]?.term ?? terminologyId}: ${localeOption(localeId)?.label ?? localeId}`,
       ];
     });
     const failed = failedLanguages.length;
@@ -561,14 +554,14 @@ async function saveDefinitions(
 
   <section
     v-else-if="data"
-    class="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
+    class="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden rounded-[28px] border border-neutral-200 bg-white squircle dark:border-white/5 dark:bg-neutral-900"
     :aria-label="t('terminologies.workspace')"
     :aria-busy="isFetching"
   >
     <div
-      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-700"
+      class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
-      <div class="w-full sm:w-72" @keydown="onSearchKeydown">
+      <div class="w-full sm:w-56" @keydown="onSearchKeydown">
         <Input
           v-model="search"
           dense
@@ -615,7 +608,7 @@ async function saveDefinitions(
         :items="splitViewItems"
         :selected="selectedTerminology"
         :total="terminologyTotal"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
+        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectTerminology"
       >
         <template #empty>
@@ -624,27 +617,18 @@ async function saveDefinitions(
           </p>
         </template>
         <template #item="{ item }">
-          <span class="flex min-w-0 w-full items-center justify-between gap-3">
-            <span class="truncate" :title="item.label">{{ item.label }}</span>
-            <span
-              v-if="hasUnsavedDefinitions(String(item.key))"
-              class="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-300"
-              :title="t('terminologies.unsavedDefinitions')"
-              >{{ t("common.unsaved") }}</span
-            >
-            <Tooltip
-              v-else-if="
-                !hasUnsavedDefinitions(String(item.key)) &&
-                isMissingDefinitions(item)
-              "
-              :content="t('entries.missingTranslations')"
-            >
-              <span
-                class="h-2 w-2 shrink-0 rounded-full bg-rose-400"
-                :aria-label="t('entries.missingTranslations')"
-              />
-            </Tooltip>
-          </span>
+          <EditorListItem
+            :label="item.label"
+            :missing-count="missingCount(item)"
+            :unsaved="hasUnsavedDefinitions(String(item.key))"
+            :missing-label="
+              t(
+                'entries.missingCount',
+                { count: missingCount(item) },
+                missingCount(item),
+              )
+            "
+          />
         </template>
         <template #header="{ item }">
           <div class="flex items-center justify-between gap-4">
@@ -659,15 +643,35 @@ async function saveDefinitions(
                 {{ selectedTerminologyData.description }}
               </p>
             </div>
-            <BaseActionButtons
+            <div
               v-if="selectedTerminologyData"
-              :key="selectedTerminologyData.id ?? undefined"
-              :disabled="isSaving"
-              :edit-label="t('terminologies.edit')"
-              :delete-label="t('terminologies.delete')"
-              @edit="editDialogItem = selectedTerminologyData"
-              @delete="deleteDialogItem = selectedTerminologyData"
-            />
+              class="flex shrink-0 items-center gap-2"
+            >
+              <span
+                class="mr-1.5 text-[11.5px] font-semibold whitespace-nowrap text-neutral-500 dark:text-neutral-400"
+                >{{
+                  t("terminologies.definedCount", {
+                    done: definedCount,
+                    total: selectedLocaleIds.length,
+                  })
+                }}</span
+              >
+              <BaseIconButton
+                icon="pencil-simple"
+                :label="t('terminologies.edit')"
+                :disabled="isSaving"
+                class="bg-neutral-100 dark:bg-white/5"
+                @click="editDialogItem = selectedTerminologyData"
+              />
+              <BaseIconButton
+                icon="trash"
+                destructive
+                :label="t('terminologies.delete')"
+                :disabled="isSaving"
+                class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
+                @click="deleteDialogItem = selectedTerminologyData"
+              />
+            </div>
           </div>
         </template>
         <template #default="{ item }">
@@ -690,88 +694,41 @@ async function saveDefinitions(
           </div>
           <div
             v-else-if="item && selectedLocaleIds.length > 0"
-            class="mx-auto flex w-full flex-col gap-6"
+            class="flex w-full flex-col gap-0.5 rounded-[22px] bg-neutral-100 p-1 squircle dark:bg-neutral-950"
           >
-            <div
+            <EditorTranslationRow
               v-for="localeId in orderedSelectedLocaleIds"
               :key="localeId"
-              :class="
-                localeId === defaultLocale?.id
-                  ? 'rounded-lg border border-primary-200 bg-primary-50/50 p-3 dark:border-primary-800 dark:bg-primary-950/30'
-                  : ''
+              :input-id="`terminology-${item.key}-${localeId}`"
+              :locale-name="localeOption(localeId)?.label ?? localeId"
+              :locale-code="localeOption(localeId)?.code ?? ''"
+              :is-default="localeId === defaultLocale?.id"
+              :translated="!!(currentTerminologyForms[localeId] ?? '').trim()"
+              :dirty="isDefinitionDirty(String(item.key), localeId)"
+              :active="contextOpen && activeLocaleId === localeId"
+              :readonly="isSaving"
+              :placeholder="t('terminologies.definitionPlaceholder')"
+              :model-value="currentTerminologyForms[localeId] ?? ''"
+              @update:model-value="
+                setDefinitionForm(String(item.key), localeId, $event)
               "
+              @focus="onRowFocus(localeId)"
+              @revert="
+                setDefinitionForm(
+                  String(item.key),
+                  localeId,
+                  savedDefinitions[String(item.key)]?.[localeId] ?? '',
+                )
+              "
+              @open-context="toggleContext(localeId)"
             >
-              <div
-                class="flex flex-wrap items-center h-10 justify-between gap-2"
-              >
-                <label
-                  :for="`terminology-${item.key}-${localeId}`"
-                  class="flex items-center gap-2 text-sm"
-                >
-                  {{
-                    localeOptions.find((locale) => locale.value === localeId)
-                      ?.label
-                  }}
-                  <Badge v-if="localeId === defaultLocale?.id">{{
-                    t("common.default")
-                  }}</Badge>
-                  <span
-                    v-if="isDefinitionDirty(String(item.key), localeId)"
-                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                    >{{ t("common.unsaved") }}</span
-                  >
-                </label>
-                <div class="flex items-center gap-2">
-                  <Button
-                    v-if="localeId === defaultLocale?.id"
-                    type="button"
-                    ghost
-                    dense
-                    icon="copy"
-                    :disabled="!canFillEmptyDefinitions"
-                    @click="fillEmptyDefinitions"
-                  >
-                    {{ t("entries.copyEmpty") }}
-                  </Button>
-                  <Button
-                    v-if="!contextOpen || activeLocaleId !== localeId"
-                    type="button"
-                    ghost
-                    icon="sidebar"
-                    :aria-label="
-                      t('context.openFor', {
-                        language:
-                          localeOptions.find(
-                            (locale) => locale.value === localeId,
-                          )?.label ?? '',
-                      })
-                    "
-                    @click="openContext(localeId)"
-                  />
-                  <span
-                    v-else
-                    class="inline-flex shrink-0 items-center gap-2 rounded-md text-xs font-medium text-primary-600"
-                    aria-live="polite"
-                  >
-                    {{ t("context.active") }}
-                  </span>
-                </div>
-              </div>
-              <Textarea
-                :id="`terminology-${item.key}-${localeId}`"
-                :aria-label="
-                  localeOptions.find((locale) => locale.value === localeId)
-                    ?.label
-                "
-                :readonly="isSaving"
-                :model-value="currentTerminologyForms[String(localeId)] ?? ''"
-                :placeholder="t('terminologies.definitionPlaceholder')"
-                @update:model-value="
-                  setDefinitionForm(String(item.key), localeId, $event)
-                "
-                @focusin="activeLocaleId = localeId"
-              />
-            </div>
+              <template v-if="localeId === defaultLocale?.id" #meta>
+                <EditorCopyEmptyChip
+                  :disabled="!canFillEmptyDefinitions"
+                  @click="fillEmptyDefinitions"
+                />
+              </template>
+            </EditorTranslationRow>
           </div>
 
           <div
@@ -788,7 +745,7 @@ async function saveDefinitions(
       </SplitView>
       <TerminologyContextPanel
         v-if="contextOpen && activeLocaleId && selectedTerminology"
-        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
+        class="flex-[0_0_280px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
         :terminology-id="String(selectedTerminology.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
@@ -796,9 +753,9 @@ async function saveDefinitions(
       />
     </div>
     <div
-      class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700"
+      class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <span class="text-sm text-neutral-500 dark:text-neutral-400">
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">
         <template v-if="terminologyTotal !== undefined"
           >{{
             t(
@@ -818,7 +775,7 @@ async function saveDefinitions(
         }}
         <span
           v-if="unsavedLocaleIds.length"
-          class="ml-2 text-amber-700 dark:text-amber-300"
+          class="ml-2 text-yellow-700 dark:text-amber-300"
           >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
           }}{{
             unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
@@ -828,6 +785,14 @@ async function saveDefinitions(
         >
       </span>
       <div class="flex shrink-0 items-center gap-2">
+        <Button
+          type="button"
+          ghost
+          :disabled="!allUnsavedCount || isSaving"
+          @click="requestDiscardAll"
+        >
+          {{ t("common.discardAll") }}
+        </Button>
         <Button
           primary
           :disabled="
@@ -843,6 +808,12 @@ async function saveDefinitions(
     </div>
   </section>
 
+  <EditorDiscardDialog
+    :open="showDiscardDialog"
+    :count="allUnsavedCount"
+    @close="showDiscardDialog = false"
+    @confirm="discardChanges"
+  />
   <TerminologyFormDialog
     :open="showCreateDialog"
     @close="showCreateDialog = false"

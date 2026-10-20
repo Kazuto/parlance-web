@@ -13,6 +13,7 @@ usePage(() => ({
   width: "wide",
   title: t("settings.title"),
   description: t("settings.description"),
+  showHeader: false,
 }));
 
 const availableLocales = computed(() => locales.value);

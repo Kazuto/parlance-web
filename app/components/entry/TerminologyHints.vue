@@ -1,62 +1,32 @@
 <script setup lang="ts">
-import { Button, Icon } from "@thkzt/eunoia";
-import { useQuery } from "@tanstack/vue-query";
-import { refDebounced } from "@vueuse/core";
-import { api } from "~/lib/api";
+import { Icon } from "@thkzt/eunoia";
+import { useTerminologySuggestions } from "~/composables/terminology/useTerminologySuggestions";
 
+// Glossary terms in the source text and how this translation uses them, for the
+// context panel's Terminology tab.
 const props = defineProps<{
   sourceText: string;
   targetLocaleId: string;
   translation: string;
-  compact?: boolean;
-  panel?: boolean;
 }>();
-const emit = defineEmits<{ open: [] }>();
 const { t } = useI18n();
-const source = computed(() => props.sourceText.trim());
-const debouncedSource = refDebounced(source, 400);
-const targetLocaleId = computed(() => props.targetLocaleId);
-const options = api.terminologies.suggest.use({
-  sourceText: debouncedSource,
-  targetLocaleId,
-});
-const { data, isFetching, error, refetch } = useQuery({
-  ...options,
-  enabled: computed(
-    () =>
-      toValue(options.enabled) &&
-      !!debouncedSource.value &&
-      source.value === debouncedSource.value &&
-      !!targetLocaleId.value,
-  ),
-  staleTime: 5 * 60 * 1000,
-  retry: false,
-});
-const suggestions = computed(() =>
-  source.value === debouncedSource.value
-    ? (data.value?.suggestions ?? []).filter((suggestion) =>
-        suggestion.targetTranslation?.trim(),
-      )
-    : [],
-);
-const expanded = ref<string>();
+
+const { matches, hasSource, isFetching, error, refetch } =
+  useTerminologySuggestions(
+    () => props.sourceText,
+    () => props.targetLocaleId,
+    () => props.translation,
+  );
+
 const copied = ref<string>();
 const copyError = ref(false);
-watch([source, targetLocaleId], () => {
-  expanded.value = undefined;
-  copied.value = undefined;
-  copyError.value = false;
-});
-
-function termUsed(term: string) {
-  const normalized = props.translation.normalize("NFKC").toLocaleLowerCase();
-  const needle = term.normalize("NFKC").toLocaleLowerCase();
-  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(
-    `(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`,
-    "u",
-  ).test(normalized);
-}
+watch(
+  () => [props.sourceText, props.targetLocaleId],
+  () => {
+    copied.value = undefined;
+    copyError.value = false;
+  },
+);
 
 async function copyTerm(term: string) {
   copyError.value = false;
@@ -67,149 +37,117 @@ async function copyTerm(term: string) {
     copyError.value = true;
   }
 }
+
+const STATUS_COLORS = {
+  untranslated: "text-primary-600 dark:text-primary-300",
+  unused: "text-yellow-700 dark:text-amber-300",
+  used: "text-green-600 dark:text-green-300",
+};
 </script>
 
 <template>
-  <div
-    v-if="panel || (source && (suggestions.length || isFetching || error))"
-    class="mt-2 space-y-2 text-xs"
-  >
-    <div class="flex flex-wrap items-center gap-2 text-neutral-500">
+  <div class="flex flex-col gap-2 text-xs">
+    <p v-if="!hasSource" class="text-sm text-neutral-500 dark:text-neutral-400">
+      {{ t("context.sourceRequired") }}
+    </p>
+    <p
+      v-else-if="isFetching && !matches.length"
+      role="status"
+      class="text-neutral-500 dark:text-neutral-400"
+    >
+      {{ t("terminologyHints.loading") }}
+    </p>
+    <p v-else-if="error" role="status" class="text-neutral-500">
+      {{ t("terminologyHints.unavailable") }}
       <button
-        v-if="compact"
         type="button"
-        class="cursor-pointer text-primary-600 hover:underline"
-        @click="emit('open')"
+        class="cursor-pointer underline"
+        @click="() => refetch()"
+      >
+        {{ t("common.retry") }}
+      </button>
+    </p>
+    <p
+      v-else-if="!matches.length"
+      class="text-sm text-neutral-500 dark:text-neutral-400"
+    >
+      {{ t("context.noTerms") }}
+    </p>
+    <template v-else>
+      <span
+        class="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400"
       >
         {{ t("terminologyHints.title") }} ·
         {{
           t(
             "terminologyHints.matches",
-            { count: suggestions.length },
-            suggestions.length,
+            { count: matches.length },
+            matches.length,
           )
         }}
-      </button>
-      <template v-else>
-        <span class="font-medium">{{ t("terminologyHints.title") }}</span>
-        <span v-if="isFetching" role="status">{{
-          t("terminologyHints.loading")
-        }}</span>
-        <span v-else-if="error" role="status">
-          {{ t("terminologyHints.unavailable") }}
-          <button type="button" class="underline" @click="() => refetch()">
-            {{ t("common.retry") }}
-          </button>
-        </span>
-        <span v-else>{{
-          t(
-            "terminologyHints.matches",
-            { count: suggestions.length },
-            suggestions.length,
-          )
-        }}</span>
-      </template>
-    </div>
-    <p
-      v-if="panel && !source"
-      class="text-sm text-neutral-500 dark:text-neutral-400"
-    >
-      {{ t("context.sourceRequired") }}
-    </p>
-    <p
-      v-else-if="panel && !suggestions.length && !isFetching && !error"
-      class="text-sm text-neutral-500 dark:text-neutral-400"
-    >
-      {{ t("context.noTerms") }}
-    </p>
-    <div v-if="!compact && !panel" class="flex flex-wrap gap-2">
-      <button
-        v-for="(suggestion, index) in suggestions"
-        :key="suggestion.terminology?.id ?? index"
-        type="button"
-        class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-neutral-700 hover:border-primary-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-        :aria-expanded="expanded === String(index)"
-        :aria-label="
-          t('terminologyHints.termLabel', {
-            source: suggestion.terminology?.term ?? '',
-            target: suggestion.targetTranslation ?? '',
-            state: t(
-              termUsed(suggestion.targetTranslation ?? '')
-                ? 'terminologyHints.used'
-                : 'terminologyHints.preferred',
-            ),
-          })
-        "
-        @click="
-          expanded = expanded === String(index) ? undefined : String(index)
-        "
-      >
-        <span>{{
-          suggestion.terminology?.term ?? suggestion.matchedWords?.join(", ")
-        }}</span>
-        <span aria-hidden="true">→</span>
-        <span class="font-medium">{{ suggestion.targetTranslation }}</span>
-        <Icon
-          v-if="termUsed(suggestion.targetTranslation ?? '')"
-          name="check"
-          size="sm"
-          class="text-green-600"
-        />
-      </button>
-    </div>
-    <template
-      v-for="(suggestion, index) in suggestions"
-      :key="suggestion.terminology?.id ?? index"
-    >
+      </span>
       <div
-        v-if="!compact && (panel || expanded === String(index))"
-        class="rounded-md border border-neutral-200 p-3 dark:border-neutral-700"
+        v-for="(match, index) in matches"
+        :key="match.terminology?.id ?? index"
+        class="flex flex-col gap-1.5 rounded-2xl border border-neutral-200 bg-white px-3.5 py-3 squircle dark:border-white/5 dark:bg-neutral-800"
       >
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="text-sm font-medium dark:text-neutral-100">
-            {{ suggestion.terminology?.term }} →
-            {{ suggestion.targetTranslation }}
-          </p>
-          <Button
-            type="button"
-            ghost
-            icon="copy"
-            @click="copyTerm(suggestion.targetTranslation ?? '')"
+        <div class="flex items-center gap-2">
+          <!-- One line of text, so term, arrow and translation share a baseline and wrap together. -->
+          <p
+            class="min-w-0 flex-1 text-[13px] font-bold break-words dark:text-neutral-50"
           >
-            {{
+            <span>{{
+              match.terminology?.term ?? match.matchedWords?.join(", ")
+            }}</span>
+            <Icon
+              name="arrow-right"
+              type="bold"
+              size="xs"
+              class="mx-1.5 -mt-px align-middle text-neutral-500 dark:text-neutral-300"
+            />
+            <span class="sr-only"> → </span>
+            <span class="text-primary-700 dark:text-primary-500">{{
+              match.targetTranslation
+            }}</span>
+          </p>
+          <!-- Icon only, so the term keeps the card's width in every language. -->
+          <BaseIconButton
+            dense
+            :icon="copied === match.targetTranslation ? 'check' : 'copy'"
+            :label="
               t(
-                copied === suggestion.targetTranslation
-                  ? "terminologyHints.copied"
-                  : "terminologyHints.copy",
+                copied === match.targetTranslation
+                  ? 'terminologyHints.copied'
+                  : 'terminologyHints.copy',
               )
-            }}
-          </Button>
+            "
+            class="shrink-0 bg-neutral-100 text-neutral-600 dark:bg-white/5 dark:text-neutral-300"
+            @click="copyTerm(match.targetTranslation ?? '')"
+          />
         </div>
         <p
-          v-if="suggestion.terminology?.description"
-          class="mt-2 whitespace-pre-wrap text-neutral-500 dark:text-neutral-400"
+          v-if="match.terminology?.description"
+          class="whitespace-pre-wrap text-neutral-500 dark:text-neutral-400"
         >
-          {{ suggestion.terminology.description }}
+          {{ match.terminology.description }}
         </p>
-        <p class="mt-2 text-neutral-500 dark:text-neutral-400">
-          {{
-            t(
-              termUsed(suggestion.targetTranslation ?? "")
-                ? "terminologyHints.usedHint"
-                : "terminologyHints.preferredHint",
-            )
-          }}
-        </p>
-        <NuxtLink
-          to="/glossary"
-          class="mt-2 inline-block text-primary-600 underline dark:text-primary-400"
+        <p
+          class="flex items-center gap-1.5 text-[11.5px] font-semibold"
+          :class="STATUS_COLORS[match.status]"
         >
-          {{ t("terminologyHints.glossary") }}
-        </NuxtLink>
-        <p v-if="copyError" role="alert" class="mt-2 text-red-600">
-          {{ t("terminologyHints.copyFailed") }}
+          <span class="size-1.5 rounded-full bg-current" />
+          {{ t(`terminologyHints.status.${match.status}`) }}
         </p>
       </div>
+      <NuxtLink
+        to="/glossary"
+        class="self-start py-0.5 text-xs font-semibold text-primary-600 no-underline hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400"
+      >
+        {{ t("terminologyHints.glossary") }} →
+      </NuxtLink>
+      <p v-if="copyError" role="alert" class="text-red-600">
+        {{ t("terminologyHints.copyFailed") }}
+      </p>
     </template>
   </div>
 </template>

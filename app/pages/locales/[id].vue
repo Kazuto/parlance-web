@@ -7,7 +7,6 @@ import {
   Input,
   SplitView,
   type SplitViewItem,
-  Tooltip,
 } from "@thkzt/eunoia";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
@@ -76,6 +75,16 @@ const selectedItem = computed<SplitViewItem | undefined>(() => {
 });
 const form = computed(() => drafts.value[selectedId.value]);
 
+// Languages this locale has no name for yet, from the draft if there is one.
+function missingNames(id: string) {
+  const names =
+    drafts.value[id]?.names ??
+    localeData.value?.locales?.find((locale) => locale.id === id)?.names;
+  return languages.value.filter(
+    (language) => !(names?.[language.code ?? ""] ?? "").trim(),
+  ).length;
+}
+
 function changedFields(id: string) {
   const draft = drafts.value[id];
   const baseline = saved.value[id];
@@ -100,6 +109,25 @@ const unsavedLocaleIds = computed(() =>
   Object.keys(drafts.value).filter((id) => changedFields(id) > 0),
 );
 registerUnsavedChanges("locale-editor", allUnsaved, isSaving);
+
+const discardOpen = ref(false);
+
+function discardChanges() {
+  discardOpen.value = false;
+  for (const id of unsavedLocaleIds.value) {
+    const baseline = saved.value[id];
+    if (baseline) drafts.value[id] = structuredClone(baseline);
+  }
+}
+
+// Changes on the open locale go right away; others are out of sight, so confirm.
+function requestDiscardAll() {
+  const onlyCurrent = unsavedLocaleIds.value.every(
+    (id) => id === selectedId.value,
+  );
+  if (onlyCurrent) discardChanges();
+  else discardOpen.value = true;
+}
 
 watch(
   () => route.params.id,
@@ -257,28 +285,12 @@ async function handleDeleted(id: string) {
       @select="selectLocale"
     >
       <template #item="{ item }">
-        <span class="flex w-full min-w-0 items-center justify-between gap-3">
-          <span class="truncate" :title="item.label">{{ item.label }}</span>
-          <span
-            v-if="changedFields(String(item.key))"
-            class="shrink-0 text-xs text-amber-700 dark:text-amber-300"
-            >{{ t("common.unsaved") }}</span
-          >
-          <Tooltip
-            v-else-if="
-              languages.some(
-                (language) =>
-                  !(drafts[String(item.key)]?.names ??
-                    localeData?.locales?.find(
-                      (locale) => locale.id === item.key,
-                    )?.names)?.[language.code ?? ''],
-              )
-            "
-            :content="t('locales.missingNames')"
-          >
-            <span class="h-2 w-2 shrink-0 rounded-full bg-rose-400" />
-          </Tooltip>
-        </span>
+        <EditorListItem
+          :label="item.label"
+          :missing-count="missingNames(String(item.key))"
+          :unsaved="!!changedFields(String(item.key))"
+          :missing-label="t('locales.missingNames')"
+        />
       </template>
       <template #header>
         <div class="flex items-start justify-between gap-4">
@@ -291,15 +303,23 @@ async function handleDeleted(id: string) {
               {{ t("locales.namesHint") }}
             </p>
           </div>
-          <BaseActionButtons
-            v-if="form"
-            :key="selectedId"
-            :disabled="isSaving || isLoading"
-            :edit-label="t('locales.edit')"
-            :delete-label="t('locales.delete')"
-            @edit="openEdit"
-            @delete="deleteItem = data?.locale ?? undefined"
-          />
+          <div v-if="form" class="flex shrink-0 items-center gap-2">
+            <BaseIconButton
+              icon="pencil-simple"
+              :label="t('locales.edit')"
+              :disabled="isSaving || isLoading"
+              class="bg-neutral-100 dark:bg-white/5"
+              @click="openEdit"
+            />
+            <BaseIconButton
+              icon="trash"
+              destructive
+              :label="t('locales.delete')"
+              :disabled="isSaving || isLoading"
+              class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
+              @click="deleteItem = data?.locale ?? undefined"
+            />
+          </div>
         </div>
       </template>
       <template #default>
@@ -313,57 +333,45 @@ async function handleDeleted(id: string) {
         >
           {{ loadError?.message ?? listError?.message }}
         </p>
-        <div v-else-if="form" class="flex flex-col gap-6">
-          <div
+        <div
+          v-else-if="form"
+          class="flex w-full flex-col gap-0.5 rounded-[22px] bg-neutral-100 p-1 squircle dark:bg-neutral-950"
+        >
+          <EditorTranslationRow
             v-for="language in languages"
             :key="language.id ?? undefined"
-            :class="
-              language.isDefault
-                ? 'rounded-lg border border-primary-200 bg-primary-50/50 p-3 dark:border-primary-800 dark:bg-primary-950/30'
-                : ''
+            v-model="form.names[language.code ?? '']"
+            :input-id="`locale-name-${selectedId}-${language.code}`"
+            :locale-name="language.name ?? language.code ?? ''"
+            :locale-code="language.code ?? ''"
+            :is-default="!!language.isDefault"
+            :translated="!!(form.names[language.code ?? ''] ?? '').trim()"
+            :dirty="
+              (form.names[language.code ?? ''] ?? '') !==
+              (saved[selectedId]?.names[language.code ?? ''] ?? '')
             "
-          >
-            <label
-              :for="`locale-name-${selectedId}-${language.code}`"
-              class="mb-1 flex items-center gap-2 text-sm"
-            >
-              {{ language.name ?? language.code }}
-              <Badge v-if="language.isDefault">{{ t("common.default") }}</Badge>
-              <span
-                v-if="
-                  (form.names[language.code ?? ''] ?? '') !==
-                  (saved[selectedId]?.names[language.code ?? ''] ?? '')
-                "
-                class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                >{{ t("common.unsaved") }}</span
-              >
-            </label>
-            <Input
-              :id="`locale-name-${selectedId}-${language.code}`"
-              v-model="form.names[language.code ?? '']"
-              :readonly="isSaving"
-              :aria-label="
-                t('locales.nameIn', {
-                  language: language.name ?? language.code ?? '',
-                })
-              "
-              :placeholder="t('locales.namePlaceholder')"
-            />
-          </div>
+            :readonly="isSaving"
+            :placeholder="t('locales.namePlaceholder')"
+            without-context
+            @revert="
+              form.names[language.code ?? ''] =
+                saved[selectedId]?.names[language.code ?? ''] ?? ''
+            "
+          />
         </div>
       </template>
       <template #footer>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="text-sm text-neutral-500">
+          <div class="text-xs text-neutral-500 dark:text-neutral-400">
             {{ t("common.languageCount", { count: languages.length }) }}
             <span
               v-if="currentUnsaved"
-              class="ml-2 text-amber-700 dark:text-amber-300"
+              class="ml-2 text-yellow-700 dark:text-amber-300"
               >{{ t("common.unsavedCount", { count: currentUnsaved }) }}</span
             >
             <span
               v-if="allUnsaved > currentUnsaved"
-              class="ml-2 text-amber-700 dark:text-amber-300"
+              class="ml-2 text-yellow-700 dark:text-amber-300"
               >{{
                 t("locales.otherUnsaved", {
                   count: allUnsaved - currentUnsaved,
@@ -375,6 +383,14 @@ async function handleDeleted(id: string) {
             </p>
           </div>
           <div class="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              ghost
+              :disabled="!unsavedLocaleIds.length || isSaving"
+              @click="requestDiscardAll"
+            >
+              {{ t("common.discardAll") }}
+            </Button>
             <Button
               type="button"
               ghost
@@ -400,6 +416,12 @@ async function handleDeleted(id: string) {
       </template>
     </SplitView>
   </section>
+  <EditorDiscardDialog
+    :open="discardOpen"
+    :count="allUnsaved"
+    @close="discardOpen = false"
+    @confirm="discardChanges"
+  />
   <Dialog
     :open="saveAllOpen"
     :title="t('locales.saveAllTitle')"
