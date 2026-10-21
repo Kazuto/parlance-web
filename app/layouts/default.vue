@@ -36,13 +36,13 @@ const onMenuSelect = (label: string) => {
 const menuItems = computed<MenuItem[]>(() => [
   { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
   { label: t("nav.locales"), to: "/locales", icon: "globe-simple" },
-  { label: t("nav.entries"), to: "/entries", icon: "book" },
+  { label: t("nav.entries"), to: "/entries", icon: "translate" },
   {
     label: t("nav.transfer"),
     to: "/entries/transfer",
     icon: "arrows-down-up",
   },
-  { label: t("nav.glossary"), to: "/glossary", icon: "tag-simple" },
+  { label: t("nav.glossary"), to: "/glossary", icon: "book-open-text" },
   { label: t("nav.scopes"), to: "/scopes", icon: "stack" },
   { label: t("nav.roles"), to: "/roles", icon: "shield" },
   { label: t("nav.users"), to: "/users", icon: "users" },

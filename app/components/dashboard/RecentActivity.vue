@@ -97,7 +97,7 @@ function subjectLink(item: ActivityItem) {
           aria-hidden="true"
         >
           <Icon
-            :name="isDefinition(item) ? 'tag-simple' : 'translate'"
+            :name="isDefinition(item) ? 'book-open-text' : 'translate'"
             size="sm"
           />
         </span>

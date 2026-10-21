@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Headline, Text } from "@thkzt/eunoia";
+import { Card, Headline, Icon, Text } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
@@ -46,45 +46,49 @@ usePage(() => ({
   showHeader: false,
 }));
 
-const cards = [
+const cards = computed(() => [
   {
     title: t("nav.locales"),
     description: t("dashboard.localesDescription"),
-    icon: "🌍",
+    icon: "globe-simple",
     href: "/locales",
     permission: "read_locale",
-    color: "primary",
+    iconClass:
+      "bg-primary-100 text-primary-600 dark:bg-primary-500/15 dark:text-primary-400",
   },
   {
     title: t("nav.entries"),
     description: t("dashboard.entriesDescription"),
-    icon: "📝",
+    icon: "translate",
     href: "/entries",
     permission: "read_entry",
-    color: "green",
+    iconClass:
+      "bg-green-100 text-green-600 dark:bg-green-500/15 dark:text-green-400",
   },
   {
     title: t("nav.glossary"),
     description: t("dashboard.terminologyDescription"),
-    icon: "📚",
+    icon: "book-open-text",
     href: "/glossary",
     permission: "read_terminology",
-    color: "purple",
+    iconClass:
+      "bg-purple-100 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400",
   },
   {
     title: t("nav.users"),
     description: t("dashboard.usersDescription"),
-    icon: "👥",
+    icon: "users",
     href: "/users",
     permission: "read_user",
-    color: "orange",
+    iconClass:
+      "bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400",
   },
-];
+]);
 
 const { can } = usePermission();
 
 const visibleCards = computed(() =>
-  cards.filter((card) => can.value(card.permission)),
+  cards.value.filter((card) => can.value(card.permission)),
 );
 </script>
 
@@ -151,19 +155,11 @@ const visibleCards = computed(() =>
       :to="missingUrl"
     >
       <template #icon>
-        <svg
-          class="w-6 h-6 text-yellow-600 dark:text-yellow-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <Icon
+          name="warning-circle"
+          size="lg"
+          class="text-red-600 dark:text-red-400"
+        />
       </template>
     </DashboardMetricCard>
 
@@ -208,10 +204,11 @@ const visibleCards = computed(() =>
         <Card
           class="h-full transition-shadow group-hover:shadow-[inset_0_0_0_2px_var(--color-primary-500)] dark:group-hover:shadow-[inset_0_0_0_2px_var(--color-primary-600)]"
         >
-          <div class="flex items-start">
-            <div class="text-4xl mb-3">
-              {{ card.icon }}
-            </div>
+          <div
+            class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl"
+            :class="card.iconClass"
+          >
+            <Icon :name="card.icon" size="lg" />
           </div>
           <h3
             class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
