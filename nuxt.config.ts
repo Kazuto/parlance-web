@@ -21,6 +21,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@nuxtjs/i18n",
     "@nuxt/a11y",
+    "@nuxt/test-utils/module",
   ],
 
   i18n: {
