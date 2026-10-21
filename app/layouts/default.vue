@@ -12,9 +12,22 @@ import {
   Page,
   useTheme,
 } from "@thkzt/eunoia";
+import { useQuery } from "@tanstack/vue-query";
+import { api } from "~/lib/api";
 
-const { user, logout } = useAuthStore();
+const authStore = useAuthStore();
+const { user, logout } = authStore;
 const { t } = useI18n();
+
+// The stored user is only replaced on login and token refresh, so role changes made
+// since then would not show. Reload it so the UI follows the current permissions.
+const { data: currentUserData } = useQuery({
+  ...api.auth.getCurrentUser.use({}),
+  enabled: computed(() => authStore.isLoggedIn),
+});
+watch(currentUserData, (data) => {
+  if (data?.user) authStore.setUser(data.user);
+});
 
 const route = useRoute();
 
@@ -33,20 +46,60 @@ const onMenuSelect = (label: string) => {
   }
 };
 
-const menuItems = computed<MenuItem[]>(() => [
-  { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
-  { label: t("nav.locales"), to: "/locales", icon: "globe-simple" },
-  { label: t("nav.entries"), to: "/entries", icon: "translate" },
-  {
-    label: t("nav.transfer"),
-    to: "/entries/transfer",
-    icon: "arrows-down-up",
-  },
-  { label: t("nav.glossary"), to: "/glossary", icon: "book-open-text" },
-  { label: t("nav.scopes"), to: "/scopes", icon: "stack" },
-  { label: t("nav.roles"), to: "/roles", icon: "shield" },
-  { label: t("nav.users"), to: "/users", icon: "users" },
-]);
+const { can } = usePermission();
+
+// Only link pages the user can open; items without a permission are always shown.
+const menuItems = computed<MenuItem[]>(() =>
+  (
+    [
+      { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
+      {
+        label: t("nav.locales"),
+        to: "/locales",
+        icon: "globe-simple",
+        permission: "read_locale",
+      },
+      {
+        label: t("nav.entries"),
+        to: "/entries",
+        icon: "translate",
+        permission: "read_entry",
+      },
+      {
+        label: t("nav.transfer"),
+        to: "/entries/transfer",
+        icon: "arrows-down-up",
+        permission: "read_entry",
+      },
+      {
+        label: t("nav.glossary"),
+        to: "/glossary",
+        icon: "book-open-text",
+        permission: "read_terminology",
+      },
+      {
+        label: t("nav.scopes"),
+        to: "/scopes",
+        icon: "stack",
+        permission: "read_scope",
+      },
+      {
+        label: t("nav.roles"),
+        to: "/roles",
+        icon: "shield",
+        permission: "read_role",
+      },
+      {
+        label: t("nav.users"),
+        to: "/users",
+        icon: "users",
+        permission: "read_user",
+      },
+    ] satisfies (MenuItem & { permission?: string })[]
+  )
+    .filter((item) => !item.permission || can.value(item.permission))
+    .map(({ permission: _permission, ...item }) => item),
+);
 
 const userMenuItems = computed<UserMenuItem[]>(() => [
   { label: t("nav.settings"), icon: "gear", to: "/settings" },

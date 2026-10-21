@@ -22,6 +22,8 @@ import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSch
 const queryClient = useQueryClient();
 const historyQueryKey = api.entries.history.getQueryKey();
 const { t } = useI18n();
+const { can, canAll } = usePermission();
+const canUpdate = computed(() => can.value("update_entry"));
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Entry>();
 const editDialogItem = ref<Entry>();
@@ -56,17 +58,24 @@ usePage(() => ({
   title: t("nav.entries"),
   description: t("entries.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("entries.create"),
-    icon: "plus",
-    onClick: () => (showCreateDialog.value = true),
-  },
+  primaryAction: can.value("create_entry")
+    ? {
+        content: t("entries.create"),
+        icon: "plus",
+        onClick: () => (showCreateDialog.value = true),
+      }
+    : undefined,
   secondaryActions: [
-    {
-      content: t("entries.import"),
-      icon: "upload",
-      onClick: () => openTransfer("import"),
-    },
+    // Importing creates entries and overwrites translations.
+    ...(canAll.value(["create_entry", "update_entry"])
+      ? [
+          {
+            content: t("entries.import"),
+            icon: "upload",
+            onClick: () => openTransfer("import"),
+          },
+        ]
+      : []),
     {
       content: t("entries.export"),
       icon: "download",
@@ -249,8 +258,6 @@ function selectEntry(item: SplitViewItem) {
 
 // Entries ticked in the list for bulk scope edits. Kept across filter changes so
 // entries can be gathered from several searches.
-const { can } = usePermission();
-const canBulkEdit = computed(() => can.value("update_entry"));
 const MAX_BULK_ENTRIES = 1000;
 const checkedEntryIds = ref<string[]>([]);
 const showScopesDialog = ref(false);
@@ -772,7 +779,7 @@ async function saveTranslations(
         :has-more="hasNextPage"
         :loading="isFetchingNextPage"
         :total="entryTotal"
-        :selectable="canBulkEdit"
+        :selectable="canUpdate"
         :selection="checkedEntryIds"
         class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectEntry"
@@ -858,6 +865,7 @@ async function saveTranslations(
                 </div>
                 <button
                   v-else-if="selectedEntryData"
+                  v-can="'update_entry'"
                   type="button"
                   class="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600 hover:underline dark:hover:text-neutral-300"
                   :disabled="isSaving"
@@ -887,6 +895,7 @@ async function saveTranslations(
                 }}</span
               >
               <BaseIconButton
+                v-can="'update_entry'"
                 icon="pencil-simple"
                 :label="t('entries.edit')"
                 :disabled="isSaving"
@@ -894,6 +903,7 @@ async function saveTranslations(
                 @click="editDialogItem = selectedEntryData"
               />
               <BaseIconButton
+                v-can="'delete_entry'"
                 icon="trash"
                 destructive
                 :label="t('actions.deleteEntry')"
@@ -936,7 +946,7 @@ async function saveTranslations(
               :translated="!!(currentEntryForms[localeId] ?? '').trim()"
               :dirty="isTranslationDirty(String(item.key), localeId)"
               :active="contextOpen && activeLocaleId === localeId"
-              :readonly="isSaving"
+              :readonly="isSaving || !canUpdate"
               :placeholder="t('entries.translationPlaceholder')"
               :model-value="currentEntryForms[localeId] ?? ''"
               @update:model-value="
@@ -955,6 +965,7 @@ async function saveTranslations(
               <template v-if="defaultLocale?.id" #meta>
                 <EditorCopyEmptyChip
                   v-if="localeId === defaultLocale.id"
+                  v-can="'update_entry'"
                   :disabled="!canFillEmptyTranslations"
                   @click="fillEmptyTranslations"
                 />
@@ -1022,7 +1033,7 @@ async function saveTranslations(
           }}</span
         >
       </span>
-      <div class="flex shrink-0 items-center gap-2">
+      <div v-can="'update_entry'" class="flex shrink-0 items-center gap-2">
         <Button
           type="button"
           ghost

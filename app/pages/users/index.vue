@@ -12,6 +12,7 @@ import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
 const { t } = useI18n();
+const { can } = usePermission();
 
 const showDialog = ref(false);
 const editDialogItem = ref<User>();
@@ -23,11 +24,13 @@ usePage(() => ({
   title: t("nav.users"),
   description: t("users.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("users.create"),
-    icon: "plus",
-    onClick: () => (showDialog.value = true),
-  },
+  primaryAction: can.value("create_user")
+    ? {
+        content: t("users.create"),
+        icon: "plus",
+        onClick: () => (showDialog.value = true),
+      }
+    : undefined,
 }));
 
 const { data, filter, pagination, isFetching, error, refetch } = useUserList();
@@ -110,12 +113,15 @@ const tableItems = computed(() => data.value?.users ?? []);
             <BaseActionButtons
               :edit-label="t('users.edit')"
               :delete-label="t('users.delete')"
+              edit-permission="update_user"
+              delete-permission="delete_user"
               @edit="editDialogItem = item"
               @delete="deleteDialogItem = item"
             />
           </div>
           <div v-else class="flex items-center justify-end gap-2">
             <BaseIconButton
+              v-can="'delete_user'"
               icon="arrow-counter-clockwise"
               :label="t('users.restore')"
               @click="restoreDialogItem = item"

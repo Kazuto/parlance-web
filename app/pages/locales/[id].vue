@@ -21,6 +21,9 @@ type LocaleForm = {
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const { can } = usePermission();
+// Without it the names stay readable but can't be edited.
+const canUpdate = computed(() => can.value("update_locale"));
 const localeName = useLocaleName();
 const queryClient = useQueryClient();
 const localeQueryKey = api.locales.get.getQueryKey();
@@ -306,6 +309,7 @@ async function handleDeleted(id: string) {
           </div>
           <div v-if="form" class="flex shrink-0 items-center gap-2">
             <BaseIconButton
+              v-can="'update_locale'"
               icon="pencil-simple"
               :label="t('locales.edit')"
               :disabled="isSaving || isLoading"
@@ -313,6 +317,7 @@ async function handleDeleted(id: string) {
               @click="openEdit"
             />
             <BaseIconButton
+              v-can="'delete_locale'"
               icon="trash"
               destructive
               :label="t('locales.delete')"
@@ -351,7 +356,7 @@ async function handleDeleted(id: string) {
               (form.names[language.code ?? ''] ?? '') !==
               (saved[selectedId]?.names[language.code ?? ''] ?? '')
             "
-            :readonly="isSaving"
+            :readonly="isSaving || !canUpdate"
             :placeholder="t('locales.namePlaceholder')"
             without-context
             @revert="
@@ -383,7 +388,7 @@ async function handleDeleted(id: string) {
               {{ error }}
             </p>
           </div>
-          <div class="flex shrink-0 items-center gap-2">
+          <div v-can="'update_locale'" class="flex shrink-0 items-center gap-2">
             <Button
               type="button"
               ghost

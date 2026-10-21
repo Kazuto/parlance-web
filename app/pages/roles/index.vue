@@ -16,17 +16,20 @@ import DeleteDialog from "~/components/role/DeleteDialog.vue";
 import ViewPermissionsDialog from "~/components/role/ViewPermissionsDialog.vue";
 
 const { t } = useI18n();
+const { can } = usePermission();
 
 usePage(() => ({
   width: "extra-wide",
   title: t("nav.roles"),
   description: t("roles.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("roles.create"),
-    icon: "plus",
-    onClick: () => (createDialogOpen.value = true),
-  },
+  primaryAction: can.value("create_role")
+    ? {
+        content: t("roles.create"),
+        icon: "plus",
+        onClick: () => (createDialogOpen.value = true),
+      }
+    : undefined,
 }));
 
 const { data, isLoading, error, refetch, filter } = useRoleList();
@@ -194,6 +197,8 @@ const tableItems = computed(() => data.value?.roles ?? []);
             class="justify-end"
             :edit-label="t('roles.edit')"
             :delete-label="t('roles.delete')"
+            edit-permission="update_role"
+            delete-permission="delete_role"
             @edit="openEdit(item)"
             @delete="openDelete(item)"
           />
@@ -222,7 +227,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
       <p class="mt-1 text-sm text-neutral-500">
         {{ t("roles.description") }}
       </p>
-      <div class="mt-6">
+      <div v-can="'create_role'" class="mt-6">
         <Button primary @click="createDialogOpen = true">
           {{ t("roles.create") }}
         </Button>

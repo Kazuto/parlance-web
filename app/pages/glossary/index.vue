@@ -18,6 +18,7 @@ import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchem
 import type { Definition } from "~/lib/api/schemas/parlance/v1/DefinitionSchema";
 
 const { t } = useI18n();
+const { can } = usePermission();
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Terminology>();
 const editDialogItem = ref<Terminology>();
@@ -28,11 +29,13 @@ usePage(() => ({
   title: t("nav.glossary"),
   description: t("terminologies.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("terminologies.create"),
-    icon: "plus",
-    onClick: () => (showCreateDialog.value = true),
-  },
+  primaryAction: can.value("create_terminology")
+    ? {
+        content: t("terminologies.create"),
+        icon: "plus",
+        onClick: () => (showCreateDialog.value = true),
+      }
+    : undefined,
 }));
 
 const {
@@ -400,11 +403,21 @@ const definedCount = computed(
     ).length,
 );
 
+// Saving updates an existing definition but creates a missing one, and the two
+// need different permissions.
+function canEditDefinition(terminologyId: string, localeId: string) {
+  const exists = knownTerminologies.value[terminologyId]?.definitions?.some(
+    (definition: Definition) => definition.localeId === localeId,
+  );
+  return can.value(exists ? "update_definition" : "create_definition");
+}
+
 const emptySelectedLocaleIds = computed(() =>
   selectedLocaleIds.value.filter(
     (id) =>
       id !== defaultLocale.value?.id &&
-      !(currentTerminologyForms.value[id] ?? "").trim(),
+      !(currentTerminologyForms.value[id] ?? "").trim() &&
+      canEditDefinition(String(selectedTerminology.value?.key), id),
   ),
 );
 
@@ -671,6 +684,7 @@ async function saveDefinitions(
                 }}</span
               >
               <BaseIconButton
+                v-can="'update_terminology'"
                 icon="pencil-simple"
                 :label="t('terminologies.edit')"
                 :disabled="isSaving"
@@ -678,6 +692,7 @@ async function saveDefinitions(
                 @click="editDialogItem = selectedTerminologyData"
               />
               <BaseIconButton
+                v-can="'delete_terminology'"
                 icon="trash"
                 destructive
                 :label="t('terminologies.delete')"
@@ -720,7 +735,9 @@ async function saveDefinitions(
               :translated="!!(currentTerminologyForms[localeId] ?? '').trim()"
               :dirty="isDefinitionDirty(String(item.key), localeId)"
               :active="contextOpen && activeLocaleId === localeId"
-              :readonly="isSaving"
+              :readonly="
+                isSaving || !canEditDefinition(String(item.key), localeId)
+              "
               :placeholder="t('terminologies.definitionPlaceholder')"
               :model-value="currentTerminologyForms[localeId] ?? ''"
               @update:model-value="
@@ -738,6 +755,7 @@ async function saveDefinitions(
             >
               <template v-if="localeId === defaultLocale?.id" #meta>
                 <EditorCopyEmptyChip
+                  v-can="{ any: ['create_definition', 'update_definition'] }"
                   :disabled="!canFillEmptyDefinitions"
                   @click="fillEmptyDefinitions"
                 />
@@ -798,7 +816,10 @@ async function saveDefinitions(
           }}</span
         >
       </span>
-      <div class="flex shrink-0 items-center gap-2">
+      <div
+        v-can="{ any: ['create_definition', 'update_definition'] }"
+        class="flex shrink-0 items-center gap-2"
+      >
         <Button
           type="button"
           ghost

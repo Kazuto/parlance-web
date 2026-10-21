@@ -13,6 +13,7 @@ import { useScopeList } from "~/composables/scope/useScopeList";
 import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
 
 const { t } = useI18n();
+const { can } = usePermission();
 const { data, filter, pagination, isFetching, error, refetch } = useScopeList();
 filter.value.includeDeleted = true;
 pagination.value.perPage = 20;
@@ -27,11 +28,13 @@ usePage(() => ({
   title: t("nav.scopes"),
   description: t("scopes.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("scopes.create"),
-    icon: "plus",
-    onClick: () => (createDialogOpen.value = true),
-  },
+  primaryAction: can.value("create_scope")
+    ? {
+        content: t("scopes.create"),
+        icon: "plus",
+        onClick: () => (createDialogOpen.value = true),
+      }
+    : undefined,
 }));
 
 const search = ref("");
@@ -120,11 +123,14 @@ const tableItems = computed(() => data.value?.scopes ?? []);
           class="justify-end"
           :edit-label="t('scopes.edit')"
           :delete-label="t('scopes.delete')"
+          edit-permission="update_scope"
+          delete-permission="delete_scope"
           @edit="editDialogItem = item"
           @delete="deleteDialogItem = item"
         />
         <div v-else class="flex justify-end">
           <BaseIconButton
+            v-can="'delete_scope'"
             icon="arrow-counter-clockwise"
             :label="t('scopes.restore')"
             @click="restoreDialogItem = item"

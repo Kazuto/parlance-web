@@ -17,7 +17,7 @@ import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 const { data, filter, pagination, isFetching, error, refetch } =
   useLocaleList();
 
-const { can } = usePermission();
+const { can, canAll } = usePermission();
 
 // Only show deleted locales to users with permanent_delete_locale permission
 filter.value.includeDeleted = can.value("permanent_delete_locale");
@@ -42,23 +42,34 @@ usePage(() => ({
   title: t("nav.locales"),
   description: t("locales.description"),
   showHeader: false,
-  primaryAction: {
-    content: t("locales.create"),
-    icon: "plus",
-    onClick: () => (showDialog.value = true),
-  },
+  primaryAction: can.value("create_locale")
+    ? {
+        content: t("locales.create"),
+        icon: "plus",
+        onClick: () => (showDialog.value = true),
+      }
+    : undefined,
   secondaryActions: [
-    {
-      content: t("import.zip.import"),
-      icon: "upload",
-      onClick: () => (showImportDialog.value = true),
-    },
-    {
-      content: t("export.zip.export"),
-      icon: "download",
-      onClick: handleExportZip,
-      loading: isExporting.value,
-    },
+    // Importing creates entries and overwrites translations.
+    ...(canAll.value(["create_entry", "update_entry"])
+      ? [
+          {
+            content: t("import.zip.import"),
+            icon: "upload",
+            onClick: () => (showImportDialog.value = true),
+          },
+        ]
+      : []),
+    ...(can.value("read_entry")
+      ? [
+          {
+            content: t("export.zip.export"),
+            icon: "download",
+            onClick: handleExportZip,
+            loading: isExporting.value,
+          },
+        ]
+      : []),
   ],
 }));
 
@@ -172,6 +183,7 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
               @click="() => router.push(`/locales/${item.id}`)"
             />
             <BaseIconButton
+              v-can="'delete_locale'"
               icon="trash"
               destructive
               :label="t('locales.delete')"
@@ -180,12 +192,13 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
           </div>
           <div v-else class="flex items-center justify-end gap-2">
             <BaseIconButton
+              v-can="'delete_locale'"
               icon="arrow-counter-clockwise"
               :label="t('locales.restore')"
               @click="restoreDialogItem = item"
             />
             <BaseIconButton
-              v-if="can('permanent_delete_locale')"
+              v-can="'permanent_delete_locale'"
               icon="x-circle"
               destructive
               :label="t('locales.permanentDelete')"
