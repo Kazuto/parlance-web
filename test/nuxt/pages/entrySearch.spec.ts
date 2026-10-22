@@ -21,7 +21,7 @@ type ListRequest = {
   targetLocaleIds?: string[];
 };
 
-async function openEntries(route: string) {
+async function openEntries(route: string, entries: object[] = []) {
   const requests: ListRequest[] = [];
   loginAs(VIEWER);
   mockRpc("LocaleService/ListLocales", {
@@ -30,14 +30,30 @@ async function openEntries(route: string) {
   });
   mockRpc("EntryService/ListEntries", (body) => {
     requests.push(body as ListRequest);
-    return { entries: [], pagination: pagination(0) };
+    return { entries, pagination: pagination(entries.length) };
   });
   const page = await mountPage(EntriesPage, { route });
   return { page, requests };
 }
 
 describe("entry search", () => {
-  it("says it searches translations too", async () => {
+  it("types out a real key as an example search", async () => {
+    const { page } = await openEntries("/entries", [
+      { id: "e1", key: "auth.signIn", defaultTranslation: "Sign in" },
+      { id: "e2", key: "app.title", defaultTranslation: "Parlance" },
+    ]);
+    const input = page.wrapper.find('input[type="search"]');
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    const placeholder = input.attributes("placeholder") ?? "";
+    expect(placeholder.length).toBeGreaterThan(0);
+    expect("auth.signIn".startsWith(placeholder)).toBe(true);
+    // The examples only show; the name says what can be searched.
+    expect(input.attributes("aria-label")).toBe(t("entries.search"));
+  });
+
+  it("describes the search while there are no examples", async () => {
     const { page } = await openEntries("/entries");
     const input = page.wrapper.find('input[type="search"]');
 

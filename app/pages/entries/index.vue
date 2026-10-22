@@ -120,6 +120,13 @@ watch(
 );
 const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
+// Types out keys and their default texts from the list, showing by example that
+// both can be searched; the accessible name says it in words.
+const searchPlaceholder = useSearchExamples(
+  () => feedEntries.value.map((entry) => [entry.key, entry.defaultTranslation]),
+  search,
+  () => t("entries.search"),
+);
 const isSaving = ref(false);
 const showSaveAllDialog = ref(false);
 const contextOpen = ref(true);
@@ -661,7 +668,7 @@ async function saveTranslations(
           v-model="search"
           dense
           type="search"
-          :placeholder="t('entries.search')"
+          :placeholder="searchPlaceholder"
           :aria-label="t('entries.search')"
           :title="t('entries.searchShortcut')"
           shortcut="/"

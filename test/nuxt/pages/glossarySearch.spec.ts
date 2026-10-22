@@ -21,7 +21,7 @@ type ListRequest = {
   targetLocaleIds?: string[];
 };
 
-async function openGlossary() {
+async function openGlossary(terminologies: object[] = []) {
   const requests: ListRequest[] = [];
   loginAs(VIEWER);
   mockRpc("LocaleService/ListLocales", {
@@ -30,14 +30,42 @@ async function openGlossary() {
   });
   mockRpc("TerminologyService/ListTerminologies", (body) => {
     requests.push(body as ListRequest);
-    return { terminologies: [], pagination: pagination(0) };
+    return { terminologies, pagination: pagination(terminologies.length) };
   });
   const page = await mountPage(GlossaryPage);
   return { page, requests };
 }
 
 describe("glossary search", () => {
-  it("says it searches translations too", async () => {
+  it("types out a real term as an example search", async () => {
+    const { page } = await openGlossary([
+      // The same in every language, so it shows nothing new.
+      {
+        id: "g0",
+        term: "API",
+        definitions: [{ id: "d0", localeId: "l2", translation: "API" }],
+      },
+      {
+        id: "g1",
+        term: "Workspace",
+        definitions: [
+          { id: "d1", localeId: "l1", translation: "Workspace" },
+          { id: "d2", localeId: "l2", translation: "Arbeitsbereich" },
+        ],
+      },
+    ]);
+    const input = page.wrapper.find('input[type="search"]');
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    const placeholder = input.attributes("placeholder") ?? "";
+    expect(placeholder.length).toBeGreaterThan(0);
+    expect("Workspace".startsWith(placeholder)).toBe(true);
+    // The examples only show; the name says what can be searched.
+    expect(input.attributes("aria-label")).toBe(t("terminologies.search"));
+  });
+
+  it("describes the search while there are no examples", async () => {
     const { page } = await openGlossary();
     const input = page.wrapper.find('input[type="search"]');
 

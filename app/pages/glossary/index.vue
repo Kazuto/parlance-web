@@ -110,6 +110,26 @@ const selectedTerminology = ref<SplitViewItem>();
 // Links (e.g. from the dashboard activity) can open the page with a search via ?q=.
 const route = useRoute();
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
+// Types out terms and one of their translations from the list, showing by
+// example that both can be searched; the accessible name says it in words.
+// Terms that read the same in every language ("API") show nothing new, so they
+// are left out.
+const searchPlaceholder = useSearchExamples(
+  () =>
+    feedTerminologies.value.map((terminology) => [
+      terminology.term,
+      terminology.definitions?.find((definition) => {
+        const translation = definition.translation?.trim().toLowerCase();
+        return (
+          definition.localeId !== defaultLocale.value?.id &&
+          !!translation &&
+          translation !== terminology.term?.trim().toLowerCase()
+        );
+      })?.translation,
+    ]),
+  search,
+  () => t("terminologies.search"),
+);
 const isSaving = ref(false);
 const contextOpen = ref(true);
 const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
@@ -593,7 +613,7 @@ async function saveDefinitions(
           v-model="search"
           dense
           type="search"
-          :placeholder="t('terminologies.search')"
+          :placeholder="searchPlaceholder"
           :aria-label="t('terminologies.search')"
           shortcut="/"
         />
