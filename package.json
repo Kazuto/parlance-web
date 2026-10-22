@@ -16,6 +16,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "test": "vitest run",
+    "typecheck": "nuxt typecheck",
     "test:watch": "vitest",
     "postinstall": "nuxt prepare",
     "prepare": "husky"
