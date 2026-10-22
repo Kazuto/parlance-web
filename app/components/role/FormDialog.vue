@@ -238,7 +238,9 @@ async function handleSubmit() {
                 @update:model-value="toggleResourceGroup(resource)"
               >
                 <template #description>
-                  <span class="font-medium capitalize">{{ resource }}</span>
+                  <span class="font-medium capitalize">{{
+                    resource.replaceAll("_", " ")
+                  }}</span>
                 </template>
               </Checkbox>
             </div>
@@ -253,7 +255,13 @@ async function handleSubmit() {
                 @update:model-value="togglePermission(permission.id)"
               >
                 <template #description>
-                  {{ permission.action || permission.name || "Unknown" }}
+                  {{
+                    (
+                      permission.action ||
+                      permission.name ||
+                      "Unknown"
+                    ).replaceAll("_", " ")
+                  }}
                 </template>
               </Checkbox>
             </div>

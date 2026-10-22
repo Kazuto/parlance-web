@@ -19,7 +19,7 @@ function sourceFiles(dir: string): string[] {
 // A permission string looks like "<action>_<resource>"; collect every literal of
 // that shape that sits where the app checks permissions.
 const PERMISSION_LITERAL =
-  /["'`]((?:create|read|update|delete|permanent_delete)_[a-z_]+)["'`]/g;
+  /["'`]((?:create|read|update|delete|permanent_delete|use)_[a-z_]+)["'`]/g;
 
 function permissionsUsedInApp() {
   const used = new Map<string, string[]>();

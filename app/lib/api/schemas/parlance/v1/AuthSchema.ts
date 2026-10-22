@@ -94,9 +94,13 @@ export type GetCurrentUserRequest = Record<string, never>;
 export const GetCurrentUserRequestSchema = z.object({});
 export type GetCurrentUserResponse = {
   user?: User | null;
+  translationEnabled?: boolean | null;
 };
 export const GetCurrentUserResponseSchema = z.object({
   get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
     return UserSchema.nullish();
+  },
+  get translationEnabled(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });

@@ -111,8 +111,12 @@ export async function handleFetch(
   if (!match) return new Response("Not found", { status: 404 });
 
   const method = match[1]!;
+  // The signed-in user, plus anything a test adds, e.g. translationEnabled.
   if (method === "AuthService/GetCurrentUser") {
-    return Response.json({ user: state.currentUser ?? null });
+    return Response.json({
+      ...(state.rpcHandlers.get(method)?.({}) ?? {}),
+      user: state.currentUser ?? null,
+    });
   }
 
   const text = await request.text();

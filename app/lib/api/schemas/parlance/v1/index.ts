@@ -14,4 +14,5 @@ export * from "./ScopeSchema";
 export * from "./SetupSchema";
 export * from "./StatsSchema";
 export * from "./TerminologySchema";
+export * from "./TranslationServerSchema";
 export * from "./UserSchema";

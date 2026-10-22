@@ -167,32 +167,62 @@ export const RestoreLocalizationResponseSchema = z.object({
 });
 export type DeleteLocalizationResponse = Record<string, never>;
 export const DeleteLocalizationResponseSchema = z.object({});
-export type TranslateLocalizationRequest = {
+export type SuggestTranslationsRequest = {
   entryId?: string | null;
-  targetLocaleId?: string | null;
-  sourceLocaleId?: string | null;
-  applyTerminology?: boolean | null;
+  targetLocaleIds?: Array<string> | null;
 };
-export const TranslateLocalizationRequestSchema = z.object({
+export const SuggestTranslationsRequestSchema = z.object({
   get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
-  get targetLocaleId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
-    return z.string().nullish();
-  },
-  get sourceLocaleId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
-    return z.string().nullish();
-  },
-  get applyTerminology(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
-    return z.boolean().nullish();
+  get targetLocaleIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
   },
 });
-export type TranslateLocalizationResponse = {
-  localization?: Localization | null;
+export type TranslationWarning = {
+  code?: string | null;
+  detail?: string | null;
 };
-export const TranslateLocalizationResponseSchema = z.object({
-  get localization(): z.ZodOptional<z.ZodNullable<z.ZodType<Localization>>> {
-    return LocalizationSchema.nullish();
+export const TranslationWarningSchema = z.object({
+  get code(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get detail(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type TranslationSuggestion = {
+  localeId?: string | null;
+  translation?: string | null;
+  warnings?: Array<TranslationWarning> | null;
+  errorCode?: string | null;
+};
+export const TranslationSuggestionSchema = z.object({
+  get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get translation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get warnings(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<TranslationWarning>>>
+  > {
+    return z.array(TranslationWarningSchema).nullish();
+  },
+  get errorCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type SuggestTranslationsResponse = {
+  suggestions?: Array<TranslationSuggestion> | null;
+};
+export const SuggestTranslationsResponseSchema = z.object({
+  get suggestions(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<TranslationSuggestion>>>
+  > {
+    return z.array(TranslationSuggestionSchema).nullish();
   },
 });
 export type BatchTranslateRequest = {
@@ -219,6 +249,7 @@ export type BatchTranslateResponse = {
   localizations?: Array<Localization> | null;
   successCount?: number | null;
   failureCount?: number | null;
+  skippedCount?: number | null;
 };
 export const BatchTranslateResponseSchema = z.object({
   get localizations(): z.ZodOptional<
@@ -230,6 +261,9 @@ export const BatchTranslateResponseSchema = z.object({
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
   get failureCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get skippedCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });

@@ -10,6 +10,7 @@ import {
   Input,
 } from "@thkzt/eunoia";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
+import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { watchDebounced, useMediaQuery } from "@vueuse/core";
@@ -507,6 +508,49 @@ function fillEmptyTranslations() {
   }
 }
 
+const {
+  enabled: translationEnabled,
+  pending: isTranslating,
+  suggest: suggestTranslations,
+  resultFor: suggestionFor,
+} = useTranslationSuggestions();
+
+// The server translates the saved default text, so unsaved edits to it must be
+// saved first.
+const isSourceUnsaved = computed(() => {
+  const entryId = selectedEntry.value?.key;
+  const sourceId = defaultLocale.value?.id;
+  return (
+    entryId != null &&
+    !!sourceId &&
+    isTranslationDirty(String(entryId), sourceId)
+  );
+});
+
+async function translateEmptyTranslations() {
+  const entryId = selectedEntry.value?.key;
+  if (
+    !canFillEmptyTranslations.value ||
+    isSourceUnsaved.value ||
+    entryId == null
+  )
+    return;
+  const key = String(entryId);
+  try {
+    const suggestions = await suggestTranslations(key, [
+      ...emptySelectedLocaleIds.value,
+    ]);
+    for (const { localeId, translation } of suggestions) {
+      // Text typed while waiting stays.
+      if (!localeId || !translation) continue;
+      if ((localizationForms.value[key]?.[localeId] ?? "").trim()) continue;
+      setLocalizationForm(key, localeId, translation);
+    }
+  } catch (error) {
+    showError(error as Error);
+  }
+}
+
 function setLocalizationForm(
   entryId: string,
   localeId: string,
@@ -978,19 +1022,39 @@ async function saveTranslations(
               @open-context="toggleContext(localeId)"
             >
               <template v-if="defaultLocale?.id" #meta>
-                <EditorCopyEmptyChip
+                <div
                   v-if="localeId === defaultLocale.id"
                   v-can="'update_entry'"
-                  :disabled="!canFillEmptyTranslations"
-                  @click="fillEmptyTranslations"
-                />
-                <EntryTermChip
-                  v-else
-                  :source-text="currentEntryForms[defaultLocale.id] ?? ''"
-                  :locale-id="localeId"
-                  :translation="currentEntryForms[localeId] ?? ''"
-                  @open="openContext(localeId, 'terminology')"
-                />
+                  class="flex flex-wrap gap-1"
+                >
+                  <EditorCopyEmptyChip
+                    :disabled="!canFillEmptyTranslations"
+                    @click="fillEmptyTranslations"
+                  />
+                  <EditorTranslateEmptyChip
+                    v-if="translationEnabled && can('use_machine_translation')"
+                    :disabled="!canFillEmptyTranslations || isSourceUnsaved"
+                    :pending="isTranslating"
+                    :reason="
+                      isSourceUnsaved
+                        ? t('entries.translateSaveSourceFirst')
+                        : undefined
+                    "
+                    @click="translateEmptyTranslations"
+                  />
+                </div>
+                <div v-else class="flex flex-wrap gap-1">
+                  <EntryTermChip
+                    :source-text="currentEntryForms[defaultLocale.id] ?? ''"
+                    :locale-id="localeId"
+                    :translation="currentEntryForms[localeId] ?? ''"
+                    @open="openContext(localeId, 'terminology')"
+                  />
+                  <EditorSuggestionNotice
+                    :suggestion="suggestionFor(String(item.key), localeId)"
+                    :value="currentEntryForms[localeId] ?? ''"
+                  />
+                </div>
               </template>
             </EditorTranslationRow>
           </div>

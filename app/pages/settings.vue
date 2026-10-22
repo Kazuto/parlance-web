@@ -8,6 +8,7 @@ const { t, locale, locales, setLocale } = useI18n();
 const authStore = useAuthStore();
 const storedLocale = useLocalStorage("preferred-locale", "");
 const { showError } = useErrorHelper();
+const { can } = usePermission();
 
 usePage(() => ({
   width: "wide",
@@ -137,9 +138,6 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
       </div>
     </Card>
 
-    <!-- Future sections can go here -->
-    <!-- <Card>
-      <Headline :level="4">Other Settings</Headline>
-    </Card> -->
+    <TranslationServerSettings v-if="can('read_translation_server')" />
   </div>
 </template>

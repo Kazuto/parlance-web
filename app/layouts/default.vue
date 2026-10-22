@@ -101,6 +101,10 @@ const menuItems = computed<MenuItem[]>(() =>
     .map(({ permission: _permission, ...item }) => item),
 );
 
+const settingsMenuItems = computed<MenuItem[]>(() => [
+  { label: t("nav.settings"), to: "/settings", icon: "gear" },
+]);
+
 const userMenuItems = computed<UserMenuItem[]>(() => [
   { label: t("nav.settings"), icon: "gear", to: "/settings" },
   { label: t("nav.signOut"), icon: "sign-out", variant: "danger" },
@@ -140,10 +144,22 @@ const headerOptions = computed(() => {
       v-model:collapsed="sidebarCollapsed"
       class="border-neutral-200 bg-transparent dark:border-white/5 dark:bg-transparent"
     >
-      <div class="flex px-3 pt-3.5 pb-1">
-        <SidebarToggle v-model:collapsed="sidebarCollapsed" />
+      <!-- Settings sit at the bottom, apart from the pages; unlike the sidebar
+           footer, this stays visible while collapsed. -->
+      <div class="flex min-h-full flex-col">
+        <div class="flex px-3 pt-3.5 pb-1">
+          <SidebarToggle v-model:collapsed="sidebarCollapsed" />
+        </div>
+        <Menu class="p-3 pt-1" :items="menuItems" :current-path="route.path" />
+        <!-- Menu puts its class on the list inside, so a wrapper does the pushing. -->
+        <div class="mt-auto">
+          <Menu
+            class="p-3"
+            :items="settingsMenuItems"
+            :current-path="route.path"
+          />
+        </div>
       </div>
-      <Menu class="p-3 pt-1" :items="menuItems" :current-path="route.path" />
     </Sidebar>
 
     <!-- Header + Main -->

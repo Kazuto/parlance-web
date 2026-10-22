@@ -33,6 +33,11 @@ export const ALL_PERMISSIONS = [
   "read_definition",
   "update_definition",
   "delete_definition",
+  "create_translation_server",
+  "read_translation_server",
+  "update_translation_server",
+  "delete_translation_server",
+  "use_machine_translation",
 ] as const;
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];

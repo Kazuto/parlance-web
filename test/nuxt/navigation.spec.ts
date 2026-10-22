@@ -16,10 +16,7 @@ async function sidebarLinks() {
     slots: { default: () => "content" },
   });
   await settle();
-  return wrapper
-    .find("nav")
-    .findAll("a")
-    .map((link) => link.attributes("href"));
+  return wrapper.findAll("nav a").map((link) => link.attributes("href"));
 }
 
 describe("sidebar", () => {
@@ -33,6 +30,7 @@ describe("sidebar", () => {
       "/entries/transfer",
       "/glossary",
       "/scopes",
+      "/settings",
     ]);
   });
 
@@ -48,6 +46,7 @@ describe("sidebar", () => {
       "/scopes",
       "/roles",
       "/users",
+      "/settings",
     ]);
   });
 
@@ -66,9 +65,9 @@ describe("sidebar", () => {
     expect(await sidebarLinks()).toContain(href);
   });
 
-  it("always links the dashboard", async () => {
+  it("always links the dashboard and the settings", async () => {
     loginAs([]);
-    expect(await sidebarLinks()).toEqual(["/"]);
+    expect(await sidebarLinks()).toEqual(["/", "/settings"]);
   });
 
   it("reloads the user so role changes made since sign-in apply", async () => {

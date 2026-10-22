@@ -146,7 +146,11 @@ const tableItems = computed(() => data.value?.roles ?? []);
               <span
                 class="text-xs text-neutral-500 dark:text-neutral-400 capitalize"
               >
-                {{ getPermissionSummary(item.permissions)!.firstResource }}:
+                {{
+                  getPermissionSummary(
+                    item.permissions,
+                  )!.firstResource.replaceAll("_", " ")
+                }}:
               </span>
               <Badge
                 v-for="permission in getPermissionSummary(item.permissions)!
@@ -155,7 +159,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
                 variant="secondary"
                 size="sm"
               >
-                {{ permission.action }}
+                {{ permission.action?.replaceAll("_", " ") }}
               </Badge>
               <button
                 v-if="

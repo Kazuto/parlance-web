@@ -18,6 +18,9 @@ import {
   RestoreLocalizationRequestSchema,
   RestoreLocalizationResponseSchema,
   type RestoreLocalizationRequest,
+  SuggestTranslationsRequestSchema,
+  SuggestTranslationsResponseSchema,
+  type SuggestTranslationsRequest,
 } from "../schemas/parlance/v1/LocalizationSchema";
 
 export const localizations = {
@@ -90,6 +93,18 @@ export const localizations = {
     {
       input: RestoreLocalizationRequestSchema,
       output: RestoreLocalizationResponseSchema,
+    },
+  ),
+
+  suggestTranslations: authedEndpoint.mutate(
+    (data: SuggestTranslationsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocalizationService/SuggestTranslations",
+      json: data,
+    }),
+    {
+      input: SuggestTranslationsRequestSchema,
+      output: SuggestTranslationsResponseSchema,
     },
   ),
 };

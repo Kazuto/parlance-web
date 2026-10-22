@@ -6,6 +6,10 @@ import { clearQueries, handleFetch, logout, resetRpcs } from "./helpers";
 // while the test app starts, and no test may reach the network.
 vi.stubGlobal("fetch", vi.fn(handleFetch));
 
+// Leaving a page with unsaved drafts asks first; happy-dom has no dialog, and the
+// reset after each test must be able to leave.
+vi.stubGlobal("confirm", () => true);
+
 // Pages left mounted keep running their watchers and would leak into later tests.
 enableAutoUnmount(afterEach);
 
