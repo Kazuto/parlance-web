@@ -41,3 +41,7 @@ coverage
 .cache
 tmp
 temp
+
+# Tests (not part of the image)
+test
+vitest.config.*
