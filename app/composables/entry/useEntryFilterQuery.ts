@@ -76,12 +76,17 @@ export function useEntryFilterQuery({
       localeIds.value = initial.length ? initial : fallback ? [fallback] : [];
       localesReady.value = true;
       // Remember only changes from here on, so opening a link doesn't replace
-      // the stored filters. The page's scope stops the watcher on unmount.
+      // the stored filters. Watch the selection itself, not the codes derived
+      // from the locale list: that list reloads (and is briefly empty while it
+      // does), which is no change by the user. The page's scope stops the
+      // watcher on unmount.
       scope?.run(() =>
         watch(
-          [localeCodes, scopeIds, status],
-          ([codes, scopes, nextStatus]) => {
-            stored.languages.value = [...codes];
+          [localeIds, scopeIds, status],
+          ([, scopes, nextStatus]) => {
+            if (locales.value?.length) {
+              stored.languages.value = [...localeCodes.value];
+            }
             stored.entries.value = { scopes: [...scopes], status: nextStatus };
           },
           { deep: true },
@@ -94,7 +99,9 @@ export function useEntryFilterQuery({
   watch(
     [localesReady, localeCodes, scopeIds, status, search],
     () => {
-      if (!localesReady.value) return;
+      // While the locale list reloads its codes are unknown; keeping the URL as
+      // it is avoids dropping the selected locales from it.
+      if (!localesReady.value || !locales.value?.length) return;
       const query: LocationQuery = { ...route.query };
       const next: Record<string, string> = {
         locales: localeCodes.value.join(","),

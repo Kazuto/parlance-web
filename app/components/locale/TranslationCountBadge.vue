@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { Badge } from "@thkzt/eunoia";
+import { Badge, Tooltip } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { api } from "~/lib/api";
 
 const props = defineProps<{
   item: Locale;
+  /**
+   * Makes the badge a link to the locale's entries: those still missing a
+   * translation, or all of them once nothing is missing.
+   */
+  entriesUrl?: (status?: "missing") => string;
 }>();
+
+const { t } = useI18n();
 
 // Get stats from backend
 const { data: statsData } = useQuery({
@@ -30,8 +37,25 @@ const variant = computed(() => {
   if (percentage.value >= 50) return "warning";
   return "secondary";
 });
+
+const isComplete = computed(() => percentage.value === 100);
+const link = computed(() =>
+  props.entriesUrl?.(isComplete.value ? undefined : "missing"),
+);
+const linkLabel = computed(() =>
+  t(isComplete.value ? "locales.showEntries" : "locales.showMissing"),
+);
 </script>
 
 <template>
-  <Badge :variant="variant" dense> {{ percentage }}% </Badge>
+  <Tooltip v-if="link" :content="linkLabel" placement="top">
+    <NuxtLink
+      :to="link"
+      :aria-label="`${linkLabel} (${percentage}%)`"
+      class="inline-flex rounded-full transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+    >
+      <Badge :variant="variant" dense> {{ percentage }}% </Badge>
+    </NuxtLink>
+  </Tooltip>
+  <Badge v-else :variant="variant" dense> {{ percentage }}% </Badge>
 </template>

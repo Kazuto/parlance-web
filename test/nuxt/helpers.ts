@@ -177,9 +177,10 @@ export async function mountPage(
   await settle();
 
   // Closed dialogs stay in the DOM, so their buttons are not part of the page.
+  // Buttons that navigate are links, so they count too.
   const buttons = () =>
     wrapper
-      .findAll("button")
+      .findAll("button, a[aria-label]")
       .filter((button) => !button.element.closest("dialog:not([open])"));
   return {
     wrapper,

@@ -13,7 +13,9 @@ beforeEach(() => {
   vi.mocked(fetch).mockClear();
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // The router outlives each test; a route left behind would leak its query.
+  await useRouter().replace("/");
   logout();
   resetRpcs();
   clearQueries();

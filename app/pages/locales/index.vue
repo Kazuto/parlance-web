@@ -22,11 +22,26 @@ const { can, canAll } = usePermission();
 // Only show deleted locales to users with permanent_delete_locale permission
 filter.value.includeDeleted = can.value("permanent_delete_locale");
 
-const router = useRouter();
 const { t } = useI18n();
 const { getErrorMessage, showSuccess, showError } = useErrorHelper();
 const { exportZip, isPending: isExporting } = useZipExport();
 const showImportDialog = ref(false);
+
+// Opens the entries in this language next to the default one, whose text is the
+// source to translate from. The link's filters apply to that visit only and do
+// not replace the filters remembered on the entries page.
+function entriesUrl(locale: Locale, status?: "missing") {
+  const defaultCode = data.value?.locales?.find(
+    (other) => other.isDefault && !other.deletedAt,
+  )?.code;
+  const codes = [
+    ...new Set(
+      [defaultCode, locale.code].filter((code): code is string => !!code),
+    ),
+  ];
+  const locales = `locales=${codes.map(encodeURIComponent).join(",")}`;
+  return `/entries?${locales}${status ? `&status=${status}` : ""}`;
+}
 
 async function handleExportZip() {
   try {
@@ -163,7 +178,14 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
         </template>
         <template #translations="{ item }">
           <div class="flex items-center gap-2">
-            <LocaleTranslationCountBadge :item />
+            <LocaleTranslationCountBadge
+              :item
+              :entries-url="
+                can('read_entry') && !item.deletedAt
+                  ? (status) => entriesUrl(item, status)
+                  : undefined
+              "
+            />
           </div>
         </template>
         <template #createdAt="{ item }">
@@ -180,7 +202,13 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
             <BaseIconButton
               icon="eye"
               :label="t('locales.view')"
-              @click="() => router.push(`/locales/${item.id}`)"
+              :to="`/locales/${item.id}`"
+            />
+            <BaseIconButton
+              v-can="'read_entry'"
+              icon="translate"
+              :label="t('locales.openEntries')"
+              :to="entriesUrl(item)"
             />
             <BaseIconButton
               v-can="'delete_locale'"
