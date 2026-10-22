@@ -7,6 +7,7 @@ import TransferPage from "~/pages/entries/transfer.vue";
 import {
   ALL_PERMISSIONS,
   VIEWER,
+  actionMenuLabels,
   loginAs,
   mockRpc,
   mountPage,
@@ -69,16 +70,17 @@ describe("entries page", () => {
     return mountPage(EntriesPage);
   }
 
+  const entryActions = (page: MountedPage) =>
+    actionMenuLabels(page, t("entries.actions"));
+
   it("lets a viewer read but change nothing", async () => {
     const page = await open(VIEWER);
 
     expect(page.wrapper.text()).toContain("app.title");
     // Export stays: it only reads.
     expect(page.headerActions()).toEqual([t("entries.export")]);
-    expect(page.iconButtons()).not.toContain(t("entries.edit"));
-    expect(page.iconButtons()).not.toContain(t("actions.deleteEntry"));
+    expect(await entryActions(page)).toEqual([]);
     expect(page.buttons()).not.toContain(t("common.saveChanges"));
-    expect(page.buttons()).not.toContain(t("entries.copyEmptyShort"));
     expect(page.wrapper.text()).not.toContain(t("entries.noScopes"));
     expect(isSelectable(page)).toBe(false);
     expect(fields(page).length).toBeGreaterThan(0);
@@ -92,7 +94,7 @@ describe("entries page", () => {
       t("entries.create"),
       t("entries.export"),
     ]);
-    expect(page.iconButtons()).not.toContain(t("entries.edit"));
+    expect(await entryActions(page)).toEqual([]);
   });
 
   it("offers the import only with create_entry and update_entry", async () => {
@@ -109,10 +111,12 @@ describe("entries page", () => {
     const page = await open([...VIEWER, "update_entry"]);
 
     expect(page.headerActions()).toEqual([t("entries.export")]);
-    expect(page.iconButtons()).toContain(t("entries.edit"));
-    expect(page.iconButtons()).not.toContain(t("actions.deleteEntry"));
+    // No AI translation: no server is enabled and the permission is missing.
+    expect(await entryActions(page)).toEqual([
+      t("entries.copyDefaultToEmpty"),
+      t("entries.edit"),
+    ]);
     expect(page.buttons()).toContain(t("common.saveChanges"));
-    expect(page.buttons()).toContain(t("entries.copyEmptyShort"));
     expect(page.wrapper.text()).toContain(t("entries.noScopes"));
     expect(isSelectable(page)).toBe(true);
     expect(fields(page)).not.toContain("readonly");
@@ -121,8 +125,7 @@ describe("entries page", () => {
   it("lets delete_entry delete but not edit", async () => {
     const page = await open([...VIEWER, "delete_entry"]);
 
-    expect(page.iconButtons()).toContain(t("actions.deleteEntry"));
-    expect(page.iconButtons()).not.toContain(t("entries.edit"));
+    expect(await entryActions(page)).toEqual([t("actions.deleteEntry")]);
     expect(fields(page)).not.toContain("editable");
   });
 
@@ -134,9 +137,11 @@ describe("entries page", () => {
       t("entries.import"),
       t("entries.export"),
     ]);
-    expect(page.iconButtons()).toEqual(
-      expect.arrayContaining([t("entries.edit"), t("actions.deleteEntry")]),
-    );
+    expect(await entryActions(page)).toEqual([
+      t("entries.copyDefaultToEmpty"),
+      t("entries.edit"),
+      t("actions.deleteEntry"),
+    ]);
   });
 });
 

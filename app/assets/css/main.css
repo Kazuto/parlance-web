@@ -1,2 +1,16 @@
 @import "tailwindcss";
 @import "@thkzt/eunoia/styles.css";
+
+@theme {
+  /* A light sweeping across, e.g. over a field that is being filled. */
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+}

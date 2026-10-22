@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import {
+  ActionMenu,
+  type ActionMenuItem,
   Alert,
   Button,
+  Icon,
   SplitView,
   type SplitViewItem,
   Tooltip,
@@ -513,6 +516,7 @@ const {
   pending: isTranslating,
   suggest: suggestTranslations,
   resultFor: suggestionFor,
+  isWaitingFor: isTranslatingLocale,
 } = useTranslationSuggestions();
 
 // The server translates the saved default text, so unsaved edits to it must be
@@ -526,6 +530,75 @@ const isSourceUnsaved = computed(() => {
     isTranslationDirty(String(entryId), sourceId)
   );
 });
+
+// Why "fill empty languages" can't run right now, if it can't.
+const fillEmptyBlocker = computed(() => {
+  const sourceId = defaultLocale.value?.id;
+  if (!sourceId || !currentEntryForms.value[sourceId]?.trim())
+    return t("entries.noSourceText");
+  if (!emptySelectedLocaleIds.value.length)
+    return t("entries.noEmptyLanguages");
+  return undefined;
+});
+
+// Actions on the whole entry: they affect every selected language, so they sit
+// in the entry header rather than on a language row.
+const entryActions = computed<ActionMenuItem[]>(() => {
+  const items: ActionMenuItem[] = [];
+  const busy = isSaving.value;
+  if (can.value("update_entry")) {
+    if (translationEnabled.value && can.value("use_machine_translation")) {
+      const hint = isTranslating.value
+        ? t("entries.translating")
+        : (fillEmptyBlocker.value ??
+          (isSourceUnsaved.value
+            ? t("entries.translateSaveSourceFirst")
+            : undefined));
+      items.push({
+        value: "translate",
+        label: t("entries.aiTranslateEmpty"),
+        icon: "sparkle",
+        hint,
+        disabled: busy || !!hint,
+      });
+    }
+    items.push(
+      {
+        value: "copy",
+        label: t("entries.copyDefaultToEmpty"),
+        icon: "copy",
+        hint: fillEmptyBlocker.value,
+        disabled: busy || !!fillEmptyBlocker.value,
+      },
+      {
+        value: "edit",
+        label: t("entries.edit"),
+        icon: "pencil-simple",
+        disabled: busy,
+      },
+    );
+  }
+  if (can.value("delete_entry")) {
+    items.push({
+      value: "delete",
+      label: t("actions.deleteEntry"),
+      icon: "trash",
+      variant: "danger",
+      divider: items.length > 0,
+      disabled: busy,
+    });
+  }
+  return items;
+});
+
+function onEntryAction(action: string) {
+  const entry = selectedEntryData.value;
+  if (!entry) return;
+  if (action === "translate") translateEmptyTranslations();
+  else if (action === "copy") fillEmptyTranslations();
+  else if (action === "edit") editDialogItem.value = entry;
+  else if (action === "delete") deleteDialogItem.value = entry;
+}
 
 async function translateEmptyTranslations() {
   const entryId = selectedEntry.value?.key;
@@ -953,22 +1026,20 @@ async function saveTranslations(
                   })
                 }}</span
               >
-              <BaseIconButton
-                v-can="'update_entry'"
-                icon="pencil-simple"
-                :label="t('entries.edit')"
-                :disabled="isSaving"
+              <span
+                v-if="isTranslating"
+                role="status"
+                class="flex items-center gap-1 text-[11.5px] font-semibold whitespace-nowrap text-primary-600 dark:text-primary-300"
+              >
+                <Icon name="sparkle" size="xs" class="animate-pulse" />
+                {{ t("entries.translating") }}
+              </span>
+              <ActionMenu
+                v-if="entryActions.length"
+                :items="entryActions"
+                :label="t('entries.actions')"
                 class="bg-neutral-100 dark:bg-white/5"
-                @click="editDialogItem = selectedEntryData"
-              />
-              <BaseIconButton
-                v-can="'delete_entry'"
-                icon="trash"
-                destructive
-                :label="t('actions.deleteEntry')"
-                :disabled="isSaving"
-                class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
-                @click="deleteDialogItem = selectedEntryData"
+                @select="onEntryAction"
               />
             </div>
           </div>
@@ -1006,6 +1077,7 @@ async function saveTranslations(
               :dirty="isTranslationDirty(String(item.key), localeId)"
               :active="contextOpen && activeLocaleId === localeId"
               :readonly="isSaving || !canUpdate"
+              :translating="isTranslatingLocale(String(item.key), localeId)"
               :placeholder="t('entries.translationPlaceholder')"
               :model-value="currentEntryForms[localeId] ?? ''"
               @update:model-value="
@@ -1021,29 +1093,11 @@ async function saveTranslations(
               "
               @open-context="toggleContext(localeId)"
             >
-              <template v-if="defaultLocale?.id" #meta>
-                <div
-                  v-if="localeId === defaultLocale.id"
-                  v-can="'update_entry'"
-                  class="flex flex-wrap gap-1"
-                >
-                  <EditorCopyEmptyChip
-                    :disabled="!canFillEmptyTranslations"
-                    @click="fillEmptyTranslations"
-                  />
-                  <EditorTranslateEmptyChip
-                    v-if="translationEnabled && can('use_machine_translation')"
-                    :disabled="!canFillEmptyTranslations || isSourceUnsaved"
-                    :pending="isTranslating"
-                    :reason="
-                      isSourceUnsaved
-                        ? t('entries.translateSaveSourceFirst')
-                        : undefined
-                    "
-                    @click="translateEmptyTranslations"
-                  />
-                </div>
-                <div v-else class="flex flex-wrap gap-1">
+              <template
+                v-if="defaultLocale?.id && localeId !== defaultLocale.id"
+                #meta
+              >
+                <div class="flex flex-wrap gap-1">
                   <EntryTermChip
                     :source-text="currentEntryForms[defaultLocale.id] ?? ''"
                     :locale-id="localeId"

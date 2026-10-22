@@ -88,8 +88,9 @@ export function logout() {
 }
 
 /**
- * Answers an RPC such as "ScopeService/ListScopes". Unregistered RPCs answer with
- * an empty object, which every response schema accepts.
+ * Answers an RPC such as "ScopeService/ListScopes", with a value or a promise of
+ * one. Unregistered RPCs answer with an empty object, which every response schema
+ * accepts.
  */
 export function mockRpc(method: string, handler: RpcHandler | object) {
   state.rpcHandlers.set(
@@ -121,7 +122,8 @@ export async function handleFetch(
 
   const text = await request.text();
   const body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
-  return Response.json(state.rpcHandlers.get(method)?.(body) ?? {});
+  // A handler may answer later, e.g. to check what shows while waiting.
+  return Response.json((await state.rpcHandlers.get(method)?.(body)) ?? {});
 }
 
 /** Lets queries resolve and the DOM settle after mounting. */
@@ -207,4 +209,28 @@ export async function mountPage(
           button.text().trim() === label,
       ),
   };
+}
+
+/**
+ * Opens the action menu named `label` and returns its items, or none without the
+ * menu. Each item's `label` leaves out its hint.
+ */
+export async function openActionMenu(page: MountedPage, label: string) {
+  const trigger = page.wrapper.find(`button[aria-label="${label}"]`);
+  if (!trigger.exists()) return [];
+  if (trigger.attributes("aria-expanded") !== "true") {
+    await trigger.trigger("click");
+    await settle();
+  }
+  return page.wrapper.findAll('[role="menuitem"]').map((item) => ({
+    item,
+    label: item.find("span > span").text().trim(),
+    hint: item.findAll("span > span")[1]?.text().trim(),
+    disabled: item.attributes("aria-disabled") === "true",
+  }));
+}
+
+/** The labels of the action menu named `label`. */
+export async function actionMenuLabels(page: MountedPage, label: string) {
+  return (await openActionMenu(page, label)).map((entry) => entry.label);
 }

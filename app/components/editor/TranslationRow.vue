@@ -17,6 +17,8 @@ const props = defineProps<{
   placeholder?: string;
   /** Pages without a context panel hide the button and its column. */
   withoutContext?: boolean;
+  /** A machine translation for this field is on its way. */
+  translating?: boolean;
 }>();
 const emit = defineEmits<{ "open-context": []; focus: []; revert: [] }>();
 defineSlots<{
@@ -111,8 +113,9 @@ const contextButtonClass = computed(() => {
       <textarea
         :id="inputId"
         v-model="value"
-        :readonly
-        :placeholder
+        :readonly="readonly || translating"
+        :aria-busy="translating || undefined"
+        :placeholder="translating ? undefined : placeholder"
         rows="1"
         class="block min-h-[38px] w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
         :class="[
@@ -121,6 +124,23 @@ const contextButtonClass = computed(() => {
         ]"
         @focus="emit('focus')"
       />
+      <!-- While a machine translation is on its way, the field shows it is being
+           worked on. The sweep is left out for reduced motion. -->
+      <div
+        v-if="translating"
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 overflow-hidden rounded-[13px] bg-primary-50/90 squircle dark:bg-primary-950/60"
+      >
+        <div
+          class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/80 to-transparent motion-safe:animate-shimmer dark:via-primary-300/15"
+        />
+        <div
+          class="relative flex h-full min-h-[38px] items-center gap-1.5 px-3 text-[12.5px] font-semibold text-primary-700 dark:text-primary-200"
+        >
+          <Icon name="sparkle" size="xs" class="motion-safe:animate-pulse" />
+          {{ t("entries.translating") }}
+        </div>
+      </div>
       <Tooltip
         v-if="dirty"
         :content="t('common.revert')"

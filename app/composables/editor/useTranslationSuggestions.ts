@@ -24,8 +24,21 @@ export function useTranslationSuggestions() {
   const results = ref<Record<string, Record<string, TranslationSuggestion>>>(
     {},
   );
+  // The languages each entry is waiting for, so their fields can show it.
+  const waiting = ref<Record<string, string[]>>({});
 
   async function suggest(entryId: string, localeIds: string[]) {
+    waiting.value[entryId] = localeIds;
+    try {
+      return await request(entryId, localeIds);
+    } finally {
+      waiting.value = Object.fromEntries(
+        Object.entries(waiting.value).filter(([id]) => id !== entryId),
+      );
+    }
+  }
+
+  async function request(entryId: string, localeIds: string[]) {
     const response = await mutateAsync({ entryId, targetLocaleIds: localeIds });
     const suggestions = response.suggestions ?? [];
     const forEntry = { ...results.value[entryId] };
@@ -40,5 +53,9 @@ export function useTranslationSuggestions() {
     return results.value[entryId]?.[localeId];
   }
 
-  return { enabled, pending, suggest, resultFor };
+  function isWaitingFor(entryId: string, localeId: string) {
+    return waiting.value[entryId]?.includes(localeId) ?? false;
+  }
+
+  return { enabled, pending, suggest, resultFor, isWaitingFor };
 }

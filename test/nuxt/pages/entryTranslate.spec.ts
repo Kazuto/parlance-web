@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import EntriesPage from "~/pages/entries/index.vue";
 import {
   VIEWER,
+  actionMenuLabels,
+  openActionMenu,
   loginAs,
   mockRpc,
   mountPage,
@@ -81,13 +83,14 @@ async function openEditor(
 const field = (page: MountedPage, localeId: string) =>
   page.wrapper.find<HTMLTextAreaElement>(`textarea[id$="-${localeId}"]`);
 
-const translateButton = (page: MountedPage) =>
-  page.wrapper
-    .findAll("button")
-    .find((button) => button.text() === t("entries.translateEmptyShort"));
+/** The menu item, or undefined when the menu doesn't offer it. */
+async function translateItem(page: MountedPage) {
+  const items = await openActionMenu(page, t("entries.actions"));
+  return items.find((entry) => entry.label === t("entries.aiTranslateEmpty"));
+}
 
 async function translate(page: MountedPage) {
-  await translateButton(page)!.trigger("click");
+  await (await translateItem(page))!.item.trigger("click");
   await settle();
 }
 
@@ -154,12 +157,69 @@ describe("machine translation in the editor", () => {
       suggestions: [{ localeId: "l2", translation: "Hallo {name}" }],
     });
 
-    const click = translateButton(page)!.trigger("click");
+    const click = (await translateItem(page))!.item.trigger("click");
     await field(page, "l2").setValue("Servus {name}");
     await click;
     await settle();
 
     expect(field(page, "l2").element.value).toBe("Servus {name}");
+  });
+
+  it("explains why it can't run while every language has text", async () => {
+    const { page } = await openEditor();
+    await field(page, "l2").setValue("Hallo {name}");
+    await settle();
+
+    const item = (await translateItem(page))!;
+    expect(item.disabled).toBe(true);
+    expect(item.hint).toBe(t("entries.noEmptyLanguages"));
+  });
+
+  it("unlocks the languages when the request fails", async () => {
+    const { page } = await openEditor();
+    mockRpc("LocalizationService/SuggestTranslations", () =>
+      Promise.reject(new Error("server down")),
+    );
+
+    await translate(page);
+
+    expect(field(page, "l2").attributes("aria-busy")).toBeUndefined();
+    expect(field(page, "l2").attributes("readonly")).toBeUndefined();
+    expect(page.wrapper.text()).not.toContain(t("entries.translating"));
+  });
+
+  it("shows that it is translating", async () => {
+    const { page } = await openEditor();
+    // Hold the answer back until the test lets it through.
+    let answer!: (value: object) => void;
+    mockRpc(
+      "LocalizationService/SuggestTranslations",
+      () => new Promise((resolve) => (answer = resolve)),
+    );
+
+    await (await translateItem(page))!.item.trigger("click");
+    await settle();
+    const statuses = page.wrapper
+      .findAll('[role="status"]')
+      .map((status) => status.text());
+    expect(statuses).toContain(t("entries.translating"));
+    // Only the empty language waits; it is locked and says so.
+    expect(field(page, "l2").attributes("aria-busy")).toBe("true");
+    expect(field(page, "l2").attributes("readonly")).toBeDefined();
+    // The overlay says what is happening; the placeholder would show through.
+    expect(field(page, "l2").attributes("placeholder")).toBeUndefined();
+    expect(field(page, "l3").attributes("aria-busy")).toBeUndefined();
+    expect(field(page, "l3").attributes("readonly")).toBeUndefined();
+
+    answer({ suggestions: [{ localeId: "l2", translation: "Hallo {name}" }] });
+    await settle();
+    expect(page.wrapper.text()).not.toContain(t("entries.translating"));
+    expect(field(page, "l2").element.value).toBe("Hallo {name}");
+    expect(field(page, "l2").attributes("aria-busy")).toBeUndefined();
+    expect(field(page, "l2").attributes("readonly")).toBeUndefined();
+    expect(field(page, "l2").attributes("placeholder")).toBe(
+      t("entries.translationPlaceholder"),
+    );
   });
 
   it("waits for the default text to be saved", async () => {
@@ -168,7 +228,9 @@ describe("machine translation in the editor", () => {
     await field(page, "l1").setValue("Hi {name}");
     await settle();
 
-    expect(translateButton(page)!.attributes("disabled")).toBeDefined();
+    const item = (await translateItem(page))!;
+    expect(item.disabled).toBe(true);
+    expect(item.hint).toBe(t("entries.translateSaveSourceFirst"));
     await translate(page);
     expect(requests).toEqual([]);
   });
@@ -176,8 +238,10 @@ describe("machine translation in the editor", () => {
   it("is hidden while the server has no translation model", async () => {
     const { page } = await openEditor({ enabled: false });
 
-    expect(page.buttons()).toContain(t("entries.copyEmptyShort"));
-    expect(translateButton(page)).toBeUndefined();
+    expect(await actionMenuLabels(page, t("entries.actions"))).toContain(
+      t("entries.copyDefaultToEmpty"),
+    );
+    expect(await translateItem(page)).toBeUndefined();
   });
 
   it("needs use_machine_translation", async () => {
@@ -185,13 +249,15 @@ describe("machine translation in the editor", () => {
       permissions: [...VIEWER, "update_entry"],
     });
 
-    expect(page.buttons()).toContain(t("entries.copyEmptyShort"));
-    expect(translateButton(page)).toBeUndefined();
+    expect(await actionMenuLabels(page, t("entries.actions"))).toContain(
+      t("entries.copyDefaultToEmpty"),
+    );
+    expect(await translateItem(page)).toBeUndefined();
   });
 
   it("is hidden from viewers", async () => {
     const { page } = await openEditor({ permissions: VIEWER });
 
-    expect(translateButton(page)).toBeUndefined();
+    expect(await translateItem(page)).toBeUndefined();
   });
 });
