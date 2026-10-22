@@ -63,7 +63,7 @@
   "scopes.restoreTitle": "Restaurar ámbito: {name}",
   "scopes.restoreConfirm": "El ámbito vuelve a estar disponible en filtros, importaciones y exportaciones.",
   "entries.filters": "Filtros",
-  "entries.searchKeys": "Buscar claves…",
+  "entries.search": "Buscar claves y traducciones…",
   "entries.searchShortcut": "Presione / para buscar, Esc para borrar",
   "entries.copyKey": "Copiar clave",
   "entries.filterByScope": "Filtrar por {scope}",

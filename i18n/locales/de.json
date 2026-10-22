@@ -63,7 +63,7 @@
   "scopes.restoreTitle": "Bereich wiederherstellen: {name}",
   "scopes.restoreConfirm": "Der Bereich wird wieder in Filtern, Importen und Exporten verfügbar.",
   "entries.filters": "Filter",
-  "entries.searchKeys": "Schlüssel durchsuchen…",
+  "entries.search": "Schlüssel und Übersetzungen durchsuchen…",
   "entries.searchShortcut": "Drücken Sie / zum Suchen, Esc zum Löschen",
   "entries.copyKey": "Schlüssel kopieren",
   "entries.filterByScope": "Nach {scope} filtern",

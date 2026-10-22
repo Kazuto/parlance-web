@@ -661,8 +661,8 @@ async function saveTranslations(
           v-model="search"
           dense
           type="search"
-          :placeholder="t('entries.searchKeys')"
-          :aria-label="t('entries.searchKeys')"
+          :placeholder="t('entries.search')"
+          :aria-label="t('entries.search')"
           :title="t('entries.searchShortcut')"
           shortcut="/"
         />

@@ -63,7 +63,7 @@
   "scopes.restoreTitle": "Restaurer le scope : {name}",
   "scopes.restoreConfirm": "Le scope devient à nouveau disponible dans les filtres, imports et exports.",
   "entries.filters": "Filtres",
-  "entries.searchKeys": "Rechercher des clés…",
+  "entries.search": "Rechercher des clés et des traductions…",
   "entries.searchShortcut": "Appuyez sur / pour rechercher, Échap pour effacer",
   "entries.copyKey": "Copier la clé",
   "entries.filterByScope": "Filtrer par {scope}",
