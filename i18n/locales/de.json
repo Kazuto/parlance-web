@@ -202,6 +202,7 @@
   "entries.loadingMore": "Weitere Einträge werden geladen…",
   "entries.noMatches": "Keine Einträge entsprechen den Filtern.",
   "entries.loadingEntry": "Eintrag wird geladen…",
+  "entries.noDefaultTranslation": "Noch kein Text auf {language}",
   "entries.entryLoadFailed": "Dieser Eintrag konnte nicht geladen werden.",
   "entries.saveAllTitle": "Alle Übersetzungen speichern?",
   "entries.saveAllConfirm": "{count} nicht gespeicherte Übersetzungen über {entries} Einträge speichern, einschließlich Sprachen und Einträgen, die derzeit nicht sichtbar sind?",

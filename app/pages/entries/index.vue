@@ -320,6 +320,7 @@ const splitViewItems = computed((): SplitViewItem[] =>
       key: entry.id ?? "",
       label: entry.key ?? "",
       missingLocaleIds: entry.missingLocaleIds ?? [],
+      defaultTranslation: entry.defaultTranslation ?? "",
     })),
 );
 
@@ -812,7 +813,14 @@ async function saveTranslations(
                 missingCount(item),
               )
             "
-          />
+          >
+            <template v-if="defaultLocale?.id" #tooltip>
+              <EntryDefaultTranslation
+                :translation="item.defaultTranslation as string"
+                :locale-name="localeOption(defaultLocale.id)?.label ?? ''"
+              />
+            </template>
+          </EditorListItem>
         </template>
         <template #header="{ item }">
           <div class="flex items-center justify-between gap-4">

@@ -202,6 +202,7 @@
   "entries.loadingMore": "Cargando más entradas…",
   "entries.noMatches": "Ninguna entrada coincide con los filtros.",
   "entries.loadingEntry": "Cargando entrada…",
+  "entries.noDefaultTranslation": "Aún no hay texto en {language}",
   "entries.entryLoadFailed": "No se pudo cargar esta entrada.",
   "entries.saveAllTitle": "¿Guardar todas las traducciones?",
   "entries.saveAllConfirm": "¿Guardar {count} traducciones sin guardar en {entries} entradas, incluidos los idiomas y las entradas que actualmente no están visibles?",

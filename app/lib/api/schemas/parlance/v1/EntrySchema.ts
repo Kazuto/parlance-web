@@ -26,6 +26,7 @@ export type Entry = {
   localizations?: Array<Localization> | null;
   scopes?: Array<Scope> | null;
   missingLocaleIds?: Array<string> | null;
+  defaultTranslation?: string | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -64,6 +65,9 @@ export const EntrySchema = z.object({
     z.ZodNullable<z.ZodType<Array<string>>>
   > {
     return z.array(z.string()).nullish();
+  },
+  get defaultTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type ListEntriesRequest = {

@@ -202,6 +202,7 @@
   "entries.loadingMore": "Chargement d'autres entrées…",
   "entries.noMatches": "Aucune entrée ne correspond aux filtres.",
   "entries.loadingEntry": "Chargement de l'entrée…",
+  "entries.noDefaultTranslation": "Pas encore de texte en {language}",
   "entries.entryLoadFailed": "Impossible de charger cette entrée.",
   "entries.saveAllTitle": "Enregistrer toutes les traductions ?",
   "entries.saveAllConfirm": "Enregistrer {count} traductions non enregistrées dans {entries} entrées, y compris les langues et les entrées actuellement non visibles ?",
