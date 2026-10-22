@@ -348,7 +348,7 @@
   "terminologies.updated": "Terminologie {term} aktualisiert",
   "terminologies.deleted": "Terminologie {term} gelöscht",
   "terminologies.workspace": "Terminologiearbeitsbereich",
-  "terminologies.searchTerms": "Begriffe durchsuchen…",
+  "terminologies.search": "Begriffe und Übersetzungen durchsuchen…",
   "terminologies.selectTerminology": "Eine Terminologie auswählen",
   "terminologies.selectLanguagesHint": "Wählen Sie eine oder mehrere Sprachen oben aus, um Begriffe zu definieren.",
   "terminologies.selectTerminologyHint": "Wählen Sie eine Terminologie aus, um zu definieren.",

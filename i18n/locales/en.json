@@ -357,7 +357,7 @@
   "terminologies.updated": "Terminology {term} updated",
   "terminologies.deleted": "Terminology {term} deleted",
   "terminologies.workspace": "Terminology workspace",
-  "terminologies.searchTerms": "Search terms…",
+  "terminologies.search": "Search terms and translations…",
   "terminologies.selectTerminology": "Select a terminology",
   "terminologies.selectLanguagesHint": "Select one or more languages above to start defining terms.",
   "terminologies.selectTerminologyHint": "Select a terminology to start defining.",

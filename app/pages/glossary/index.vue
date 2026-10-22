@@ -593,8 +593,8 @@ async function saveDefinitions(
           v-model="search"
           dense
           type="search"
-          :placeholder="t('terminologies.searchTerms')"
-          :aria-label="t('terminologies.searchTerms')"
+          :placeholder="t('terminologies.search')"
+          :aria-label="t('terminologies.search')"
           shortcut="/"
         />
       </div>
