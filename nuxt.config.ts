@@ -1,4 +1,6 @@
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
+import { availableLocales } from "./i18n/availableLocales";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -27,32 +29,10 @@ export default defineNuxtConfig({
   i18n: {
     strategy: "no_prefix",
     defaultLocale: "en",
-    locales: [
-      {
-        code: "en",
-        language: "en",
-        name: "English",
-        files: ["en.json"],
-      },
-      {
-        code: "de",
-        language: "de",
-        name: "Deutsch",
-        files: ["de.json"],
-      },
-      {
-        code: "fr",
-        language: "fr",
-        name: "Français",
-        files: ["fr.json"],
-      },
-      {
-        code: "es",
-        language: "es",
-        name: "Español",
-        files: ["es.json"],
-      },
-    ],
+    // Every catalog in i18n/locales is a language of the interface.
+    locales: availableLocales(
+      fileURLToPath(new URL("./i18n/locales", import.meta.url)),
+    ),
     detectBrowserLanguage: false,
     vueI18n: "./i18n.config.ts",
   },

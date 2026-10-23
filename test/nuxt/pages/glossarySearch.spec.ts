@@ -124,7 +124,7 @@ describe("glossary list", () => {
 
     const page = await mountPage(GlossaryPage);
 
-    page.wrapper.findComponent(SplitView).vm.$emit("end-reached");
+    page.wrapper.findComponent(SplitView).vm.$emit("endReached");
     await settle();
 
     // The first page loads again once the languages arrive; then comes the next.
