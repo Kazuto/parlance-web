@@ -25,13 +25,17 @@ async function mountItem(translation?: string) {
               h(DefaultTranslation, { translation, localeName: "English" }),
           },
   });
+
   await settle();
+
   return wrapper;
 }
 
 function hoverLabel(wrapper: Awaited<ReturnType<typeof mountItem>>) {
   const anchor = wrapper.find("span.truncate").element.parentElement!;
+
   anchor.dispatchEvent(new MouseEvent("mouseenter"));
+
   return anchor;
 }
 
@@ -41,6 +45,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 describe("entry key tooltip", () => {
   it("shows the default translation when the pointer rests on the key", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountItem("Hello world");
 
     hoverLabel(wrapper);
@@ -59,7 +64,9 @@ describe("entry key tooltip", () => {
 
   it("takes the text from the list instead of loading the entry", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountItem("Hello world");
+
     vi.mocked(fetch).mockClear();
 
     hoverLabel(wrapper);
@@ -72,9 +79,11 @@ describe("entry key tooltip", () => {
 
   it("waits briefly, so moving through the list opens nothing", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountItem("Hello world");
 
     const anchor = hoverLabel(wrapper);
+
     await wait(150);
     expect(tooltip()).toBeNull();
 
@@ -86,6 +95,7 @@ describe("entry key tooltip", () => {
 
   it("says when the entry has no default text yet", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountSuspended(DefaultTranslation, {
       props: { translation: "", localeName: "English" },
     });
@@ -97,13 +107,17 @@ describe("entry key tooltip", () => {
 
   it("keeps the plain title where no tooltip is given", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountItem();
+
     expect(wrapper.find("span.truncate").attributes("title")).toBe("app.title");
   });
 
   it("drops the plain title where the tooltip replaces it", async () => {
     loginAs(VIEWER);
+
     const wrapper = await mountItem("Hello world");
+
     expect(wrapper.find("span.truncate").attributes("title")).toBeUndefined();
   });
 });
@@ -122,11 +136,13 @@ describe("entries list", () => {
       ],
       pagination: pagination(2),
     });
+
     const page = await mountPage(EntriesPage);
 
     // The list is virtualized and renders no rows without a layout, so check the
     // items it is given.
     const items = page.wrapper.findComponent(SplitView).props("items");
+
     expect(items.map((item) => [item.label, item.defaultTranslation])).toEqual([
       ["app.title", "Hello world"],
       ["app.empty", ""],

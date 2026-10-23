@@ -20,6 +20,7 @@ const { matches, hasSource, isFetching, error, refetch } =
 
 const copied = ref<string>();
 const copyError = ref(false);
+
 watch(
   () => [props.sourceText, props.targetLocaleId],
   () => {
@@ -30,6 +31,7 @@ watch(
 
 async function copyTerm(term: string) {
   copyError.value = false;
+
   try {
     await navigator.clipboard.writeText(term);
     copied.value = term;

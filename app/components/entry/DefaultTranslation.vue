@@ -5,6 +5,7 @@ defineProps<{
   translation?: string;
   localeName: string;
 }>();
+
 const { t } = useI18n();
 </script>
 

@@ -11,6 +11,7 @@ import {
   DeleteTerminologyRequestSchema,
   DeleteTerminologyResponseSchema,
   type ListTerminologiesRequest,
+  type ListTerminologiesResponse,
   type GetTerminologyRequest,
   type CreateTerminologyRequest,
   type UpdateTerminologyRequest,
@@ -58,6 +59,31 @@ export const terminologies = {
     {
       input: ListTerminologiesRequestSchema,
       output: ListTerminologiesResponseSchema,
+    },
+  ),
+
+  // ListTerminologies paged by number, for lists that load more as they scroll.
+  feed: authedEndpoint.infiniteQuery(
+    (data: ListTerminologiesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.TerminologyService/ListTerminologies",
+      json: data,
+    }),
+    {
+      input: ListTerminologiesRequestSchema,
+      output: ListTerminologiesResponseSchema,
+      initialPageParam: 1,
+      getNextPageParam: (lastPage: ListTerminologiesResponse) => {
+        const page = lastPage.pagination?.page ?? 1;
+
+        return page < (lastPage.pagination?.totalPages ?? 1)
+          ? page + 1
+          : undefined;
+      },
+      withPageParam: (data: ListTerminologiesRequest, page: number) => ({
+        ...data,
+        pagination: { ...data.pagination, page },
+      }),
     },
   ),
 

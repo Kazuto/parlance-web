@@ -9,9 +9,11 @@ const appRoot = join(webRoot, "app");
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
+
     if (statSync(path).isDirectory()) {
       return name === "lib" ? [] : sourceFiles(path);
     }
+
     return /\.(vue|ts)$/.test(name) ? [path] : [];
   });
 }
@@ -23,14 +25,17 @@ const PERMISSION_LITERAL =
 
 function permissionsUsedInApp() {
   const used = new Map<string, string[]>();
+
   for (const file of sourceFiles(appRoot)) {
     for (const match of readFileSync(file, "utf8").matchAll(
       PERMISSION_LITERAL,
     )) {
       const name = match[1]!;
+
       used.set(name, [...(used.get(name) ?? []), relative(webRoot, file)]);
     }
   }
+
   return used;
 }
 
@@ -48,6 +53,7 @@ describe("permission catalog", () => {
   it("finds the permission checks it is meant to verify", () => {
     // Guards the scan itself: if it found nothing, the test above would pass vacuously.
     const used = permissionsUsedInApp();
+
     for (const name of [
       "create_entry",
       "update_entry",

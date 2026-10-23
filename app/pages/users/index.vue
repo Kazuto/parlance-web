@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import {
   Alert,
   Badge,
@@ -8,10 +9,10 @@ import {
   Pagination,
   type DataTableColumn,
 } from "@thkzt/eunoia";
-import { useUserList } from "~/composables/user/useUserList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
 const { t } = useI18n();
+const { getErrorMessage } = useErrorHelper();
 const { can } = usePermission();
 
 const showDialog = ref(false);
@@ -33,11 +34,12 @@ usePage(() => ({
     : undefined,
 }));
 
-const { data, filter, pagination, isFetching, error, refetch } = useUserList();
+const { data, pagination, isFetching, error, refetch } = usePaginatedList(
+  api.users.list,
+  { includeDeleted: true },
+);
 
-filter.value.includeDeleted = true;
-
-const tableColumns: DataTableColumn<User>[] = [
+const tableColumns = computed<DataTableColumn<User>[]>(() => [
   {
     title: t("common.name"),
     key: "name",
@@ -54,24 +56,27 @@ const tableColumns: DataTableColumn<User>[] = [
     sortable: true,
   },
   {
-    title: "Updated",
+    title: t("common.updated"),
     key: "updatedAt",
     sortable: true,
   },
-];
+]);
 
 const tableItems = computed(() => data.value?.users ?? []);
 </script>
 
 <template>
   <!-- Loading State -->
-  <div v-if="isFetching" class="flex items-center justify-center py-12">
+  <div
+    v-if="isFetching && !data"
+    class="flex items-center justify-center py-12"
+  >
     <div class="text-neutral-600">{{ t("users.loading") }}</div>
   </div>
 
   <!-- Error State -->
   <Alert v-else-if="error" variant="danger" persistent>
-    <p>{{ t("users.loadFailed", { error: error.message }) }}</p>
+    <p>{{ t("users.loadFailed", { error: getErrorMessage(error) }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
 

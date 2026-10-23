@@ -2,47 +2,20 @@
 import { ConfirmDialog } from "@thkzt/eunoia";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-const props = defineProps<{
-  open: boolean;
-  item?: Locale;
-}>();
-
-const { restore } = useLocaleStore();
-const { mutateAsync: restoreLocale, isPending } = restore;
-
+const props = defineProps<{ open: boolean; item?: Locale }>();
+const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
 const localeName = useLocaleName();
 const name = computed(() => (props.item ? localeName(props.item) : ""));
-const { showError, showSuccess } = useErrorHelper();
+const localeStore = useLocaleStore();
+const { isPending, run, cancel } = useConfirmMutation(
+  () => localeStore.restore,
+  () => emit("close"),
+);
 
-async function handleSubmit() {
-  if (!props.item) return;
-
-  await restoreLocale(
-    {
-      id: props.item.id,
-    },
-    {
-      onSuccess: () => {
-        showSuccess(t("locales.restored", { name: name.value }));
-      },
-      onError: (error) => {
-        showError(error);
-      },
-    },
-  );
-
-  handleClose();
-}
-
-const emit = defineEmits<{
-  close: [];
-}>();
-
-function handleClose() {
-  if (!isPending) {
-    emit("close");
-  }
+function handleConfirm() {
+  if (!props.item?.id) return;
+  run({ id: props.item.id }, t("locales.restored", { name: name.value }));
 }
 </script>
 
@@ -50,9 +23,10 @@ function handleClose() {
   <ConfirmDialog
     :open
     :title="t('locales.restoreTitle', { name })"
-    @cancel="handleClose"
-    @close="handleClose"
-    @confirm="handleSubmit"
+    :persistent="isPending"
+    @cancel="cancel"
+    @close="cancel"
+    @confirm="handleConfirm"
   >
     <p class="text-sm text-neutral-700 dark:text-neutral-200">
       {{ t("locales.restoreConfirm") }}

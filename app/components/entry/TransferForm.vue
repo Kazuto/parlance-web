@@ -2,6 +2,8 @@
 import { Button, Dropzone, Select } from "@thkzt/eunoia";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
+import { invalidateTranslationData } from "~/lib/api/invalidation";
+import { downloadBlob, fileToBase64 } from "~/lib/files";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type {
   ImportMode,
@@ -16,9 +18,6 @@ const props = defineProps<{
 const emit = defineEmits<{ cancel: []; exported: [] }>();
 const isPending = defineModel<boolean>("pending", { default: false });
 const queryClient = useQueryClient();
-const entriesQueryKey = api.entries.list.getQueryKey();
-const entryFeedQueryKey = api.entries.feed.getQueryKey();
-const localizationsQueryKey = api.localizations.list.getQueryKey();
 const importJson = useMutation(api.imports.json.use());
 const importPhp = useMutation(api.imports.php.use());
 const importPo = useMutation(api.imports.po.use());
@@ -34,7 +33,7 @@ const error = ref<string>();
 const result = ref<ImportResult>();
 const { t } = useI18n();
 const localeName = useLocaleName();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess, showError, getErrorMessage } = useErrorHelper();
 const localeOptions = computed(() =>
   props.locales
     .filter((locale) => locale.id && locale.code && !locale.deletedAt)
@@ -95,28 +94,32 @@ watch(file, () => {
 });
 
 function encodeFile(value: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
-    reader.onerror = () => reject(new Error(t("transfer.readFailed")));
-    reader.readAsDataURL(value);
+  return fileToBase64(value).catch(() => {
+    throw new Error(t("transfer.readFailed"));
   });
 }
 
 async function handleSubmit() {
   if (isPending.value) return;
   error.value = undefined;
+
   const locale = props.locales.find((item) => item.id === localeId.value);
+
   if (!locale?.id || !locale.code) {
     error.value = t("transfer.languageRequired");
+
     return;
   }
+
   if (props.action === "import" && !file.value) {
     error.value = t("transfer.fileRequired");
+
     return;
   }
+
   isPending.value = true;
   result.value = undefined;
+
   try {
     if (props.action === "import") {
       const selectedFile = file.value!;
@@ -132,19 +135,10 @@ async function handleSubmit() {
         : format.value === "php"
           ? importPhp.mutateAsync(input)
           : importJson.mutateAsync(input));
+
       if (!response.result) throw new Error(t("transfer.missingImportResult"));
       result.value = response.result;
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: entriesQueryKey,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: entryFeedQueryKey,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: localizationsQueryKey,
-        }),
-      ]);
+      await invalidateTranslationData(queryClient);
     } else {
       const input = {
         localeCode: locale.code,
@@ -155,9 +149,10 @@ async function handleSubmit() {
         : format.value === "php"
           ? exportPhp.mutateAsync(input)
           : exportJson.mutateAsync(input));
+
       if (response.content == null)
         throw new Error(t("transfer.missingExportContent"));
-      const url = URL.createObjectURL(
+      downloadBlob(
         new Blob([response.content], {
           type:
             format.value === "json"
@@ -166,29 +161,14 @@ async function handleSubmit() {
                 ? "text/x-gettext-translation;charset=utf-8"
                 : "text/plain;charset=utf-8",
         }),
+        response.filename ?? `${locale.code}.${format.value}`,
       );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = (response.filename ?? `${locale.code}.${format.value}`)
-        .split(/[\\/]/)
-        .pop()!;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showSuccess(t("transfer.exported"));
       emit("exported");
     }
   } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(
-            props.action === "import"
-              ? "transfer.importFailed"
-              : "transfer.exportFailed",
-          );
+    showError(cause);
+    error.value = getErrorMessage(cause);
   } finally {
     isPending.value = false;
   }

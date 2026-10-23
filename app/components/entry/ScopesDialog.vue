@@ -6,9 +6,7 @@ const props = defineProps<{ open: boolean; entryIds: string[] }>();
 const emit = defineEmits<{ close: []; updated: [entryIds: string[]] }>();
 const addScopeIds = ref<string[]>([]);
 const removeScopeIds = ref<string[]>([]);
-const error = ref<string>();
 const entryStore = useEntryStore();
-const isPending = computed(() => entryStore.updateScopes.isPending);
 const {
   options: scopeOptions,
   error: scopeError,
@@ -26,32 +24,28 @@ const removeOptions = computed(() =>
   ),
 );
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => entryStore.updateScopes.isPending,
+  reset: () => {
     addScopeIds.value = [];
     removeScopeIds.value = [];
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    if (!addScopeIds.value.length && !removeScopeIds.value.length) {
+      error.value = t("entries.bulkScopesRequired");
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  if (!addScopeIds.value.length && !removeScopeIds.value.length) {
-    error.value = t("entries.bulkScopesRequired");
-    return;
-  }
-  const entryIds = [...props.entryIds];
-  try {
+      return false;
+    }
+
+    const entryIds = [...props.entryIds];
+
     await entryStore.updateScopes.mutateAsync({
       entryIds,
       addScopeIds: addScopeIds.value,
@@ -65,12 +59,7 @@ async function handleSubmit() {
       ),
     );
     emit("updated", entryIds);
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error ? cause.message : t("entries.bulkScopesFailed");
-  }
+  });
 }
 </script>
 
@@ -81,7 +70,7 @@ async function handleSubmit() {
       t('entries.bulkScopesTitle', { count: entryIds.length }, entryIds.length)
     "
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Select
@@ -113,7 +102,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

@@ -20,8 +20,10 @@ const tabs = computed(() => [
 ]);
 const page = ref(1);
 const entryId = computed(() => props.entryId);
+const localeId = computed(() => props.localeId);
 const options = api.entries.history.use({
   entryId,
+  localeId,
   pagination: { page, perPage: 25 },
 });
 const { data, isFetching, error, refetch } = useQuery({
@@ -32,14 +34,12 @@ const { data, isFetching, error, refetch } = useQuery({
   ),
   staleTime: 10000,
 });
-watch(entryId, () => {
+
+watch([entryId, localeId], () => {
   page.value = 1;
 });
-const history = computed(() =>
-  (data.value?.history ?? []).filter(
-    (item) => item.localeId === props.localeId,
-  ),
-);
+
+const history = computed(() => data.value?.history ?? []);
 </script>
 
 <template>

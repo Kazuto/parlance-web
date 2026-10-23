@@ -68,11 +68,13 @@ export function useEntryFilterQuery({
     locales,
     (list) => {
       if (localesReady.value || !list?.length) return;
+
       const codes = fromLink
         ? first(initialQuery.locales).split(",").filter(Boolean)
         : stored.languages.value;
       const initial = localeIdsFromCodes(list, codes);
       const fallback = (list.find((locale) => locale.isDefault) ?? list[0])?.id;
+
       localeIds.value = initial.length ? initial : fallback ? [fallback] : [];
       localesReady.value = true;
       // Remember only changes from here on, so opening a link doesn't replace
@@ -87,6 +89,7 @@ export function useEntryFilterQuery({
             if (locales.value?.length) {
               stored.languages.value = [...localeCodes.value];
             }
+
             stored.entries.value = { scopes: [...scopes], status: nextStatus };
           },
           { deep: true },
@@ -102,6 +105,7 @@ export function useEntryFilterQuery({
       // While the locale list reloads its codes are unknown; keeping the URL as
       // it is avoids dropping the selected locales from it.
       if (!localesReady.value || !locales.value?.length) return;
+
       const query: LocationQuery = { ...route.query };
       const next: Record<string, string> = {
         locales: localeCodes.value.join(","),
@@ -109,14 +113,38 @@ export function useEntryFilterQuery({
         status: status.value,
         q: search.value.trim(),
       };
+
       for (const [key, value] of Object.entries(next)) {
         if (value) query[key] = value;
         else Reflect.deleteProperty(query, key);
       }
+
       router.replace({ query });
     },
     { deep: true },
   );
 
   return { localesReady };
+}
+
+/**
+ * A link to the entries page showing these filters, in the URL format
+ * useEntryFilterQuery reads, e.g. `/entries?locales=en,de&status=missing`.
+ */
+export function entriesLink(filters: {
+  locales?: string[];
+  scopes?: string[];
+  status?: "missing" | "complete";
+  q?: string;
+}) {
+  const list = (values: string[]) =>
+    values.map((value) => encodeURIComponent(value)).join(",");
+  const params = [
+    filters.locales?.length && `locales=${list(filters.locales)}`,
+    filters.scopes?.length && `scopes=${list(filters.scopes)}`,
+    filters.status && `status=${filters.status}`,
+    filters.q && `q=${encodeURIComponent(filters.q)}`,
+  ].filter(Boolean);
+
+  return params.length ? `/entries?${params.join("&")}` : "/entries";
 }

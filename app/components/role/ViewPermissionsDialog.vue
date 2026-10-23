@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Dialog, Badge, Button } from "@thkzt/eunoia";
-import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
+import { groupPermissionsByResource } from "~/lib/permissions";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 const props = defineProps<{
@@ -16,6 +16,7 @@ const { t } = useI18n();
 
 const permissionsByResource = computed(() => {
   if (!props.role?.permissions) return {};
+
   return groupPermissionsByResource(props.role.permissions);
 });
 

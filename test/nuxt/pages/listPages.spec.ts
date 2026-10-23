@@ -29,6 +29,7 @@ describe("scopes page", () => {
   async function open(permissions: readonly string[]) {
     loginAs(permissions);
     fixtures();
+
     return mountPage(ScopesPage);
   }
 
@@ -51,11 +52,13 @@ describe("scopes page", () => {
     const page = await open(["read_scope", permission]);
 
     expect(page.headerActions()).toEqual(expected.header.map((key) => t(key)));
+
     const rowActions = [
       t("scopes.edit"),
       t("scopes.delete"),
       t("scopes.restore"),
     ];
+
     expect(
       page.iconButtons().filter((label) => rowActions.includes(label)),
     ).toEqual(expected.rows.map((key) => t(key)));
@@ -88,6 +91,7 @@ describe("users page", () => {
   async function open(permissions: readonly string[]) {
     loginAs(permissions);
     fixtures();
+
     return mountPage(UsersPage);
   }
 
@@ -130,6 +134,7 @@ describe("roles page", () => {
   ) {
     loginAs(permissions);
     mockRpc("RoleService/ListRoles", { roles, pagination: pagination(1) });
+
     return mountPage(RolesPage);
   }
 
@@ -160,10 +165,12 @@ describe("roles page", () => {
 
   it("offers creating a role in the empty state only with create_role", async () => {
     const reader = await open(["read_role"], []);
+
     expect(reader.buttons()).not.toContain(t("roles.create"));
     reader.wrapper.unmount();
 
     const creator = await open(["read_role", "create_role"], []);
+
     expect(creator.buttons()).toContain(t("roles.create"));
   });
 });
@@ -183,6 +190,7 @@ describe("locales page", () => {
   async function open(permissions: readonly string[]) {
     loginAs(permissions);
     fixtures();
+
     return mountPage(LocalesPage);
   }
 
@@ -204,7 +212,9 @@ describe("locales page", () => {
 
   it("names the locales in the UI language", async () => {
     const i18n = useNuxtApp().$i18n;
+
     await i18n.setLocale("de");
+
     try {
       loginAs(VIEWER);
       mockRpc("LocaleService/ListLocales", {
@@ -219,6 +229,7 @@ describe("locales page", () => {
         ],
         pagination: pagination(1),
       });
+
       const page = await mountPage(LocalesPage);
 
       expect(page.wrapper.text()).toContain("Deutsch");
@@ -230,19 +241,23 @@ describe("locales page", () => {
 
   it("hides the export without read_entry", async () => {
     const page = await open(["read_locale"]);
+
     expect(page.headerActions()).toEqual([]);
   });
 
   it("offers the import only with create_entry and update_entry", async () => {
     const creator = await open([...VIEWER, "create_entry"]);
+
     expect(creator.headerActions()).not.toContain(t("import.zip.import"));
     creator.wrapper.unmount();
 
     const editor = await open([...VIEWER, "update_entry"]);
+
     expect(editor.headerActions()).not.toContain(t("import.zip.import"));
     editor.wrapper.unmount();
 
     const importer = await open([...VIEWER, "create_entry", "update_entry"]);
+
     expect(importer.headerActions()).toEqual([
       t("import.zip.import"),
       t("export.zip.export"),

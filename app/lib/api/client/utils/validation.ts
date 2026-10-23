@@ -65,7 +65,9 @@ function stringifyZodIssues(issues: core.$ZodIssue[], indent = 0) {
 
     if (issue_.code === "invalid_union") {
       const { errors, ...issue__ } = issue_;
+
       stringifiedIssue += `${JSON.stringify(issue__)}\n`;
+
       const stringifiedUnionErrors = [];
 
       for (const error of errors) {

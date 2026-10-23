@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { entriesLink } from "~/composables/entry/useEntryFilterQuery";
 import { Card, Headline, Icon, Text } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
@@ -18,26 +19,19 @@ const completedCount = computed(
   () => statsData.value?.fullyTranslatedEntries ?? 0,
 );
 
-// Build URLs with all locales selected
+// The entries in every locale, filtered by status
 const allLocaleCodes = computed(
   () =>
     statsData.value?.byLocale
       ?.map((locale) => locale.localeCode)
-      .filter(Boolean)
-      .join(",") || "",
+      .filter((code): code is string => !!code) ?? [],
 );
-
-const missingUrl = computed(() => {
-  return allLocaleCodes.value
-    ? `/entries?status=missing&locales=${allLocaleCodes.value}`
-    : "/entries?status=missing";
-});
-
-const completeUrl = computed(() => {
-  return allLocaleCodes.value
-    ? `/entries?status=complete&locales=${allLocaleCodes.value}`
-    : "/entries?status=complete";
-});
+const missingUrl = computed(() =>
+  entriesLink({ locales: allLocaleCodes.value, status: "missing" }),
+);
+const completeUrl = computed(() =>
+  entriesLink({ locales: allLocaleCodes.value, status: "complete" }),
+);
 
 usePage(() => ({
   width: "extra-wide",

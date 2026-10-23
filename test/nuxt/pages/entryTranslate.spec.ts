@@ -46,6 +46,7 @@ async function openEditor(
 ) {
   const requests: { entryId?: string; targetLocaleIds?: string[] }[] = [];
   const saves: string[] = [];
+
   loginAs(
     options.permissions ?? [
       ...VIEWER,
@@ -67,17 +68,22 @@ async function openEditor(
   mockRpc("EntryService/GetEntry", { entry });
   mockRpc("LocalizationService/SuggestTranslations", (body) => {
     requests.push(body);
+
     return { suggestions: options.suggestions ?? [] };
   });
+
   for (const method of ["CreateLocalization", "UpdateLocalization"]) {
     mockRpc(`LocalizationService/${method}`, () => {
       saves.push(method);
+
       return {};
     });
   }
+
   const page = await mountPage(EntriesPage, {
     route: "/entries?locales=en,de,fr",
   });
+
   return { page, requests, saves };
 }
 
@@ -87,6 +93,7 @@ const field = (page: MountedPage, localeId: string) =>
 /** The menu item, or undefined when the menu doesn't offer it. */
 async function translateItem(page: MountedPage) {
   const items = await openActionMenu(page, t("entries.actions"));
+
   return items.find((entry) => entry.label === t("entries.aiTranslateEmpty"));
 }
 
@@ -159,6 +166,7 @@ describe("machine translation in the editor", () => {
     });
 
     const click = (await translateItem(page))!.item.trigger("click");
+
     await field(page, "l2").setValue("Servus {name}");
     await click;
     await settle();
@@ -168,16 +176,19 @@ describe("machine translation in the editor", () => {
 
   it("explains why it can't run while every language has text", async () => {
     const { page } = await openEditor();
+
     await field(page, "l2").setValue("Hallo {name}");
     await settle();
 
     const item = (await translateItem(page))!;
+
     expect(item.disabled).toBe(true);
     expect(item.hint).toBe(t("entries.noEmptyLanguages"));
   });
 
   it("unlocks the languages when the request fails", async () => {
     const { page } = await openEditor();
+
     mockRpc("LocalizationService/SuggestTranslations", () =>
       Promise.reject(new Error("server down")),
     );
@@ -193,6 +204,7 @@ describe("machine translation in the editor", () => {
     const { page } = await openEditor();
     // Hold the answer back until the test lets it through.
     let answer!: (value: object) => void;
+
     mockRpc(
       "LocalizationService/SuggestTranslations",
       () => new Promise((resolve) => (answer = resolve)),
@@ -200,9 +212,11 @@ describe("machine translation in the editor", () => {
 
     await (await translateItem(page))!.item.trigger("click");
     await settle();
+
     const statuses = page.wrapper
       .findAll('[role="status"]')
       .map((status) => status.text());
+
     expect(statuses).toContain(t("entries.translating"));
     // Only the empty language waits; it is locked and says so.
     expect(field(page, "l2").attributes("aria-busy")).toBe("true");
@@ -230,6 +244,7 @@ describe("machine translation in the editor", () => {
     await settle();
 
     const item = (await translateItem(page))!;
+
     expect(item.disabled).toBe(true);
     expect(item.hint).toBe(t("entries.translateSaveSourceFirst"));
     await translate(page);
@@ -294,6 +309,7 @@ describe("machine translation of ticked entries", () => {
     } = {},
   ) {
     const requests: { entryId?: string; targetLocaleIds?: string[] }[] = [];
+
     loginAs(
       options.permissions ?? [
         ...VIEWER,
@@ -315,7 +331,9 @@ describe("machine translation of ticked entries", () => {
     }));
     mockRpc("LocalizationService/SuggestTranslations", (body) => {
       const request = body as { entryId?: string; targetLocaleIds?: string[] };
+
       requests.push(request);
+
       return (
         options.answer?.(request) ?? {
           suggestions: request.targetLocaleIds?.map((localeId) => ({
@@ -325,14 +343,17 @@ describe("machine translation of ticked entries", () => {
         }
       );
     });
+
     const page = await mountPage(EntriesPage, {
       route: options.route ?? "/entries?locales=en,de,fr",
     });
+
     // The list is virtualized and renders no rows here, so tick through it.
     page.wrapper
       .findComponent(SplitView)
       .vm.$emit("update:selection", ["e1", "e2", "e3"]);
     await settle();
+
     return { page, requests };
   }
 
@@ -371,11 +392,13 @@ describe("machine translation of ticked entries", () => {
     expect(page.wrapper.text()).toContain(
       t("entries.bulkTranslateProgress", { done: 0, total: 3 }),
     );
+
     const stop = page.wrapper
       .findAll("button")
       .find(
         (button) => button.text().trim() === t("entries.bulkTranslateStop"),
       )!;
+
     await stop.trigger("click");
     answer({ suggestions: [{ localeId: "l2", translation: "Hallo" }] });
     await settle();

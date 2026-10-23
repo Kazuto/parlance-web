@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import {
   Alert,
   Button,
@@ -8,15 +9,13 @@ import {
   Pagination,
   type DataTableColumn,
 } from "@thkzt/eunoia";
-import { watchDebounced } from "@vueuse/core";
-import { useScopeList } from "~/composables/scope/useScopeList";
 import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
 
 const { t } = useI18n();
+const { getErrorMessage } = useErrorHelper();
 const { can } = usePermission();
-const { data, filter, pagination, isFetching, error, refetch } = useScopeList();
-filter.value.includeDeleted = true;
-pagination.value.perPage = 20;
+const { data, filter, pagination, isFetching, error, refetch } =
+  usePaginatedList(api.scopes.list, { includeDeleted: true });
 
 const createDialogOpen = ref(false);
 const editDialogItem = ref<Scope>();
@@ -38,21 +37,17 @@ usePage(() => ({
 }));
 
 const search = ref("");
-watchDebounced(
-  search,
-  (value) => {
-    filter.value.search = value || undefined;
-    pagination.value.page = 1;
-  },
-  { debounce: 300 },
-);
+const { onKeydown: onSearchKeydown } = useDebouncedSearch(search, (value) => {
+  filter.value.search = value;
+  pagination.value.page = 1;
+});
 
-const tableColumns: DataTableColumn<Scope>[] = [
+const tableColumns = computed<DataTableColumn<Scope>[]>(() => [
   { title: t("common.name"), key: "name", sortable: true },
   { title: t("scopes.slug"), key: "slug", sortable: true },
   { title: t("common.description"), key: "description" },
   { title: t("common.created"), key: "createdAt", sortable: true },
-];
+]);
 const tableItems = computed(() => data.value?.scopes ?? []);
 </script>
 
@@ -66,6 +61,7 @@ const tableItems = computed(() => data.value?.scopes ?? []);
           :placeholder="t('scopes.search')"
           :aria-label="t('scopes.search')"
           shortcut="/"
+          @keydown="onSearchKeydown"
         />
       </div>
     </div>
@@ -79,7 +75,7 @@ const tableItems = computed(() => data.value?.scopes ?? []);
   </div>
 
   <Alert v-else-if="error && !data" variant="danger" persistent>
-    <p>{{ t("scopes.listFailed", { error: error.message }) }}</p>
+    <p>{{ t("scopes.listFailed", { error: getErrorMessage(error) }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
 

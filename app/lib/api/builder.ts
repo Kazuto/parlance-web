@@ -16,6 +16,7 @@ const baseClient = createApiClient({
         ) {
           error.message = String(error.data.message);
         }
+
         return error;
       },
     ],

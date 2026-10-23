@@ -44,6 +44,14 @@ export const useAuthStore = defineStore("authStore", () => {
     },
   });
 
+  // Flattened once per user change, for the permission checks across the app.
+  const permissions = computed(() =>
+    (user.value?.roles ?? []).flatMap((role) => role.permissions ?? []),
+  );
+  const permissionNames = computed(
+    () => new Set(permissions.value.map((permission) => permission.name)),
+  );
+
   const now = useNow({ interval: oneMinute });
 
   const tokenPayload = computed<JWTPayload | undefined>(() =>
@@ -86,6 +94,7 @@ export const useAuthStore = defineStore("authStore", () => {
       // Clear any existing tokens on login error
       setToken();
       user.value = undefined;
+
       throw error;
     },
     onSuccess: (data) => {
@@ -105,6 +114,7 @@ export const useAuthStore = defineStore("authStore", () => {
       // Clear tokens on refresh error
       setToken();
       user.value = undefined;
+
       throw error;
     },
     onSuccess: (data) => {
@@ -147,6 +157,7 @@ export const useAuthStore = defineStore("authStore", () => {
     }
 
     isRefreshing.value = true;
+
     try {
       await refreshCall({ refreshToken: refreshToken.value });
     } finally {
@@ -159,6 +170,7 @@ export const useAuthStore = defineStore("authStore", () => {
 
     if (!tokenPayload.value?.exp) {
       console.warn('"exp" not set in JWT!');
+
       return;
     }
 
@@ -222,6 +234,8 @@ export const useAuthStore = defineStore("authStore", () => {
     login,
     logout,
     payload: readonly(tokenPayload),
+    permissionNames,
+    permissions,
     refresh,
     refreshToken: readonly(refreshToken),
     setToken,

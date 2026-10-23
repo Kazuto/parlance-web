@@ -2,43 +2,38 @@
 import { ConfirmDialog } from "@thkzt/eunoia";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
-const props = defineProps<{
-  open: boolean;
-  item?: Terminology;
-}>();
+const props = defineProps<{ open: boolean; item?: Terminology }>();
 const emit = defineEmits<{ close: []; deleted: [id: string] }>();
-
-const terminologyStore = useTerminologyStore();
-const { mutateAsync: deleteTerminology, isPending } = terminologyStore.destroy;
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const terminologyStore = useTerminologyStore();
+const { isPending, run, cancel } = useConfirmMutation(
+  () => terminologyStore.destroy,
+  () => emit("close"),
+);
 
 async function handleConfirm() {
-  if (!props.item?.id || isPending) return;
-  try {
-    await deleteTerminology({ id: props.item.id });
-    showSuccess(t("terminologies.deleted", { term: props.item.term ?? "" }));
-    emit("deleted", props.item.id);
-    emit("close");
-  } catch (error) {
-    showError(error as Error);
-  }
-}
+  const id = props.item?.id;
 
-function handleClose() {
-  if (!isPending) emit("close");
+  if (!id) return;
+
+  const term = props.item?.term ?? "";
+
+  if (await run({ id }, t("terminologies.deleted", { term }))) {
+    emit("deleted", id);
+  }
 }
 </script>
 
 <template>
   <ConfirmDialog
     :open
-    :title="t('terminologies.deleteTitle', { term: props.item?.term ?? '' })"
+    :title="t('terminologies.deleteTitle', { term: item?.term ?? '' })"
     :confirm-phrase="
-      t('terminologies.deleteConfirm', { term: props.item?.term ?? '' })
+      t('terminologies.deleteConfirm', { term: item?.term ?? '' })
     "
-    @cancel="handleClose"
-    @close="handleClose"
+    :persistent="isPending"
+    @cancel="cancel"
+    @close="cancel"
     @confirm="handleConfirm"
   >
     <p class="text-sm text-neutral-500 dark:text-neutral-400">

@@ -69,6 +69,7 @@ describe("entries page", () => {
       pagination: pagination(1),
     });
     mockRpc("EntryService/GetEntry", { entry });
+
     return mountPage(EntriesPage);
   }
 
@@ -170,6 +171,7 @@ describe("glossary page", () => {
       pagination: pagination(1),
     });
     mockRpc("TerminologyService/GetTerminology", { terminology });
+
     return mountPage(GlossaryPage);
   }
 
@@ -180,6 +182,7 @@ describe("glossary page", () => {
       "parlance-filters.languages",
       JSON.stringify(["en", "de"]),
     );
+
     return open(permissions);
   }
 
@@ -203,7 +206,9 @@ describe("glossary page", () => {
     const page = await open([...VIEWER, permission]);
 
     expect(page.headerActions()).toEqual(expected.header.map((key) => t(key)));
+
     const termActions = [t("terminologies.edit"), t("terminologies.delete")];
+
     expect(
       page.iconButtons().filter((label) => termActions.includes(label)),
     ).toEqual(expected.icons.map((key) => t(key)));
@@ -243,6 +248,7 @@ describe("locale page", () => {
     loginAs(permissions);
     mockLocales();
     mockRpc("LocaleService/GetLocale", { locale: locales[0] });
+
     return mountPage(LocalePage, { route: "/locales/l1" });
   }
 
@@ -284,12 +290,14 @@ describe("locale page", () => {
 
   async function choose(page: MountedPage, label: string) {
     const items = await openActionMenu(page, t("locales.actions"));
+
     await items.find((entry) => entry.label === label)!.item.trigger("click");
     await settle();
   }
 
   it("fills the missing names of this locale as drafts", async () => {
     const page = await open([...VIEWER, "update_locale"]);
+
     expect(nameField(page, "l1", "de").value).toBe("");
 
     await choose(page, t("locales.fillNames"));
@@ -301,9 +309,11 @@ describe("locale page", () => {
       t("common.unsavedCount", { count: 1 }),
     );
     expect(await actions(page)).toContain(t("locales.fillNames"));
+
     const fill = (await openActionMenu(page, t("locales.actions"))).find(
       (entry) => entry.label === t("locales.fillNames"),
     )!;
+
     expect(fill.disabled).toBe(true);
     expect(fill.hint).toBe(t("locales.noKnownMissingNames"));
   });
@@ -329,6 +339,7 @@ describe("import / export page", () => {
   ) {
     loginAs(permissions);
     mockLocales();
+
     return mountPage(TransferPage, { route });
   }
 
@@ -337,11 +348,13 @@ describe("import / export page", () => {
 
   it("offers a viewer only the export", async () => {
     const page = await open(VIEWER);
+
     expect(tabs(page)).toEqual([t("transfer.exportTab")]);
   });
 
   it("opens on the export even when a link asks for the import", async () => {
     const page = await open(VIEWER, "/entries/transfer?tab=import");
+
     expect(page.wrapper.find('[role="tab"][aria-selected="true"]').text()).toBe(
       t("transfer.exportTab"),
     );
@@ -351,12 +364,14 @@ describe("import / export page", () => {
     "keeps the import hidden with only %j",
     async (extra) => {
       const page = await open([...VIEWER, ...extra]);
+
       expect(tabs(page)).toEqual([t("transfer.exportTab")]);
     },
   );
 
   it("offers the import with create_entry and update_entry", async () => {
     const page = await open([...VIEWER, "create_entry", "update_entry"]);
+
     expect(tabs(page)).toEqual([
       t("transfer.importTab"),
       t("transfer.exportTab"),

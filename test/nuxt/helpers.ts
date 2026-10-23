@@ -22,6 +22,7 @@ export function makeUser(
         name: "test",
         permissions: permissions.map((name, index) => {
           const [action, ...resource] = name.split("_");
+
           return {
             id: `permission-${index}`,
             name,
@@ -40,6 +41,7 @@ function fakeToken() {
   const encode = (value: object) =>
     btoa(JSON.stringify(value)).replace(/=+$/, "");
   const now = Math.floor(Date.now() / 1000);
+
   return [
     encode({ alg: "none", typ: "JWT" }),
     encode({
@@ -68,9 +70,12 @@ type TestState = {
 /** Signs in a user holding exactly these permissions. */
 export function loginAs(permissions: readonly string[]) {
   state.currentUser = makeUser(permissions);
+
   const authStore = useAuthStore();
+
   authStore.setToken({ token: fakeToken(), refreshToken: fakeToken() });
   authStore.setUser(state.currentUser);
+
   return state.currentUser;
 }
 
@@ -82,7 +87,9 @@ export function changePermissions(permissions: readonly string[]) {
 
 export function logout() {
   state.currentUser = undefined;
+
   const authStore = useAuthStore();
+
   authStore.setUser(undefined);
   authStore.setToken();
 }
@@ -109,9 +116,11 @@ export async function handleFetch(
 ): Promise<Response> {
   const request = new Request(input, init);
   const match = new URL(request.url).pathname.match(/parlance\.v1\.(.+)$/);
+
   if (!match) return new Response("Not found", { status: 404 });
 
   const method = match[1]!;
+
   // The signed-in user, plus anything a test adds, e.g. translationEnabled.
   if (method === "AuthService/GetCurrentUser") {
     return Response.json({
@@ -122,6 +131,7 @@ export async function handleFetch(
 
   const text = await request.text();
   const body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+
   // A handler may answer later, e.g. to check what shows while waiting.
   return Response.json((await state.rpcHandlers.get(method)?.(body)) ?? {});
 }
@@ -175,11 +185,13 @@ export async function mountPage(
       pageOptions = usePageProvider();
       // The layout provides the toast stack the pages report through.
       provide("toastStack", ref(null));
+
       return () => h(page);
     },
   });
 
   const wrapper = await mountSuspended(Host, { route: options.route });
+
   await settle();
 
   // Closed dialogs stay in the DOM, so their buttons are not part of the page.
@@ -188,11 +200,13 @@ export async function mountPage(
     wrapper
       .findAll("button, a[aria-label]")
       .filter((button) => !button.element.closest("dialog:not([open])"));
+
   return {
     wrapper,
     options: () => pageOptions!.value,
     headerActions: () => {
       const { primaryAction, secondaryActions } = pageOptions!.value;
+
       return [primaryAction, ...(secondaryActions ?? [])]
         .filter((action) => !!action)
         .map((action) => String(action.content));
@@ -217,11 +231,14 @@ export async function mountPage(
  */
 export async function openActionMenu(page: MountedPage, label: string) {
   const trigger = page.wrapper.find(`button[aria-label="${label}"]`);
+
   if (!trigger.exists()) return [];
+
   if (trigger.attributes("aria-expanded") !== "true") {
     await trigger.trigger("click");
     await settle();
   }
+
   return page.wrapper.findAll('[role="menuitem"]').map((item) => ({
     item,
     label: item.find("span > span").text().trim(),

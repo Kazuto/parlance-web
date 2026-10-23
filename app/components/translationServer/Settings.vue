@@ -27,10 +27,11 @@ function openForm(server?: TranslationServer) {
 
 async function setEnabled(server: TranslationServer, enabled: boolean) {
   if (!server.id) return;
+
   try {
     await store.update.mutateAsync({ id: server.id, enabled });
   } catch (error) {
-    showError(error as Error);
+    showError(error);
   }
 }
 
@@ -41,12 +42,13 @@ const testing = ref<string>();
 async function runTest(server: TranslationServer) {
   if (!server.id || testing.value) return;
   testing.value = server.id;
+
   try {
     testResults.value[server.id] = await store.test.mutateAsync({
       id: server.id,
     });
   } catch (error) {
-    showError(error as Error);
+    showError(error);
   } finally {
     testing.value = undefined;
   }

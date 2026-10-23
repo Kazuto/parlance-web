@@ -1,25 +1,22 @@
 <script setup lang="ts">
 import {
-  ActionMenu,
   type ActionMenuItem,
   Alert,
   Button,
-  Icon,
   SplitView,
   type SplitViewItem,
-  Tooltip,
-  Dialog,
   Chip,
   Input,
 } from "@thkzt/eunoia";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
+import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
+import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
-import { watchDebounced, useMediaQuery } from "@vueuse/core";
+import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 import type { Localization } from "~/lib/api/schemas/parlance/v1/LocalizationSchema";
 
@@ -36,6 +33,7 @@ function handleEntryUpdated(entry: Entry) {
   if (entry.id) {
     // Keep the loaded localizations; saving relies on them to update, not duplicate.
     const known = knownEntries.value[entry.id];
+
     knownEntries.value[entry.id] = {
       ...entry,
       localizations: entry.localizations?.length
@@ -44,10 +42,12 @@ function handleEntryUpdated(entry: Entry) {
     };
     if (entry.id === selectedEntryId.value) refetchDetail();
   }
+
   if (entry.id && selectedEntry.value?.key === entry.id) {
     selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
   }
 }
+
 const transferAction = ref<"import" | "export">("import");
 const showTransferDialog = ref(false);
 
@@ -110,11 +110,13 @@ const statusOptions = computed(() => [
   { label: t("entries.filterMissing"), value: "missing" },
   { label: t("entries.filterComplete"), value: "complete" },
 ]);
-const { data: localeData, pagination } = useLocaleList();
-
-pagination.value.perPage = 100;
+const { items: locales } = useAllPages(
+  api.locales.list,
+  (response) => response.locales,
+);
 
 const selectedLocaleIds = ref<string[]>([]);
+
 watch(
   selectedLocaleIds,
   (ids) => {
@@ -122,6 +124,7 @@ watch(
   },
   { deep: true },
 );
+
 const selectedEntry = ref<SplitViewItem>();
 const search = ref("");
 // Types out keys and their default texts from the list, showing by example that
@@ -131,59 +134,15 @@ const searchPlaceholder = useSearchExamples(
   search,
   () => t("entries.search"),
 );
-const isSaving = ref(false);
 const showSaveAllDialog = ref(false);
-const contextOpen = ref(true);
-const contextTab = ref("terminology");
-const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
-watch(
-  narrowWorkspace,
-  (narrow) => {
-    if (narrow) contextOpen.value = false;
-  },
-  { immediate: true },
-);
-const activeLocaleId = ref<string>();
-const activeLocaleName = computed(
-  () => localeOption(activeLocaleId.value)?.label ?? "",
-);
-
-function openContext(localeId: string, tab?: string) {
-  activeLocaleId.value = localeId;
-  if (tab) contextTab.value = tab;
-  contextOpen.value = true;
-}
-
-// The row button toggles: on the language already shown it closes the panel.
-function toggleContext(localeId: string) {
-  if (contextOpen.value && activeLocaleId.value === localeId) {
-    contextOpen.value = false;
-    return;
-  }
-  openContext(localeId);
-}
-
-// Typing in another language moves an open panel along, without opening it.
-function onRowFocus(localeId: string) {
-  if (contextOpen.value) activeLocaleId.value = localeId;
-}
-
-watchDebounced(
+const { onKeydown: onSearchKeydown } = useDebouncedSearch(
   search,
-  (value) => {
-    feedSearch.value = value;
-  },
-  { debounce: 350 },
+  (value) => (feedSearch.value = value),
+  350,
 );
-
-function onSearchKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || !search.value) return;
-  event.preventDefault();
-  search.value = "";
-}
 
 useEntryFilterQuery({
-  locales: computed(() => localeData.value?.locales),
+  locales: computed(() => locales.value),
   localeIds: selectedLocaleIds,
   scopeIds,
   status: translationStatus,
@@ -200,25 +159,27 @@ const {
   selectedLanguageLabels,
   languageSummary,
   languagesFiltered,
-} = useEditorLocales(() => localeData.value?.locales, selectedLocaleIds);
+} = useEditorLocales(() => locales.value, selectedLocaleIds);
+const {
+  contextOpen,
+  contextTab,
+  activeLocaleId,
+  activeLocaleName,
+  openContext,
+  toggleContext,
+  onRowFocus,
+} = useEditorContextPanel({
+  selectedLocaleIds,
+  orderedSelectedLocaleIds,
+  defaultLocaleId: () => defaultLocale.value?.id,
+  localeLabel: (id) => localeOption(id)?.label ?? "",
+});
 const activeFilterCount = computed(
   () =>
     Number(languagesFiltered.value) +
     Number(scopeIds.value.length > 0) +
     Number(!!translationStatus.value),
 );
-const copiedKey = ref<string>();
-let copiedKeyTimer: ReturnType<typeof setTimeout> | undefined;
-async function copyKey(key: string) {
-  try {
-    await navigator.clipboard.writeText(key);
-  } catch {
-    return;
-  }
-  copiedKey.value = key;
-  clearTimeout(copiedKeyTimer);
-  copiedKeyTimer = setTimeout(() => (copiedKey.value = undefined), 1500);
-}
 
 function toggleScopeFilter(id: string) {
   if (isSaving.value) return;
@@ -230,6 +191,7 @@ function toggleScopeFilter(id: string) {
 const selectedScopes = computed(() =>
   scopeIds.value.map((id) => {
     const option = scopeOptions.value.find((scope) => scope.value === id);
+
     return { id, label: option?.label ?? id, color: option?.color };
   }),
 );
@@ -302,27 +264,11 @@ async function handleDeleted(id: string) {
   checkedEntryIds.value = checkedEntryIds.value.filter(
     (entryId) => entryId !== id,
   );
-  Reflect.deleteProperty(localizationForms.value, id);
-  Reflect.deleteProperty(savedTranslations.value, id);
-  Reflect.deleteProperty(knownEntries.value, id);
+  forgetEntry(id);
   pinnedEntryId.value = undefined;
   selectedEntry.value = undefined;
   await refetch();
 }
-
-// The panel starts on the source language, like the rows are ordered.
-watch(
-  [selectedLocaleIds, () => defaultLocale.value?.id],
-  () => {
-    if (
-      !activeLocaleId.value ||
-      !selectedLocaleIds.value.includes(activeLocaleId.value)
-    ) {
-      activeLocaleId.value = orderedSelectedLocaleIds.value[0];
-    }
-  },
-  { deep: true },
-);
 
 const splitViewItems = computed((): SplitViewItem[] =>
   feedEntries.value
@@ -337,6 +283,7 @@ const splitViewItems = computed((): SplitViewItem[] =>
 
 function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
+
   return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
 }
 
@@ -344,7 +291,9 @@ watch(
   splitViewItems,
   (items) => {
     const id = selectedEntry.value?.key;
+
     if (id !== undefined && id === pinnedEntryId.value) return;
+
     if (!items.some((item) => item.key === id)) {
       selectedEntry.value = items[0];
     }
@@ -362,35 +311,55 @@ const {
   refetch: refetchDetail,
 } = useEntryDetail(selectedEntryId);
 
-// localizationForms keyed by entryId -> localeId -> translation
-const localizationForms = ref<Record<string, Record<string, string>>>({});
-const savedTranslations = ref<Record<string, Record<string, string>>>({});
-const knownEntries = ref<Record<string, Entry>>({});
-
-// Takes in an entry as loaded from the server; its drafts stay.
-function registerEntry(entry: Entry) {
-  if (!entry.id) return;
-  knownEntries.value[entry.id] = {
-    ...entry,
-    localizations: [...(entry.localizations ?? [])],
-  };
-  const saved = Object.fromEntries(
-    (entry.localizations ?? [])
-      .filter((localization) => !!localization.localeId)
-      .map((localization) => [
-        String(localization.localeId),
-        localization.translation ?? "",
-      ]),
-  );
-  const previous = savedTranslations.value[entry.id] ?? {};
-  const drafts = localizationForms.value[entry.id] ?? {};
-  const next = { ...saved };
-  for (const [localeId, value] of Object.entries(drafts)) {
-    if (value !== (previous[localeId] ?? "")) next[localeId] = value;
-  }
-  localizationForms.value[entry.id] = next;
-  savedTranslations.value[entry.id] = saved;
-}
+const localizationStore = useLocalizationStore();
+const {
+  forms: localizationForms,
+  saved: savedTranslations,
+  known: knownEntries,
+  isSaving,
+  showDiscardDialog,
+  register: registerEntry,
+  forget: forgetEntry,
+  setForm: setLocalizationForm,
+  isDirty: isTranslationDirty,
+  hasUnsaved: hasUnsavedTranslations,
+  currentForms: currentEntryForms,
+  unsavedLocaleIds,
+  allUnsaved: allUnsavedTranslations,
+  allUnsavedCount,
+  discardChanges,
+  requestDiscardAll,
+  save: saveTranslations,
+} = useTranslationDrafts<Entry, Localization>({
+  name: "entry-translations",
+  selectedId: selectedEntryId,
+  rows: (entry) => entry.localizations,
+  setRows: (entry, localizations) => (entry.localizations = localizations),
+  upsert: async ({ itemId, localeId, translation }, existing) =>
+    existing
+      ? (
+          await localizationStore.update.mutateAsync({
+            id: existing.id,
+            translation,
+          })
+        ).localization
+      : (
+          await localizationStore.create.mutateAsync({
+            entryId: itemId,
+            localeId,
+            translation,
+          })
+        ).localization,
+  describe: ({ itemId, localeId }, entry) =>
+    `${entry?.key ?? itemId}: ${localeOption(localeId)?.label ?? localeId}`,
+  messages: { saved: "entries.saved", partial: "entries.partialSave" },
+  afterSave: () =>
+    Promise.all([
+      refetch(),
+      refetchDetail(),
+      queryClient.invalidateQueries({ queryKey: historyQueryKey }),
+    ]),
+});
 
 watch(
   () => detailData.value?.entry,
@@ -400,63 +369,11 @@ watch(
   { immediate: true },
 );
 
-function isTranslationDirty(entryId: string, localeId: string) {
-  return (
-    (localizationForms.value[entryId]?.[localeId] ?? "") !==
-    (savedTranslations.value[entryId]?.[localeId] ?? "")
-  );
-}
-
-function hasUnsavedTranslations(entryId: string) {
-  return Object.keys(localizationForms.value[entryId] ?? {}).some((localeId) =>
-    isTranslationDirty(entryId, localeId),
-  );
-}
-
-const unsavedLocaleIds = computed(() => {
-  const id = selectedEntry.value?.key;
-  return id == null
-    ? []
-    : Object.keys(localizationForms.value[String(id)] ?? {}).filter(
-        (localeId) => isTranslationDirty(String(id), localeId),
-      );
-});
-
 const selectedUnsavedLocaleIds = computed(() =>
   selectedLocaleIds.value.filter((localeId) =>
     unsavedLocaleIds.value.includes(localeId),
   ),
 );
-
-const allUnsavedTranslations = computed(() =>
-  Object.entries(localizationForms.value).flatMap(([entryId, translations]) =>
-    Object.entries(translations)
-      .filter(([localeId]) => isTranslationDirty(entryId, localeId))
-      .map(([localeId, translation]) => ({ entryId, localeId, translation })),
-  ),
-);
-const allUnsavedCount = computed(() => allUnsavedTranslations.value.length);
-registerUnsavedChanges("entry-translations", allUnsavedCount, isSaving);
-
-const showDiscardDialog = ref(false);
-
-function discardChanges() {
-  showDiscardDialog.value = false;
-  for (const entryId of Object.keys(localizationForms.value)) {
-    localizationForms.value[entryId] = {
-      ...(savedTranslations.value[entryId] ?? {}),
-    };
-  }
-}
-
-// Changes on the open entry go right away; others are out of sight, so confirm.
-function requestDiscardAll() {
-  const onlyCurrent = allUnsavedTranslations.value.every(
-    (change) => change.entryId === selectedEntryId.value,
-  );
-  if (onlyCurrent) discardChanges();
-  else showDiscardDialog.value = true;
-}
 
 const selectedEntryData = computed(() =>
   selectedEntryId.value ? knownEntries.value[selectedEntryId.value] : undefined,
@@ -468,14 +385,6 @@ const isEditorLoading = computed(
     !selectedEntryData.value &&
     isDetailLoading.value,
 );
-
-const currentEntryForms = computed(() => {
-  const key = selectedEntry.value?.key;
-
-  if (!key) return {};
-
-  return localizationForms.value[key] ?? {};
-});
 
 // Counts what is typed, not only what is saved, so the header follows along.
 const translatedCount = computed(
@@ -495,6 +404,7 @@ const emptySelectedLocaleIds = computed(() =>
 
 const canFillEmptyTranslations = computed(() => {
   const id = defaultLocale.value?.id;
+
   return (
     !isSaving.value &&
     !!selectedEntry.value &&
@@ -507,8 +417,11 @@ const canFillEmptyTranslations = computed(() => {
 function fillEmptyTranslations() {
   const sourceId = defaultLocale.value?.id;
   const entryId = selectedEntry.value?.key;
+
   if (!canFillEmptyTranslations.value || !sourceId || entryId == null) return;
+
   const source = currentEntryForms.value[sourceId] ?? "";
+
   for (const localeId of emptySelectedLocaleIds.value) {
     setLocalizationForm(String(entryId), localeId, source);
   }
@@ -533,6 +446,7 @@ const canMachineTranslate = computed(
 const isSourceUnsaved = computed(() => {
   const entryId = selectedEntry.value?.key;
   const sourceId = defaultLocale.value?.id;
+
   return (
     entryId != null &&
     !!sourceId &&
@@ -543,10 +457,12 @@ const isSourceUnsaved = computed(() => {
 // Why "fill empty languages" can't run right now, if it can't.
 const fillEmptyBlocker = computed(() => {
   const sourceId = defaultLocale.value?.id;
+
   if (!sourceId || !currentEntryForms.value[sourceId]?.trim())
     return t("entries.noSourceText");
   if (!emptySelectedLocaleIds.value.length)
     return t("entries.noEmptyLanguages");
+
   return undefined;
 });
 
@@ -555,6 +471,7 @@ const fillEmptyBlocker = computed(() => {
 const entryActions = computed<ActionMenuItem[]>(() => {
   const items: ActionMenuItem[] = [];
   const busy = isSaving.value;
+
   if (can.value("update_entry")) {
     if (canMachineTranslate.value) {
       const hint = isTranslating.value
@@ -563,6 +480,7 @@ const entryActions = computed<ActionMenuItem[]>(() => {
           (isSourceUnsaved.value
             ? t("entries.translateSaveSourceFirst")
             : undefined));
+
       items.push({
         value: "translate",
         label: t("entries.aiTranslateEmpty"),
@@ -571,6 +489,7 @@ const entryActions = computed<ActionMenuItem[]>(() => {
         disabled: busy || !!hint,
       });
     }
+
     items.push(
       {
         value: "copy",
@@ -587,6 +506,7 @@ const entryActions = computed<ActionMenuItem[]>(() => {
       },
     );
   }
+
   if (can.value("delete_entry")) {
     items.push({
       value: "delete",
@@ -597,11 +517,13 @@ const entryActions = computed<ActionMenuItem[]>(() => {
       disabled: busy,
     });
   }
+
   return items;
 });
 
 function onEntryAction(action: string) {
   const entry = selectedEntryData.value;
+
   if (!entry) return;
   if (action === "translate") translateEmptyTranslations();
   else if (action === "copy") fillEmptyTranslations();
@@ -611,17 +533,21 @@ function onEntryAction(action: string) {
 
 async function translateEmptyTranslations() {
   const entryId = selectedEntry.value?.key;
+
   if (
     !canFillEmptyTranslations.value ||
     isSourceUnsaved.value ||
     entryId == null
   )
     return;
+
   const key = String(entryId);
+
   try {
     const suggestions = await suggestTranslations(key, [
       ...emptySelectedLocaleIds.value,
     ]);
+
     for (const { localeId, translation } of suggestions) {
       // Text typed while waiting stays.
       if (!localeId || !translation) continue;
@@ -629,138 +555,43 @@ async function translateEmptyTranslations() {
       setLocalizationForm(key, localeId, translation);
     }
   } catch (error) {
-    showError(error as Error);
+    showError(error);
   }
 }
 
-// AI translation of the ticked entries, one after the other: like for one entry,
-// the empty selected languages get drafts to review. Each entry is loaded first,
-// so its drafts save like any other.
-const MAX_BULK_TRANSLATE = 50;
-const bulkTranslation = ref<{ done: number; total: number; stop: boolean }>();
-// Built during setup, which the API client needs; the query key carries the id.
-const entryQuery = api.entries.get.use({ id: "" });
-function loadEntry(id: string) {
-  const [operation, middlewares] = entryQuery.queryKey;
-  return queryClient.fetchQuery({
-    queryKey: [operation, middlewares, { id }] as const,
-    queryFn: entryQuery.queryFn,
-    // Translating needs the saved text as it is now.
-    staleTime: 0,
-  });
-}
-const bulkTargetLocaleIds = computed(() =>
-  selectedLocaleIds.value.filter((id) => id !== defaultLocale.value?.id),
-);
-// Why the ticked entries can't be translated right now, if they can't.
-const bulkTranslateBlocker = computed(() => {
-  if (checkedEntryIds.value.length > MAX_BULK_TRANSLATE)
-    return t("entries.bulkTranslateLimit", { max: MAX_BULK_TRANSLATE });
-  if (!bulkTargetLocaleIds.value.length)
-    return t("entries.bulkTranslateNoLanguages");
-  return undefined;
+const {
+  progress: bulkTranslation,
+  blocker: bulkTranslateBlocker,
+  run: translateCheckedEntries,
+  stop: stopBulkTranslation,
+} = useBulkTranslate({
+  entryIds: checkedEntryIds,
+  selectedLocaleIds,
+  sourceLocaleId: () => defaultLocale.value?.id,
+  drafts: {
+    forms: localizationForms,
+    saved: savedTranslations,
+    register: registerEntry,
+    isDirty: isTranslationDirty,
+    setForm: setLocalizationForm,
+  },
+  suggest: suggestTranslations,
 });
 
-async function translateCheckedEntries() {
-  const sourceId = defaultLocale.value?.id;
-  if (!sourceId || bulkTranslation.value || bulkTranslateBlocker.value) return;
-  const entryIds = [...checkedEntryIds.value];
-  const targets = [...bulkTargetLocaleIds.value];
-  const result = { languages: 0, entries: 0, skipped: 0, failed: 0 };
-  bulkTranslation.value = { done: 0, total: entryIds.length, stop: false };
-  const progress = bulkTranslation.value;
-  try {
-    for (const entryId of entryIds) {
-      if (progress.stop) break;
-      try {
-        const { entry } = await loadEntry(entryId);
-        if (entry) registerEntry(entry);
-        const empty = targets.filter(
-          (id) => !(localizationForms.value[entryId]?.[id] ?? "").trim(),
-        );
-        // The server translates the saved default text.
-        const source = savedTranslations.value[entryId]?.[sourceId] ?? "";
-        if (
-          !empty.length ||
-          !source.trim() ||
-          isTranslationDirty(entryId, sourceId)
-        ) {
-          result.skipped++;
-          continue;
-        }
-        let filled = 0;
-        for (const { localeId, translation } of await suggestTranslations(
-          entryId,
-          empty,
-        )) {
-          if (!localeId) continue;
-          if (!translation) result.failed++;
-          // Text typed while waiting stays.
-          else if (
-            !(localizationForms.value[entryId]?.[localeId] ?? "").trim()
-          ) {
-            setLocalizationForm(entryId, localeId, translation);
-            filled++;
-          }
-        }
-        result.languages += filled;
-        if (filled) result.entries++;
-      } catch {
-        result.failed++;
-      } finally {
-        progress.done++;
-      }
-    }
-  } finally {
-    bulkTranslation.value = undefined;
-    const message = [
-      progress.stop ? t("entries.bulkTranslateStopped") : "",
-      t("entries.bulkTranslateDone", result),
-    ]
-      .filter(Boolean)
-      .join(" ");
-    if (result.failed && !result.languages) showError(message);
-    else showSuccess(message);
-  }
-}
-
-function stopBulkTranslation() {
-  if (bulkTranslation.value) bulkTranslation.value.stop = true;
-}
-
-function setLocalizationForm(
-  entryId: string,
-  localeId: string,
-  value: string | undefined,
-) {
-  if (value === undefined) return;
-
-  if (!localizationForms.value[entryId]) {
-    localizationForms.value[entryId] = {};
-  }
-  localizationForms.value[entryId][String(localeId)] = value;
-}
-
-const localizationStore = useLocalizationStore();
-const {
-  create: createLocalizationEndpoint,
-  update: updateLocalizationEndpoint,
-} = localizationStore;
-const { mutateAsync: createLocalization } = createLocalizationEndpoint;
-const { mutateAsync: updateLocalization } = updateLocalizationEndpoint;
-
-const { showSuccess, showError } = useErrorHelper();
+const { showError, getErrorMessage } = useErrorHelper();
 
 async function handleSave() {
   const entry = selectedEntryData.value;
+
   if (!entry?.id || isSaving.value) return;
 
   const entryId = entry.id;
   const localeIds = [...selectedUnsavedLocaleIds.value];
+
   if (!localeIds.length) return;
   await saveTranslations(
     localeIds.map((localeId) => ({
-      entryId,
+      itemId: entryId,
       localeId,
       translation: localizationForms.value[entryId]?.[localeId] ?? "",
     })),
@@ -776,91 +607,6 @@ async function handleSaveAll() {
     t("entries.translations"),
   );
 }
-
-async function saveTranslations(
-  changes: { entryId: string; localeId: string; translation: string }[],
-  label: string,
-) {
-  if (!changes.length || isSaving.value) return;
-
-  isSaving.value = true;
-  try {
-    const results = await Promise.allSettled(
-      changes.map(async ({ entryId, localeId, translation }) => {
-        const existing = knownEntries.value[entryId]?.localizations?.find(
-          (localization: Localization) =>
-            localization.localeId === String(localeId),
-        );
-
-        if (existing) {
-          const response = await updateLocalization({
-            id: existing.id,
-            translation,
-          });
-          return response.localization;
-        } else {
-          const response = await createLocalization({
-            entryId,
-            localeId: String(localeId),
-            translation,
-          });
-          return response.localization;
-        }
-      }),
-    );
-
-    for (const [index, result] of results.entries()) {
-      const change = changes[index];
-      if (result.status === "fulfilled" && change) {
-        const { entryId, localeId: id, translation } = change;
-        savedTranslations.value[entryId] ??= {};
-        savedTranslations.value[entryId][id] = translation;
-        if (result.value?.id && knownEntries.value[entryId]) {
-          const entry = knownEntries.value[entryId];
-          entry.localizations = [
-            ...(entry.localizations ?? []).filter(
-              (item) => item.localeId !== id,
-            ),
-            result.value,
-          ];
-        }
-      }
-    }
-
-    const failedLanguages = results.flatMap((result, index) => {
-      if (result.status !== "rejected") return [];
-      const change = changes[index];
-      if (!change) return [];
-      const { entryId, localeId } = change;
-      return [
-        `${knownEntries.value[entryId]?.key ?? entryId}: ${localeOption(localeId)?.label ?? localeId}`,
-      ];
-    });
-    const failed = failedLanguages.length;
-    if (failed === 0) {
-      showSuccess(t("entries.saved", { label }));
-    } else {
-      const message = t("entries.partialSave", {
-        saved: results.length - failed,
-        total: results.length,
-        failures: failedLanguages.join(", "),
-      });
-      if (failed === results.length) {
-        showError(message);
-      } else {
-        showSuccess(message); // Partial success still shows as success with warning details
-      }
-    }
-
-    await Promise.all([
-      refetch(),
-      refetchDetail(),
-      queryClient.invalidateQueries({ queryKey: historyQueryKey }),
-    ]);
-  } finally {
-    isSaving.value = false;
-  }
-}
 </script>
 
 <template>
@@ -871,7 +617,7 @@ async function saveTranslations(
   </div>
 
   <Alert v-else-if="error && !data" variant="danger" persistent>
-    <p>{{ t("entries.loadFailed", { error: error.message }) }}</p>
+    <p>{{ t("entries.loadFailed", { error: getErrorMessage(error) }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
 
@@ -935,107 +681,32 @@ async function saveTranslations(
       <span v-if="scopeError" class="text-xs text-red-600">{{
         t("scopes.loadFailed")
       }}</span>
-      <span
-        v-if="isFetching && !isFetchingNextPage && !isSaving"
-        role="status"
-        class="ml-auto text-xs text-neutral-500 dark:text-neutral-400"
-      >
-        {{ t("entries.refreshing") }}
-      </span>
-      <span v-else-if="error" role="alert" class="ml-auto text-xs text-red-600">
-        {{ t("entries.refreshFailed") }}
-        <button
-          type="button"
-          class="cursor-pointer underline"
-          @click="() => refetch()"
-        >
-          {{ t("common.retry") }}
-        </button>
-      </span>
+      <EditorRefreshStatus
+        :refreshing="isFetching && !isFetchingNextPage && !isSaving"
+        :failed="!!error"
+        :refreshing-label="t('entries.refreshing')"
+        :failed-label="t('entries.refreshFailed')"
+        @retry="refetch()"
+      />
     </div>
-    <div
+    <EntryBulkBar
       v-if="checkedEntryIds.length"
-      class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-primary-200 bg-primary-50/60 px-4 py-1.5 text-sm text-neutral-900 dark:border-primary-800 dark:bg-primary-950/30 dark:text-neutral-100"
-      role="region"
-      :aria-label="t('entries.bulkActions')"
-    >
-      <span class="font-medium" aria-live="polite">{{
-        t(
-          "entries.bulkSelected",
-          { count: checkedEntryIds.length },
-          checkedEntryIds.length,
-        )
-      }}</span>
-      <Button
-        v-if="!allLoadedChecked"
-        type="button"
-        ghost
-        dense
-        :disabled="isSaving"
-        @click="checkAllLoaded"
-      >
-        {{ t("entries.bulkSelectLoaded", { count: splitViewItems.length }) }}
-      </Button>
-      <Button
-        type="button"
-        ghost
-        dense
-        :disabled="isSaving"
-        @click="checkedEntryIds = []"
-      >
-        {{ t("entries.bulkClear") }}
-      </Button>
-      <span v-if="bulkLimitReached" role="alert" class="text-xs text-red-600">
-        {{ t("entries.bulkLimit", { max: MAX_BULK_ENTRIES }) }}
-      </span>
-      <span
-        v-if="bulkTranslation"
-        role="status"
-        class="ml-auto flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-300"
-      >
-        <Icon name="sparkle" size="xs" class="animate-pulse" />
-        {{
-          t("entries.bulkTranslateProgress", {
-            done: bulkTranslation.done,
-            total: bulkTranslation.total,
-          })
-        }}
-      </span>
-      <Button
-        v-if="bulkTranslation"
-        type="button"
-        ghost
-        dense
-        :disabled="bulkTranslation.stop"
-        @click="stopBulkTranslation"
-      >
-        {{ t("entries.bulkTranslateStop") }}
-      </Button>
-      <Button
-        v-else-if="canMachineTranslate"
-        type="button"
-        ghost
-        dense
-        icon="sparkle"
-        class="ml-auto"
-        :title="bulkTranslateBlocker"
-        :disabled="isSaving || isTranslating || !!bulkTranslateBlocker"
-        @click="translateCheckedEntries"
-      >
-        {{ t("entries.bulkTranslate") }}
-      </Button>
-      <Button
-        type="button"
-        primary
-        dense
-        icon="stack"
-        :class="{ 'ml-auto': !bulkTranslation && !canMachineTranslate }"
-        :disabled="isSaving || bulkLimitReached"
-        @click="showScopesDialog = true"
-      >
-        {{ t("entries.bulkEditScopes") }}
-      </Button>
-    </div>
+      :count="checkedEntryIds.length"
+      :loaded-count="splitViewItems.length"
+      :all-loaded-checked="allLoadedChecked"
+      :max-entries="MAX_BULK_ENTRIES"
+      :limit-reached="bulkLimitReached"
+      :is-saving="isSaving"
+      :is-translating="isTranslating"
+      :can-translate="canMachineTranslate"
+      :translate-blocker="bulkTranslateBlocker"
+      :progress="bulkTranslation"
+      @check-loaded="checkAllLoaded"
+      @clear="checkedEntryIds = []"
+      @translate="translateCheckedEntries"
+      @stop-translate="stopBulkTranslation"
+      @edit-scopes="showScopesDialog = true"
+    />
     <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
         :items="splitViewItems"
@@ -1087,102 +758,21 @@ async function saveTranslations(
           </EditorListItem>
         </template>
         <template #header="{ item }">
-          <div class="flex items-center justify-between gap-4">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <h2 class="min-w-0 font-mono font-semibold break-all">
-                  <Tooltip
-                    v-if="item?.label"
-                    :content="
-                      t(
-                        copiedKey === item.label
-                          ? 'terminologyHints.copied'
-                          : 'entries.copyKey',
-                      )
-                    "
-                  >
-                    <button
-                      type="button"
-                      class="cursor-pointer rounded-sm text-left transition-colors hover:text-primary-600 focus-visible:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:hover:text-primary-400 dark:focus-visible:text-primary-400"
-                      :aria-label="`${item.label} – ${t('entries.copyKey')}`"
-                      @click="copyKey(item.label)"
-                    >
-                      {{ item.label }}
-                    </button>
-                  </Tooltip>
-                  <template v-else>{{ t("entries.selectEntry") }}</template>
-                </h2>
-                <div
-                  v-if="selectedEntryData?.scopes?.length"
-                  class="flex flex-wrap gap-1"
-                >
-                  <ScopeChip
-                    v-for="scope in selectedEntryData.scopes"
-                    :key="scope.id ?? undefined"
-                    dense
-                    :color="scope.color"
-                    :active="!!scope.id && scopeIds.includes(scope.id)"
-                    :title="
-                      t(
-                        scope.id && scopeIds.includes(scope.id)
-                          ? 'entries.unfilterByScope'
-                          : 'entries.filterByScope',
-                        { scope: scope.name },
-                      )
-                    "
-                    class="cursor-pointer"
-                    @click="scope.id && toggleScopeFilter(scope.id)"
-                    >{{ scope.name }}</ScopeChip
-                  >
-                </div>
-                <button
-                  v-else-if="selectedEntryData"
-                  v-can="'update_entry'"
-                  type="button"
-                  class="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600 hover:underline dark:hover:text-neutral-300"
-                  :disabled="isSaving"
-                  @click="editDialogItem = selectedEntryData"
-                >
-                  {{ t("entries.noScopes") }}
-                </button>
-              </div>
-              <p
-                v-if="selectedEntryData?.description"
-                class="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
-              >
-                {{ selectedEntryData.description }}
-              </p>
-            </div>
-            <div
-              v-if="selectedEntryData"
-              class="flex shrink-0 items-center gap-2"
-            >
-              <span
-                class="mr-1.5 text-[11.5px] font-semibold whitespace-nowrap text-neutral-500 dark:text-neutral-400"
-                >{{
-                  t("entries.translatedCount", {
-                    done: translatedCount,
-                    total: selectedLocaleIds.length,
-                  })
-                }}</span
-              >
-              <span
-                v-if="selectedEntryId && isEntryWaiting(selectedEntryId)"
-                role="status"
-                class="flex items-center gap-1 text-[11.5px] font-semibold whitespace-nowrap text-primary-600 dark:text-primary-300"
-              >
-                <Icon name="sparkle" size="xs" class="animate-pulse" />
-                {{ t("entries.translating") }}
-              </span>
-              <ActionMenu
-                v-if="entryActions.length"
-                :items="entryActions"
-                :label="t('entries.actions')"
-                class="bg-neutral-100 dark:bg-white/5"
-                @select="onEntryAction"
-              />
-            </div>
-          </div>
+          <EntryHeader
+            :label="item?.label"
+            :entry="selectedEntryData"
+            :active-scope-ids="scopeIds"
+            :translated-count="translatedCount"
+            :locale-count="selectedLocaleIds.length"
+            :is-saving="isSaving"
+            :is-translating="
+              !!selectedEntryId && isEntryWaiting(selectedEntryId)
+            "
+            :actions="entryActions"
+            @toggle-scope="toggleScopeFilter"
+            @edit="editDialogItem = selectedEntryData"
+            @action="onEntryAction"
+          />
         </template>
         <template #default="{ item }">
           <div
@@ -1306,67 +896,32 @@ async function saveTranslations(
           }}</span
         >
       </span>
-      <div v-can="'update_entry'" class="flex shrink-0 items-center gap-2">
-        <Button
-          type="button"
-          ghost
-          :disabled="!allUnsavedCount || isSaving"
-          @click="requestDiscardAll"
-        >
-          {{ t("common.discardAll") }}
-        </Button>
-        <Button
-          type="button"
-          ghost
-          :disabled="!allUnsavedCount || isSaving"
-          @click="showSaveAllDialog = true"
-        >
-          {{
-            allUnsavedCount
-              ? t("common.saveAllCount", { count: allUnsavedCount })
-              : t("common.saveAll")
-          }}
-        </Button>
-        <Button
-          primary
-          :disabled="
-            !selectedEntryData || !selectedUnsavedLocaleIds.length || isSaving
-          "
-          @click="handleSave"
-        >
-          {{ isSaving ? t("common.saving") : t("common.saveChanges") }}
-        </Button>
-      </div>
+      <EditorWorkspaceActions
+        v-can="'update_entry'"
+        show-save-all
+        :unsaved-count="allUnsavedCount"
+        :can-save="!!selectedEntryData && !!selectedUnsavedLocaleIds.length"
+        :is-saving="isSaving"
+        @discard-all="requestDiscardAll"
+        @save-all="showSaveAllDialog = true"
+        @save="handleSave"
+      />
     </div>
   </section>
-  <Dialog
+  <EditorSaveAllDialog
     :open="showSaveAllDialog"
     :title="t('entries.saveAllTitle')"
+    :message="
+      t('entries.saveAllConfirm', {
+        count: allUnsavedCount,
+        entries: new Set(allUnsavedTranslations.map((change) => change.itemId))
+          .size,
+      })
+    "
+    :disabled="!allUnsavedCount || isSaving"
     @close="showSaveAllDialog = false"
-  >
-    <p class="text-sm text-neutral-500 dark:text-neutral-400">
-      {{
-        t("entries.saveAllConfirm", {
-          count: allUnsavedCount,
-          entries: new Set(
-            allUnsavedTranslations.map((change) => change.entryId),
-          ).size,
-        })
-      }}
-    </p>
-    <div class="mt-6 flex justify-end gap-3">
-      <Button type="button" ghost @click="showSaveAllDialog = false">{{
-        t("common.cancel")
-      }}</Button>
-      <Button
-        type="button"
-        primary
-        :disabled="!allUnsavedCount || isSaving"
-        @click="handleSaveAll"
-        >{{ t("common.saveAll") }}</Button
-      >
-    </div>
-  </Dialog>
+    @confirm="handleSaveAll"
+  />
   <EditorDiscardDialog
     :open="showDiscardDialog"
     :count="allUnsavedCount"
@@ -1388,7 +943,7 @@ async function saveTranslations(
   <EntryTransferDialog
     :open="showTransferDialog"
     :action="transferAction"
-    :locales="localeData?.locales ?? []"
+    :locales="locales"
     @close="showTransferDialog = false"
   />
   <EntryFormDialog

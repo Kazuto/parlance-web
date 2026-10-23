@@ -32,9 +32,5 @@ export function useToast() {
     });
   }
 
-  function dismiss(id: number) {
-    toastStack?.value?.dismiss(id);
-  }
-
-  return { add, dismiss };
+  return { add };
 }

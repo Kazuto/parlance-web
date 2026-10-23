@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { HEX_COLOR } from "~/lib/colors";
 import {
   Button,
   Dialog,
@@ -13,19 +14,14 @@ const props = defineProps<{ open: boolean; item?: Scope }>();
 const emit = defineEmits<{ close: [] }>();
 
 const DEFAULT_COLOR = "#6366f1";
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 const form = ref({ name: "", slug: "", description: "", color: "" });
 // Follow the name until the slug is edited by hand; existing slugs are never rewritten.
 const slugTouched = ref(false);
-const error = ref<string>();
 const scopeStore = useScopeStore();
 const isEdit = computed(() => !!props.item);
-const isPending = computed(
-  () => scopeStore.create.isPending || scopeStore.update.isPending,
-);
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 const colorInvalid = computed(
   () => !!form.value.color && !HEX_COLOR.test(form.value.color),
 );
@@ -55,10 +51,10 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => scopeStore.create.isPending || scopeStore.update.isPending,
+  reset: () => {
     form.value = {
       name: props.item?.name ?? "",
       slug: props.item?.slug ?? "",
@@ -66,10 +62,10 @@ watch(
       color: props.item?.color ?? "",
     };
     slugTouched.value = isEdit.value;
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
+
 watch(
   () => form.value.name,
   (name) => {
@@ -82,46 +78,39 @@ function updateSlug(value: string | undefined) {
   form.value.slug = value ?? "";
 }
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    const name = form.value.name.trim();
+    const slug = slugify(form.value.slug);
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  const name = form.value.name.trim();
-  const slug = slugify(form.value.slug);
-  if (!name || !slug) {
-    error.value = t("scopes.nameSlugRequired");
-    return;
-  }
-  if (colorInvalid.value) {
-    error.value = t("scopes.colorInvalid");
-    return;
-  }
-  const input = {
-    name,
-    slug,
-    description: form.value.description.trim(),
-    color: form.value.color,
-  };
-  try {
+    if (!name || !slug) {
+      error.value = t("scopes.nameSlugRequired");
+
+      return false;
+    }
+
+    if (colorInvalid.value) {
+      error.value = t("scopes.colorInvalid");
+
+      return false;
+    }
+
+    const input = {
+      name,
+      slug,
+      description: form.value.description.trim(),
+      color: form.value.color,
+    };
+
     if (props.item) {
-      if (!props.item.id) return;
+      if (!props.item.id) return false;
       await scopeStore.update.mutateAsync({ id: props.item.id, ...input });
       showSuccess(t("scopes.updated", { name }));
     } else {
       await scopeStore.create.mutateAsync(input);
       showSuccess(t("scopes.created", { name }));
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(isEdit.value ? "scopes.updateFailed" : "scopes.createFailed");
-  }
+  });
 }
 </script>
 
@@ -130,7 +119,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'scopes.edit' : 'scopes.create')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -183,7 +172,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

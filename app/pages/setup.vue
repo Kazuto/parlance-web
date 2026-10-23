@@ -37,16 +37,19 @@ async function handleSetup() {
   // Validation
   if (!adminEmail.value || !adminPassword.value || !adminName.value) {
     error.value = t("setup.allFieldsRequired");
+
     return;
   }
 
   if (adminPassword.value !== adminPasswordConfirm.value) {
     error.value = t("setup.passwordsDoNotMatch");
+
     return;
   }
 
   if (adminPassword.value.length < 8) {
     error.value = t("setup.passwordTooShort");
+
     return;
   }
 

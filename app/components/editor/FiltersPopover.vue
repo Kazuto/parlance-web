@@ -1,4 +1,6 @@
 <script setup lang="ts">
+// The filters button of an editor page: languages to show, plus what the page
+// puts in the default slot.
 import { Badge, Button, Checkbox } from "@thkzt/eunoia";
 import { onClickOutside, useEventListener } from "@vueuse/core";
 
@@ -49,7 +51,9 @@ function close() {
 async function toggle() {
   if (props.disabled) return;
   if (open.value) return close();
+
   const rect = trigger.value?.getBoundingClientRect();
+
   if (!rect) return;
   position.value = {
     top: `${rect.bottom + 4}px`,
@@ -145,6 +149,9 @@ watch(() => props.disabled, close);
           </Checkbox>
         </div>
       </fieldset>
+
+      <!-- Further filters of the page -->
+      <slot />
     </div>
   </Teleport>
 </template>

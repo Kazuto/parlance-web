@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import {
   Alert,
   Button,
@@ -8,12 +9,12 @@ import {
   Chip,
 } from "@thkzt/eunoia";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
+import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
+import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import {
   useTerminologyDetail,
   useTerminologyFeed,
 } from "~/composables/terminology/useTerminologyFeed";
-import { watchDebounced, useMediaQuery } from "@vueuse/core";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 import type { Definition } from "~/lib/api/schemas/parlance/v1/DefinitionSchema";
 
@@ -44,14 +45,19 @@ const {
   total: terminologyTotal,
   isLoading,
   isFetching,
+  isFetchingNextPage,
+  hasNextPage,
+  fetchNextPage,
   error,
   refetch,
   search: feedSearch,
   targetLocaleIds,
 } = useTerminologyFeed(100);
 
-const { data: localeData, pagination } = useLocaleList();
-pagination.value.perPage = 100;
+const { items: locales } = useAllPages(
+  api.locales.list,
+  (response) => response.locales,
+);
 
 const selectedLocaleIds = ref<string[]>([]);
 const {
@@ -63,16 +69,29 @@ const {
   selectedLanguageLabels,
   languageSummary,
   languagesFiltered,
-} = useEditorLocales(() => localeData.value?.locales, selectedLocaleIds);
+} = useEditorLocales(() => locales.value, selectedLocaleIds);
+const {
+  contextOpen,
+  activeLocaleId,
+  activeLocaleName,
+  toggleContext,
+  onRowFocus,
+} = useEditorContextPanel({
+  selectedLocaleIds,
+  orderedSelectedLocaleIds,
+  defaultLocaleId: () => defaultLocale.value?.id,
+  localeLabel: (id) => localeOption(id)?.label ?? "",
+});
 const storedFilters = useStoredFilters();
 
 // Initialize selectedLocaleIds once when locales are loaded, with the languages
 // last picked here or on the entries page.
 watch(
-  () => localeData.value?.locales,
+  () => locales.value,
   (locales) => {
     if (locales && selectedLocaleIds.value.length === 0) {
       const stored = localeIdsFromCodes(locales, storedFilters.languages.value);
+
       selectedLocaleIds.value = stored.length
         ? stored
         : [...defaultLocaleIds.value];
@@ -84,9 +103,8 @@ watch(
 watch(
   selectedLocaleIds,
   (ids) => {
-    const locales = localeData.value?.locales ?? [];
     storedFilters.languages.value = ids
-      .map((id) => locales.find((locale) => locale.id === id)?.code)
+      .map((id) => locales.value.find((locale) => locale.id === id)?.code)
       .filter((code): code is string => !!code);
   },
   { deep: true },
@@ -120,6 +138,7 @@ const searchPlaceholder = useSearchExamples(
       terminology.term,
       terminology.definitions?.find((definition) => {
         const translation = definition.translation?.trim().toLowerCase();
+
         return (
           definition.localeId !== defaultLocale.value?.id &&
           !!translation &&
@@ -130,63 +149,11 @@ const searchPlaceholder = useSearchExamples(
   search,
   () => t("terminologies.search"),
 );
-const isSaving = ref(false);
-const contextOpen = ref(true);
-const narrowWorkspace = useMediaQuery("(max-width: 1100px)");
-watch(
-  narrowWorkspace,
-  (narrow) => {
-    if (narrow) contextOpen.value = false;
-  },
-  { immediate: true },
-);
-const activeLocaleId = ref<string>();
-const activeLocaleName = computed(
-  () => localeOption(activeLocaleId.value)?.label ?? "",
-);
-
-// The row button toggles: on the language already shown it closes the panel.
-function toggleContext(localeId: string) {
-  if (contextOpen.value && activeLocaleId.value === localeId) {
-    contextOpen.value = false;
-    return;
-  }
-  activeLocaleId.value = localeId;
-  contextOpen.value = true;
-}
-
-// Typing in another language moves an open panel along, without opening it.
-function onRowFocus(localeId: string) {
-  if (contextOpen.value) activeLocaleId.value = localeId;
-}
-
-// The panel starts on the source language, like the rows are ordered.
-watch(
-  [selectedLocaleIds, () => defaultLocale.value?.id],
-  () => {
-    if (
-      !activeLocaleId.value ||
-      !selectedLocaleIds.value.includes(activeLocaleId.value)
-    ) {
-      activeLocaleId.value = orderedSelectedLocaleIds.value[0];
-    }
-  },
-  { deep: true },
-);
-
-watchDebounced(
+const { onKeydown: onSearchKeydown } = useDebouncedSearch(
   search,
-  (value) => {
-    feedSearch.value = value;
-  },
-  { debounce: 350 },
+  (value) => (feedSearch.value = value),
+  350,
 );
-
-function onSearchKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || !search.value) return;
-  event.preventDefault();
-  search.value = "";
-}
 
 feedSearch.value = search.value || undefined;
 
@@ -211,18 +178,65 @@ function selectTerminology(item: SplitViewItem) {
 }
 
 async function handleDeleted(id: string) {
-  Reflect.deleteProperty(definitionForms.value, id);
-  Reflect.deleteProperty(savedDefinitions.value, id);
-  Reflect.deleteProperty(knownTerminologies.value, id);
+  forgetTerminology(id);
   pinnedTerminologyId.value = undefined;
   selectedTerminology.value = undefined;
   await refetch();
 }
 
-const knownTerminologies = ref<Record<string, Terminology>>({});
+const selectedTerminologyId = computed(() =>
+  selectedTerminology.value ? String(selectedTerminology.value.key) : undefined,
+);
+const definitionStore = useDefinitionStore();
+const {
+  forms: definitionForms,
+  saved: savedDefinitions,
+  known: knownTerminologies,
+  isSaving,
+  showDiscardDialog,
+  register: registerTerminology,
+  forget: forgetTerminology,
+  setForm: setDefinitionForm,
+  isDirty: isDefinitionDirty,
+  hasUnsaved: hasUnsavedDefinitions,
+  currentForms: currentTerminologyForms,
+  unsavedLocaleIds,
+  allUnsavedCount,
+  discardChanges,
+  requestDiscardAll,
+  save: saveDefinitions,
+} = useTranslationDrafts<Terminology, Definition>({
+  name: "terminology-definitions",
+  selectedId: selectedTerminologyId,
+  rows: (terminology) => terminology.definitions,
+  setRows: (terminology, definitions) =>
+    (terminology.definitions = definitions),
+  upsert: async ({ itemId, localeId, translation }, existing) =>
+    existing
+      ? (
+          await definitionStore.update.mutateAsync({
+            id: existing.id ?? "",
+            translation,
+          })
+        ).definition
+      : (
+          await definitionStore.create.mutateAsync({
+            terminologyId: itemId,
+            localeId,
+            translation,
+          })
+        ).definition,
+  describe: ({ itemId, localeId }, terminology) =>
+    `${terminology?.term ?? itemId}: ${localeOption(localeId)?.label ?? localeId}`,
+  messages: {
+    saved: "terminologies.saved",
+    partial: "terminologies.partialSave",
+  },
+  afterSave: () => Promise.all([refetch(), refetchDetail()]),
+});
 
 const splitViewItems = computed((): SplitViewItem[] => {
-  const activeLocales = localeData.value?.locales?.filter(
+  const activeLocales = locales.value.filter(
     (locale) => !locale.deletedAt && locale.id,
   );
   const activeLocaleIds =
@@ -256,6 +270,7 @@ const splitViewItems = computed((): SplitViewItem[] => {
 
 function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
+
   return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
 }
 
@@ -263,7 +278,9 @@ watch(
   splitViewItems,
   (items) => {
     const id = selectedTerminology.value?.key;
+
     if (id !== undefined && id === pinnedTerminologyId.value) return;
+
     if (!items.some((item) => item.key === id)) {
       selectedTerminology.value = items[0];
     }
@@ -271,9 +288,6 @@ watch(
   { immediate: true },
 );
 
-const selectedTerminologyId = computed(() =>
-  selectedTerminology.value ? String(selectedTerminology.value.key) : undefined,
-);
 const {
   data: detailData,
   isLoading: isDetailLoading,
@@ -281,12 +295,10 @@ const {
   refetch: refetchDetail,
 } = useTerminologyDetail(selectedTerminologyId);
 
-const definitionForms = ref<Record<string, Record<string, string>>>({});
-const savedDefinitions = ref<Record<string, Record<string, string>>>({});
-
 function handleTerminologyUpdated(terminology: Terminology) {
   if (terminology.id) {
     const known = knownTerminologies.value[terminology.id];
+
     knownTerminologies.value[terminology.id] = {
       ...terminology,
       definitions: terminology.definitions?.length
@@ -295,6 +307,7 @@ function handleTerminologyUpdated(terminology: Terminology) {
     };
     if (terminology.id === selectedTerminologyId.value) refetchDetail();
   }
+
   if (terminology.id && selectedTerminology.value?.key === terminology.id) {
     selectedTerminology.value = {
       key: terminology.id,
@@ -305,96 +318,17 @@ function handleTerminologyUpdated(terminology: Terminology) {
 
 watch(
   () => detailData.value?.terminology,
-  (detail) => {
-    for (const terminology of detail ? [detail] : []) {
-      if (!terminology.id) continue;
-      knownTerminologies.value[terminology.id] = {
-        ...terminology,
-        definitions: [...(terminology.definitions ?? [])],
-      };
-      const saved = Object.fromEntries(
-        (terminology.definitions ?? [])
-          .filter((definition) => !!definition.localeId)
-          .map((definition) => [
-            String(definition.localeId),
-            definition.translation ?? "",
-          ]),
-      );
-      const previous = savedDefinitions.value[terminology.id] ?? {};
-      const drafts = definitionForms.value[terminology.id] ?? {};
-      const next = { ...saved };
-      for (const [localeId, value] of Object.entries(drafts)) {
-        if (value !== (previous[localeId] ?? "")) next[localeId] = value;
-      }
-      definitionForms.value[terminology.id] = next;
-      savedDefinitions.value[terminology.id] = saved;
-    }
+  (terminology) => {
+    if (terminology) registerTerminology(terminology);
   },
   { immediate: true },
 );
-
-function isDefinitionDirty(terminologyId: string, localeId: string) {
-  return (
-    (definitionForms.value[terminologyId]?.[localeId] ?? "") !==
-    (savedDefinitions.value[terminologyId]?.[localeId] ?? "")
-  );
-}
-
-function hasUnsavedDefinitions(terminologyId: string) {
-  return Object.keys(definitionForms.value[terminologyId] ?? {}).some(
-    (localeId) => isDefinitionDirty(terminologyId, localeId),
-  );
-}
-
-const unsavedLocaleIds = computed(() => {
-  const id = selectedTerminology.value?.key;
-  return id == null
-    ? []
-    : Object.keys(definitionForms.value[String(id)] ?? {}).filter((localeId) =>
-        isDefinitionDirty(String(id), localeId),
-      );
-});
 
 const selectedUnsavedLocaleIds = computed(() =>
   selectedLocaleIds.value.filter((localeId) =>
     unsavedLocaleIds.value.includes(localeId),
   ),
 );
-
-const allUnsavedDefinitions = computed(() =>
-  Object.entries(definitionForms.value).flatMap(
-    ([terminologyId, definitions]) =>
-      Object.entries(definitions)
-        .filter(([localeId]) => isDefinitionDirty(terminologyId, localeId))
-        .map(([localeId, translation]) => ({
-          terminologyId,
-          localeId,
-          translation,
-        })),
-  ),
-);
-const allUnsavedCount = computed(() => allUnsavedDefinitions.value.length);
-registerUnsavedChanges("terminology-definitions", allUnsavedCount, isSaving);
-
-const showDiscardDialog = ref(false);
-
-function discardChanges() {
-  showDiscardDialog.value = false;
-  for (const terminologyId of Object.keys(definitionForms.value)) {
-    definitionForms.value[terminologyId] = {
-      ...(savedDefinitions.value[terminologyId] ?? {}),
-    };
-  }
-}
-
-// Changes on the open term go right away; others are out of sight, so confirm.
-function requestDiscardAll() {
-  const onlyCurrent = allUnsavedDefinitions.value.every(
-    (change) => change.terminologyId === selectedTerminologyId.value,
-  );
-  if (onlyCurrent) discardChanges();
-  else showDiscardDialog.value = true;
-}
 
 const selectedTerminologyData = computed(() =>
   selectedTerminologyId.value
@@ -408,12 +342,6 @@ const isEditorLoading = computed(
     !selectedTerminologyData.value &&
     isDetailLoading.value,
 );
-
-const currentTerminologyForms = computed(() => {
-  const key = selectedTerminology.value?.key;
-  if (!key) return {};
-  return definitionForms.value[key] ?? {};
-});
 
 // Counts what is typed, not only what is saved, so the header follows along.
 const definedCount = computed(
@@ -429,6 +357,7 @@ function canEditDefinition(terminologyId: string, localeId: string) {
   const exists = knownTerminologies.value[terminologyId]?.definitions?.some(
     (definition: Definition) => definition.localeId === localeId,
   );
+
   return can.value(exists ? "update_definition" : "create_definition");
 }
 
@@ -443,6 +372,7 @@ const emptySelectedLocaleIds = computed(() =>
 
 const canFillEmptyDefinitions = computed(() => {
   const id = defaultLocale.value?.id;
+
   return (
     !isSaving.value &&
     !!selectedTerminology.value &&
@@ -455,135 +385,36 @@ const canFillEmptyDefinitions = computed(() => {
 function fillEmptyDefinitions() {
   const sourceId = defaultLocale.value?.id;
   const terminologyId = selectedTerminology.value?.key;
+
   if (!canFillEmptyDefinitions.value || !sourceId || terminologyId == null)
     return;
+
   const source = currentTerminologyForms.value[sourceId] ?? "";
+
   for (const localeId of emptySelectedLocaleIds.value) {
     setDefinitionForm(String(terminologyId), localeId, source);
   }
 }
 
-function setDefinitionForm(
-  terminologyId: string,
-  localeId: string,
-  value: string | undefined,
-) {
-  if (value === undefined) return;
-  if (!definitionForms.value[terminologyId]) {
-    definitionForms.value[terminologyId] = {};
-  }
-  definitionForms.value[terminologyId][String(localeId)] = value;
-}
-
-const definitionStore = useDefinitionStore();
-const { create: createDefinitionEndpoint, update: updateDefinitionEndpoint } =
-  definitionStore;
-const { mutateAsync: createDefinition } = createDefinitionEndpoint;
-const { mutateAsync: updateDefinition } = updateDefinitionEndpoint;
-
-const { showSuccess, showError } = useErrorHelper();
+const { getErrorMessage } = useErrorHelper();
 
 async function handleSave() {
   const terminology = selectedTerminologyData.value;
+
   if (!terminology?.id || isSaving.value) return;
 
   const terminologyId = terminology.id;
   const localeIds = [...selectedUnsavedLocaleIds.value];
+
   if (!localeIds.length) return;
   await saveDefinitions(
     localeIds.map((localeId) => ({
-      terminologyId,
+      itemId: terminologyId,
       localeId,
       translation: definitionForms.value[terminologyId]?.[localeId] ?? "",
     })),
     t("terminologies.definitionLabel", { term: terminology.term ?? "" }),
   );
-}
-
-async function saveDefinitions(
-  changes: {
-    terminologyId: string;
-    localeId: string;
-    translation: string;
-  }[],
-  label: string,
-) {
-  if (!changes.length || isSaving.value) return;
-
-  isSaving.value = true;
-  try {
-    const results = await Promise.allSettled(
-      changes.map(async ({ terminologyId, localeId, translation }) => {
-        const existing = knownTerminologies.value[
-          terminologyId
-        ]?.definitions?.find(
-          (definition: Definition) => definition.localeId === String(localeId),
-        );
-
-        if (existing) {
-          const response = await updateDefinition({
-            id: existing.id ?? "",
-            translation,
-          });
-          return response.definition;
-        } else {
-          const response = await createDefinition({
-            terminologyId,
-            localeId: String(localeId),
-            translation,
-          });
-          return response.definition;
-        }
-      }),
-    );
-
-    for (const [index, result] of results.entries()) {
-      const change = changes[index];
-      if (result.status === "fulfilled" && change) {
-        const { terminologyId, localeId: id, translation } = change;
-        savedDefinitions.value[terminologyId] ??= {};
-        savedDefinitions.value[terminologyId][id] = translation;
-        if (result.value?.id && knownTerminologies.value[terminologyId]) {
-          const terminology = knownTerminologies.value[terminologyId];
-          terminology.definitions = [
-            ...(terminology.definitions ?? []).filter(
-              (item) => item.localeId !== id,
-            ),
-            result.value,
-          ];
-        }
-      }
-    }
-
-    const failedLanguages = results.flatMap((result, index) => {
-      if (result.status !== "rejected") return [];
-      const change = changes[index];
-      if (!change) return [];
-      const { terminologyId, localeId } = change;
-      return [
-        `${knownTerminologies.value[terminologyId]?.term ?? terminologyId}: ${localeOption(localeId)?.label ?? localeId}`,
-      ];
-    });
-    const failed = failedLanguages.length;
-    if (failed === 0) {
-      showSuccess(t("terminologies.saved", { label }));
-    } else {
-      const message = t("terminologies.partialSave", {
-        saved: results.length - failed,
-        total: results.length,
-        failures: failedLanguages.join(", "),
-      });
-      if (failed === results.length) {
-        showError(message);
-      } else {
-        showSuccess(message);
-      }
-    }
-
-    await Promise.all([refetch(), refetchDetail()]);
-  } finally {
-    isSaving.value = false;
-  }
 }
 </script>
 
@@ -595,7 +426,9 @@ async function saveDefinitions(
   </div>
 
   <Alert v-else-if="error && !data" variant="danger" persistent>
-    <p>{{ t("terminologies.loadFailed", { error: error.message }) }}</p>
+    <p>
+      {{ t("terminologies.loadFailed", { error: getErrorMessage(error) }) }}
+    </p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
 
@@ -618,7 +451,7 @@ async function saveDefinitions(
           shortcut="/"
         />
       </div>
-      <TerminologyFiltersPopover
+      <EditorFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
         :locale-options="localeOptions"
         :active-count="activeFilterCount"
@@ -632,31 +465,23 @@ async function saveDefinitions(
       >
         {{ languageSummary }}
       </Chip>
-      <span
-        v-if="isFetching && !isSaving"
-        role="status"
-        class="ml-auto text-xs text-neutral-500 dark:text-neutral-400"
-      >
-        {{ t("common.refreshing") }}
-      </span>
-      <span v-else-if="error" role="alert" class="ml-auto text-xs text-red-600">
-        {{ t("common.refreshFailed") }}
-        <button
-          type="button"
-          class="cursor-pointer underline"
-          @click="() => refetch()"
-        >
-          {{ t("common.retry") }}
-        </button>
-      </span>
+      <EditorRefreshStatus
+        :refreshing="isFetching && !isFetchingNextPage && !isSaving"
+        :failed="!!error"
+        @retry="refetch()"
+      />
     </div>
     <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
         :items="splitViewItems"
         :selected="selectedTerminology"
+        virtual
+        :has-more="hasNextPage"
+        :loading="isFetchingNextPage"
         :total="terminologyTotal"
         class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
         @select="selectTerminology"
+        @end-reached="fetchNextPage()"
       >
         <template #empty>
           <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
@@ -836,30 +661,16 @@ async function saveDefinitions(
           }}</span
         >
       </span>
-      <div
+      <EditorWorkspaceActions
         v-can="{ any: ['create_definition', 'update_definition'] }"
-        class="flex shrink-0 items-center gap-2"
-      >
-        <Button
-          type="button"
-          ghost
-          :disabled="!allUnsavedCount || isSaving"
-          @click="requestDiscardAll"
-        >
-          {{ t("common.discardAll") }}
-        </Button>
-        <Button
-          primary
-          :disabled="
-            !selectedTerminologyData ||
-            !selectedUnsavedLocaleIds.length ||
-            isSaving
-          "
-          @click="handleSave"
-        >
-          {{ isSaving ? t("common.saving") : t("common.saveChanges") }}
-        </Button>
-      </div>
+        :unsaved-count="allUnsavedCount"
+        :can-save="
+          !!selectedTerminologyData && !!selectedUnsavedLocaleIds.length
+        "
+        :is-saving="isSaving"
+        @discard-all="requestDiscardAll"
+        @save="handleSave"
+      />
     </div>
   </section>
 

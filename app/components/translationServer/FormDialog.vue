@@ -23,19 +23,15 @@ const form = ref({
   maxConcurrency: 2,
   enabled: true,
 });
-const error = ref<string>();
 const store = useTranslationServerStore();
 const isEdit = computed(() => !!props.item);
-const isPending = computed(
-  () => store.create.isPending || store.update.isPending,
-);
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => store.create.isPending || store.update.isPending,
+  reset: () => {
     form.value = {
       name: props.item?.name ?? "",
       baseUrl: props.item?.baseUrl ?? "",
@@ -47,56 +43,52 @@ watch(
       // server starts on.
       enabled: props.item ? !!props.item.enabled : true,
     };
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
 function isHttpUrl(value: string) {
   try {
     const url = new URL(value);
+
     return url.protocol === "http:" || url.protocol === "https:";
   } catch {
     return false;
   }
 }
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    const name = form.value.name.trim();
+    const baseUrl = form.value.baseUrl.trim();
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  const name = form.value.name.trim();
-  const baseUrl = form.value.baseUrl.trim();
-  if (!name || !isHttpUrl(baseUrl)) {
-    error.value = t("translationServers.nameUrlRequired");
-    return;
-  }
-  const input = {
-    name,
-    baseUrl,
-    model: form.value.model.trim(),
-    maxConcurrency: form.value.maxConcurrency,
-    enabled: form.value.enabled,
-  };
-  try {
+    if (!name || !isHttpUrl(baseUrl)) {
+      error.value = t("translationServers.nameUrlRequired");
+
+      return false;
+    }
+
+    const input = {
+      name,
+      baseUrl,
+      model: form.value.model.trim(),
+      maxConcurrency: form.value.maxConcurrency,
+      enabled: form.value.enabled,
+    };
+
     if (props.item?.id) {
       // Only a typed key replaces the stored one; removing sends an empty key.
       const apiKey = form.value.removeApiKey
         ? ""
         : form.value.apiKey || undefined;
+
       await store.update.mutateAsync({ id: props.item.id, ...input, apiKey });
       showSuccess(t("translationServers.updated", { name }));
     } else {
       await store.create.mutateAsync({ ...input, apiKey: form.value.apiKey });
       showSuccess(t("translationServers.created", { name }));
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-  }
+  });
 }
 </script>
 
@@ -105,7 +97,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'translationServers.edit' : 'translationServers.add')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -172,7 +164,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

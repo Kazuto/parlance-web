@@ -1,9 +1,12 @@
 import type { LocaleObject } from "@nuxtjs/i18n";
 
+/** Where the UI language picked in this browser is kept. */
+export const PREFERRED_LOCALE_KEY = "preferred-locale";
+
 export function useLocalePreference() {
   const { locale, locales, setLocale } = useI18n();
   const authStore = useAuthStore();
-  const storedLocale = useLocalStorage("preferred-locale", "");
+  const storedLocale = useLocalStorage(PREFERRED_LOCALE_KEY, "");
 
   // First supported locale from the browser's languages, matching "de-AT" to "de"
   const browserLocale = () =>

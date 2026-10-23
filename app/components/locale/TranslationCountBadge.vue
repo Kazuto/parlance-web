@@ -35,6 +35,7 @@ const variant = computed(() => {
   if (percentage.value === 100) return "success";
   if (percentage.value >= 75) return "primary";
   if (percentage.value >= 50) return "warning";
+
   return "secondary";
 });
 

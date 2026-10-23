@@ -1,19 +1,25 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import { Alert, Button, Card, Tabs } from "@thkzt/eunoia";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
 
 type Action = "import" | "export";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const { getErrorMessage } = useErrorHelper();
 const { canAll } = usePermission();
 // Importing creates entries and overwrites translations.
 const canImport = computed(() =>
   canAll.value(["create_entry", "update_entry"]),
 );
-const { data, isLoading, error, refetch, pagination } = useLocaleList();
-pagination.value.perPage = 100;
+const {
+  items: locales,
+  data,
+  isLoading,
+  error,
+  refetch,
+} = useAllPages(api.locales.list, (response) => response.locales);
 const isPending = ref(false);
 
 // Kept in the query so links and reloads land on the same tab.
@@ -48,7 +54,7 @@ usePage(() => ({
     {{ t("locales.loading") }}
   </div>
   <Alert v-else-if="error && !data" variant="danger" persistent>
-    <p>{{ t("locales.loadFailed", { error: error.message }) }}</p>
+    <p>{{ t("locales.loadFailed", { error: getErrorMessage(error) }) }}</p>
     <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
   </Alert>
   <Card v-else class="max-w-2xl">
@@ -63,7 +69,7 @@ usePage(() => ({
           :key="item.value"
           v-model:pending="isPending"
           :action="item.value as Action"
-          :locales="data?.locales ?? []"
+          :locales="locales"
         />
       </template>
     </Tabs>

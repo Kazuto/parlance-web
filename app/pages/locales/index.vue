@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { entriesLink } from "~/composables/entry/useEntryFilterQuery";
+import { useQuery } from "@tanstack/vue-query";
+import { api } from "~/lib/api";
 import {
   Alert,
   DataTable,
@@ -10,17 +13,17 @@ import {
   Icon,
   Pagination,
 } from "@thkzt/eunoia";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
 import { useZipExport } from "~/composables/export/useZipExport";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-const { data, filter, pagination, isFetching, error, refetch } =
-  useLocaleList();
-
 const { can, canAll } = usePermission();
 
-// Only show deleted locales to users with permanent_delete_locale permission
-filter.value.includeDeleted = can.value("permanent_delete_locale");
+// Deleted locales only reach users with permanent_delete_locale; the server drops
+// the flag for everyone else.
+const { data, pagination, isFetching, error, refetch } = usePaginatedList(
+  api.locales.list,
+  { includeDeleted: true },
+);
 
 const { t } = useI18n();
 const { getErrorMessage, showSuccess, showError } = useErrorHelper();
@@ -34,13 +37,11 @@ function entriesUrl(locale: Locale, status?: "missing") {
   const defaultCode = data.value?.locales?.find(
     (other) => other.isDefault && !other.deletedAt,
   )?.code;
-  const codes = [
-    ...new Set(
-      [defaultCode, locale.code].filter((code): code is string => !!code),
-    ),
-  ];
-  const locales = `locales=${codes.map(encodeURIComponent).join(",")}`;
-  return `/entries?${locales}${status ? `&status=${status}` : ""}`;
+  const codes = [defaultCode, locale.code].filter(
+    (code): code is string => !!code,
+  );
+
+  return entriesLink({ locales: [...new Set(codes)], status });
 }
 
 async function handleExportZip() {
@@ -48,7 +49,7 @@ async function handleExportZip() {
     await exportZip();
     showSuccess(t("export.zip.success"));
   } catch (error) {
-    showError(error as Error);
+    showError(error);
   }
 }
 
@@ -88,7 +89,7 @@ usePage(() => ({
   ],
 }));
 
-const tableColumns: DataTableColumn<Locale>[] = [
+const tableColumns = computed<DataTableColumn<Locale>[]>(() => [
   {
     title: t("common.code"),
     key: "code",
@@ -114,23 +115,22 @@ const tableColumns: DataTableColumn<Locale>[] = [
     key: "updatedAt",
     sortable: true,
   },
-];
+]);
 
-const { mapTranslatable } = useTranslatable<Locale>();
 const localeName = useLocaleName();
+// The same query the status badges read, so the column sorts by what they show.
+const { data: stats } = useQuery(api.stats.get.use({}));
 
 // The name in the UI language, so the column also sorts by it.
-const tableItems = computed(() => {
-  if (!data.value?.locales) return [];
-
-  return mapTranslatable(
-    data.value.locales.map((locale) => ({
-      ...locale,
-      name: localeName(locale),
-    })),
-    "names",
-  );
-});
+const tableItems = computed(() =>
+  (data.value?.locales ?? []).map((locale) => ({
+    ...locale,
+    name: localeName(locale),
+    translations:
+      stats.value?.byLocale?.find((item) => item.localeId === locale.id)
+        ?.percentage ?? 0,
+  })),
+);
 
 const showDialog = ref(false);
 const deleteDialogItem = ref<Locale | undefined>(undefined);

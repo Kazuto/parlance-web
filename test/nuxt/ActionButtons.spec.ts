@@ -12,7 +12,9 @@ async function mountButtons() {
       deleteLabel: "Delete scope",
     },
   });
+
   await settle();
+
   return wrapper;
 }
 
@@ -37,6 +39,7 @@ describe("BaseActionButtons", () => {
 
   it("emits edit and delete", async () => {
     loginAs(["update_scope", "delete_scope"]);
+
     const wrapper = await mountButtons();
 
     await wrapper.find('[aria-label="Edit scope"]').trigger("click");
@@ -48,7 +51,9 @@ describe("BaseActionButtons", () => {
 
   it("follows permission changes", async () => {
     loginAs([]);
+
     const wrapper = await mountButtons();
+
     expect(labels(wrapper)).toEqual([]);
 
     changePermissions(["delete_scope"]);

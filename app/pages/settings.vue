@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Card, Headline, Text } from "@thkzt/eunoia";
-import { useMutation } from "@tanstack/vue-query";
-import { api } from "~/lib/api";
 import type { LocaleObject } from "@nuxtjs/i18n";
 
 const { t, locale, locales, setLocale } = useI18n();
 const authStore = useAuthStore();
-const storedLocale = useLocalStorage("preferred-locale", "");
+const storedLocale = useLocalStorage(PREFERRED_LOCALE_KEY, "");
 const { showError } = useErrorHelper();
 const { can } = usePermission();
 
@@ -21,10 +19,8 @@ const availableLocales = computed(() => locales.value);
 
 const currentLocale = computed(() => locale.value);
 
-// Mutation to update user locale in backend
-const { mutateAsync: updateUserLocale, isPending: isUpdating } = useMutation({
-  ...api.users.update.use(),
-});
+const userStore = useUserStore();
+const isUpdating = computed(() => userStore.update.isPending);
 
 const setLanguage = async (localeCode: LocaleObject["code"]) => {
   const previousLocale = locale.value;
@@ -38,7 +34,7 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
 
     // Save to backend if user is logged in
     if (authStore.user?.id) {
-      const updatedUser = await updateUserLocale({
+      const updatedUser = await userStore.update.mutateAsync({
         id: authStore.user.id,
         locale: localeCode,
       });
@@ -51,9 +47,7 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
   } catch (error) {
     // Revert to previous locale on error
     await setLocale(previousLocale as LocaleObject["code"]);
-
-    console.error("Failed to save locale preference:", error);
-    showError(error as Error);
+    showError(error);
   }
 };
 </script>

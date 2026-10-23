@@ -4,7 +4,6 @@ import {
   type DirectiveBinding,
   type WatchStopHandle,
 } from "vue";
-import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 
 interface CanBindingValue {
   permission?: string;
@@ -21,50 +20,15 @@ interface ElementWithComment extends HTMLElement {
   __vCanStop?: WatchStopHandle;
 }
 
-function checkPermission(
-  value: CanBindingValue,
-  authStore: ReturnType<typeof useAuthStore>,
-): boolean {
-  if (!authStore.user) return false;
+function checkPermission(value: CanBindingValue): boolean {
+  const { can, canDo, canAny, canAll, hasRole } = usePermission();
 
-  const allPermissions = (authStore.user.roles ?? []).flatMap(
-    (role) => role.permissions ?? [],
-  );
-
-  // Check by permission name
-  if (value.permission) {
-    return allPermissions.some(
-      (permission: Permission) => permission.name === value.permission,
-    );
-  }
-
-  // Check by resource and action
-  if (value.resource && value.action) {
-    return allPermissions.some(
-      (permission: Permission) =>
-        permission.resource === value.resource &&
-        permission.action === value.action,
-    );
-  }
-
-  // Check if has any of the permissions
-  if (value.any) {
-    return value.any.some((name) =>
-      allPermissions.some((permission: Permission) => permission.name === name),
-    );
-  }
-
-  // Check if has all of the permissions
-  if (value.all) {
-    return value.all.every((name) =>
-      allPermissions.some((permission: Permission) => permission.name === name),
-    );
-  }
-
-  // Check by role
-  if (value.role) {
-    return (authStore.user.roles ?? []).some((r) => r.name === value.role);
-  }
+  if (value.permission) return can.value(value.permission);
+  if (value.resource && value.action)
+    return canDo.value(value.resource, value.action);
+  if (value.any) return canAny.value(value.any);
+  if (value.all) return canAll.value(value.all);
+  if (value.role) return hasRole.value(value.role);
 
   return false;
 }
@@ -81,9 +45,11 @@ function apply(element: ElementWithComment, hasPermission: boolean) {
   if (!hasPermission && element.parentNode) {
     if (!comment) {
       const newComment = document.createComment("v-can");
+
       element.parentNode.insertBefore(newComment, element);
       element.__vCanComment = newComment;
     }
+
     element.remove();
   } else if (hasPermission && comment?.parentNode && !element.parentNode) {
     comment.parentNode.insertBefore(element, comment.nextSibling);
@@ -96,13 +62,13 @@ export const vCan: Directive = {
     binding: DirectiveBinding<string | CanBindingValue>,
   ) {
     const element = el as ElementWithComment;
-    const authStore = useAuthStore();
+
     element.__vCanValue = toBindingValue(binding.value);
 
     // Follow the store too: the user and their permissions can be reloaded after
     // the element mounted, without its component rendering again.
     element.__vCanStop = watch(
-      () => checkPermission(element.__vCanValue!, authStore),
+      () => checkPermission(element.__vCanValue!),
       (hasPermission) => apply(element, hasPermission),
       { immediate: true },
     );
@@ -113,15 +79,19 @@ export const vCan: Directive = {
     binding: DirectiveBinding<string | CanBindingValue>,
   ) {
     const element = el as ElementWithComment;
+
     element.__vCanValue = toBindingValue(binding.value);
-    apply(element, checkPermission(element.__vCanValue, useAuthStore()));
+    apply(element, checkPermission(element.__vCanValue));
   },
 
   unmounted(el: HTMLElement) {
     const element = el as ElementWithComment;
+
     element.__vCanStop?.();
+
     // Clean up comment node
     const comment = element.__vCanComment;
+
     if (comment?.parentNode) {
       comment.remove();
     }

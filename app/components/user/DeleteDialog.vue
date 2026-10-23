@@ -2,58 +2,35 @@
 import { ConfirmDialog } from "@thkzt/eunoia";
 import type { User } from "~/lib/api";
 
-const props = defineProps<{
-  open: boolean;
-  item?: User;
-}>();
+const props = defineProps<{ open: boolean; item?: User }>();
+const emit = defineEmits<{ close: [] }>();
+const { t } = useI18n();
+const userStore = useUserStore();
+const { isPending, run, cancel } = useConfirmMutation(
+  () => userStore.destroy,
+  () => emit("close"),
+);
 
-const { destroy } = useUserStore();
-const { mutateAsync: destroyUser, isPending } = destroy;
-
-const { showSuccess, showError } = useErrorHelper();
-
-async function handleSubmit() {
-  if (!props.item) return;
-
-  await destroyUser(
-    {
-      id: props.item.id,
-    },
-    {
-      onSuccess: () => {
-        showSuccess(`User ${props.item?.name} deleted`);
-      },
-      onError: (error) => {
-        showError(error);
-      },
-    },
-  );
-
-  handleClose();
-}
-
-const emit = defineEmits<{
-  close: [];
-}>();
-
-function handleClose() {
-  if (!isPending) {
-    emit("close");
-  }
+function handleConfirm() {
+  if (!props.item?.id) return;
+  run({ id: props.item.id }, t("users.deleted", { name: props.item.name }));
 }
 </script>
 
 <template>
   <ConfirmDialog
     :open
-    :title="`Delete User: ${props.item?.name}`"
-    :confirm-phrase="`Delete ${props.item?.name}`"
-    @cancel="handleClose"
-    @close="handleClose"
-    @confirm="handleSubmit"
+    :title="t('users.deleteTitle', { name: item?.name ?? '' })"
+    :confirm-phrase="
+      t('common.deleteConfirmPhrase', { name: item?.name ?? '' })
+    "
+    :persistent="isPending"
+    @cancel="cancel"
+    @close="cancel"
+    @confirm="handleConfirm"
   >
     <p class="text-sm text-neutral-700 dark:text-neutral-200">
-      Are you sure you want to delete this user?
+      {{ t("users.deleteConfirm") }}
     </p>
   </ConfirmDialog>
 </template>

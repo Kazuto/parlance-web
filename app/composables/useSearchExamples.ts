@@ -6,8 +6,11 @@ const MAX_LENGTH = 32;
 /** Cuts a long text at a word boundary, so it fits the search field. */
 function shorten(text: string) {
   const single = text.replace(/\s+/g, " ").trim();
+
   if (single.length <= MAX_LENGTH) return single;
+
   const cut = single.slice(0, MAX_LENGTH - 1);
+
   return `${cut.slice(0, cut.lastIndexOf(" ") > 0 ? cut.lastIndexOf(" ") : cut.length)}…`;
 }
 
@@ -30,10 +33,12 @@ export function useSearchExamples(
     pairs,
     (list) => {
       if (search.value) return;
+
       const next = list
         .filter((pair): pair is [string, string] => !!pair[0] && !!pair[1])
         .slice(0, MAX_PAIRS)
         .flatMap(([name, text]) => [name, shorten(text)]);
+
       if (next.join("\n") !== examples.value.join("\n")) {
         examples.value = next;
       }

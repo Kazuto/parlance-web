@@ -6,10 +6,12 @@ export default defineNuxtPlugin({
     const i18n = nuxtApp.$i18n as Composer;
     const router = useRouter();
     const { count, saving } = useUnsavedChanges();
+
     router.beforeEach((to, from) => {
       if (to.fullPath === from.fullPath) return true;
       if (saving.value) return false;
       if (!count.value) return true;
+
       return window.confirm(
         i18n.t("unsaved.leaveConfirm", { count: count.value }, count.value),
       );

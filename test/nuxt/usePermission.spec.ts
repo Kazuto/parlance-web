@@ -4,6 +4,7 @@ import { changePermissions, loginAs, logout } from "./helpers";
 describe("usePermission", () => {
   it("denies everything while signed out", () => {
     logout();
+
     const { can, canDo, canAny, canAll, hasRole } = usePermission();
 
     expect(can.value("read_entry")).toBe(false);
@@ -16,6 +17,7 @@ describe("usePermission", () => {
 
   it("grants only the permissions the user holds", () => {
     loginAs(["read_entry", "update_entry"]);
+
     const { can } = usePermission();
 
     expect(can.value("read_entry")).toBe(true);
@@ -26,6 +28,7 @@ describe("usePermission", () => {
 
   it("does not match permissions by prefix or resource alone", () => {
     loginAs(["delete_locale"]);
+
     const { can } = usePermission();
 
     expect(can.value("permanent_delete_locale")).toBe(false);
@@ -35,6 +38,7 @@ describe("usePermission", () => {
 
   it("checks by resource and action", () => {
     loginAs(["update_scope", "permanent_delete_locale"]);
+
     const { canDo } = usePermission();
 
     expect(canDo.value("scope", "update")).toBe(true);
@@ -44,6 +48,7 @@ describe("usePermission", () => {
 
   it("checks any and all of several permissions", () => {
     loginAs(["create_entry"]);
+
     const { canAny, canAll } = usePermission();
 
     expect(canAny.value(["create_entry", "update_entry"])).toBe(true);
@@ -56,8 +61,11 @@ describe("usePermission", () => {
 
   it("combines the permissions of every role", () => {
     loginAs([]);
+
     const user = makeUserWithRoles([["read_entry"], ["update_entry"]]);
+
     useAuthStore().setUser(user);
+
     const { can, hasRole, hasAnyRole, hasAllRoles } = usePermission();
 
     expect(can.value("read_entry")).toBe(true);
@@ -71,6 +79,7 @@ describe("usePermission", () => {
   it("copes with roles that come without permissions", () => {
     loginAs([]);
     useAuthStore().setUser({ id: "user-1", roles: [{ name: "empty" }] });
+
     const { can, hasRole } = usePermission();
 
     expect(can.value("read_entry")).toBe(false);
@@ -79,6 +88,7 @@ describe("usePermission", () => {
 
   it("follows permission changes without being called again", () => {
     loginAs(VIEWER_LIKE);
+
     const { can } = usePermission();
     const canCreate = computed(() => can.value("create_entry"));
 

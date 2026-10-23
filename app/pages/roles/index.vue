@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import {
   Alert,
   Badge,
@@ -6,10 +7,13 @@ import {
   Card,
   DataTable,
   Input,
+  Pagination,
   type DataTableColumn,
 } from "@thkzt/eunoia";
-import { useRoleList } from "~/composables/role/useRoleList";
-import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
+import {
+  groupPermissionsByResource,
+  humanizePermission,
+} from "~/lib/permissions";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 import DeleteDialog from "~/components/role/DeleteDialog.vue";
@@ -32,13 +36,17 @@ usePage(() => ({
     : undefined,
 }));
 
-const { data, isLoading, error, refetch, filter } = useRoleList();
+const { data, isLoading, error, refetch, filter, pagination } =
+  usePaginatedList(api.roles.list);
 
-// Search
 const searchQuery = ref("");
-watch(searchQuery, (value) => {
-  filter.value.search = value;
-});
+const { onKeydown: onSearchKeydown } = useDebouncedSearch(
+  searchQuery,
+  (value) => {
+    filter.value.search = value;
+    pagination.value.page = 1;
+  },
+);
 
 // Dialogs
 const createDialogOpen = ref(false);
@@ -73,6 +81,7 @@ function getPermissionSummary(permissions: Permission[]) {
 
   // Show first resource group completely, then count remaining
   const firstResource = resources[0];
+
   if (!firstResource) return null;
 
   const firstGroup = grouped[firstResource] || [];
@@ -87,7 +96,7 @@ function getPermissionSummary(permissions: Permission[]) {
   };
 }
 
-const tableColumns: DataTableColumn<Role>[] = [
+const tableColumns = computed<DataTableColumn<Role>[]>(() => [
   {
     title: t("common.name"),
     key: "name",
@@ -106,9 +115,14 @@ const tableColumns: DataTableColumn<Role>[] = [
     key: "createdAt",
     sortable: true,
   },
-];
+]);
 
-const tableItems = computed(() => data.value?.roles ?? []);
+const tableItems = computed(() =>
+  (data.value?.roles ?? []).map((role) => ({
+    ...role,
+    summary: getPermissionSummary(role.permissions ?? []),
+  })),
+);
 </script>
 
 <template>
@@ -119,6 +133,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
       :placeholder="t('roles.searchRoles')"
       :aria-label="t('roles.searchRoles')"
       shortcut="/"
+      @keydown="onSearchKeydown"
     />
   </Card>
 
@@ -139,33 +154,24 @@ const tableItems = computed(() => data.value?.roles ?? []);
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #permissions="{ item }">
           <div v-if="item.permissions?.length" class="space-y-1">
-            <div
-              v-if="getPermissionSummary(item.permissions)"
-              class="flex flex-wrap gap-1 items-center"
-            >
+            <div v-if="item.summary" class="flex flex-wrap gap-1 items-center">
               <span
                 class="text-xs text-neutral-500 dark:text-neutral-400 capitalize"
               >
-                {{
-                  getPermissionSummary(
-                    item.permissions,
-                  )!.firstResource.replaceAll("_", " ")
-                }}:
+                {{ humanizePermission(item.summary.firstResource) }}:
               </span>
               <Badge
-                v-for="permission in getPermissionSummary(item.permissions)!
-                  .firstGroup"
+                v-for="permission in item.summary.firstGroup"
                 :key="permission.id ?? undefined"
                 variant="secondary"
                 size="sm"
               >
-                {{ permission.action?.replaceAll("_", " ") }}
+                {{ humanizePermission(permission.action ?? "") }}
               </Badge>
               <button
                 v-if="
-                  getPermissionSummary(item.permissions)!.remainingInFirst >
-                    0 ||
-                  getPermissionSummary(item.permissions)!.remainingCount > 0
+                  item.summary.remainingInFirst > 0 ||
+                  item.summary.remainingCount > 0
                 "
                 class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium cursor-pointer"
                 @click="openViewPermissions(item)"
@@ -173,8 +179,8 @@ const tableItems = computed(() => data.value?.roles ?? []);
                 {{
                   t("roles.morePermissions", {
                     count:
-                      getPermissionSummary(item.permissions)!.remainingInFirst +
-                      getPermissionSummary(item.permissions)!.remainingCount,
+                      item.summary.remainingInFirst +
+                      item.summary.remainingCount,
                   })
                 }}
               </button>
@@ -209,6 +215,16 @@ const tableItems = computed(() => data.value?.roles ?? []);
         </template>
       </DataTable>
     </Card>
+
+    <Pagination
+      v-if="(data?.pagination?.totalPages ?? 0) > 1"
+      class="mt-4"
+      :current="pagination.page ?? 1"
+      :per-page="pagination.perPage ?? 20"
+      :total="data?.pagination?.totalPages ?? 0"
+      @update:current="pagination.page = $event"
+      @update:per-page="pagination.perPage = $event"
+    />
 
     <!-- Empty State -->
     <Card v-if="tableItems.length === 0" class="text-center py-12">
@@ -248,7 +264,7 @@ const tableItems = computed(() => data.value?.roles ?? []);
   />
   <DeleteDialog
     :open="deleteDialogOpen"
-    :role="selectedRole"
+    :item="selectedRole"
     @close="deleteDialogOpen = false"
   />
   <ViewPermissionsDialog

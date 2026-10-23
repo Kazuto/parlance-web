@@ -21,14 +21,10 @@ const form = ref({
   description: "",
 });
 
-const error = ref<string>();
 const terminologyStore = useTerminologyStore();
 const isEdit = computed(() => !!props.item);
-const isPending = computed(
-  () => terminologyStore.create.isPending || terminologyStore.update.isPending,
-);
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 const { placeholder: termPlaceholder } = useTypingPlaceholder([
   "API",
   "Dashboard",
@@ -40,58 +36,48 @@ const { placeholder: termPlaceholder } = useTypingPlaceholder([
   "Interface",
 ]);
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () =>
+    terminologyStore.create.isPending || terminologyStore.update.isPending,
+  reset: () => {
     form.value = {
       term: props.item?.term ?? "",
       description: props.item?.description ?? "",
     };
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    const term = form.value.term.trim();
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  const term = form.value.term.trim();
-  if (!term) {
-    error.value = t("terminologies.termRequired");
-    return;
-  }
-  const input = { term, description: form.value.description.trim() };
-  try {
+    if (!term) {
+      error.value = t("terminologies.termRequired");
+
+      return false;
+    }
+
+    const input = { term, description: form.value.description.trim() };
+
     if (props.item) {
-      if (!props.item.id) return;
+      if (!props.item.id) return false;
+
       const response = await terminologyStore.update.mutateAsync({
         id: props.item.id,
         ...input,
       });
+
       showSuccess(t("terminologies.updated", { term }));
       if (response.terminology) emit("updated", response.terminology);
     } else {
       const response = await terminologyStore.create.mutateAsync(input);
+
       showSuccess(t("terminologies.created", { term }));
       if (response.terminology?.id) emit("created", response.terminology);
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(
-            isEdit.value
-              ? "terminologies.updateFailed"
-              : "terminologies.createFailed",
-          );
-  }
+  });
 }
 </script>
 
@@ -100,7 +86,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'terminologies.edit' : 'terminologies.create')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -123,7 +109,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

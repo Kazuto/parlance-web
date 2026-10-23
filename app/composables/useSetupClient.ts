@@ -1,9 +1,10 @@
+import { api } from "~/lib/api";
 import type { InitializeRequest } from "~/lib/api";
 import type { QueryFunctionContext } from "@tanstack/vue-query";
 import { useQueryClient } from "@tanstack/vue-query";
 
 export function useSetupClient() {
-  const { setup } = useApi();
+  const { setup } = api;
   const queryClient = useQueryClient();
 
   // Capture the mutation/query functions during setup when we have injection context

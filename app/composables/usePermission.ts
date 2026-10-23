@@ -1,69 +1,50 @@
-import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
-
 export function usePermission() {
   const authStore = useAuthStore();
 
   /**
    * Check if user has a specific permission by name
    */
-  const can = (permissionName: string): boolean => {
-    if (!authStore.user) return false;
-
-    return (authStore.user.roles ?? [])
-      .flatMap((role) => role.permissions ?? [])
-      .some((permission: Permission) => permission.name === permissionName);
-  };
+  const can = (permissionName: string): boolean =>
+    authStore.permissionNames.has(permissionName);
 
   /**
    * Check if user has a specific permission by resource and action
    */
-  const canDo = (resource: string, action: string): boolean => {
-    if (!authStore.user) return false;
-
-    return (authStore.user.roles ?? [])
-      .flatMap((role) => role.permissions ?? [])
-      .some(
-        (permission: Permission) =>
-          permission.resource === resource && permission.action === action,
-      );
-  };
+  const canDo = (resource: string, action: string): boolean =>
+    authStore.permissions.some(
+      (permission) =>
+        permission.resource === resource && permission.action === action,
+    );
 
   /**
    * Check if user has any of the specified permissions
    */
-  const canAny = (permissionNames: string[]): boolean => {
-    return permissionNames.some((name) => can(name));
-  };
+  const canAny = (permissionNames: string[]): boolean =>
+    permissionNames.some((name) => can(name));
 
   /**
    * Check if user has all of the specified permissions
    */
-  const canAll = (permissionNames: string[]): boolean => {
-    return permissionNames.every((name) => can(name));
-  };
+  const canAll = (permissionNames: string[]): boolean =>
+    !!authStore.user && permissionNames.every((name) => can(name));
 
   /**
    * Check if user has a specific role
    */
-  const hasRole = (roleName: string): boolean => {
-    if (!authStore.user) return false;
-
-    return (authStore.user.roles ?? []).some((role) => role.name === roleName);
-  };
+  const hasRole = (roleName: string): boolean =>
+    (authStore.user?.roles ?? []).some((role) => role.name === roleName);
 
   /**
    * Check if user has any of the specified roles
    */
-  const hasAnyRole = (roleNames: string[]): boolean => {
-    return roleNames.some((name) => hasRole(name));
-  };
+  const hasAnyRole = (roleNames: string[]): boolean =>
+    roleNames.some((name) => hasRole(name));
 
   /**
    * Check if user has all of the specified roles
    */
-  const hasAllRoles = (roleNames: string[]): boolean => {
-    return roleNames.every((name) => hasRole(name));
-  };
+  const hasAllRoles = (roleNames: string[]): boolean =>
+    !!authStore.user && roleNames.every((name) => hasRole(name));
 
   return {
     can: computed(() => can),

@@ -12,7 +12,6 @@ import {
 } from "@thkzt/eunoia";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { fillLanguageNames, languageName } from "~/lib/languageNames";
 
@@ -21,6 +20,7 @@ type LocaleForm = {
   names: Record<string, string>;
   isDefault: boolean;
 };
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
@@ -31,8 +31,10 @@ const localeName = useLocaleName();
 const queryClient = useQueryClient();
 const localeQueryKey = api.locales.get.getQueryKey();
 const selectedId = ref(String(route.params.id));
-const { data: localeData, pagination, error: listError } = useLocaleList();
-pagination.value.perPage = 100;
+const { items: locales, error: listError } = useAllPages(
+  api.locales.list,
+  (response) => response.locales,
+);
 const {
   data,
   isLoading,
@@ -42,7 +44,7 @@ const store = useLocaleStore();
 const batchSaving = ref(false);
 const isSaving = computed(() => batchSaving.value || store.update.isPending);
 const saveAllOpen = ref(false);
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess, showError, getErrorMessage } = useErrorHelper();
 const search = ref("");
 const drafts = ref<Record<string, LocaleForm>>({});
 const saved = ref<Record<string, LocaleForm>>({});
@@ -52,7 +54,7 @@ const metadata = ref({ code: "", isDefault: false });
 const deleteItem = ref<Locale>();
 
 const languages = computed(() =>
-  (localeData.value?.locales ?? [])
+  locales.value
     .filter((locale) => locale.id && locale.code && !locale.deletedAt)
     .toSorted((a, b) => Number(!!b.isDefault) - Number(!!a.isDefault)),
 );
@@ -70,9 +72,9 @@ const items = computed<SplitViewItem[]>(() =>
 );
 const selectedItem = computed<SplitViewItem | undefined>(() => {
   const locale =
-    localeData.value?.locales?.find(
-      (locale) => locale.id === selectedId.value,
-    ) ?? data.value?.locale;
+    locales.value.find((locale) => locale.id === selectedId.value) ??
+    data.value?.locale;
+
   return locale
     ? {
         key: selectedId.value,
@@ -86,7 +88,8 @@ const form = computed(() => drafts.value[selectedId.value]);
 function missingNames(id: string) {
   const names =
     drafts.value[id]?.names ??
-    localeData.value?.locales?.find((locale) => locale.id === id)?.names;
+    locales.value.find((locale) => locale.id === id)?.names;
+
   return languages.value.filter(
     (language) => !(names?.[language.code ?? ""] ?? "").trim(),
   ).length;
@@ -95,11 +98,14 @@ function missingNames(id: string) {
 function changedFields(id: string) {
   const draft = drafts.value[id];
   const baseline = saved.value[id];
+
   if (!draft || !baseline) return 0;
+
   const codes = new Set([
     ...Object.keys(draft.names),
     ...Object.keys(baseline.names),
   ]);
+
   return (
     [...codes].filter(
       (code) => (draft.names[code] ?? "") !== (baseline.names[code] ?? ""),
@@ -108,6 +114,7 @@ function changedFields(id: string) {
     Number(draft.isDefault !== baseline.isDefault)
   );
 }
+
 const currentUnsaved = computed(() => changedFields(selectedId.value));
 const allUnsaved = computed(() =>
   Object.keys(drafts.value).reduce((count, id) => count + changedFields(id), 0),
@@ -115,14 +122,17 @@ const allUnsaved = computed(() =>
 const unsavedLocaleIds = computed(() =>
   Object.keys(drafts.value).filter((id) => changedFields(id) > 0),
 );
+
 registerUnsavedChanges("locale-editor", allUnsaved, isSaving);
 
 const discardOpen = ref(false);
 
 function discardChanges() {
   discardOpen.value = false;
+
   for (const id of unsavedLocaleIds.value) {
     const baseline = saved.value[id];
+
     if (baseline) drafts.value[id] = structuredClone(baseline);
   }
 }
@@ -132,6 +142,7 @@ function requestDiscardAll() {
   const onlyCurrent = unsavedLocaleIds.value.every(
     (id) => id === selectedId.value,
   );
+
   if (onlyCurrent) discardChanges();
   else discardOpen.value = true;
 }
@@ -146,11 +157,13 @@ watch(
   () => data.value?.locale,
   (locale) => {
     if (!locale?.id) return;
+
     const next: LocaleForm = {
       code: locale.code ?? "",
       names: { ...locale.names },
       isDefault: !!locale.isDefault,
     };
+
     if (!changedFields(locale.id))
       drafts.value[locale.id] = structuredClone(next);
     saved.value[locale.id] = next;
@@ -180,7 +193,9 @@ const languageCodes = computed(() =>
 
 function fillableNames(id: string) {
   const draft = drafts.value[id] ?? listForm(id);
+
   if (!draft) return 0;
+
   return languageCodes.value.filter(
     (language) =>
       !(draft.names[language] ?? "").trim() &&
@@ -191,7 +206,9 @@ function fillableNames(id: string) {
 // A locale that wasn't opened yet has no draft; its listed data is the baseline.
 function listForm(id: string): LocaleForm | undefined {
   const locale = languages.value.find((language) => language.id === id);
+
   if (!locale) return undefined;
+
   return {
     code: locale.code ?? "",
     names: { ...locale.names },
@@ -201,32 +218,39 @@ function listForm(id: string): LocaleForm | undefined {
 
 function fillNames(ids: string[]) {
   let filled = 0;
+
   for (const id of ids) {
     if (!drafts.value[id]) {
       const form = listForm(id);
+
       if (!form) continue;
       saved.value[id] ??= structuredClone(form);
       drafts.value[id] = form;
     }
+
     const draft = drafts.value[id]!;
+
     filled += fillLanguageNames(
       draft.names,
       draft.code,
       languageCodes.value,
     ).length;
   }
+
   if (filled) showSuccess(t("locales.namesFilled", { count: filled }));
 }
 
 const localeActions = computed<ActionMenuItem[]>(() => {
   const items: ActionMenuItem[] = [];
   const busy = isSaving.value || isLoading.value;
+
   if (canUpdate.value) {
     const here = fillableNames(selectedId.value);
     const everywhere = languages.value.reduce(
       (count, language) => count + fillableNames(language.id!),
       0,
     );
+
     items.push(
       {
         value: "fill",
@@ -250,6 +274,7 @@ const localeActions = computed<ActionMenuItem[]>(() => {
       },
     );
   }
+
   if (can.value("delete_locale")) {
     items.push({
       value: "delete",
@@ -260,6 +285,7 @@ const localeActions = computed<ActionMenuItem[]>(() => {
       disabled: busy,
     });
   }
+
   return items;
 });
 
@@ -299,6 +325,7 @@ async function saveAll() {
 async function saveLocales(ids: string[]) {
   if (!ids.length || isSaving.value) return;
   error.value = undefined;
+
   const changes = ids.map((id) => ({
     id,
     submitted: { ...drafts.value[id]!, names: { ...drafts.value[id]!.names } },
@@ -306,18 +333,24 @@ async function saveLocales(ids: string[]) {
   const newDefaults = changes.filter(
     ({ id, submitted }) => submitted.isDefault && !saved.value[id]?.isDefault,
   );
+
   if (newDefaults.length > 1) {
     error.value = t("locales.singleDefault");
+
     return;
   }
+
   // Save other locales first, then apply the new default last.
   changes.sort(
     (a, b) =>
       Number(newDefaults.some((item) => item.id === a.id)) -
       Number(newDefaults.some((item) => item.id === b.id)),
   );
+
   const failures: string[] = [];
+
   batchSaving.value = true;
+
   try {
     for (const { id, submitted } of changes) {
       try {
@@ -328,6 +361,7 @@ async function saveLocales(ids: string[]) {
           names: { values: submitted.names },
         });
         const locale = response.locale;
+
         saved.value[id] = locale
           ? {
               code: locale.code ?? submitted.code,
@@ -340,18 +374,19 @@ async function saveLocales(ids: string[]) {
           names: { ...saved.value[id]!.names },
         };
       } catch (cause) {
-        failures.push(
-          `${submitted.code}: ${cause instanceof Error ? cause.message : t("locales.saveFailed")}`,
-        );
+        failures.push(`${submitted.code}: ${getErrorMessage(cause)}`);
       }
     }
+
     if (failures.length) {
       error.value = failures.join("; ");
+
       const message = t("locales.partialSave", {
         saved: changes.length - failures.length,
         total: changes.length,
         failures: failures.join("; "),
       });
+
       if (failures.length === changes.length) {
         showError(message);
       } else {
@@ -364,6 +399,7 @@ async function saveLocales(ids: string[]) {
           : t("locales.savedMany", { count: changes.length }),
       );
     }
+
     await queryClient.invalidateQueries({
       queryKey: localeQueryKey,
     });
@@ -428,7 +464,7 @@ async function handleDeleted(id: string) {
           role="alert"
           class="text-sm text-red-600"
         >
-          {{ loadError?.message ?? listError?.message }}
+          {{ getErrorMessage(loadError ?? listError) }}
         </p>
         <div
           v-else-if="form"
@@ -479,36 +515,16 @@ async function handleDeleted(id: string) {
               {{ error }}
             </p>
           </div>
-          <div v-can="'update_locale'" class="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              ghost
-              :disabled="!unsavedLocaleIds.length || isSaving"
-              @click="requestDiscardAll"
-            >
-              {{ t("common.discardAll") }}
-            </Button>
-            <Button
-              type="button"
-              ghost
-              :disabled="!unsavedLocaleIds.length || isSaving"
-              @click="saveAllOpen = true"
-            >
-              {{
-                unsavedLocaleIds.length
-                  ? t("common.saveAllCount", { count: unsavedLocaleIds.length })
-                  : t("common.saveAll")
-              }}
-            </Button>
-            <Button
-              primary
-              :disabled="!currentUnsaved || isSaving"
-              @click="saveChanges"
-              >{{
-                isSaving ? t("common.saving") : t("common.saveChanges")
-              }}</Button
-            >
-          </div>
+          <EditorWorkspaceActions
+            v-can="'update_locale'"
+            show-save-all
+            :unsaved-count="unsavedLocaleIds.length"
+            :can-save="!!currentUnsaved"
+            :is-saving="isSaving"
+            @discard-all="requestDiscardAll"
+            @save-all="saveAllOpen = true"
+            @save="saveChanges"
+          />
         </div>
       </template>
     </SplitView>
@@ -519,32 +535,19 @@ async function handleDeleted(id: string) {
     @close="discardOpen = false"
     @confirm="discardChanges"
   />
-  <Dialog
+  <EditorSaveAllDialog
     :open="saveAllOpen"
     :title="t('locales.saveAllTitle')"
+    :message="
+      t('locales.saveAllConfirm', {
+        count: allUnsaved,
+        locales: unsavedLocaleIds.length,
+      })
+    "
+    :disabled="!unsavedLocaleIds.length || isSaving"
     @close="saveAllOpen = false"
-  >
-    <p class="text-sm text-neutral-500">
-      {{
-        t("locales.saveAllConfirm", {
-          count: allUnsaved,
-          locales: unsavedLocaleIds.length,
-        })
-      }}
-    </p>
-    <div class="mt-6 flex justify-end gap-3">
-      <Button type="button" ghost @click="saveAllOpen = false">{{
-        t("common.cancel")
-      }}</Button>
-      <Button
-        type="button"
-        primary
-        :disabled="!unsavedLocaleIds.length || isSaving"
-        @click="saveAll"
-        >{{ t("common.saveAll") }}</Button
-      >
-    </div>
-  </Dialog>
+    @confirm="saveAll"
+  />
   <Dialog :open="editOpen" :title="t('locales.edit')" @close="editOpen = false">
     <form class="space-y-4" @submit.prevent="applyMetadata">
       <Input v-model="metadata.code" required>{{ t("common.code") }}</Input>

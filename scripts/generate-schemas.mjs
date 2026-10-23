@@ -23,6 +23,7 @@ function files(directory, prefix = "") {
   return readdirSync(join(directory, prefix), { withFileTypes: true })
     .flatMap((entry) => {
       const relative = join(prefix, entry.name);
+
       return entry.isDirectory() ? files(directory, relative) : [relative];
     })
     .sort();
@@ -48,10 +49,12 @@ try {
     cwd: server,
     stdio: "inherit",
   });
+
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error("Buf schema generation failed");
 
   const generated = files(destination);
+
   for (const file of generated) {
     const formatted = await format(
       readFileSync(join(destination, file), "utf8"),
@@ -59,11 +62,13 @@ try {
         parser: "typescript",
       },
     );
+
     writeFileSync(join(destination, file), formatted);
   }
 
   if (check) {
     const existing = files(output);
+
     if (
       JSON.stringify(existing) !== JSON.stringify(generated) ||
       generated.some(
@@ -77,6 +82,7 @@ try {
         "Generated schemas are stale. Run npm run schemas:generate.",
       );
     }
+
     console.log("Generated schemas are up to date.");
   } else {
     console.log(`Generated ${generated.length} schema files.`);

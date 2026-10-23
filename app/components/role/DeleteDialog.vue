@@ -2,55 +2,32 @@
 import { ConfirmDialog } from "@thkzt/eunoia";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
-const props = defineProps<{
-  open: boolean;
-  role?: Role;
-}>();
-
-const emit = defineEmits<{
-  close: [];
-}>();
-
+const props = defineProps<{ open: boolean; item?: Role }>();
+const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
-const { destroy } = useRoleStore();
-const { mutateAsync: destroyRole, isPending } = destroy;
+const roleStore = useRoleStore();
+const { isPending, run, cancel } = useConfirmMutation(
+  () => roleStore.destroy,
+  () => emit("close"),
+);
 
-async function handleSubmit() {
-  if (!props.role) return;
-
-  await destroyRole(
-    {
-      id: props.role.id,
-    },
-    {
-      onSuccess: () => {
-        showSuccess(t("roles.deleted", { name: props.role?.name }));
-      },
-      onError: (error) => {
-        showError(error);
-      },
-    },
-  );
-
-  handleClose();
-}
-
-function handleClose() {
-  if (!isPending) {
-    emit("close");
-  }
+function handleConfirm() {
+  if (!props.item?.id) return;
+  run({ id: props.item.id }, t("roles.deleted", { name: props.item.name }));
 }
 </script>
 
 <template>
   <ConfirmDialog
     :open
-    :title="t('roles.deleteTitle', { name: role?.name || '' })"
-    :confirm-phrase="`Delete ${role?.name}`"
-    @cancel="handleClose"
-    @close="handleClose"
-    @confirm="handleSubmit"
+    :title="t('roles.deleteTitle', { name: item?.name ?? '' })"
+    :confirm-phrase="
+      t('common.deleteConfirmPhrase', { name: item?.name ?? '' })
+    "
+    :persistent="isPending"
+    @cancel="cancel"
+    @close="cancel"
+    @confirm="handleConfirm"
   >
     <p class="text-sm text-neutral-700 dark:text-neutral-200">
       {{ t("roles.deleteConfirm") }}

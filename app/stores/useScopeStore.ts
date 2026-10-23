@@ -6,7 +6,6 @@ export const useScopeStore = defineStore("scopeStore", () => {
   // Entries show scope names and colors, so refresh them along with the scope list.
   const queryKeys = [
     api.scopes.list.getQueryKey(),
-    api.entries.list.getQueryKey(),
     api.entries.feed.getQueryKey(),
     api.entries.get.getQueryKey(),
   ];

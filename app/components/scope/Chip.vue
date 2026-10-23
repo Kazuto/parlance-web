@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { HEX_COLOR } from "~/lib/colors";
 import { Chip } from "@thkzt/eunoia";
 
 // A chip tinted with the scope's color. Text keeps the normal color so any scope color stays readable.
@@ -10,10 +11,11 @@ const props = defineProps<{
   removable?: boolean;
 }>();
 
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const tint = computed(() => {
   const color = props.color && HEX_COLOR.test(props.color) ? props.color : "";
+
   if (!color) return undefined;
+
   // Strengths come from --tint/--edge, set per color mode by tintClass.
   return {
     backgroundColor: `color-mix(in srgb, ${color} var(--tint), transparent)`,
@@ -25,6 +27,7 @@ const tint = computed(() => {
 // Light mode needs a softer tint than dark to look equally calm.
 const tintClass = computed(() => {
   if (!tint.value) return undefined;
+
   return [
     props.active
       ? "[--edge:80%] [--tint:22%] dark:[--edge:100%] dark:[--tint:30%]"

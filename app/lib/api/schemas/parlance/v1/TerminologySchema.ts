@@ -176,6 +176,7 @@ export const RestoreTerminologyResponseSchema = z.object({
 export type GetDefinitionHistoryRequest = {
   terminologyId?: string | null;
   pagination?: PaginationRequest | null;
+  localeId?: string | null;
 };
 export const GetDefinitionHistoryRequestSchema = z.object({
   get terminologyId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -183,6 +184,9 @@ export const GetDefinitionHistoryRequestSchema = z.object({
   },
   get pagination(): z.ZodOptional<z.ZodNullable<z.ZodType<PaginationRequest>>> {
     return PaginationRequestSchema.nullish();
+  },
+  get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type GetDefinitionHistoryResponse = {

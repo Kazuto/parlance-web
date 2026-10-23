@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SplitView } from "@thkzt/eunoia";
 import GlossaryPage from "~/pages/glossary/index.vue";
 import {
   VIEWER,
@@ -23,6 +24,7 @@ type ListRequest = {
 
 async function openGlossary(terminologies: object[] = []) {
   const requests: ListRequest[] = [];
+
   loginAs(VIEWER);
   mockRpc("LocaleService/ListLocales", {
     locales,
@@ -30,9 +32,12 @@ async function openGlossary(terminologies: object[] = []) {
   });
   mockRpc("TerminologyService/ListTerminologies", (body) => {
     requests.push(body as ListRequest);
+
     return { terminologies, pagination: pagination(terminologies.length) };
   });
+
   const page = await mountPage(GlossaryPage);
+
   return { page, requests };
 }
 
@@ -55,10 +60,12 @@ describe("glossary search", () => {
       },
     ]);
     const input = page.wrapper.find('input[type="search"]');
+
     await new Promise((resolve) => setTimeout(resolve, 400));
     await settle();
 
     const placeholder = input.attributes("placeholder") ?? "";
+
     expect(placeholder.length).toBeGreaterThan(0);
     expect("Workspace".startsWith(placeholder)).toBe(true);
     // The examples only show; the name says what can be searched.
@@ -78,6 +85,7 @@ describe("glossary search", () => {
       "parlance-filters.languages",
       JSON.stringify(["en", "de"]),
     );
+
     const { page, requests } = await openGlossary();
 
     await page.wrapper.find('input[type="search"]').setValue("arbeits");
@@ -86,7 +94,47 @@ describe("glossary search", () => {
     await settle();
 
     const last = requests.at(-1)!;
+
     expect(last.filter?.search).toBe("arbeits");
     expect([...(last.targetLocaleIds ?? [])].sort()).toEqual(["l1", "l2"]);
+  });
+});
+
+describe("glossary list", () => {
+  it("loads more terms as the list scrolls", async () => {
+    const requests: { pagination?: { page?: number } }[] = [];
+
+    loginAs(VIEWER);
+    mockRpc("LocaleService/ListLocales", {
+      locales,
+      pagination: pagination(locales.length),
+    });
+    mockRpc("TerminologyService/ListTerminologies", (body) => {
+      const request = body as { pagination?: { page?: number } };
+
+      requests.push(request);
+
+      const page = request.pagination?.page ?? 1;
+
+      return {
+        terminologies: [{ id: `g${page}`, term: `Term ${page}` }],
+        pagination: { page, perPage: 1, total: 2, totalPages: 2 },
+      };
+    });
+
+    const page = await mountPage(GlossaryPage);
+
+    page.wrapper.findComponent(SplitView).vm.$emit("end-reached");
+    await settle();
+
+    // The first page loads again once the languages arrive; then comes the next.
+    expect(requests.at(-1)?.pagination?.page).toBe(2);
+
+    // The list is virtual, so check what it was given rather than what it drew.
+    const items = page.wrapper.findComponent(SplitView).props("items") as {
+      label: string;
+    }[];
+
+    expect(items.map((item) => item.label)).toEqual(["Term 1", "Term 2"]);
   });
 });

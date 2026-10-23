@@ -1,3 +1,6 @@
+// Once set up, an instance stays set up, so the status is only asked until then.
+let setupComplete = false;
+
 export default defineNuxtRouteMiddleware(async (to) => {
   // Only run on client side
   if (import.meta.server) {
@@ -8,24 +11,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const publicRoutes = ["/login", "/setup"];
 
   // Check if setup is needed (only for non-setup pages)
-  if (to.path !== "/setup") {
+  if (to.path !== "/setup" && !setupComplete) {
     try {
-      const config = useRuntimeConfig();
-      const response = await fetch(
-        `${config.public.apiBaseUrl}/parlance.v1.SetupService/GetSetupStatus`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        },
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.needsSetup) {
-          return navigateTo("/setup");
-        }
+      if (await useSetupClient().checkStatus()) {
+        return navigateTo("/setup");
       }
+
+      setupComplete = true;
     } catch (err) {
       console.error("Failed to check setup status:", err);
     }

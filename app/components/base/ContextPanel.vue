@@ -5,10 +5,13 @@ defineProps<{
   localeName: string;
   tabs?: { value: string; label: string }[];
 }>();
+
 const emit = defineEmits<{ close: [] }>();
+
 defineSlots<{
   default(props: { tab: string | undefined }): unknown;
 }>();
+
 const { t } = useI18n();
 
 const tab = defineModel<string | undefined>("tab");

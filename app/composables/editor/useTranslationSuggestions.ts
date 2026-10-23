@@ -29,6 +29,7 @@ export function useTranslationSuggestions() {
 
   async function suggest(entryId: string, localeIds: string[]) {
     waiting.value[entryId] = localeIds;
+
     try {
       return await request(entryId, localeIds);
     } finally {
@@ -42,10 +43,13 @@ export function useTranslationSuggestions() {
     const response = await mutateAsync({ entryId, targetLocaleIds: localeIds });
     const suggestions = response.suggestions ?? [];
     const forEntry = { ...results.value[entryId] };
+
     for (const suggestion of suggestions) {
       if (suggestion.localeId) forEntry[suggestion.localeId] = suggestion;
     }
+
     results.value[entryId] = forEntry;
+
     return suggestions;
   }
 

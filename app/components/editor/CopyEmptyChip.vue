@@ -3,6 +3,7 @@ import { Icon, Tooltip } from "@thkzt/eunoia";
 
 // Copies the default language's text into the selected languages that are empty.
 defineProps<{ disabled?: boolean }>();
+
 const emit = defineEmits<{ click: [] }>();
 const { t } = useI18n();
 </script>

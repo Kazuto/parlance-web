@@ -32,10 +32,12 @@ const servers = [
 
 async function openSettings(permissions: readonly string[]) {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
+
   loginAs(permissions);
   mockRpc("TranslationServerService/ListTranslationServers", {
     translationServers: servers,
   });
+
   for (const method of [
     "CreateTranslationServer",
     "UpdateTranslationServer",
@@ -43,16 +45,21 @@ async function openSettings(permissions: readonly string[]) {
   ]) {
     mockRpc(`TranslationServerService/${method}`, (body) => {
       calls.push({ method, body });
+
       return { translationServer: servers[0] };
     });
   }
+
   mockRpc("TranslationServerService/TestTranslationServer", (body) => {
     calls.push({ method: "TestTranslationServer", body });
+
     return body.id === "s1"
       ? { ok: true, translation: "Änderungen speichern", durationMs: 840 }
       : { ok: false, error: "connection refused" };
   });
+
   const page = await mountPage(SettingsPage);
+
   return { page, calls };
 }
 
@@ -78,6 +85,7 @@ function dialogField(page: MountedPage, label: string) {
     .findAll("label")
     .find((item) => item.text().trim().startsWith(label));
   const id = labelEl?.attributes("for");
+
   return id ? dialog.find(`#${CSS.escape(id)}`) : labelEl!.find("input");
 }
 
@@ -135,6 +143,7 @@ describe("translation server settings", () => {
 
     const edit = () =>
       button(page, t("translationServers.editFor", { name: "Hosted" }))!;
+
     await edit().trigger("click");
     await settle();
     expect(

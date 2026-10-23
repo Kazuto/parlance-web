@@ -15,7 +15,9 @@ async function sidebarLinks() {
   const wrapper = await mountSuspended(DefaultLayout, {
     slots: { default: () => "content" },
   });
+
   await settle();
+
   return wrapper.findAll("nav a").map((link) => link.attributes("href"));
 }
 
@@ -76,6 +78,7 @@ describe("sidebar", () => {
     useAuthStore().setUser(makeUser(ALL_PERMISSIONS));
 
     const links = await sidebarLinks();
+
     expect(links).not.toContain("/roles");
     expect(links).not.toContain("/users");
   });
@@ -84,7 +87,9 @@ describe("sidebar", () => {
 describe("dashboard quick access", () => {
   async function cards(permissions: readonly string[]) {
     loginAs(permissions);
+
     const page = await mountPage(DashboardPage);
+
     return page.wrapper
       .findAll("a")
       .map((link) => link.attributes("href"))
@@ -108,7 +113,9 @@ describe("dashboard quick access", () => {
 
   it("explains when nothing is accessible", async () => {
     loginAs([]);
+
     const page = await mountPage(DashboardPage);
+
     expect(page.wrapper.text()).toContain(
       useNuxtApp().$i18n.t("dashboard.noAccess"),
     );

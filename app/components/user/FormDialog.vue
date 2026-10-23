@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from "~/lib/api";
 import {
   Button,
   Dialog,
@@ -6,21 +7,19 @@ import {
   Select,
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
-import { useRoleList } from "~/composables/role/useRoleList";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
 // Without a user the dialog creates one; with a user it edits that user.
 const props = defineProps<{ open: boolean; user?: User }>();
 const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 const userStore = useUserStore();
 const isEdit = computed(() => !!props.user);
-const isPending = computed(
-  () => userStore.create.isPending || userStore.update.isPending,
+const { items: roles } = useAllPages(
+  api.roles.list,
+  (response) => response.roles,
 );
-const { data: rolesData, pagination: rolesPagination } = useRoleList();
-rolesPagination.value.perPage = 100;
 
 const { placeholder: namePlaceholder } = useTypingPlaceholder([
   "Jane Doe",
@@ -44,13 +43,11 @@ const form = ref({
   passwordConfirm: "",
   roleIds: [] as string[],
 });
-const error = ref<string>();
 
-const roleOptions = computed(
-  () =>
-    rolesData.value?.roles
-      ?.filter((role) => !!role.id)
-      .map((role) => ({ label: role.name ?? "", value: role.id ?? "" })) ?? [],
+const roleOptions = computed(() =>
+  roles.value
+    .filter((role) => !!role.id)
+    .map((role) => ({ label: role.name ?? "", value: role.id ?? "" })),
 );
 const passwordMismatch = computed(
   () =>
@@ -58,10 +55,10 @@ const passwordMismatch = computed(
     form.value.password !== form.value.passwordConfirm,
 );
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => userStore.create.isPending || userStore.update.isPending,
+  reset: () => {
     form.value = {
       name: props.user?.name ?? "",
       email: props.user?.email ?? "",
@@ -72,34 +69,33 @@ watch(
           ?.map((role) => role.id)
           .filter((id): id is string => !!id) ?? [],
     };
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    const name = form.value.name.trim();
+    const email = form.value.email.trim();
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  const name = form.value.name.trim();
-  const email = form.value.email.trim();
-  if (!name || !email) {
-    error.value = t("users.nameEmailRequired");
-    return;
-  }
-  if (!isEdit.value && !form.value.password) {
-    error.value = t("users.passwordRequired");
-    return;
-  }
-  if (form.value.password !== form.value.passwordConfirm) {
-    error.value = t("users.passwordMismatch");
-    return;
-  }
+    if (!name || !email) {
+      error.value = t("users.nameEmailRequired");
 
-  try {
+      return false;
+    }
+
+    if (!isEdit.value && !form.value.password) {
+      error.value = t("users.passwordRequired");
+
+      return false;
+    }
+
+    if (form.value.password !== form.value.passwordConfirm) {
+      error.value = t("users.passwordMismatch");
+
+      return false;
+    }
+
     if (props.user) {
       await userStore.update.mutateAsync({
         id: props.user.id,
@@ -119,14 +115,7 @@ async function handleSubmit() {
       });
       showSuccess(t("users.created", { name }));
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(isEdit.value ? "users.updateFailed" : "users.createFailed");
-  }
+  });
 }
 </script>
 
@@ -135,7 +124,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'users.edit' : 'users.create')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -193,7 +182,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

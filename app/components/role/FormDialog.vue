@@ -8,9 +8,11 @@ import {
   Checkbox,
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
-import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import { groupPermissionsByResource } from "~/composables/permission/usePermissionList";
+import {
+  groupPermissionsByResource,
+  humanizePermission,
+} from "~/lib/permissions";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 // Without a role the dialog creates one; with a role it edits that role.
@@ -22,7 +24,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 const { placeholder: namePlaceholder } = useTypingPlaceholder([
   "Translator",
   "Reviewer",
@@ -35,19 +37,16 @@ const { placeholder: namePlaceholder } = useTypingPlaceholder([
 const name = ref("");
 const description = ref("");
 const permissionIds = ref<string[]>([]);
-const error = ref<string>();
 
-const permissionsPagination = ref({ page: 1, perPage: 1000 });
 const {
-  data: permissionsData,
+  items: permissions,
   error: permissionError,
   isLoading: permissionsLoading,
-} = useQuery(api.permissions.list.use({ pagination: permissionsPagination }));
+} = useAllPages(api.permissions.list, (response) => response.permissions);
 
-const permissionsByResource = computed(() => {
-  if (!permissionsData.value?.permissions) return {};
-  return groupPermissionsByResource(permissionsData.value.permissions);
-});
+const permissionsByResource = computed(() =>
+  groupPermissionsByResource(permissions.value),
+);
 
 const resourceKeys = computed(() =>
   Object.keys(permissionsByResource.value).sort(),
@@ -55,7 +54,9 @@ const resourceKeys = computed(() =>
 
 function togglePermission(permissionId: string | null | undefined) {
   if (!permissionId) return;
+
   const index = permissionIds.value.indexOf(permissionId);
+
   if (index > -1) {
     permissionIds.value.splice(index, 1);
   } else {
@@ -83,6 +84,7 @@ function toggleResourceGroup(resource: string) {
     const toAdd = resourcePermissionIds.filter(
       (id) => !permissionIds.value.includes(id),
     );
+
     permissionIds.value.push(...toAdd);
   }
 }
@@ -115,64 +117,50 @@ function isResourceGroupIndeterminate(resource: string) {
 
 const roleStore = useRoleStore();
 const isEdit = computed(() => !!props.role);
-const isPending = computed(
-  () => roleStore.create.isPending || roleStore.update.isPending,
-);
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => roleStore.create.isPending || roleStore.update.isPending,
+  reset: () => {
     name.value = props.role?.name ?? "";
     description.value = props.role?.description ?? "";
     permissionIds.value =
       props.role?.permissions
         ?.map((permission) => permission.id)
         .filter((id): id is string => !!id) ?? [];
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    if (!name.value.trim()) {
+      error.value = t("roles.nameRequired");
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
+      return false;
+    }
 
-  if (!name.value.trim()) {
-    error.value = t("roles.nameRequired");
-    return;
-  }
+    const input = {
+      name: name.value.trim(),
+      description: description.value.trim(),
+      permissions: { ids: permissionIds.value },
+    };
 
-  const input = {
-    name: name.value.trim(),
-    description: description.value.trim(),
-    permissions: { ids: permissionIds.value },
-  };
-  try {
     if (props.role) {
       const response = await roleStore.update.mutateAsync({
         id: props.role.id,
         ...input,
       });
+
       showSuccess(t("roles.updated", { name: input.name }));
       if (response.role) emit("updated", response.role);
     } else {
       const response = await roleStore.create.mutateAsync(input);
+
       showSuccess(t("roles.created", { name: input.name }));
       if (response.role) emit("created", response.role);
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(isEdit.value ? "roles.updateFailed" : "roles.createFailed");
-  }
+  });
 }
 </script>
 
@@ -181,7 +169,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'roles.edit' : 'roles.create')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -212,11 +200,11 @@ async function handleSubmit() {
           v-if="permissionsLoading"
           class="text-sm text-neutral-500 dark:text-neutral-400 p-4 text-center"
         >
-          Loading permissions...
+          {{ t("roles.permissionsLoading") }}
         </div>
 
         <Alert v-else-if="permissionError" variant="danger" dense persistent>
-          Failed to load permissions
+          {{ t("roles.permissionsLoadFailed") }}
         </Alert>
 
         <div
@@ -239,7 +227,7 @@ async function handleSubmit() {
               >
                 <template #description>
                   <span class="font-medium capitalize">{{
-                    resource.replaceAll("_", " ")
+                    humanizePermission(resource)
                   }}</span>
                 </template>
               </Checkbox>
@@ -256,11 +244,9 @@ async function handleSubmit() {
               >
                 <template #description>
                   {{
-                    (
-                      permission.action ||
-                      permission.name ||
-                      "Unknown"
-                    ).replaceAll("_", " ")
+                    humanizePermission(
+                      permission.action || permission.name || "",
+                    )
                   }}
                 </template>
               </Checkbox>
@@ -280,7 +266,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button

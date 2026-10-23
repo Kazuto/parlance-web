@@ -18,6 +18,7 @@ defineProps<{
   failed: boolean;
   totalPages: number;
 }>();
+
 const emit = defineEmits<{ retry: [] }>();
 const page = defineModel<number>("page", { required: true });
 const { t } = useI18n();

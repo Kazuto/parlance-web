@@ -7,11 +7,9 @@ import {
   Input,
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
-import type { CreateLocaleResponse } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-defineProps<{
-  open: boolean;
-}>();
+const props = defineProps<{ open: boolean }>();
+const emit = defineEmits<{ close: [] }>();
 
 const form = ref({
   code: "",
@@ -19,13 +17,9 @@ const form = ref({
   isDefault: false,
 });
 
-const error = ref<string>();
-
-const { create } = useLocaleStore();
-const { mutateAsync: createLocale, isPending } = create;
-
+const localeStore = useLocaleStore();
 const { t } = useI18n();
-const { showError, showSuccess } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 
 const { placeholder: codePlaceholder } = useTypingPlaceholder([
   "en-US",
@@ -54,62 +48,40 @@ const { placeholder: namePlaceholder } = useTypingPlaceholder([
   "Russian",
 ]);
 
-function resetForm() {
-  form.value = {
-    code: "",
-    names: {} as Record<string, string>,
-    isDefault: false,
-  };
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => localeStore.create.isPending,
+  reset: () => {
+    form.value = { code: "", names: {}, isDefault: false };
+  },
+  close: () => emit("close"),
+});
 
-  error.value = undefined;
-}
+function handleSubmit() {
+  submit(async () => {
+    if (!form.value.code || !form.value.names.en) {
+      error.value = t("locales.createRequired");
 
-async function handleSubmit() {
-  error.value = undefined;
+      return false;
+    }
 
-  if (!form.value.code || !form.value.names.en) {
-    error.value = t("locales.createRequired");
-    return;
-  }
-
-  await createLocale(
-    {
+    const response = await localeStore.create.mutateAsync({
       code: form.value.code,
       names: { values: form.value.names },
       isDefault: form.value.isDefault,
-    },
-    {
-      onSuccess: (response: CreateLocaleResponse) => {
-        showSuccess(
-          t("locales.created", {
-            name: response.locale?.name ?? form.value.names.en,
-          }),
-        );
-      },
-      onError: (error) => {
-        showError(error);
-      },
-    },
-  );
+    });
 
-  handleClose();
-}
-
-const emit = defineEmits<{
-  close: [];
-}>();
-
-function handleClose() {
-  if (!isPending) {
-    emit("close");
-
-    resetForm();
-  }
+    showSuccess(
+      t("locales.created", {
+        name: response.locale?.name ?? form.value.names.en,
+      }),
+    );
+  });
 }
 </script>
 
 <template>
-  <Dialog :open :title="t('locales.create')" @close="handleClose">
+  <Dialog :open :title="t('locales.create')" @close="cancel">
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
         v-model="form.code"
@@ -149,7 +121,7 @@ function handleClose() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

@@ -25,6 +25,7 @@ const { data: currentUserData } = useQuery({
   ...api.auth.getCurrentUser.use({}),
   enabled: computed(() => authStore.isLoggedIn),
 });
+
 watch(currentUserData, (data) => {
   if (data?.user) authStore.setUser(data.user);
 });

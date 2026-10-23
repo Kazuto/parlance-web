@@ -12,14 +12,18 @@ const { t } = useI18n();
 
 const problems = computed(() => {
   const suggestion = props.suggestion;
+
   if (!suggestion) return [];
+
   if (suggestion.errorCode) {
     return props.value.trim()
       ? []
       : [t(`entries.suggestionError.${suggestion.errorCode}`)];
   }
+
   if (!suggestion.translation || props.value !== suggestion.translation)
     return [];
+
   return (suggestion.warnings ?? []).map((warning) =>
     t(`entries.suggestionWarning.${warning.code}`, {
       placeholder: warning.detail ?? "",

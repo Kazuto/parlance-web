@@ -23,6 +23,7 @@ type ListRequest = {
 
 async function openEntries(route: string, entries: object[] = []) {
   const requests: ListRequest[] = [];
+
   loginAs(VIEWER);
   mockRpc("LocaleService/ListLocales", {
     locales,
@@ -30,9 +31,12 @@ async function openEntries(route: string, entries: object[] = []) {
   });
   mockRpc("EntryService/ListEntries", (body) => {
     requests.push(body as ListRequest);
+
     return { entries, pagination: pagination(entries.length) };
   });
+
   const page = await mountPage(EntriesPage, { route });
+
   return { page, requests };
 }
 
@@ -43,10 +47,12 @@ describe("entry search", () => {
       { id: "e2", key: "app.title", defaultTranslation: "Parlance" },
     ]);
     const input = page.wrapper.find('input[type="search"]');
+
     await new Promise((resolve) => setTimeout(resolve, 400));
     await settle();
 
     const placeholder = input.attributes("placeholder") ?? "";
+
     expect(placeholder.length).toBeGreaterThan(0);
     expect("auth.signIn".startsWith(placeholder)).toBe(true);
     // The examples only show; the name says what can be searched.
@@ -69,6 +75,7 @@ describe("entry search", () => {
     await settle();
 
     const last = requests.at(-1)!;
+
     expect(last.filter?.search).toBe("hallo");
     expect([...(last.targetLocaleIds ?? [])].sort()).toEqual(["l1", "l2"]);
   });

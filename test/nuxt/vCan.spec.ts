@@ -19,7 +19,9 @@ function guarded(binding: string) {
 
 async function mountGuarded(binding: string, props = {}) {
   const wrapper = await mountSuspended(guarded(binding), { props });
+
   await settle();
+
   return wrapper;
 }
 
@@ -84,7 +86,9 @@ describe("v-can", () => {
 
   it("follows permissions that change after mounting", async () => {
     loginAs(["read_entry"]);
+
     const wrapper = await mountGuarded("'update_entry'");
+
     expect(isShown(wrapper)).toBe(false);
 
     changePermissions(["read_entry", "update_entry"]);
@@ -98,18 +102,22 @@ describe("v-can", () => {
 
   it("puts the element back in its original place", async () => {
     loginAs([]);
+
     const wrapper = await mountGuarded("'update_entry'");
 
     changePermissions(["update_entry"]);
     await settle();
 
     const ids = [...wrapper.element.children].map((child) => child.id);
+
     expect(ids).toEqual(["before", "guarded", "after"]);
   });
 
   it("follows a binding that changes", async () => {
     loginAs(["update_entry"]);
+
     const wrapper = await mountGuarded("value", { value: "update_entry" });
+
     expect(isShown(wrapper)).toBe(true);
 
     await wrapper.setProps({ value: "delete_entry" });
@@ -123,8 +131,10 @@ describe("v-can", () => {
 
   it("stops following permissions once unmounted", async () => {
     loginAs([]);
+
     const wrapper = await mountGuarded("'update_entry'");
     const button = wrapper.element.querySelector("#guarded");
+
     wrapper.unmount();
 
     // A leftover watcher would try to put the button back into a dead tree.

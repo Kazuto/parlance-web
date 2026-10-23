@@ -6,6 +6,7 @@ type Pair = [string | undefined, string | undefined];
 
 async function mountExamples(pairs: Ref<Pair[]>, search: Ref<string>) {
   let placeholder!: Ref<string>;
+
   await mountSuspended(
     defineComponent({
       setup() {
@@ -14,11 +15,13 @@ async function mountExamples(pairs: Ref<Pair[]>, search: Ref<string>) {
           search,
           () => "Search…",
         );
+
         return () => h("input", { placeholder: placeholder.value });
       },
     }),
   );
   await settle();
+
   return placeholder;
 }
 
@@ -26,8 +29,10 @@ async function mountExamples(pairs: Ref<Pair[]>, search: Ref<string>) {
 async function watchFor(placeholder: Ref<string>, ms: number) {
   const seen = new Set<string>();
   const stop = watch(placeholder, (value) => seen.add(value));
+
   await new Promise((resolve) => setTimeout(resolve, ms));
   stop();
+
   return [...seen];
 }
 
@@ -37,6 +42,7 @@ describe("useSearchExamples", () => {
     const placeholder = await mountExamples(pairs, ref(""));
 
     const seen = await watchFor(placeholder, 3500);
+
     expect(seen).toContain("a.b");
     expect(seen).toContain("Hi");
   });
@@ -52,12 +58,14 @@ describe("useSearchExamples", () => {
     const placeholder = await mountExamples(pairs, ref(""));
 
     const seen = await watchFor(placeholder, 300);
+
     expect(seen.some((value) => value.startsWith("k1"))).toBe(true);
     expect(seen.some((value) => value.startsWith("no"))).toBe(false);
   });
 
   it("shows the fallback without examples", async () => {
     const placeholder = await mountExamples(ref([]), ref(""));
+
     expect(placeholder.value).toBe("Search…");
   });
 
@@ -70,7 +78,9 @@ describe("useSearchExamples", () => {
     search.value = "other";
     pairs.value = [["other.key", "Other"]];
     await settle();
+
     const seen = await watchFor(placeholder, 400);
+
     expect(seen.every((value) => "first.key".startsWith(value))).toBe(true);
   });
 });

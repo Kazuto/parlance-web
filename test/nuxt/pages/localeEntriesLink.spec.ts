@@ -40,6 +40,7 @@ async function followOpenEntries(wrapper: VueWrapper, name: string) {
     .findAll("tr")
     .find((candidate) => candidate.text().includes(name));
   const link = row!.find(`a[aria-label="${t("locales.openEntries")}"]`);
+
   await useRouter().push(link.attributes("href")!);
   await settle();
 }
@@ -56,12 +57,14 @@ describe("opening entries from the locales overview", () => {
     loginAs(permissions);
     mockLocales();
     mockRpc("StatsService/GetStats", {});
+
     return mountPage(LocalesPage);
   }
 
   /** Follows the "open entries" link in the row of the locale with this name. */
   async function openEntriesFor(page: MountedPage, name: string) {
     await followOpenEntries(page.wrapper, name);
+
     return useRouter().currentRoute.value;
   }
 
@@ -71,6 +74,7 @@ describe("opening entries from the locales overview", () => {
     const actions = page
       .iconButtons()
       .filter((label) => label === t("locales.openEntries"));
+
     expect(actions).toHaveLength(locales.length);
   });
 
@@ -81,16 +85,19 @@ describe("opening entries from the locales overview", () => {
       .find((candidate) => candidate.text().includes("German"));
 
     const entries = row!.find(`[aria-label="${t("locales.openEntries")}"]`);
+
     expect(entries.element.tagName).toBe("A");
     expect(entries.attributes("href")).toBe("/entries?locales=en,de");
 
     const view = row!.find(`[aria-label="${t("locales.view")}"]`);
+
     expect(view.element.tagName).toBe("A");
     expect(view.attributes("href")).toBe("/locales/l2");
   });
 
   it("is not offered without read_entry", async () => {
     const page = await openOverview(["read_locale"]);
+
     expect(page.iconButtons()).not.toContain(t("locales.openEntries"));
   });
 
@@ -111,7 +118,9 @@ describe("opening entries from the locales overview", () => {
 
   it("leaves the remembered languages alone", async () => {
     localStorage.setItem(STORED_LANGUAGES, JSON.stringify(["fr"]));
+
     const page = await openOverview(VIEWER);
+
     await openEntriesFor(page, "German");
 
     expect(JSON.parse(localStorage.getItem(STORED_LANGUAGES)!)).toEqual(["fr"]);
@@ -129,6 +138,7 @@ describe("entries page opened with preselected languages", () => {
       pagination: pagination(1),
     });
     mockRpc("EntryService/GetEntry", { entry });
+
     return mountPage(EntriesPage, { route });
   }
 
@@ -139,11 +149,13 @@ describe("entries page opened with preselected languages", () => {
       .filter((field) => !field.element.closest("dialog:not([open])"))
       .map((field) => {
         const code = field.attributes("id")!.split("-").pop();
+
         return locales.find((locale) => locale.id === code)?.code;
       });
 
   it("shows the languages from the link", async () => {
     localStorage.setItem(STORED_LANGUAGES, JSON.stringify(["fr"]));
+
     const page = await openEntries("/entries?locales=en,de");
 
     expect(shownLanguages(page)).toEqual(["en", "de"]);
@@ -158,9 +170,11 @@ describe("entries page opened with preselected languages", () => {
 
   it("remembers languages the user picks after opening a link", async () => {
     localStorage.setItem(STORED_LANGUAGES, JSON.stringify(["fr"]));
+
     const page = await openEntries("/entries?locales=en,de");
 
     const filters = page.wrapper.findComponent(EntryFiltersPopover);
+
     filters.vm.$emit("update:localeIds", ["l1", "l3"]);
     await settle();
 
@@ -172,6 +186,7 @@ describe("entries page opened with preselected languages", () => {
 
   it("still uses the remembered languages without a link", async () => {
     localStorage.setItem(STORED_LANGUAGES, JSON.stringify(["fr"]));
+
     const page = await openEntries("/entries");
 
     expect(shownLanguages(page)).toEqual(["fr"]);
@@ -189,6 +204,7 @@ describe("translation status on the locales overview", () => {
         { localeId: "l3", percentage: 0 },
       ],
     });
+
     return mountPage(LocalesPage);
   }
 
@@ -197,6 +213,7 @@ describe("translation status on the locales overview", () => {
     const row = page.wrapper
       .findAll("tr")
       .find((candidate) => candidate.text().includes(name))!;
+
     return row.find("td:nth-child(3)");
   }
 
@@ -233,12 +250,14 @@ describe("translation status on the locales overview", () => {
 
   it("opens the entries filtered to what is missing", async () => {
     const page = await openOverview(VIEWER);
+
     await useRouter().push(
       statusOf(page, "French").find("a").attributes("href")!,
     );
     await settle();
 
     const route = useRouter().currentRoute.value;
+
     expect(route.query).toEqual({ locales: "en,fr", status: "missing" });
   });
 });
@@ -250,14 +269,19 @@ describe("from the locales overview to the entries, through the app", () => {
     loginAs(VIEWER);
     mockLocales();
     mockRpc("StatsService/GetStats", {});
+
     const entry = { id: "e1", key: "app.title", scopes: [], localizations: [] };
+
     mockRpc("EntryService/ListEntries", {
       entries: [entry],
       pagination: pagination(1),
     });
     mockRpc("EntryService/GetEntry", { entry });
+
     const app = await mountSuspended(App, { route: "/locales" });
+
     await settle();
+
     return app;
   }
 
@@ -271,7 +295,9 @@ describe("from the locales overview to the entries, through the app", () => {
 
   it("keeps the remembered languages", async () => {
     localStorage.setItem(STORED_LANGUAGES, JSON.stringify(["fr"]));
+
     const app = await openApp();
+
     await clickOpenEntries(app, "German");
 
     expect(useRouter().currentRoute.value.fullPath).toBe(
@@ -282,6 +308,7 @@ describe("from the locales overview to the entries, through the app", () => {
 
   it("keeps the remembered languages when there are none yet", async () => {
     const app = await openApp();
+
     await clickOpenEntries(app, "German");
 
     expect(useRouter().currentRoute.value.fullPath).toBe(

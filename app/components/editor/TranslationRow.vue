@@ -21,10 +21,12 @@ const props = defineProps<{
   translating?: boolean;
 }>();
 const emit = defineEmits<{ "open-context": []; focus: []; revert: [] }>();
+
 defineSlots<{
   /** Under the locale code, e.g. glossary term matches or copy-to-empty. */
   meta?: () => unknown;
 }>();
+
 const value = defineModel<string>({ default: "" });
 const { t } = useI18n();
 
@@ -39,6 +41,7 @@ const fieldClass = computed(() => {
     return props.isDefault
       ? "bg-neutral-100 dark:bg-neutral-800"
       : "bg-white dark:bg-neutral-800";
+
   return props.isDefault
     ? "bg-neutral-100/60 dark:bg-white/[0.03]"
     : "bg-white/50 dark:bg-white/[0.03]";
@@ -47,6 +50,7 @@ const fieldClass = computed(() => {
 const contextButtonClass = computed(() => {
   if (props.active)
     return "bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-200";
+
   return props.isDefault
     ? "bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
     : "bg-white text-neutral-500 dark:bg-white/5 dark:text-neutral-400";

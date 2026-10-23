@@ -13,6 +13,7 @@ defineSlots<{
   /** Shown when the pointer rests on the label; replaces the plain title. */
   tooltip?: () => unknown;
 }>();
+
 const { t } = useI18n();
 </script>
 

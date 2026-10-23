@@ -3,7 +3,7 @@ import { api } from "~/lib/api";
 
 export const useTerminologyStore = defineStore("terminologyStore", () => {
   const queryClient = useQueryClient();
-  const queryKey = api.terminologies.list.getQueryKey();
+  const queryKey = api.terminologies.feed.getQueryKey();
 
   const create = useMutation({
     ...api.terminologies.create.use(),

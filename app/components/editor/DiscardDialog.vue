@@ -3,6 +3,7 @@ import { Button, Dialog } from "@thkzt/eunoia";
 
 // Confirms discarding unsaved changes that reach beyond the item on screen.
 defineProps<{ open: boolean; count: number }>();
+
 const emit = defineEmits<{ close: []; confirm: [] }>();
 const { t } = useI18n();
 </script>

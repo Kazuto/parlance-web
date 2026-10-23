@@ -5,6 +5,7 @@
  */
 export function languageName(code: string, inLanguage: string) {
   let name: string | undefined;
+
   try {
     name = new Intl.DisplayNames([inLanguage], {
       type: "language",
@@ -14,6 +15,7 @@ export function languageName(code: string, inLanguage: string) {
     // Not a valid language tag, e.g. "en_US".
     return undefined;
   }
+
   // CLDR writes names for use within a sentence, e.g. "allemand"; in a list of
   // languages they start with a capital.
   return name
@@ -31,12 +33,16 @@ export function fillLanguageNames(
   languages: readonly string[],
 ) {
   const filled: string[] = [];
+
   for (const language of languages) {
     if ((names[language] ?? "").trim()) continue;
+
     const name = languageName(code, language);
+
     if (!name) continue;
     names[language] = name;
     filled.push(language);
   }
+
   return filled;
 }

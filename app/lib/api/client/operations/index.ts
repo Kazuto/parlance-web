@@ -132,9 +132,9 @@ export abstract class Operation<
           }),
         context.context,
       )();
-    } catch {
-      // Ignore for now
-      // TODO: Add error callback
+    } catch (error) {
+      // The request itself succeeded, so a failing callback must not fail it.
+      console.error(`onSuccess of ${this.key ?? "operation"} failed:`, error);
     }
 
     return parsedOutput;

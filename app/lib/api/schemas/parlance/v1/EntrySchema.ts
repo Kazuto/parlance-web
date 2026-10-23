@@ -275,6 +275,7 @@ export const SearchEntriesResponseSchema = z.object({
 export type GetEntryHistoryRequest = {
   entryId?: string | null;
   pagination?: PaginationRequest | null;
+  localeId?: string | null;
 };
 export const GetEntryHistoryRequestSchema = z.object({
   get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -282,6 +283,9 @@ export const GetEntryHistoryRequestSchema = z.object({
   },
   get pagination(): z.ZodOptional<z.ZodNullable<z.ZodType<PaginationRequest>>> {
     return PaginationRequestSchema.nullish();
+  },
+  get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type GetEntryHistoryResponse = {

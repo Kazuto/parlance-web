@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { entriesLink } from "~/composables/entry/useEntryFilterQuery";
 import { Button, Card, Icon, Switch } from "@thkzt/eunoia";
 import { useRecentActivity } from "~/composables/activity/useRecentActivity";
 import type { ActivityItem } from "~/lib/api/schemas/parlance/v1/ActivitySchema";
@@ -14,15 +15,18 @@ function verbKey(item: ActivityItem) {
   const created = item.createdCount ?? 0;
   const updated = item.updatedCount ?? 0;
   const deleted = item.deletedCount ?? 0;
+
   if (created && !updated && !deleted) return "activity.added";
   if (updated && !created && !deleted) return "activity.updated";
   if (deleted && !created && !updated) return "activity.deleted";
+
   return "activity.changed";
 }
 
 function countLabel(item: ActivityItem) {
   const count = item.subjectCount ?? 0;
   const formatted = `${n(count)}${item.partial ? "+" : ""}`;
+
   return t(
     isDefinition(item) ? "activity.terms" : "activity.translations",
     { count: formatted },
@@ -41,13 +45,11 @@ function subjectLink(item: ActivityItem) {
   if ((item.subjectCount ?? 0) !== 1 || !item.subjectLabel) return undefined;
   if (isDefinition(item))
     return { path: "/glossary", query: { q: item.subjectLabel } };
-  return {
-    path: "/entries",
-    query: {
-      q: item.subjectLabel,
-      ...(item.localeCode ? { locales: item.localeCode } : {}),
-    },
-  };
+
+  return entriesLink({
+    q: item.subjectLabel,
+    locales: item.localeCode ? [item.localeCode] : [],
+  });
 }
 </script>
 

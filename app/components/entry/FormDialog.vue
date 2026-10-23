@@ -49,50 +49,44 @@ const scopeOptions = computed(() => [
       value: scope.id ?? "",
     })),
 ]);
-const error = ref<string>();
 const entryStore = useEntryStore();
 const isEdit = computed(() => !!props.item);
-const isPending = computed(
-  () => entryStore.create.isPending || entryStore.update.isPending,
-);
 const { t } = useI18n();
-const { showSuccess, showError } = useErrorHelper();
+const { showSuccess } = useErrorHelper();
 
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
+const { error, isPending, submit, cancel } = useFormDialog({
+  open: () => props.open,
+  isPending: () => entryStore.create.isPending || entryStore.update.isPending,
+  reset: () => {
     key.value = props.item?.key ?? "";
     description.value = props.item?.description ?? "";
     scopeIds.value = (props.item?.scopes ?? []).flatMap((scope) =>
       scope.id ? [scope.id] : [],
     );
-    error.value = undefined;
   },
-  { immediate: true },
-);
+  close: () => emit("close"),
+});
 
-function handleClose() {
-  if (!isPending.value) emit("close");
-}
+function handleSubmit() {
+  submit(async () => {
+    const trimmedKey = key.value.trim();
 
-async function handleSubmit() {
-  if (isPending.value) return;
-  error.value = undefined;
-  const trimmedKey = key.value.trim();
-  if (!trimmedKey) {
-    error.value = t("entries.keyRequired");
-    return;
-  }
-  try {
+    if (!trimmedKey) {
+      error.value = t("entries.keyRequired");
+
+      return false;
+    }
+
     if (props.item) {
-      if (!props.item.id) return;
+      if (!props.item.id) return false;
+
       const response = await entryStore.update.mutateAsync({
         id: props.item.id,
         key: trimmedKey,
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
       });
+
       showSuccess(t("entries.updated", { key: trimmedKey }));
       if (response.entry?.id) emit("updated", response.entry);
     } else {
@@ -101,17 +95,11 @@ async function handleSubmit() {
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
       });
+
       showSuccess(t("entries.created", { key: trimmedKey }));
       if (response.entry?.id) emit("created", response.entry);
     }
-    emit("close");
-  } catch (cause) {
-    showError(cause as Error);
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t(isEdit.value ? "entries.updateFailed" : "entries.createFailed");
-  }
+  });
 }
 </script>
 
@@ -120,7 +108,7 @@ async function handleSubmit() {
     :open
     :title="t(isEdit ? 'entries.edit' : 'entries.create')"
     :persistent="isPending"
-    @close="handleClose"
+    @close="cancel"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <Input
@@ -155,7 +143,7 @@ async function handleSubmit() {
 
     <template #footer>
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" ghost :disabled="isPending" @click="handleClose">
+        <Button type="button" ghost :disabled="isPending" @click="cancel">
           {{ t("common.cancel") }}
         </Button>
         <Button primary :disabled="isPending" @click="handleSubmit">

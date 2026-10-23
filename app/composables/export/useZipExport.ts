@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
+import { base64ToBlob, downloadBlob } from "~/lib/files";
 
 export function useZipExport() {
+  const { t } = useI18n();
   const { mutateAsync, isPending } = useMutation({
     ...api.exports.exportZip.use(),
   });
@@ -10,29 +12,13 @@ export function useZipExport() {
     const response = await mutateAsync({ scopeIds });
 
     if (!response.content || !response.filename) {
-      throw new Error("Invalid export response");
+      throw new Error(t("transfer.missingExportContent"));
     }
 
-    // Convert base64 to blob
-    const bytes = Uint8Array.from(atob(response.content), (c) =>
-      c.charCodeAt(0),
+    downloadBlob(
+      base64ToBlob(response.content, "application/zip"),
+      response.filename,
     );
-    const blob = new Blob([bytes], { type: "application/zip" });
-
-    // Create download link
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = response.filename;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(url);
   }
 
   return {

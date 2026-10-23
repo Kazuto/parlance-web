@@ -42,6 +42,7 @@ const modeOptions = [
 async function handleSubmit() {
   if (!file.value) {
     showError(t("import.fileRequired"));
+
     return;
   }
 
@@ -74,7 +75,7 @@ async function handleSubmit() {
 
     emit("close");
   } catch (error) {
-    showError(error as Error);
+    showError(error);
   }
 }
 
