@@ -721,7 +721,7 @@
   "transfer.missingExportContent": "Der Server hat keinen Exportinhalt zurückgegeben.",
   "transfer.missingImportResult": "Der Server hat kein Importergebnis zurückgegeben.",
   "transfer.pageDescription": "Importieren Sie Übersetzungsdateien in eine Sprache oder laden Sie die Übersetzungen einer Sprache als Datei herunter.",
-  "transfer.pageTitle": "Import \u0026 Export",
+  "transfer.pageTitle": "Import & Export",
   "transfer.php": "PHP-Array",
   "transfer.po": "Gettext PO (.po)",
   "transfer.poExportHelp": "PO-Exporte verwenden Eintragsschlüssel als msgid und enthalten Sprachmetadaten, Beschreibungskommentare und unübersetzte Einträge mit leerem msgstr.",

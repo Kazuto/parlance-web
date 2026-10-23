@@ -322,7 +322,7 @@
   "locales.englishName": "名称（英文）",
   "locales.fillAllNames": "填充所有地区中的缺失名称",
   "locales.fillNames": "填写缺失名称",
-  "locales.loadFailed": "无法加载区域设置",
+  "locales.loadFailed": "无法加载区域设置：{error}",
   "locales.loadFailedDescription": "加载本地化文件时出现了问题。请尝试再次操作，如果问题仍然存在，请联系支持团队。",
   "locales.loading": "正在加载本地文件...",
   "locales.loadingOne": "正在加载区域设置…",

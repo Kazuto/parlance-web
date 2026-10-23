@@ -322,7 +322,7 @@
   "locales.englishName": "Nome (inglese)",
   "locales.fillAllNames": "Completare i nomi mancanti in tutte le località",
   "locales.fillNames": "Completare i nomi mancanti",
-  "locales.loadFailed": "Errore nell'caricamento dei locali",
+  "locales.loadFailed": "Errore nell'caricamento dei locali: {error}",
   "locales.loadFailedDescription": "C'è stato un problema nell'caricare i locali. Provate di nuovo o contattate il supporto se il problema persiste.",
   "locales.loading": "Caricamento dei locali...",
   "locales.loadingOne": "Caricamento locale…",

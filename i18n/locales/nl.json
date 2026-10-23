@@ -322,7 +322,7 @@
   "locales.englishName": "Naam (Engels)",
   "locales.fillAllNames": "Vul de ontbrekende namen in voor alle locaties",
   "locales.fillNames": "Vul de ontbrekende namen in",
-  "locales.loadFailed": "Probleem bij het laden van locaties",
+  "locales.loadFailed": "Probleem bij het laden van locaties: {error}",
   "locales.loadFailedDescription": "Er was een probleem bij het laden van de locaties. Probeer het opnieuw, of neem contact op met ons ondersteuningsteam als het probleem blijft bestaan.",
   "locales.loading": "Lokale instellingen laden...",
   "locales.loadingOne": "Laden van locatie…",
