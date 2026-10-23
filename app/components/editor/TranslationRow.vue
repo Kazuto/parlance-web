@@ -55,6 +55,22 @@ const review = computed(() => {
   return props.reviewComment ? "rejected" : "draft";
 });
 
+// The right edge of the field shows one thing: the revert button while there are
+// unsaved edits, otherwise the review state of the saved text.
+const marker = computed(() => {
+  if (props.dirty) return "revert";
+  if (props.translating) return undefined;
+
+  return review.value;
+});
+
+// Leaves room for the marker, so text never runs under it.
+const markerPadding = computed(() => {
+  if (marker.value === "draft") return "pr-20";
+
+  return marker.value ? "pr-10" : "";
+});
+
 // Review judges the saved text, so it waits for unsaved edits.
 const reviewable = computed(
   () =>
@@ -94,7 +110,7 @@ const contextButtonClass = computed(() => {
     :class="[
       withoutContext
         ? 'grid-cols-[150px_minmax(0,1fr)] max-sm:grid-cols-1'
-        : 'grid-cols-[150px_minmax(0,1fr)_32px] max-sm:grid-cols-[minmax(0,1fr)_32px]',
+        : 'grid-cols-[150px_minmax(0,1fr)_auto] max-sm:grid-cols-[minmax(0,1fr)_auto]',
       isDefault
         ? 'bg-white shadow-sm dark:bg-neutral-800/60 dark:shadow-none'
         : '',
@@ -138,61 +154,13 @@ const contextButtonClass = computed(() => {
         class="pl-3 text-[10.5px] font-bold text-primary-600 dark:text-primary-300"
         >{{ t("common.default") }}</span
       >
-      <div v-if="review" class="flex items-center gap-1 pl-3">
-        <Tooltip
-          v-if="review === 'approved'"
-          :content="t('review.approved')"
-          class="inline-flex"
-        >
-          <Icon
-            name="seal-check"
-            size="sm"
-            class="text-green-600 dark:text-green-300"
-            :aria-label="t('review.approved')"
-          />
-        </Tooltip>
-        <Tooltip
-          v-else
-          :content="
-            review === 'rejected'
-              ? t('review.rejectedHint', { comment: reviewComment })
-              : t('review.draftHint')
-          "
-          class="inline-flex"
-        >
-          <span
-            class="rounded-[6px] px-1.5 py-px text-[10.5px] font-bold squircle"
-            :class="
-              review === 'rejected'
-                ? 'bg-red-50 text-red-600 dark:bg-rose-500/15 dark:text-rose-300'
-                : 'bg-yellow-50 text-yellow-700 dark:bg-amber-400/15 dark:text-amber-300'
-            "
-            >{{
-              t(review === "rejected" ? "review.rejected" : "review.draft")
-            }}</span
-          >
-        </Tooltip>
-        <template v-if="reviewable">
-          <BaseIconButton
-            dense
-            icon="check"
-            :label="t('review.approveFor', { language: localeName })"
-            @click="emit('approve')"
-          />
-          <BaseIconButton
-            dense
-            icon="arrow-u-up-left"
-            :label="t('review.rejectFor', { language: localeName })"
-            @click="emit('reject')"
-          />
-        </template>
-      </div>
       <div v-if="$slots.meta" class="pl-3">
         <slot name="meta" />
       </div>
     </div>
     <!-- Unsaved changes mark the field itself: a yellow border and, like an input
-         append, a revert button aligned with the first line. -->
+         append, a revert button aligned with the first line. The field's 20px lines
+         and 10px padding let a 20px marker at top-2.5 sit centered on that line. -->
     <div class="relative min-w-0">
       <textarea
         :id="inputId"
@@ -201,10 +169,11 @@ const contextButtonClass = computed(() => {
         :aria-busy="translating || undefined"
         :placeholder="translating ? undefined : placeholder"
         rows="1"
-        class="block min-h-[38px] w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
+        class="block min-h-10 w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] leading-5 text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
         :class="[
           fieldClass,
-          dirty && 'pr-10 ring-1 ring-yellow-500 dark:ring-amber-300/70',
+          markerPadding,
+          dirty && 'ring-1 ring-yellow-500 dark:ring-amber-300/70',
         ]"
         @focus="emit('focus')"
       />
@@ -219,16 +188,16 @@ const contextButtonClass = computed(() => {
           class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/80 to-transparent motion-safe:animate-shimmer dark:via-primary-300/15"
         />
         <div
-          class="relative flex h-full min-h-[38px] items-center gap-1.5 px-3 text-[12.5px] font-semibold text-primary-700 dark:text-primary-200"
+          class="relative flex h-full min-h-10 items-center gap-1.5 px-3 text-[12.5px] font-semibold text-primary-700 dark:text-primary-200"
         >
           <Icon name="sparkle" size="xs" class="motion-safe:animate-pulse" />
           {{ t("entries.translating") }}
         </div>
       </div>
       <Tooltip
-        v-if="dirty"
+        v-if="marker === 'revert'"
         :content="t('common.revert')"
-        class="absolute top-[9px] right-2"
+        class="absolute top-2.5 right-2"
       >
         <button
           type="button"
@@ -240,8 +209,52 @@ const contextButtonClass = computed(() => {
           <Icon name="arrow-counter-clockwise" size="xs" />
         </button>
       </Tooltip>
+      <Tooltip
+        v-else-if="marker"
+        :content="
+          marker === 'approved'
+            ? t('review.approved')
+            : marker === 'rejected'
+              ? t('review.rejectedHint', { comment: reviewComment })
+              : t('review.draftHint')
+        "
+        class="absolute top-2.5 right-2 flex h-5 items-center"
+      >
+        <span
+          v-if="marker === 'draft'"
+          class="block rounded-[6px] bg-neutral-100 px-1.5 py-0.5 text-[10.5px] font-bold text-neutral-500 squircle dark:bg-white/10 dark:text-neutral-300"
+          >{{ t("review.draft") }}</span
+        >
+        <Icon
+          v-else
+          :name="marker === 'approved' ? 'seal-check' : 'chat-circle-text'"
+          size="sm"
+          :class="
+            marker === 'approved'
+              ? 'text-green-600 dark:text-green-300'
+              : 'text-red-500 dark:text-rose-300'
+          "
+          :aria-label="
+            marker === 'approved' ? t('review.approved') : t('review.rejected')
+          "
+        />
+      </Tooltip>
     </div>
-    <div v-if="!withoutContext" class="flex flex-col items-center gap-1">
+    <div v-if="!withoutContext" class="flex items-center gap-1">
+      <template v-if="reviewable">
+        <BaseIconButton
+          icon="check"
+          :label="t('review.approveFor', { language: localeName })"
+          class="bg-white text-green-600 dark:bg-white/5 dark:text-green-300"
+          @click="emit('approve')"
+        />
+        <BaseIconButton
+          icon="arrow-u-up-left"
+          :label="t('review.rejectFor', { language: localeName })"
+          class="bg-white text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
+          @click="emit('reject')"
+        />
+      </template>
       <BaseIconButton
         icon="sidebar"
         :label="contextLabel"

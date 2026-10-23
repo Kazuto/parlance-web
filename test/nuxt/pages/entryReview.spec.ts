@@ -91,8 +91,15 @@ describe("reviewing translations in the editor", () => {
     const { page } = await openEditor(VIEWER);
     const text = page.wrapper.text();
 
+    // German is a draft, French was sent back and English is approved; each shows
+    // at the end of its field.
     expect(text).toContain(t("review.draft"));
-    expect(text).toContain(t("review.rejected"));
+    expect(
+      page.wrapper.find(`[aria-label="${t("review.rejected")}"]`).exists(),
+    ).toBe(true);
+    expect(
+      page.wrapper.find(`[aria-label="${t("review.approved")}"]`).exists(),
+    ).toBe(true);
     // Approving needs review_entry.
     expect(page.iconButtons()).not.toContain(
       t("review.approveFor", { language: "German" }),
