@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon, Tooltip } from "@thkzt/eunoia";
+import type { ReviewStatus } from "~/lib/api/schemas/parlance/v1/CommonSchema";
 
 // One language of the item being edited: label column, text field, and the button
 // that opens this language in the context panel.
@@ -19,8 +20,20 @@ const props = defineProps<{
   withoutContext?: boolean;
   /** A machine translation for this field is on its way. */
   translating?: boolean;
+  /** The saved text's review state; unset while nothing is saved. */
+  status?: ReviewStatus | null;
+  /** Why a reviewer sent the text back. */
+  reviewComment?: string | null;
+  /** The user may approve the text or send it back. */
+  canReview?: boolean;
 }>();
-const emit = defineEmits<{ "open-context": []; focus: []; revert: [] }>();
+const emit = defineEmits<{
+  "open-context": [];
+  focus: [];
+  revert: [];
+  approve: [];
+  reject: [];
+}>();
 
 defineSlots<{
   /** Under the locale code, e.g. glossary term matches or copy-to-empty. */
@@ -32,6 +45,24 @@ const { t } = useI18n();
 
 const contextLabel = computed(() =>
   t("context.openFor", { language: props.localeName }),
+);
+
+// A draft a reviewer sent back reads as such until it is approved.
+const review = computed(() => {
+  if (props.status === "REVIEW_STATUS_APPROVED") return "approved";
+  if (props.status !== "REVIEW_STATUS_DRAFT") return undefined;
+
+  return props.reviewComment ? "rejected" : "draft";
+});
+
+// Review judges the saved text, so it waits for unsaved edits.
+const reviewable = computed(
+  () =>
+    props.canReview &&
+    review.value !== "approved" &&
+    !!review.value &&
+    !props.dirty &&
+    !props.translating,
 );
 
 // Light mode mirrors dark: filled fields stand out from the group behind them and
@@ -107,6 +138,55 @@ const contextButtonClass = computed(() => {
         class="pl-3 text-[10.5px] font-bold text-primary-600 dark:text-primary-300"
         >{{ t("common.default") }}</span
       >
+      <div v-if="review" class="flex items-center gap-1 pl-3">
+        <Tooltip
+          v-if="review === 'approved'"
+          :content="t('review.approved')"
+          class="inline-flex"
+        >
+          <Icon
+            name="seal-check"
+            size="sm"
+            class="text-green-600 dark:text-green-300"
+            :aria-label="t('review.approved')"
+          />
+        </Tooltip>
+        <Tooltip
+          v-else
+          :content="
+            review === 'rejected'
+              ? t('review.rejectedHint', { comment: reviewComment })
+              : t('review.draftHint')
+          "
+          class="inline-flex"
+        >
+          <span
+            class="rounded-[6px] px-1.5 py-px text-[10.5px] font-bold squircle"
+            :class="
+              review === 'rejected'
+                ? 'bg-red-50 text-red-600 dark:bg-rose-500/15 dark:text-rose-300'
+                : 'bg-yellow-50 text-yellow-700 dark:bg-amber-400/15 dark:text-amber-300'
+            "
+            >{{
+              t(review === "rejected" ? "review.rejected" : "review.draft")
+            }}</span
+          >
+        </Tooltip>
+        <template v-if="reviewable">
+          <BaseIconButton
+            dense
+            icon="check"
+            :label="t('review.approveFor', { language: localeName })"
+            @click="emit('approve')"
+          />
+          <BaseIconButton
+            dense
+            icon="arrow-u-up-left"
+            :label="t('review.rejectFor', { language: localeName })"
+            @click="emit('reject')"
+          />
+        </template>
+      </div>
       <div v-if="$slots.meta" class="pl-3">
         <slot name="meta" />
       </div>

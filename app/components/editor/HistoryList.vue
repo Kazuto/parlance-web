@@ -8,6 +8,8 @@ type HistoryItem = {
   userId?: string | null;
   translation?: string | null;
   action?: string | null;
+  /** A reviewer's comment, when sending the text back. */
+  comment?: string | null;
   changedAt?: string | null;
   user?: User | null;
 };
@@ -24,7 +26,9 @@ const page = defineModel<number>("page", { required: true });
 const { t } = useI18n();
 
 function actionLabel(action: string | null | undefined) {
-  return ["created", "updated", "deleted"].includes(action ?? "")
+  return ["created", "updated", "deleted", "approved", "rejected"].includes(
+    action ?? "",
+  )
     ? t(`context.action.${action}`)
     : (action ?? "");
 }
@@ -89,6 +93,12 @@ function changedBy(item: HistoryItem) {
             class="text-sm break-words whitespace-pre-wrap dark:text-neutral-100"
           >
             {{ item.translation || t("context.emptyTranslation") }}
+          </p>
+          <p
+            v-if="item.comment"
+            class="rounded-xl bg-red-50 px-2.5 py-1.5 text-xs text-red-700 squircle dark:bg-rose-500/10 dark:text-rose-200"
+          >
+            {{ t("review.commentLabel", { comment: item.comment }) }}
           </p>
         </li>
       </ol>

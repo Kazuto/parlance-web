@@ -100,14 +100,27 @@ describe("entries page", () => {
     expect(await entryActions(page)).toEqual([]);
   });
 
-  it("offers the import only with create_entry and update_entry", async () => {
-    const page = await open([...VIEWER, "create_entry", "update_entry"]);
+  it("offers the import only with import_entry", async () => {
+    const editor = await open([...VIEWER, "create_entry", "update_entry"]);
 
-    expect(page.headerActions()).toEqual([
+    expect(editor.headerActions()).toEqual([
       t("entries.create"),
+      t("entries.export"),
+    ]);
+    editor.wrapper.unmount();
+
+    const importer = await open([...VIEWER, "import_entry"]);
+
+    expect(importer.headerActions()).toEqual([
       t("entries.import"),
       t("entries.export"),
     ]);
+  });
+
+  it("offers the export only with export_entry", async () => {
+    const page = await open(VIEWER.filter((name) => name !== "export_entry"));
+
+    expect(page.headerActions()).toEqual([]);
   });
 
   it("lets update_entry edit translations, keys and scopes", async () => {
@@ -143,6 +156,7 @@ describe("entries page", () => {
     expect(await entryActions(page)).toEqual([
       t("entries.copyDefaultToEmpty"),
       t("entries.edit"),
+      t("review.approveShown"),
       t("actions.deleteEntry"),
     ]);
   });
@@ -159,6 +173,7 @@ describe("glossary page", () => {
         terminologyId: "g1",
         localeId: "l1",
         translation: "Workspace",
+        status: "REVIEW_STATUS_APPROVED" as string,
       },
     ],
   };
@@ -240,6 +255,43 @@ describe("glossary page", () => {
     ]);
 
     expect(fields(page)).toEqual(["editable", "editable"]);
+  });
+
+  it("approves a draft definition with review_definition", async () => {
+    const reviews: unknown[] = [];
+
+    mockRpc("DefinitionService/ReviewDefinitions", (body) => {
+      reviews.push(body);
+
+      return { definitions: [] };
+    });
+    terminology.definitions[0]!.status = "REVIEW_STATUS_DRAFT";
+
+    try {
+      const page = await openWithBothLanguages([
+        ...VIEWER,
+        "review_definition",
+      ]);
+
+      expect(page.wrapper.text()).toContain(t("review.draft"));
+      await page.wrapper
+        .find(
+          `button[aria-label="${t("review.approveFor", { language: "English" })}"]`,
+        )
+        .trigger("click");
+      await settle();
+
+      expect(reviews).toEqual([
+        {
+          terminologyIds: ["g1"],
+          localeIds: ["l1"],
+          decision: "REVIEW_DECISION_APPROVE",
+        },
+      ]);
+      page.wrapper.unmount();
+    } finally {
+      terminology.definitions[0]!.status = "REVIEW_STATUS_APPROVED";
+    }
   });
 });
 
@@ -360,21 +412,39 @@ describe("import / export page", () => {
     );
   });
 
-  it.each([[["create_entry"]], [["update_entry"]]])(
-    "keeps the import hidden with only %j",
-    async (extra) => {
-      const page = await open([...VIEWER, ...extra]);
+  it.each([
+    [["create_entry"]],
+    [["update_entry"]],
+    [["create_entry", "update_entry"]],
+  ])("keeps the import hidden with only %j", async (extra) => {
+    const page = await open([...VIEWER, ...extra]);
 
-      expect(tabs(page)).toEqual([t("transfer.exportTab")]);
-    },
-  );
+    expect(tabs(page)).toEqual([t("transfer.exportTab")]);
+  });
 
-  it("offers the import with create_entry and update_entry", async () => {
-    const page = await open([...VIEWER, "create_entry", "update_entry"]);
+  it("offers the import with import_entry", async () => {
+    const page = await open([...VIEWER, "import_entry"]);
 
     expect(tabs(page)).toEqual([
       t("transfer.importTab"),
       t("transfer.exportTab"),
     ]);
+  });
+
+  it("offers to approve imports only to reviewers", async () => {
+    const importer = await open([...VIEWER, "import_entry"]);
+
+    expect(importer.wrapper.text()).not.toContain(t("transfer.approve"));
+    importer.wrapper.unmount();
+
+    const reviewer = await open([...VIEWER, "import_entry", "review_entry"]);
+
+    expect(reviewer.wrapper.text()).toContain(t("transfer.approve"));
+  });
+
+  it("lets the export include drafts", async () => {
+    const page = await open(VIEWER);
+
+    expect(page.wrapper.text()).toContain(t("transfer.includeDrafts"));
   });
 });

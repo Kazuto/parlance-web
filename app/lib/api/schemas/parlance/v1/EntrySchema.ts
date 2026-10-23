@@ -10,6 +10,8 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
+  ReviewStatusSchema,
+  type ReviewStatus,
 } from "./CommonSchema";
 import { LocalizationSchema, type Localization } from "./LocalizationSchema";
 import { ScopeSchema, type Scope } from "./ScopeSchema";
@@ -27,6 +29,7 @@ export type Entry = {
   scopes?: Array<Scope> | null;
   missingLocaleIds?: Array<string> | null;
   defaultTranslation?: string | null;
+  draftLocaleIds?: Array<string> | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -68,6 +71,9 @@ export const EntrySchema = z.object({
   },
   get defaultTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get draftLocaleIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type ListEntriesRequest = {
@@ -314,6 +320,8 @@ export type LocalizationHistory = {
   action?: string | null;
   changedAt?: string | null;
   user?: User | null;
+  status?: ReviewStatus | null;
+  comment?: string | null;
 };
 export const LocalizationHistorySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -342,5 +350,11 @@ export const LocalizationHistorySchema = z.object({
   },
   get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
     return UserSchema.nullish();
+  },
+  get status(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
+    return ReviewStatusSchema.nullish();
+  },
+  get comment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });

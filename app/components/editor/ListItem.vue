@@ -2,12 +2,14 @@
 import { Tooltip } from "@thkzt/eunoia";
 
 // A row in the editor's list: the item's label, plus how many of the selected
-// languages are still missing.
+// languages are still missing or wait for review.
 defineProps<{
   label: string;
   missingCount: number;
   unsaved?: boolean;
   missingLabel: string;
+  draftCount?: number;
+  draftLabel?: string;
 }>();
 defineSlots<{
   /** Shown when the pointer rests on the label; replaces the plain title. */
@@ -45,12 +47,21 @@ const { t } = useI18n();
       :title="t('entries.unsavedTranslations')"
       >{{ t("common.unsaved") }}</span
     >
-    <Tooltip v-else-if="missingCount > 0" :content="missingLabel">
-      <span
-        class="grid h-4 min-w-4 shrink-0 place-items-center rounded-[6px] bg-red-50 px-1 text-[10px] font-bold text-red-500 squircle dark:bg-rose-500/15 dark:text-rose-300"
-        :aria-label="missingLabel"
-        >{{ missingCount }}</span
-      >
-    </Tooltip>
+    <template v-else>
+      <Tooltip v-if="draftCount" :content="draftLabel">
+        <span
+          class="grid h-4 min-w-4 shrink-0 place-items-center rounded-[6px] bg-yellow-50 px-1 text-[10px] font-bold text-yellow-700 squircle dark:bg-amber-400/15 dark:text-amber-300"
+          :aria-label="draftLabel"
+          >{{ draftCount }}</span
+        >
+      </Tooltip>
+      <Tooltip v-if="missingCount > 0" :content="missingLabel">
+        <span
+          class="grid h-4 min-w-4 shrink-0 place-items-center rounded-[6px] bg-red-50 px-1 text-[10px] font-bold text-red-500 squircle dark:bg-rose-500/15 dark:text-rose-300"
+          :aria-label="missingLabel"
+          >{{ missingCount }}</span
+        >
+      </Tooltip>
+    </template>
   </span>
 </template>

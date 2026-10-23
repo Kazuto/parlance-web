@@ -12,6 +12,9 @@ export const ALL_PERMISSIONS = [
   "read_entry",
   "update_entry",
   "delete_entry",
+  "review_entry",
+  "import_entry",
+  "export_entry",
   "create_user",
   "read_user",
   "update_user",
@@ -33,6 +36,7 @@ export const ALL_PERMISSIONS = [
   "read_definition",
   "update_definition",
   "delete_definition",
+  "review_definition",
   "create_translation_server",
   "read_translation_server",
   "update_translation_server",
@@ -42,11 +46,12 @@ export const ALL_PERMISSIONS = [
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];
 
-/** The seeded "viewer" role: it may read content but change nothing. */
+/** The seeded "viewer" role: it may read and export content but change nothing. */
 export const VIEWER: PermissionName[] = [
   "read_locale",
   "read_entry",
   "read_terminology",
   "read_definition",
   "read_scope",
+  "export_entry",
 ];

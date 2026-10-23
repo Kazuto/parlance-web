@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Dropzone, Select } from "@thkzt/eunoia";
+import { Button, Checkbox, Dropzone, Select } from "@thkzt/eunoia";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { invalidateTranslationData } from "~/lib/api/invalidation";
@@ -28,6 +28,11 @@ const localeId = ref("");
 const scopeIds = ref<string[]>([]);
 const format = ref("json");
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
+// Imports land as drafts unless a reviewer vouches for them; exports leave drafts out.
+const approve = ref(false);
+const includeDrafts = ref(false);
+const { can } = usePermission();
+const canApprove = computed(() => can.value("review_entry"));
 const file = ref<File>();
 const error = ref<string>();
 const result = ref<ImportResult>();
@@ -129,6 +134,7 @@ async function handleSubmit() {
         fileContent: await encodeFile(selectedFile),
         mode: mode.value,
         scopeIds: scopeIds.value,
+        approve: canApprove.value && approve.value,
       };
       const response = await (format.value === "po"
         ? importPo.mutateAsync(input)
@@ -143,6 +149,7 @@ async function handleSubmit() {
       const input = {
         localeCode: locale.code,
         scopeIds: scopeIds.value,
+        includeDrafts: includeDrafts.value,
       };
       const response = await (format.value === "po"
         ? exportPo.mutateAsync(input)
@@ -221,6 +228,14 @@ async function handleSubmit() {
         :disabled="isPending"
         >{{ t("transfer.behavior") }}</Select
       >
+      <Checkbox
+        v-if="canApprove"
+        v-model="approve"
+        :disabled="isPending"
+        :helper="t('transfer.approveHelp')"
+      >
+        <template #description>{{ t("transfer.approve") }}</template>
+      </Checkbox>
       <Dropzone
         v-model="file"
         :accept="fileAccept"
@@ -231,7 +246,18 @@ async function handleSubmit() {
         >{{ t("transfer.file") }}</Dropzone
       >
     </template>
-    <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">
+    <Checkbox
+      v-if="action === 'export'"
+      v-model="includeDrafts"
+      :disabled="isPending"
+      :helper="t('transfer.includeDraftsHelp')"
+    >
+      <template #description>{{ t("transfer.includeDrafts") }}</template>
+    </Checkbox>
+    <p
+      v-if="action === 'export'"
+      class="text-sm text-neutral-500 dark:text-neutral-400"
+    >
       {{
         selectedScopeNames
           ? t("transfer.exportScopeHelp", { scopes: selectedScopeNames })

@@ -16,11 +16,13 @@ export function useZipImport() {
     file: File,
     scopeIds: string[] = [],
     mode: ImportMode = "IMPORT_MODE_CREATE_OR_UPDATE",
+    approve = false,
   ) {
     return await mutateAsync({
       fileContent: await fileToBase64(file),
       scopeIds,
       mode,
+      approve,
     });
   }
 

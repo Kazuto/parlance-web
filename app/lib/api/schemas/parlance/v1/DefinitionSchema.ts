@@ -8,6 +8,10 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
+  ReviewDecisionSchema,
+  type ReviewDecision,
+  ReviewStatusSchema,
+  type ReviewStatus,
 } from "./CommonSchema";
 export type Definition = {
   id?: string | null;
@@ -19,6 +23,10 @@ export type Definition = {
   deletedAt?: string | null;
   createdBy?: string | null;
   updatedBy?: string | null;
+  status?: ReviewStatus | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  reviewComment?: string | null;
 };
 export const DefinitionSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -46,6 +54,18 @@ export const DefinitionSchema = z.object({
     return z.string().nullish();
   },
   get updatedBy(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get status(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
+    return ReviewStatusSchema.nullish();
+  },
+  get reviewedBy(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get reviewedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get reviewComment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -165,5 +185,39 @@ export type RestoreDefinitionResponse = {
 export const RestoreDefinitionResponseSchema = z.object({
   get definition(): z.ZodOptional<z.ZodNullable<z.ZodType<Definition>>> {
     return DefinitionSchema.nullish();
+  },
+});
+export type ReviewDefinitionsRequest = {
+  definitionIds?: Array<string> | null;
+  terminologyIds?: Array<string> | null;
+  localeIds?: Array<string> | null;
+  decision?: ReviewDecision | null;
+  comment?: string | null;
+};
+export const ReviewDefinitionsRequestSchema = z.object({
+  get definitionIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get terminologyIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get localeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get decision(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewDecision>>> {
+    return ReviewDecisionSchema.nullish();
+  },
+  get comment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type ReviewDefinitionsResponse = {
+  definitions?: Array<Definition> | null;
+};
+export const ReviewDefinitionsResponseSchema = z.object({
+  get definitions(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<Definition>>>
+  > {
+    return z.array(DefinitionSchema).nullish();
   },
 });

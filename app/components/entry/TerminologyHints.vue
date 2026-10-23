@@ -111,6 +111,12 @@ const STATUS_COLORS = {
             <span class="text-primary-700 dark:text-primary-500">{{
               match.targetTranslation
             }}</span>
+            <span
+              v-if="match.targetStatus === 'REVIEW_STATUS_DRAFT'"
+              class="ml-1.5 rounded-[6px] bg-yellow-50 px-1.5 py-px align-middle text-[10.5px] font-bold text-yellow-700 squircle dark:bg-amber-400/15 dark:text-amber-300"
+              :title="t('review.draftDefinitionHint')"
+              >{{ t("review.draft") }}</span
+            >
           </p>
           <!-- Icon only, so the term keeps the card's width in every language. -->
           <BaseIconButton

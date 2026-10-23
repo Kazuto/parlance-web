@@ -16,7 +16,7 @@ import {
 import { useZipExport } from "~/composables/export/useZipExport";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-const { can, canAll } = usePermission();
+const { can } = usePermission();
 
 // Deleted locales only reach users with permanent_delete_locale; the server drops
 // the flag for everyone else.
@@ -44,9 +44,12 @@ function entriesUrl(locale: Locale, status?: "missing") {
   return entriesLink({ locales: [...new Set(codes)], status });
 }
 
-async function handleExportZip() {
+const showExportDialog = ref(false);
+
+async function handleExportZip(includeDrafts: boolean) {
   try {
-    await exportZip();
+    await exportZip([], includeDrafts);
+    showExportDialog.value = false;
     showSuccess(t("export.zip.success"));
   } catch (error) {
     showError(error);
@@ -66,8 +69,7 @@ usePage(() => ({
       }
     : undefined,
   secondaryActions: [
-    // Importing creates entries and overwrites translations.
-    ...(canAll.value(["create_entry", "update_entry"])
+    ...(can.value("import_entry")
       ? [
           {
             content: t("import.zip.import"),
@@ -76,13 +78,12 @@ usePage(() => ({
           },
         ]
       : []),
-    ...(can.value("read_entry")
+    ...(can.value("export_entry")
       ? [
           {
             content: t("export.zip.export"),
             icon: "download",
-            onClick: handleExportZip,
-            loading: isExporting.value,
+            onClick: () => (showExportDialog.value = true),
           },
         ]
       : []),
@@ -304,6 +305,12 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
     :item="permanentDeleteDialogItem"
     :open="permanentDeleteDialogItem !== undefined"
     @close="permanentDeleteDialogItem = undefined"
+  />
+  <LocaleExportZipDialog
+    :open="showExportDialog"
+    :pending="isExporting"
+    @close="showExportDialog = false"
+    @export="handleExportZip"
   />
   <LocaleImportZipDialog
     :open="showImportDialog"

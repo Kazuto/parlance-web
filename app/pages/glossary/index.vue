@@ -11,6 +11,7 @@ import {
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
+import { useReviewActions } from "~/composables/editor/useReviewActions";
 import {
   useTerminologyDetail,
   useTerminologyFeed,
@@ -259,11 +260,20 @@ const splitViewItems = computed((): SplitViewItem[] => {
       const missingLocaleIds = activeLocaleIds.filter(
         (id) => !definedLocaleIds.has(id),
       );
+      const draftLocaleIds = (source.definitions ?? [])
+        .filter(
+          (def) =>
+            def.localeId &&
+            !def.deletedAt &&
+            def.status === "REVIEW_STATUS_DRAFT",
+        )
+        .map((def) => def.localeId!);
 
       return {
         key: terminology.id ?? "",
         label: terminology.term ?? "",
         missingLocaleIds,
+        draftLocaleIds,
       };
     });
 });
@@ -272,6 +282,12 @@ function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
 
   return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
+}
+
+function draftCount(item: SplitViewItem) {
+  const drafts = (item.draftLocaleIds as string[] | undefined) ?? [];
+
+  return selectedLocaleIds.value.filter((id) => drafts.includes(id)).length;
 }
 
 watch(
@@ -350,6 +366,45 @@ const definedCount = computed(
       (currentTerminologyForms.value[id] ?? "").trim(),
     ).length,
 );
+
+const canReview = computed(() => can.value("review_definition"));
+
+const {
+  isReviewing,
+  rejecting,
+  approve: approveDefinitions,
+  requestReject,
+  confirmReject,
+} = useReviewActions({
+  review: () => definitionStore.review,
+  request: (terminologyIds, localeIds, decision, comment) => ({
+    terminologyIds,
+    localeIds,
+    decision,
+    comment,
+  }),
+  afterReview: () => Promise.all([refetch(), refetchDetail()]),
+});
+
+// The saved definition of a term in a language, with its review state.
+function savedDefinition(terminologyId: string, localeId: string) {
+  return knownTerminologies.value[terminologyId]?.definitions?.find(
+    (definition) => definition.localeId === localeId,
+  );
+}
+
+// Drafts of the open term in the shown languages, which can be approved at once.
+const reviewableLocaleIds = computed(() => {
+  const terminologyId = selectedTerminologyId.value;
+
+  if (!terminologyId) return [];
+
+  return selectedLocaleIds.value.filter(
+    (localeId) =>
+      savedDefinition(terminologyId, localeId)?.status ===
+        "REVIEW_STATUS_DRAFT" && !isDefinitionDirty(terminologyId, localeId),
+  );
+});
 
 // Saving updates an existing definition but creates a missing one, and the two
 // need different permissions.
@@ -492,6 +547,14 @@ async function handleSave() {
           <EditorListItem
             :label="item.label"
             :missing-count="missingCount(item)"
+            :draft-count="draftCount(item)"
+            :draft-label="
+              t(
+                'review.draftCount',
+                { count: draftCount(item) },
+                draftCount(item),
+              )
+            "
             :unsaved="hasUnsavedDefinitions(String(item.key))"
             :missing-label="
               t(
@@ -528,6 +591,25 @@ async function handleSave() {
                   })
                 }}</span
               >
+              <BaseIconButton
+                v-if="canReview"
+                icon="seal-check"
+                :label="
+                  reviewableLocaleIds.length
+                    ? t('review.approveShown')
+                    : t('review.nothingToApprove')
+                "
+                :disabled="
+                  isSaving || isReviewing || !reviewableLocaleIds.length
+                "
+                class="bg-neutral-100 dark:bg-white/5"
+                @click="
+                  approveDefinitions(
+                    [String(selectedTerminologyId)],
+                    reviewableLocaleIds,
+                  )
+                "
+              />
               <BaseIconButton
                 v-can="'update_terminology'"
                 icon="pencil-simple"
@@ -584,6 +666,11 @@ async function handleSave() {
                 isSaving || !canEditDefinition(String(item.key), localeId)
               "
               :placeholder="t('terminologies.definitionPlaceholder')"
+              :status="savedDefinition(String(item.key), localeId)?.status"
+              :review-comment="
+                savedDefinition(String(item.key), localeId)?.reviewComment
+              "
+              :can-review="canReview && !isReviewing"
               :model-value="currentTerminologyForms[localeId] ?? ''"
               @update:model-value="
                 setDefinitionForm(String(item.key), localeId, $event)
@@ -597,6 +684,14 @@ async function handleSave() {
                 )
               "
               @open-context="toggleContext(localeId)"
+              @approve="approveDefinitions([String(item.key)], [localeId])"
+              @reject="
+                requestReject(
+                  String(item.key),
+                  localeId,
+                  localeOption(localeId)?.label ?? localeId,
+                )
+              "
             >
               <template v-if="localeId === defaultLocale?.id" #meta>
                 <EditorCopyEmptyChip
@@ -674,6 +769,12 @@ async function handleSave() {
     </div>
   </section>
 
+  <EditorRejectDialog
+    :open="!!rejecting"
+    :language="rejecting?.language ?? ''"
+    @close="rejecting = undefined"
+    @confirm="confirmReject"
+  />
   <EditorDiscardDialog
     :open="showDiscardDialog"
     :count="allUnsavedCount"

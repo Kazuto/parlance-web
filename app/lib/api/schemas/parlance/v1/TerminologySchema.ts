@@ -8,6 +8,8 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
+  ReviewStatusSchema,
+  type ReviewStatus,
 } from "./CommonSchema";
 import { DefinitionSchema, type Definition } from "./DefinitionSchema";
 import { UserSchema, type User } from "./UserSchema";
@@ -215,6 +217,8 @@ export type DefinitionHistory = {
   action?: string | null;
   changedAt?: string | null;
   user?: User | null;
+  status?: ReviewStatus | null;
+  comment?: string | null;
 };
 export const DefinitionHistorySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -244,6 +248,12 @@ export const DefinitionHistorySchema = z.object({
   get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
     return UserSchema.nullish();
   },
+  get status(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
+    return ReviewStatusSchema.nullish();
+  },
+  get comment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
 });
 export type SuggestTerminologiesRequest = {
   sourceText?: string | null;
@@ -271,6 +281,7 @@ export type TerminologySuggestion = {
   terminology?: Terminology | null;
   targetTranslation?: string | null;
   matchedWords?: Array<string> | null;
+  targetStatus?: ReviewStatus | null;
 };
 export const TerminologySuggestionSchema = z.object({
   get terminology(): z.ZodOptional<z.ZodNullable<z.ZodType<Terminology>>> {
@@ -281,5 +292,8 @@ export const TerminologySuggestionSchema = z.object({
   },
   get matchedWords(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get targetStatus(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
+    return ReviewStatusSchema.nullish();
   },
 });

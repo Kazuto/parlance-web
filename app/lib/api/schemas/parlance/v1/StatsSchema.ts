@@ -9,6 +9,7 @@ export type LocaleStats = {
   completed?: number | null;
   missing?: number | null;
   percentage?: number | null;
+  drafts?: number | null;
 };
 export const LocaleStatsSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -26,6 +27,9 @@ export const LocaleStatsSchema = z.object({
   get percentage(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
+  get drafts(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
 });
 export type GetStatsResponse = {
   totalEntries?: number | null;
@@ -35,6 +39,7 @@ export type GetStatsResponse = {
   missingTranslations?: number | null;
   byLocale?: Array<LocaleStats> | null;
   fullyTranslatedEntries?: number | null;
+  draftTranslations?: number | null;
 };
 export const GetStatsResponseSchema = z.object({
   get totalEntries(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
@@ -60,6 +65,9 @@ export const GetStatsResponseSchema = z.object({
   get fullyTranslatedEntries(): z.ZodOptional<
     z.ZodNullable<z.ZodType<number>>
   > {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get draftTranslations(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });

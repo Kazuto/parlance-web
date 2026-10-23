@@ -47,7 +47,7 @@ const onMenuSelect = (label: string) => {
   }
 };
 
-const { can } = usePermission();
+const { can, canAny } = usePermission();
 
 // Only link pages the user can open; items without a permission are always shown.
 const menuItems = computed<MenuItem[]>(() =>
@@ -70,7 +70,7 @@ const menuItems = computed<MenuItem[]>(() =>
         label: t("nav.transfer"),
         to: "/entries/transfer",
         icon: "arrows-down-up",
-        permission: "read_entry",
+        permission: ["import_entry", "export_entry"],
       },
       {
         label: t("nav.glossary"),
@@ -96,9 +96,16 @@ const menuItems = computed<MenuItem[]>(() =>
         icon: "users",
         permission: "read_user",
       },
-    ] satisfies (MenuItem & { permission?: string })[]
+    ] satisfies (MenuItem & { permission?: string | string[] })[]
   )
-    .filter((item) => !item.permission || can.value(item.permission))
+    // A list of permissions shows the item for any of them.
+    .filter(
+      (item) =>
+        !item.permission ||
+        (Array.isArray(item.permission)
+          ? canAny.value(item.permission)
+          : can.value(item.permission)),
+    )
     .map(({ permission: _permission, ...item }) => item),
 );
 

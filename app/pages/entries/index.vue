@@ -12,6 +12,7 @@ import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
+import { useReviewActions } from "~/composables/editor/useReviewActions";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
@@ -25,6 +26,7 @@ const historyQueryKey = api.entries.history.getQueryKey();
 const { t } = useI18n();
 const { can, canAll } = usePermission();
 const canUpdate = computed(() => can.value("update_entry"));
+const canReview = computed(() => can.value("review_entry"));
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Entry>();
 const editDialogItem = ref<Entry>();
@@ -70,8 +72,7 @@ usePage(() => ({
       }
     : undefined,
   secondaryActions: [
-    // Importing creates entries and overwrites translations.
-    ...(canAll.value(["create_entry", "update_entry"])
+    ...(can.value("import_entry")
       ? [
           {
             content: t("entries.import"),
@@ -80,11 +81,15 @@ usePage(() => ({
           },
         ]
       : []),
-    {
-      content: t("entries.export"),
-      icon: "download",
-      onClick: () => openTransfer("export"),
-    },
+    ...(can.value("export_entry")
+      ? [
+          {
+            content: t("entries.export"),
+            icon: "download",
+            onClick: () => openTransfer("export"),
+          },
+        ]
+      : []),
   ],
 }));
 
@@ -109,6 +114,7 @@ const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
   { label: t("entries.filterMissing"), value: "missing" },
   { label: t("entries.filterComplete"), value: "complete" },
+  { label: t("entries.filterReview"), value: "review" },
 ]);
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -277,6 +283,7 @@ const splitViewItems = computed((): SplitViewItem[] =>
       key: entry.id ?? "",
       label: entry.key ?? "",
       missingLocaleIds: entry.missingLocaleIds ?? [],
+      draftLocaleIds: entry.draftLocaleIds ?? [],
       defaultTranslation: entry.defaultTranslation ?? "",
     })),
 );
@@ -285,6 +292,12 @@ function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
 
   return selectedLocaleIds.value.filter((id) => missing.includes(id)).length;
+}
+
+function draftCount(item: SplitViewItem) {
+  const drafts = (item.draftLocaleIds as string[] | undefined) ?? [];
+
+  return selectedLocaleIds.value.filter((id) => drafts.includes(id)).length;
 }
 
 watch(
@@ -374,6 +387,48 @@ const selectedUnsavedLocaleIds = computed(() =>
     unsavedLocaleIds.value.includes(localeId),
   ),
 );
+
+const {
+  isReviewing,
+  rejecting,
+  approve: approveTranslations,
+  requestReject,
+  confirmReject,
+} = useReviewActions({
+  review: () => localizationStore.review,
+  request: (entryIds, localeIds, decision, comment) => ({
+    entryIds,
+    localeIds,
+    decision,
+    comment,
+  }),
+  afterReview: () =>
+    Promise.all([
+      refetch(),
+      refetchDetail(),
+      queryClient.invalidateQueries({ queryKey: historyQueryKey }),
+    ]),
+});
+
+// The saved translation of an entry in a language, with its review state.
+function savedLocalization(entryId: string, localeId: string) {
+  return knownEntries.value[entryId]?.localizations?.find(
+    (localization) => localization.localeId === localeId,
+  );
+}
+
+// Drafts of the open entry in the shown languages, which can be approved at once.
+const reviewableLocaleIds = computed(() => {
+  const entryId = selectedEntryId.value;
+
+  if (!entryId) return [];
+
+  return selectedLocaleIds.value.filter(
+    (localeId) =>
+      savedLocalization(entryId, localeId)?.status === "REVIEW_STATUS_DRAFT" &&
+      !isTranslationDirty(entryId, localeId),
+  );
+});
 
 const selectedEntryData = computed(() =>
   selectedEntryId.value ? knownEntries.value[selectedEntryId.value] : undefined,
@@ -507,6 +562,18 @@ const entryActions = computed<ActionMenuItem[]>(() => {
     );
   }
 
+  if (canReview.value) {
+    items.push({
+      value: "approve",
+      label: t("review.approveShown"),
+      icon: "seal-check",
+      hint: reviewableLocaleIds.value.length
+        ? undefined
+        : t("review.nothingToApprove"),
+      disabled: busy || isReviewing.value || !reviewableLocaleIds.value.length,
+    });
+  }
+
   if (can.value("delete_entry")) {
     items.push({
       value: "delete",
@@ -525,7 +592,9 @@ function onEntryAction(action: string) {
   const entry = selectedEntryData.value;
 
   if (!entry) return;
-  if (action === "translate") translateEmptyTranslations();
+  if (action === "approve")
+    approveTranslations([entry.id ?? ""], reviewableLocaleIds.value);
+  else if (action === "translate") translateEmptyTranslations();
   else if (action === "copy") fillEmptyTranslations();
   else if (action === "edit") editDialogItem.value = entry;
   else if (action === "delete") deleteDialogItem.value = entry;
@@ -701,11 +770,14 @@ async function handleSaveAll() {
       :can-translate="canMachineTranslate"
       :translate-blocker="bulkTranslateBlocker"
       :progress="bulkTranslation"
+      :can-approve="canReview"
+      :is-reviewing="isReviewing"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
       @translate="translateCheckedEntries"
       @stop-translate="stopBulkTranslation"
       @edit-scopes="showScopesDialog = true"
+      @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
     />
     <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
@@ -740,6 +812,14 @@ async function handleSaveAll() {
           <EditorListItem
             :label="item.label"
             :missing-count="missingCount(item)"
+            :draft-count="draftCount(item)"
+            :draft-label="
+              t(
+                'review.draftCount',
+                { count: draftCount(item) },
+                draftCount(item),
+              )
+            "
             :unsaved="hasUnsavedTranslations(String(item.key))"
             :missing-label="
               t(
@@ -809,6 +889,11 @@ async function handleSaveAll() {
               :readonly="isSaving || !canUpdate"
               :translating="isTranslatingLocale(String(item.key), localeId)"
               :placeholder="t('entries.translationPlaceholder')"
+              :status="savedLocalization(String(item.key), localeId)?.status"
+              :review-comment="
+                savedLocalization(String(item.key), localeId)?.reviewComment
+              "
+              :can-review="canReview && !isReviewing"
               :model-value="currentEntryForms[localeId] ?? ''"
               @update:model-value="
                 setLocalizationForm(String(item.key), localeId, $event)
@@ -822,6 +907,14 @@ async function handleSaveAll() {
                 )
               "
               @open-context="toggleContext(localeId)"
+              @approve="approveTranslations([String(item.key)], [localeId])"
+              @reject="
+                requestReject(
+                  String(item.key),
+                  localeId,
+                  localeOption(localeId)?.label ?? localeId,
+                )
+              "
             >
               <template
                 v-if="defaultLocale?.id && localeId !== defaultLocale.id"
@@ -921,6 +1014,12 @@ async function handleSaveAll() {
     :disabled="!allUnsavedCount || isSaving"
     @close="showSaveAllDialog = false"
     @confirm="handleSaveAll"
+  />
+  <EditorRejectDialog
+    :open="!!rejecting"
+    :language="rejecting?.language ?? ''"
+    @close="rejecting = undefined"
+    @confirm="confirmReject"
   />
   <EditorDiscardDialog
     :open="showDiscardDialog"

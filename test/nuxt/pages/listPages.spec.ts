@@ -245,18 +245,14 @@ describe("locales page", () => {
     expect(page.headerActions()).toEqual([]);
   });
 
-  it("offers the import only with create_entry and update_entry", async () => {
-    const creator = await open([...VIEWER, "create_entry"]);
-
-    expect(creator.headerActions()).not.toContain(t("import.zip.import"));
-    creator.wrapper.unmount();
-
-    const editor = await open([...VIEWER, "update_entry"]);
+  it("offers the import only with import_entry", async () => {
+    // Editing entries no longer implies importing them.
+    const editor = await open([...VIEWER, "create_entry", "update_entry"]);
 
     expect(editor.headerActions()).not.toContain(t("import.zip.import"));
     editor.wrapper.unmount();
 
-    const importer = await open([...VIEWER, "create_entry", "update_entry"]);
+    const importer = await open([...VIEWER, "import_entry"]);
 
     expect(importer.headerActions()).toEqual([
       t("import.zip.import"),

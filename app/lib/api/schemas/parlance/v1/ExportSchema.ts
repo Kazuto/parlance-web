@@ -4,6 +4,7 @@ import { z } from "zod";
 export type ExportPhpRequest = {
   localeCode?: string | null;
   scopeIds?: Array<string> | null;
+  includeDrafts?: boolean | null;
 };
 export const ExportPhpRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -11,6 +12,9 @@ export const ExportPhpRequestSchema = z.object({
   },
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportPhpResponse = {
@@ -32,6 +36,7 @@ export const ExportPhpResponseSchema = z.object({
 export type ExportJsonRequest = {
   localeCode?: string | null;
   scopeIds?: Array<string> | null;
+  includeDrafts?: boolean | null;
 };
 export const ExportJsonRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -39,6 +44,9 @@ export const ExportJsonRequestSchema = z.object({
   },
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportJsonResponse = {
@@ -60,6 +68,7 @@ export const ExportJsonResponseSchema = z.object({
 export type ExportPoRequest = {
   localeCode?: string | null;
   scopeIds?: Array<string> | null;
+  includeDrafts?: boolean | null;
 };
 export const ExportPoRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -67,6 +76,9 @@ export const ExportPoRequestSchema = z.object({
   },
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportPoResponse = {
@@ -87,10 +99,14 @@ export const ExportPoResponseSchema = z.object({
 });
 export type ExportZipRequest = {
   scopeIds?: Array<string> | null;
+  includeDrafts?: boolean | null;
 };
 export const ExportZipRequestSchema = z.object({
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportZipResponse = {

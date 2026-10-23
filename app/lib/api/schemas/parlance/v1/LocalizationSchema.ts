@@ -8,6 +8,10 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
+  ReviewDecisionSchema,
+  type ReviewDecision,
+  ReviewStatusSchema,
+  type ReviewStatus,
 } from "./CommonSchema";
 export type Localization = {
   id?: string | null;
@@ -19,6 +23,10 @@ export type Localization = {
   deletedAt?: string | null;
   createdBy?: string | null;
   updatedBy?: string | null;
+  status?: ReviewStatus | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  reviewComment?: string | null;
 };
 export const LocalizationSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -46,6 +54,18 @@ export const LocalizationSchema = z.object({
     return z.string().nullish();
   },
   get updatedBy(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get status(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
+    return ReviewStatusSchema.nullish();
+  },
+  get reviewedBy(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get reviewedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get reviewComment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -265,5 +285,41 @@ export const BatchTranslateResponseSchema = z.object({
   },
   get skippedCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type ReviewLocalizationsRequest = {
+  localizationIds?: Array<string> | null;
+  entryIds?: Array<string> | null;
+  localeIds?: Array<string> | null;
+  decision?: ReviewDecision | null;
+  comment?: string | null;
+};
+export const ReviewLocalizationsRequestSchema = z.object({
+  get localizationIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
+  },
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get localeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get decision(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewDecision>>> {
+    return ReviewDecisionSchema.nullish();
+  },
+  get comment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type ReviewLocalizationsResponse = {
+  localizations?: Array<Localization> | null;
+};
+export const ReviewLocalizationsResponseSchema = z.object({
+  get localizations(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<Localization>>>
+  > {
+    return z.array(LocalizationSchema).nullish();
   },
 });

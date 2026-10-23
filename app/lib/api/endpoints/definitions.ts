@@ -18,6 +18,9 @@ import {
   RestoreDefinitionResponseSchema,
   RestoreDefinitionRequestSchema,
   type RestoreDefinitionRequest,
+  ReviewDefinitionsRequestSchema,
+  ReviewDefinitionsResponseSchema,
+  type ReviewDefinitionsRequest,
 } from "../schemas/parlance/v1/DefinitionSchema";
 
 export const definitions = {
@@ -90,6 +93,18 @@ export const definitions = {
     {
       input: RestoreDefinitionRequestSchema,
       output: RestoreDefinitionResponseSchema,
+    },
+  ),
+
+  review: authedEndpoint.mutate(
+    (data: ReviewDefinitionsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.DefinitionService/ReviewDefinitions",
+      json: data,
+    }),
+    {
+      input: ReviewDefinitionsRequestSchema,
+      output: ReviewDefinitionsResponseSchema,
     },
   ),
 };

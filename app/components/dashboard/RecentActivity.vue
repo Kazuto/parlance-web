@@ -10,17 +10,19 @@ const { items, onlyMine, isLoading, error, refetch } = useRecentActivity(10);
 const isDefinition = (item: ActivityItem) =>
   item.kind === "ACTIVITY_KIND_DEFINITION";
 
-// Only additions, only updates or only deletions get their own verb; a mix is "changed".
+// A group of one kind of change gets its own verb, e.g. only additions or only
+// approvals; a mix is "changed".
 function verbKey(item: ActivityItem) {
-  const created = item.createdCount ?? 0;
-  const updated = item.updatedCount ?? 0;
-  const deleted = item.deletedCount ?? 0;
+  const counts = {
+    "activity.added": item.createdCount ?? 0,
+    "activity.updated": item.updatedCount ?? 0,
+    "activity.deleted": item.deletedCount ?? 0,
+    "activity.approved": item.approvedCount ?? 0,
+    "activity.rejected": item.rejectedCount ?? 0,
+  };
+  const kinds = Object.entries(counts).filter(([, count]) => count > 0);
 
-  if (created && !updated && !deleted) return "activity.added";
-  if (updated && !created && !deleted) return "activity.updated";
-  if (deleted && !created && !updated) return "activity.deleted";
-
-  return "activity.changed";
+  return kinds.length === 1 ? kinds[0]![0] : "activity.changed";
 }
 
 function countLabel(item: ActivityItem) {

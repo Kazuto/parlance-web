@@ -14,6 +14,9 @@ defineProps<{
   translateBlocker?: string;
   /** The running bulk translation, if any. */
   progress?: { done: number; total: number; stop: boolean };
+  /** The user may approve the ticked entries' drafts. */
+  canApprove?: boolean;
+  isReviewing?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +25,7 @@ const emit = defineEmits<{
   translate: [];
   stopTranslate: [];
   editScopes: [];
+  approve: [];
 }>();
 const { t } = useI18n();
 </script>
@@ -94,11 +98,24 @@ const { t } = useI18n();
       {{ t("entries.bulkTranslate") }}
     </Button>
     <Button
+      v-if="canApprove"
+      type="button"
+      ghost
+      dense
+      icon="seal-check"
+      :class="{ 'ml-auto': !progress && !canTranslate }"
+      :title="t('review.approveTickedHint')"
+      :disabled="isSaving || isReviewing || limitReached"
+      @click="emit('approve')"
+    >
+      {{ t("review.approveTicked") }}
+    </Button>
+    <Button
       type="button"
       primary
       dense
       icon="stack"
-      :class="{ 'ml-auto': !progress && !canTranslate }"
+      :class="{ 'ml-auto': !progress && !canTranslate && !canApprove }"
       :disabled="isSaving || limitReached"
       @click="emit('editScopes')"
     >

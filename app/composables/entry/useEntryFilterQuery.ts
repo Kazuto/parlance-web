@@ -9,7 +9,7 @@ type EntryFilterRefs = {
   search: Ref<string>;
 };
 
-const STATUSES = ["missing", "complete"];
+const STATUSES = ["missing", "complete", "review"];
 
 function first(value: LocationQuery[string] | undefined) {
   return (Array.isArray(value) ? value[0] : value) ?? "";
@@ -134,7 +134,7 @@ export function useEntryFilterQuery({
 export function entriesLink(filters: {
   locales?: string[];
   scopes?: string[];
-  status?: "missing" | "complete";
+  status?: "missing" | "complete" | "review";
   q?: string;
 }) {
   const list = (values: string[]) =>

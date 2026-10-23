@@ -18,6 +18,7 @@ export type ImportPhpRequest = {
   fileContent?: string | null;
   filename?: string | null;
   mode?: ImportMode | null;
+  approve?: boolean | null;
 };
 export const ImportPhpRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -35,6 +36,9 @@ export const ImportPhpRequestSchema = z.object({
   get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
     return ImportModeSchema.nullish();
   },
+  get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportPhpResponse = {
   result?: ImportResult | null;
@@ -50,6 +54,7 @@ export type ImportJsonRequest = {
   fileContent?: string | null;
   filename?: string | null;
   mode?: ImportMode | null;
+  approve?: boolean | null;
 };
 export const ImportJsonRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -67,6 +72,9 @@ export const ImportJsonRequestSchema = z.object({
   get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
     return ImportModeSchema.nullish();
   },
+  get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportJsonResponse = {
   result?: ImportResult | null;
@@ -82,6 +90,7 @@ export type ImportPoRequest = {
   fileContent?: string | null;
   filename?: string | null;
   mode?: ImportMode | null;
+  approve?: boolean | null;
 };
 export const ImportPoRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -98,6 +107,9 @@ export const ImportPoRequestSchema = z.object({
   },
   get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
     return ImportModeSchema.nullish();
+  },
+  get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ImportPoResponse = {
@@ -148,6 +160,7 @@ export type ImportZipRequest = {
   fileContent?: string | null;
   scopeIds?: Array<string> | null;
   mode?: ImportMode | null;
+  approve?: boolean | null;
 };
 export const ImportZipRequestSchema = z.object({
   get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -158,6 +171,9 @@ export const ImportZipRequestSchema = z.object({
   },
   get mode(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportMode>>> {
     return ImportModeSchema.nullish();
+  },
+  get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ImportZipResponse = {

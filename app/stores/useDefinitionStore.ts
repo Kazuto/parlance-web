@@ -33,10 +33,13 @@ export const useDefinitionStore = defineStore("definitionStore", () => {
     },
   });
 
+  const review = useMutation(api.definitions.review.use());
+
   return {
     create,
     update,
     destroy,
     restore,
+    review,
   };
 });

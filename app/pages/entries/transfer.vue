@@ -8,11 +8,9 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const { getErrorMessage } = useErrorHelper();
-const { canAll } = usePermission();
-// Importing creates entries and overwrites translations.
-const canImport = computed(() =>
-  canAll.value(["create_entry", "update_entry"]),
-);
+const { can } = usePermission();
+const canImport = computed(() => can.value("import_entry"));
+const canExport = computed(() => can.value("export_entry"));
 const {
   items: locales,
   data,
@@ -25,13 +23,15 @@ const isPending = ref(false);
 // Kept in the query so links and reloads land on the same tab.
 const action = computed<Action>({
   get: () =>
-    route.query.tab === "export" || !canImport.value ? "export" : "import",
+    (route.query.tab === "export" && canExport.value) || !canImport.value
+      ? "export"
+      : "import",
   set: (tab) => router.replace({ query: { ...route.query, tab } }),
 });
 // Only lock the other tab while a request runs; the active one must stay mounted.
 const tabs = computed(() =>
   (["import", "export"] as const)
-    .filter((value) => value === "export" || canImport.value)
+    .filter((value) => (value === "import" ? canImport.value : canExport.value))
     .map((value) => ({
       value,
       label: t(

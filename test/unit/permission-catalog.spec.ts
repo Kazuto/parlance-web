@@ -21,7 +21,7 @@ function sourceFiles(dir: string): string[] {
 // A permission string looks like "<action>_<resource>"; collect every literal of
 // that shape that sits where the app checks permissions.
 const PERMISSION_LITERAL =
-  /["'`]((?:create|read|update|delete|permanent_delete|use)_[a-z_]+)["'`]/g;
+  /["'`]((?:create|read|update|delete|permanent_delete|use|review|import|export)_[a-z_]+)["'`]/g;
 
 function permissionsUsedInApp() {
   const used = new Map<string, string[]>();
@@ -62,6 +62,10 @@ describe("permission catalog", () => {
       "create_definition",
       "update_definition",
       "read_role",
+      "review_entry",
+      "review_definition",
+      "import_entry",
+      "export_entry",
     ]) {
       expect(used.has(name), name).toBe(true);
     }

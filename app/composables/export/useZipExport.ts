@@ -8,8 +8,8 @@ export function useZipExport() {
     ...api.exports.exportZip.use(),
   });
 
-  async function exportZip(scopeIds: string[] = []) {
-    const response = await mutateAsync({ scopeIds });
+  async function exportZip(scopeIds: string[] = [], includeDrafts = false) {
+    const response = await mutateAsync({ scopeIds, includeDrafts });
 
     if (!response.content || !response.filename) {
       throw new Error(t("transfer.missingExportContent"));

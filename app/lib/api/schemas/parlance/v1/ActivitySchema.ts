@@ -48,6 +48,8 @@ export type ActivityItem = {
   changedAt?: string | null;
   localeCount?: number | null;
   partial?: boolean | null;
+  approvedCount?: number | null;
+  rejectedCount?: number | null;
 };
 export const ActivityItemSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -100,5 +102,11 @@ export const ActivityItemSchema = z.object({
   },
   get partial(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get approvedCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get rejectedCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });

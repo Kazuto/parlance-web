@@ -7,11 +7,13 @@ export const useLocalizationStore = defineStore("localizationStore", () => {
   const update = useMutation(api.localizations.update.use());
   const destroy = useMutation(api.localizations.delete.use());
   const restore = useMutation(api.localizations.restore.use());
+  const review = useMutation(api.localizations.review.use());
 
   return {
     create,
     update,
     destroy,
     restore,
+    review,
   };
 });

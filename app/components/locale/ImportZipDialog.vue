@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Dialog, Dropzone, Select } from "@thkzt/eunoia";
+import { Button, Checkbox, Dialog, Dropzone, Select } from "@thkzt/eunoia";
 import { useZipImport } from "~/composables/import/useZipImport";
 import type { ImportMode } from "~/lib/api/schemas/parlance/v1/ImportSchema";
 
@@ -17,6 +17,10 @@ const { importZip, isPending } = useZipImport();
 
 const file = ref<File | undefined>(undefined);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
+// Imported text lands as drafts unless a reviewer vouches for it.
+const approve = ref(false);
+const { can } = usePermission();
+const canApprove = computed(() => can.value("review_entry"));
 
 const hasFile = computed(() => !!file.value);
 
@@ -47,7 +51,12 @@ async function handleSubmit() {
   }
 
   try {
-    const result = await importZip(file.value, [], mode.value);
+    const result = await importZip(
+      file.value,
+      [],
+      mode.value,
+      canApprove.value && approve.value,
+    );
 
     const totalProcessed = result.results?.length ?? 0;
     const created = result.totalCreated ?? 0;
@@ -106,6 +115,15 @@ function handleClose() {
       <Select v-model="mode" :options="modeOptions" :disabled="isPending">
         {{ t("import.mode") }}
       </Select>
+
+      <Checkbox
+        v-if="canApprove"
+        v-model="approve"
+        :disabled="isPending"
+        :helper="t('transfer.approveHelp')"
+      >
+        <template #description>{{ t("transfer.approve") }}</template>
+      </Checkbox>
     </form>
 
     <template #footer>
