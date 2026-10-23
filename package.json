@@ -46,6 +46,7 @@
   "devDependencies": {
     "@nuxt/eslint": "1.13.0",
     "@nuxt/test-utils": "^4.3.4",
+    "@stylistic/eslint-plugin": "5.7.1",
     "@types/node": "^26.6.5",
     "@types/qs": "^6.15.1",
     "@vue/test-utils": "^2.5.1",
