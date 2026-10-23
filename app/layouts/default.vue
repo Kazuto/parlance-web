@@ -109,7 +109,11 @@ const menuItems = computed<MenuItem[]>(() =>
     .map(({ permission: _permission, ...item }) => item),
 );
 
+// Configuring the instance: automation for those who may see it, and settings.
 const settingsMenuItems = computed<MenuItem[]>(() => [
+  ...(can.value("read_task")
+    ? [{ label: t("nav.tasks"), to: "/tasks", icon: "lightning" }]
+    : []),
   { label: t("nav.settings"), to: "/settings", icon: "gear" },
 ]);
 

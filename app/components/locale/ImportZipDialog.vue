@@ -112,7 +112,12 @@ function handleClose() {
         :disabled="isPending"
       />
 
-      <Select v-model="mode" :options="modeOptions" :disabled="isPending">
+      <Select
+        v-model="mode"
+        teleport-to="body"
+        :options="modeOptions"
+        :disabled="isPending"
+      >
         {{ t("import.mode") }}
       </Select>
 

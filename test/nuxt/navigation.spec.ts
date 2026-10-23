@@ -48,6 +48,7 @@ describe("sidebar", () => {
       "/scopes",
       "/roles",
       "/users",
+      "/tasks",
       "/settings",
     ]);
   });
@@ -57,6 +58,7 @@ describe("sidebar", () => {
     ["read_entry", "/entries"],
     ["read_terminology", "/glossary"],
     ["read_scope", "/scopes"],
+    ["read_task", "/tasks"],
     ["read_role", "/roles"],
     ["read_user", "/users"],
   ])("needs %s for %s", async (permission, href) => {

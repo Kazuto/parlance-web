@@ -42,6 +42,11 @@ export const ALL_PERMISSIONS = [
   "update_translation_server",
   "delete_translation_server",
   "use_machine_translation",
+  "create_task",
+  "read_task",
+  "update_task",
+  "delete_task",
+  "run_task",
 ] as const;
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];

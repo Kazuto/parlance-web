@@ -36,14 +36,17 @@ function confirm() {
       >
         {{ t("review.comment") }}
       </Textarea>
-      <div class="flex justify-end gap-3">
+    </form>
+
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <Button type="button" ghost @click="emit('close')">{{
           t("common.cancel")
         }}</Button>
-        <Button type="submit" primary :disabled="!comment.trim()">{{
+        <Button primary :disabled="!comment.trim()" @click="confirm">{{
           t("review.reject")
         }}</Button>
       </div>
-    </form>
+    </template>
   </Dialog>
 </template>

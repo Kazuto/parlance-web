@@ -13,6 +13,7 @@ export * from "./RoleSchema";
 export * from "./ScopeSchema";
 export * from "./SetupSchema";
 export * from "./StatsSchema";
+export * from "./TaskSchema";
 export * from "./TerminologySchema";
 export * from "./TranslationServerSchema";
 export * from "./UserSchema";

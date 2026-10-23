@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { useMutation } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import { invalidateTranslationData } from "~/lib/api/invalidation";
+import { useTranslationDataInvalidation } from "~/lib/api/invalidation";
 import { fileToBase64 } from "~/lib/files";
 import type { ImportMode } from "~/lib/api/schemas/parlance/v1/ImportSchema";
 
 export function useZipImport() {
-  const queryClient = useQueryClient();
+  const invalidateTranslationData = useTranslationDataInvalidation();
 
   const { mutateAsync, isPending } = useMutation({
     ...api.imports.importZip.use(),
-    onSuccess: () => invalidateTranslationData(queryClient),
+    onSuccess: invalidateTranslationData,
   });
 
   async function importZip(

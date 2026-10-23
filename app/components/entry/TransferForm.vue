@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Button, Checkbox, Dropzone, Select } from "@thkzt/eunoia";
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { useMutation } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import { invalidateTranslationData } from "~/lib/api/invalidation";
+import { useTranslationDataInvalidation } from "~/lib/api/invalidation";
 import { downloadBlob, fileToBase64 } from "~/lib/files";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import type {
@@ -13,11 +13,12 @@ import type {
 const props = defineProps<{
   action: "import" | "export";
   locales: Locale[];
-  cancelable?: boolean;
+  /** The parent shows the actions, e.g. in a dialog footer, through what is exposed. */
+  externalActions?: boolean;
 }>();
-const emit = defineEmits<{ cancel: []; exported: [] }>();
+const emit = defineEmits<{ exported: [] }>();
 const isPending = defineModel<boolean>("pending", { default: false });
-const queryClient = useQueryClient();
+const invalidateTranslationData = useTranslationDataInvalidation();
 const importJson = useMutation(api.imports.json.use());
 const importPhp = useMutation(api.imports.php.use());
 const importPo = useMutation(api.imports.po.use());
@@ -104,6 +105,17 @@ function encodeFile(value: File): Promise<string> {
   });
 }
 
+const canSubmit = computed(
+  () => !isPending.value && localeOptions.value.length > 0,
+);
+const submitLabel = computed(() => {
+  if (isPending.value) return t("common.processing");
+
+  return props.action === "import"
+    ? t("entries.import")
+    : t("transfer.download");
+});
+
 async function handleSubmit() {
   if (isPending.value) return;
   error.value = undefined;
@@ -144,7 +156,7 @@ async function handleSubmit() {
 
       if (!response.result) throw new Error(t("transfer.missingImportResult"));
       result.value = response.result;
-      await invalidateTranslationData(queryClient);
+      await invalidateTranslationData();
     } else {
       const input = {
         localeCode: locale.code,
@@ -180,6 +192,14 @@ async function handleSubmit() {
     isPending.value = false;
   }
 }
+
+defineExpose({
+  submit: handleSubmit,
+  canSubmit,
+  submitLabel,
+  /** An import finished, so its summary shows and only closing is left. */
+  done: computed(() => !!result.value),
+});
 </script>
 
 <template>
@@ -292,27 +312,10 @@ async function handleSubmit() {
       </ul>
     </div>
     <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
-    <div class="flex justify-end gap-3 pt-4">
-      <Button
-        v-if="cancelable"
-        type="button"
-        ghost
-        :disabled="isPending"
-        @click="emit('cancel')"
-        >{{ result ? t("common.close") : t("common.cancel") }}</Button
-      >
-      <Button
-        type="submit"
-        primary
-        :disabled="isPending || !localeOptions.length"
-        >{{
-          isPending
-            ? t("common.processing")
-            : action === "import"
-              ? t("entries.import")
-              : t("transfer.download")
-        }}</Button
-      >
+    <div v-if="!externalActions" class="flex justify-end gap-3 pt-4">
+      <Button type="submit" primary :disabled="!canSubmit">{{
+        submitLabel
+      }}</Button>
     </div>
   </form>
 </template>

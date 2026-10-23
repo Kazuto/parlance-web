@@ -15,6 +15,7 @@ import { activity } from "./endpoints/activity";
 import { stats } from "./endpoints/stats";
 import { setup } from "./endpoints/setup";
 import { translationServers } from "./endpoints/translationServers";
+import { tasks } from "./endpoints/tasks";
 
 export const api = defineApi({
   auth,
@@ -33,6 +34,7 @@ export const api = defineApi({
   stats,
   setup,
   translationServers,
+  tasks,
 });
 
 export * from "./schemas";
