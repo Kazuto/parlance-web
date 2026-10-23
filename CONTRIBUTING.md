@@ -56,14 +56,20 @@ A handler may return a promise, to check what shows while a request is running.
 
 ## UI translations
 
-The app uses `@nuxtjs/i18n` with catalogs in `i18n/locales/` for English, German,
-French and Spanish. Routes have no locale prefix and browser-language detection is
+The app uses `@nuxtjs/i18n` with a catalog per language in `i18n/locales/`, for now
+English, German, French and Spanish. Routes have no locale prefix and browser-language detection is
 off: everyone picks their language under Settings.
 
 - **Keys:** catalogs use flat dotted keys (`"entries.create": "Create entry"`) with
   string values, so they can be imported into Parlance itself. Vue I18n's
   `flatJson` option resolves them.
-- **Every language:** add each new key to all four catalogs.
+- **Every language:** add each new key to every catalog.
+  `test/unit/i18n-catalogs.spec.ts` checks that all catalogs have the keys of
+  `en.json`, no others, and the same `{placeholders}`.
+- **New languages:** add `i18n/locales/<code>.json`, for example exported from
+  Parlance, with a language code such as `pt-BR` as its name. The app offers every
+  catalog there, named in its own language, after a restart of the dev server or a
+  new build.
 - **Usage:** `const { t } = useI18n()`, with semantic keys such as
   `t("common.saveChanges")`.
 - **Sentences:** keep complete sentences in the catalog and pass dynamic values as

@@ -150,8 +150,7 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
 
   <!-- Error State -->
   <Alert v-else-if="error && !data" variant="danger" persistent>
-    <p class="font-medium">{{ t("locales.loadFailed") }}</p>
-    <p class="mt-1">{{ getErrorMessage(error) }}</p>
+    <p>{{ t("locales.loadFailed", { error: getErrorMessage(error) }) }}</p>
     <Button ghost class="mt-3" @click="() => refetch()">
       {{ t("common.tryAgain") }}
     </Button>
