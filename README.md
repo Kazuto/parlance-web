@@ -1,187 +1,154 @@
 # Parlance
 
-A powerful, developer-friendly translation management platform that streamlines localization workflows with AI-powered translations, custom terminology control, and flexible export options.
+Parlance is a self-hosted translation management app. Keep the texts of your
+applications as keys, translate them into any number of languages side by side,
+keep wording consistent with a glossary, and import and export the files your
+framework uses.
+
+This repository holds the web app (Nuxt). The API lives in
+[parlance-server](https://github.com/Kazuto/parlance-server); the UI components come
+from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
 
 ## Features
 
-### Core Functionality
+- **Entries:** every text is an entry with a key (`auth.login.title`), an optional
+  description for translators, and one translation per language.
+- **Editor:** edit all languages of an entry side by side. Filter by scope, language
+  and missing translations, search keys and texts, and see each entry's history.
+  Changes stay drafts until you save them, one entry or all at once.
+- **Scopes:** group entries, for example by app or area (`frontend`, `mails`), and
+  change the scopes of many entries at once.
+- **Glossary:** define terms and their translation per language. The editor shows
+  the terms that occur in a text, so the same word is translated the same way.
+- **Languages:** add languages, choose the default (source) language, and name each
+  language in every language. Missing names can be filled in automatically.
+- **Import and export:** flat or nested JSON, PHP arrays (Laravel), gettext PO, and
+  ZIP files with one file per language.
+- **Machine translation (optional):** suggestions from a self-hosted
+  [Hy-MT2](https://github.com/Tencent-Hunyuan/Hy-MT2) model, for one entry or many.
+  Suggestions are drafts to review, never saved on their own.
+- **Users and roles:** permissions per role, down to who may use machine translation.
+- **Interface languages:** English, German, French and Spanish; everyone picks theirs
+  under Settings.
 
-- **Key-Based Translation System** - Organize translations with unique identifiers
-- **Multi-Locale Support** - Manage unlimited languages with ease
-- **AI-Powered Translations** - Integrate with DeepL API or custom AI models for automated translations
-- **Custom Terminology** - Define glossaries to ensure consistent translations (e.g., "Mobile phone" → "Handy" in German)
-- **Scopes & Organization** - Group translations by context (frontend, validation, errors, etc.)
+## Running Parlance
 
-### Developer Experience
+Parlance needs the API server, PostgreSQL and S3-compatible storage (for avatars).
+The server repository's Docker Compose setup starts all three, plus the optional
+translation model.
 
-- **Multiple Export Formats** - Export to Laravel, Vue i18n, and other popular frameworks
-- **Version Control** - Complete history tracking for all translation changes
-- **Search & Filter** - Quickly find translations across locales and scopes
+### Try it locally
 
-### Team Collaboration
-
-- **Role-Based Access Control** - Granular permissions for admins, translators, and reviewers
-- **Audit Trail** - Track who changed what and when
-- **Review Workflow** - Built-in approval process for translation quality
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js 24
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/criticaldevs/parlance.git
-cd parlance
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-
-# Start development server
-npm run dev
-```
-
-## Usage
-
-_To be added_
-
-## UI translations
-
-The app uses `@nuxtjs/i18n` with an English-only catalog in
-`i18n/locales/en.json`. Routes have no locale prefix and browser-language detection
-is disabled. There is no language switcher.
-
-Catalogs use flat dotted keys (`"entries.create": "Create Entry"`) and string
-values, making them directly compatible with Parlance's JSON import/export.
-Vue I18n's `flatJson` option is enabled to resolve these keys.
-
-Use `const { t } = useI18n()` in components and composables, with semantic keys
-such as `t("common.saveChanges")`. Keep complete sentences in the catalog and pass
-dynamic values as named parameters, for example
-`t("entries.created", { key: entryKey })`. Count-dependent messages use Vue I18n
-plural forms. API-provided content (entry keys, language names, translations, and
-server error messages) is displayed as returned by the backend.
-
-## Generating API schemas
-
-The backend protobuf definitions are the source of truth for the API contract.
-With the backend checked out at `../server`, install Go (the version in
-`server/go.mod`) and the [Buf CLI](https://buf.build/docs/installation/), then run:
+Check out both repositories next to each other:
 
 ```bash
-npm run schemas:generate
+git clone https://github.com/Kazuto/parlance-server.git server
+git clone https://github.com/Kazuto/parlance-web.git web
+
+# API, PostgreSQL and MinIO on http://localhost:8080
+cd server && make dev
+
+# Web app on http://localhost:3000
+cd ../web && docker compose up -d
 ```
 
-This generates Zod 4 schemas and TypeScript types for every protobuf message and
-enum in `app/lib/api/schemas/parlance/v1/`. Commit the generated files after changing
-the protos. To check for drift in CI, run `npm run schemas:check`; it generates
-into a temporary directory and fails if the committed schemas differ. CI needs
-the sibling backend checkout as well as Go, Buf, and frontend dependencies.
+Open <http://localhost:3000>. On the first start Parlance asks for the details of
+the first administrator; after that, sign in with them.
 
-```ts
-import {
-  CreateEntryRequestSchema,
-  type CreateEntryRequest,
-} from "~/lib/api/schemas/parlance/v1";
+The API only answers web apps it knows. It allows `http://localhost:3000` by
+default; for any other address, add it to `CORS_ALLOWED_ORIGINS` on the server
+(see the server README).
 
-const input: CreateEntryRequest = { key: "welcome", scopeIds: ["scope-id"] };
-CreateEntryRequestSchema.parse(input);
-```
+### Production
 
-API endpoints, application consumers, and the public `~/lib/api` schema exports
-use these generated schemas by default. Import from `schemas/parlance/v1` or a
-specific module such as `schemas/parlance/v1/EntrySchema`. The generated modules
-retain the `MessageNameSchema` and `MessageName` naming convention and include
-services such as scopes, imports, and exports.
+Both repositories publish Docker images on version tags:
 
-The `schemas/parlance/` directory contains generated files only and is cleaned on
-regeneration. Handwritten form validation belongs outside this directory.
+- `ghcr.io/kazuto/parlance-frontend` serves the web app on port 3000.
+- `ghcr.io/kazuto/parlance-api` serves the API on port 8080.
 
-### Wire format and validation
+The web app has one setting:
 
-- Field names use protobuf JSON names (`scope_ids` becomes `scopeIds`).
-- Fields are optional and nullable: ProtoJSON omits default values and accepts
-  `null` as unset. Schemas validate the wire shape without inserting defaults.
-  For example, an empty list response may be `{}`, so use `response.entries ?? []`.
-- Maps use string keys, bytes use base64 strings, enums accept their protobuf names
-  or integer values, and 64-bit integers use decimal strings to avoid precision loss.
-- Recursive messages use lazy Zod getters; explicit `oneof` groups allow at most
-  one non-null field.
-- Plain protobuf strings do not carry email, timestamp, or password constraints.
-  Add business/form validation in handwritten schemas using `.extend()`, for example:
+| Variable                   | Default                 | Description                                |
+| -------------------------- | ----------------------- | ------------------------------------------ |
+| `NUXT_PUBLIC_API_BASE_URL` | `http://localhost:8080` | Address of the API, as the browser sees it |
 
-  ```ts
-  const RegisterFormSchema = RegisterRequestSchema.extend({
-    email: z.email(),
-    password: z.string().min(8),
-    name: z.string().min(1),
-  });
-  ```
+For the server's settings, see the
+[server README](https://github.com/Kazuto/parlance-server#configuration).
 
-The local plugin lives in `server/cmd/protoc-gen-zod/` and uses protobuf descriptors,
-so it does not parse Go source or require a remote generation service. It supports
-the types currently used by this API. External message types (including Google's
-well-known types, which have special JSON representations) require adding explicit
-support to the plugin before use; unsupported external types fail generation.
+## Using Parlance
 
-## Database Schema
+### First steps
 
-The system uses a normalized database structure:
+1. **Languages:** add the languages you translate into and pick the default
+   language, the one you write the source texts in.
+2. **Scopes (optional):** create scopes to group entries, for example per app.
+3. **Entries:** create entries one by one, or import existing translation files under
+   Import / export.
+4. **Users:** invite translators and give them a role.
 
-- **entries** - Translation keys/identifiers
-- **localizations** - Locale-specific translations
-- **terminologies** - Custom terminology definitions
-- **definitions** - Locale-specific terminology translations
-- **scopes** - Organization categories (frontend, validation, etc.)
-- **locales** - Supported languages
-- **users, roles, permissions** - Access control
+### Translating
 
-Full schema documentation available in `/docs/database-schema.md`
+The editor lists the entries on the left and the selected entry's languages on the
+right. Choose which languages to show with the language filter; the default
+language always comes first, since it is the source.
 
-## 🔌 API Integration
+- **Missing translations:** filter by "missing translations" to work through
+  what is left.
+- **Drafts:** edits stay drafts until saved. "Save changes" saves the open entry,
+  "Save all" every entry with drafts. Leaving the page with drafts asks first.
+- **Entry menu (⋯):** fill the empty languages with machine translation, copy the
+  default text into them, edit the entry, or delete it.
+- **Translation context:** the side panel shows the glossary terms that occur in a
+  text and the history of every language.
+- **Several entries:** tick entries in the list to change their scopes or to
+  machine-translate them all.
 
-### DeepL Integration
+### Import and export
 
-_To be added_
+Under Import / export:
 
-### Custom AI Models
+- **JSON:** flat (`{"auth.login": "Log in"}`) or nested
+  (`{"auth": {"login": "Log in"}}`) files. Exports are flat.
+- **PHP:** Laravel-style `return [...]` arrays.
+- **PO:** gettext files where `msgid` is the key and `msgstr` the translation.
+- **ZIP:** all languages at once, one file per language.
 
-_To be added_
+An import goes into one language and can add the imported entries to scopes. The
+import mode decides what happens to existing entries: create or update, create
+only, update only, or replace all.
 
-## Roadmap
+### Users, roles and permissions
 
-- [ ] Real-time collaboration
-- [ ] Translation memory suggestions
-- [ ] Automated quality checks
-- [ ] Figma/Sketch plugin integration
-- [ ] Machine translation post-editing
-- [ ] Context screenshots for translators
-- [ ] Slack/Discord notifications
+A role is a set of permissions, such as `read_entry`, `update_entry` or
+`delete_locale`. Parlance starts with an admin role that has every permission;
+create roles for everyone else, for example translators who may edit entries but
+not delete languages. Buttons for actions a user may not take are hidden.
 
-## Contributing
+### Machine translation
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Machine translation needs a server running a Hy-MT2 model. The server repository's
+Docker Compose file includes one. It runs on a CPU or an integrated GPU and needs
+no NVIDIA card; see
+[Machine translation](https://github.com/Kazuto/parlance-server#machine-translation)
+in the server README.
+
+1. Under **Settings → Machine translation**, add the server's address, for example
+   `http://translator:8080/v1`, and press **Test**.
+2. Give the roles that may use it the permission `use_machine_translation`.
+   Translating is slow on small hardware, so not everyone should be able to start
+   it.
+3. In the editor, choose **AI-translate empty languages** in an entry's menu, or tick
+   several entries and choose **AI translate**.
+
+The results appear as drafts in the empty languages. Check them, especially those
+marked "Check": a placeholder may be missing or the plural forms may not match.
+Then save.
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, checks, tests,
+UI translations and the generated API schemas.
 
 ## License
 
-This project is licensed under the GNU General Public License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Inspired by modern translation management tools
-- Built with Nuxt.js, TypeScript and Tailwind CSS
-
-## Contact
-
-- Project Link: [https://github.com/criticaldevs/parlance](https://github.com/criticaldevs/parlance)
-- Issues: [https://github.com/criticaldevs/parlance/issues](https://github.com/criticaldevs/parlance/issues)
-
----
-
-Made with ❤️ by developers, for developers
+GNU General Public License, see [LICENSE](LICENSE).
