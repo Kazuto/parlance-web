@@ -114,6 +114,9 @@ const settingsMenuItems = computed<MenuItem[]>(() => [
   ...(can.value("read_task")
     ? [{ label: t("nav.tasks"), to: "/tasks", icon: "lightning" }]
     : []),
+  ...(can.value("read_webhook")
+    ? [{ label: t("nav.webhooks"), to: "/webhooks", icon: "webhooks-logo" }]
+    : []),
   { label: t("nav.settings"), to: "/settings", icon: "gear" },
 ]);
 

@@ -28,6 +28,9 @@ from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
   [Hy-MT2](https://github.com/Tencent-Hunyuan/Hy-MT2) model, for one entry or many.
   Suggestions are drafts to review, never saved on their own.
 - **Users and roles:** permissions per role, down to who may use machine translation.
+- **Webhooks:** tell your CI, chat or other services when translations await
+  approval, are approved or rejected, entries are added, or tasks end: right away
+  or as a digest on a schedule, as JSON or as Slack or Discord messages.
 - **Interface languages:** English, German, French and Spanish; everyone picks theirs
   under Settings.
 
@@ -143,6 +146,21 @@ in the server README.
 The results appear as drafts in the empty languages. Check them, especially those
 marked "Check": a placeholder may be missing or the plural forms may not match.
 Then save.
+
+### Webhooks
+
+Under **Webhooks**, add the address of the service to notify and pick the events it
+gets. For Slack, Mattermost or Discord, choose their format, which posts a short
+message; Parlance picks it when you paste a Slack or Discord address. For your own
+services, keep JSON, which carries every detail, and generate a signing secret for
+the receiving service, so it can check that requests come from Parlance; the secret
+is shown only until you save. To keep a channel calm, let the webhook collect its
+events and send them as an hourly, daily or weekly digest instead of right away. **Send test** posts a ping and shows the answer. Each webhook lists its deliveries with what was
+sent and what came back; failed ones are tried again for a few hours, and any can
+be sent again by hand.
+
+The events, the request format and how to check signatures are described under
+[Webhooks](https://github.com/Kazuto/parlance-server#webhooks) in the server README.
 
 ## Development
 

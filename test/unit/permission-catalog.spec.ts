@@ -68,6 +68,8 @@ describe("permission catalog", () => {
       "export_entry",
       "read_task",
       "run_task",
+      "read_webhook",
+      "update_webhook",
     ]) {
       expect(used.has(name), name).toBe(true);
     }

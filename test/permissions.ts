@@ -47,6 +47,10 @@ export const ALL_PERMISSIONS = [
   "update_task",
   "delete_task",
   "run_task",
+  "create_webhook",
+  "read_webhook",
+  "update_webhook",
+  "delete_webhook",
 ] as const;
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];

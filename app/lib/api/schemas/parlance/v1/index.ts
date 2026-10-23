@@ -17,3 +17,4 @@ export * from "./TaskSchema";
 export * from "./TerminologySchema";
 export * from "./TranslationServerSchema";
 export * from "./UserSchema";
+export * from "./WebhookSchema";

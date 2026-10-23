@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Checkbox, Input, NumberInput, Select } from "@thkzt/eunoia";
-import { formatHour, type ScheduleChoice } from "~/lib/taskSchedule";
+import type { ScheduleChoice } from "~/lib/taskSchedule";
 
 // When a task runs on its own: on a schedule and after approvals. Runs can
 // always be started by hand too.
@@ -10,7 +10,8 @@ const schedule = defineModel<ScheduleChoice>("schedule", { required: true });
 const onApproval = defineModel<boolean>("onApproval", { required: true });
 const delay = defineModel<number>("delay", { required: true });
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { hourOptions, weekdayOptions } = useScheduleOptions();
 
 const presetOptions = computed(() =>
   (["none", "hourly", "daily", "weekly", "custom"] as const).map((value) => ({
@@ -18,22 +19,6 @@ const presetOptions = computed(() =>
     label: t(`tasks.schedule.${value}`),
   })),
 );
-const hourOptions = Array.from({ length: 24 }, (_, hour) => ({
-  value: hour,
-  label: `${formatHour(hour)} UTC`,
-}));
-// 7 January 2024 was a Sunday, day 0 in cron.
-const weekdayOptions = computed(() => {
-  const format = new Intl.DateTimeFormat(locale.value, {
-    weekday: "long",
-    timeZone: "UTC",
-  });
-
-  return Array.from({ length: 7 }, (_, day) => ({
-    value: day,
-    label: format.format(new Date(Date.UTC(2024, 0, 7 + day))),
-  }));
-});
 </script>
 
 <template>
