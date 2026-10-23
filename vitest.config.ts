@@ -3,6 +3,10 @@ import { defineVitestProject } from "@nuxt/test-utils/config";
 
 export default defineConfig({
   test: {
+    // mountSuspended renders in <Suspense>, which Vue calls experimental once in
+    // every file.
+    onConsoleLog: (log) =>
+      !log.startsWith("<Suspense> is an experimental feature"),
     projects: [
       // Plain Node tests that only read files.
       {
@@ -26,6 +30,10 @@ export default defineConfig({
                 runtimeConfig: {
                   public: { apiBaseUrl: "http://api.test" },
                 },
+                // The app checks its build manifest a second after starting, with
+                // $fetch; in a test file that ended by then, that throws and fails
+                // the run.
+                experimental: { appManifest: false },
               },
             },
           },

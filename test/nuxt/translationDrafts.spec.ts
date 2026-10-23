@@ -17,7 +17,6 @@ async function setup(
   await mountSuspended(
     defineComponent({
       setup() {
-        provide("toastStack", ref(null));
         drafts = useTranslationDrafts<Item, Row>({
           name: "test-drafts",
           selectedId,
@@ -34,6 +33,9 @@ async function setup(
         return () => h("div");
       },
     }),
+    // A component can't inject what it provides itself, so the toast stack the
+    // layout gives comes from here.
+    { global: { provide: { toastStack: ref(null) } } },
   );
 
   return { drafts, selectedId, afterSave };

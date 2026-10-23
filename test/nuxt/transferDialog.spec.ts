@@ -23,6 +23,8 @@ async function openDialog(action: "import" | "export") {
   // The dialog opens when its open prop turns true.
   const wrapper = await mountSuspended(TransferDialog, {
     props: { open: false, action, locales },
+    // The layout provides the toast stack the dialog reports through.
+    global: { provide: { toastStack: ref(null) } },
   });
 
   await wrapper.setProps({ open: true });
