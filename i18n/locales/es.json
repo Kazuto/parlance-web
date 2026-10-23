@@ -495,6 +495,7 @@
   "entries.suggestionError.EMPTY_ANSWER": "El modelo de traducción no devolvió texto",
   "entries.suggestionError.ANSWER_TOO_LONG": "La respuesta no parecía una traducción",
   "entries.suggestionError.FAILED": "La traducción falló",
+  "entries.suggestionError.TIMEOUT": "El servidor de traducción tardó demasiado",
   "common.revert": "Deshacer cambios",
   "common.revertFor": "Deshacer cambios en {language}",
   "common.discard": "Descartar",

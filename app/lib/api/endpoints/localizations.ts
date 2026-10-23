@@ -101,6 +101,9 @@ export const localizations = {
       method: "post",
       url: "/parlance.v1.LocalizationService/SuggestTranslations",
       json: data,
+      // The server answers within 100 s, also when the model is slow or busy:
+      // languages not done by then come back as timed out.
+      timeout: 110_000,
     }),
     {
       input: SuggestTranslationsRequestSchema,
