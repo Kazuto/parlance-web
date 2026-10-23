@@ -19,8 +19,9 @@ const availableLocales = computed(() => locales.value);
 
 const currentLocale = computed(() => locale.value);
 
-const userStore = useUserStore();
-const isUpdating = computed(() => userStore.update.isPending);
+// Everyone may change their own language, so it goes through their account.
+const accountStore = useAccountStore();
+const isUpdating = computed(() => accountStore.update.isPending);
 
 const setLanguage = async (localeCode: LocaleObject["code"]) => {
   const previousLocale = locale.value;
@@ -32,17 +33,9 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
     // Store in localStorage as fallback
     storedLocale.value = localeCode;
 
-    // Save to backend if user is logged in
+    // Save to backend if user is logged in; the store keeps the returned user
     if (authStore.user?.id) {
-      const updatedUser = await userStore.update.mutateAsync({
-        id: authStore.user.id,
-        locale: localeCode,
-      });
-
-      // Update the user in the auth store with the returned data
-      if (updatedUser?.user) {
-        authStore.setUser(updatedUser.user);
-      }
+      await accountStore.update.mutateAsync({ locale: localeCode });
     }
   } catch (error) {
     // Revert to previous locale on error
@@ -54,6 +47,8 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
 
 <template>
   <div class="space-y-6">
+    <AccountSettings v-if="authStore.user" />
+
     <!-- User Interface Language Section -->
     <Card>
       <div class="space-y-4">

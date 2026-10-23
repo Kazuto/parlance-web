@@ -122,6 +122,11 @@ An import goes into one language and can add the imported entries to scopes. The
 import mode decides what happens to existing entries: create or update, create
 only, update only, or replace all.
 
+### Your account
+
+Under **Settings → Your account**, everyone can change their own name, email
+address, picture and password, and their language, whatever their role.
+
 ### Users, roles and permissions
 
 A role is a set of permissions, such as `read_entry`, `update_entry` or

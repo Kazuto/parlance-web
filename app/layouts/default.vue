@@ -16,7 +16,9 @@ import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
 const authStore = useAuthStore();
-const { user, logout } = authStore;
+const { logout } = authStore;
+// Follows changes to the user's own name and avatar.
+const user = computed(() => authStore.user);
 const { t } = useI18n();
 
 // The stored user is only replaced on login and token refresh, so role changes made
@@ -48,6 +50,7 @@ const onMenuSelect = (label: string) => {
 };
 
 const { can, canAny } = usePermission();
+const avatarUrl = useAvatarUrl();
 
 // Only link pages the user can open; items without a permission are always shown.
 const menuItems = computed<MenuItem[]>(() =>
@@ -191,6 +194,7 @@ const headerOptions = computed(() => {
           <UserMenu
             v-if="user"
             :name="user.name ?? undefined"
+            :image="avatarUrl(user)"
             :items="userMenuItems"
             @select="onMenuSelect"
           />

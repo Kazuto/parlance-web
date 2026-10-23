@@ -22,6 +22,7 @@ export type User = {
   createdAt?: string | null;
   updatedAt?: string | null;
   deletedAt?: string | null;
+  hasPassword?: boolean | null;
 };
 export const UserSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -50,6 +51,9 @@ export const UserSchema = z.object({
   },
   get deletedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get hasPassword(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ListUsersRequest = {
