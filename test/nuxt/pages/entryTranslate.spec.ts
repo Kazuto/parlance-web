@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SplitView } from "@thkzt/eunoia";
 import EntriesPage from "~/pages/entries/index.vue";
 import {
   VIEWER,
@@ -259,5 +260,146 @@ describe("machine translation in the editor", () => {
     const { page } = await openEditor({ permissions: VIEWER });
 
     expect(await translateItem(page)).toBeUndefined();
+  });
+});
+
+describe("machine translation of ticked entries", () => {
+  // e1 misses German, e2 has no English text to translate from, e3 misses both.
+  const entries = [
+    entry,
+    {
+      id: "e2",
+      key: "farewell",
+      scopes: [],
+      localizations: [],
+    },
+    {
+      id: "e3",
+      key: "thanks",
+      scopes: [],
+      localizations: [
+        { id: "z5", entryId: "e3", localeId: "l1", translation: "Thanks" },
+      ],
+    },
+  ];
+
+  async function openWithTicked(
+    options: {
+      permissions?: readonly string[];
+      route?: string;
+      answer?: (body: {
+        entryId?: string;
+        targetLocaleIds?: string[];
+      }) => unknown;
+    } = {},
+  ) {
+    const requests: { entryId?: string; targetLocaleIds?: string[] }[] = [];
+    loginAs(
+      options.permissions ?? [
+        ...VIEWER,
+        "update_entry",
+        "use_machine_translation",
+      ],
+    );
+    mockRpc("AuthService/GetCurrentUser", { translationEnabled: true });
+    mockRpc("LocaleService/ListLocales", {
+      locales,
+      pagination: pagination(locales.length),
+    });
+    mockRpc("EntryService/ListEntries", {
+      entries,
+      pagination: pagination(entries.length),
+    });
+    mockRpc("EntryService/GetEntry", (body) => ({
+      entry: entries.find((item) => item.id === body.id),
+    }));
+    mockRpc("LocalizationService/SuggestTranslations", (body) => {
+      const request = body as { entryId?: string; targetLocaleIds?: string[] };
+      requests.push(request);
+      return (
+        options.answer?.(request) ?? {
+          suggestions: request.targetLocaleIds?.map((localeId) => ({
+            localeId,
+            translation: `${request.entryId}-${localeId}`,
+          })),
+        }
+      );
+    });
+    const page = await mountPage(EntriesPage, {
+      route: options.route ?? "/entries?locales=en,de,fr",
+    });
+    // The list is virtualized and renders no rows here, so tick through it.
+    page.wrapper
+      .findComponent(SplitView)
+      .vm.$emit("update:selection", ["e1", "e2", "e3"]);
+    await settle();
+    return { page, requests };
+  }
+
+  const bulkButton = (page: MountedPage) =>
+    page.wrapper
+      .findAll("button")
+      .find((button) => button.text().trim() === t("entries.bulkTranslate"));
+
+  it("fills the empty languages of each ticked entry as drafts", async () => {
+    const { page, requests } = await openWithTicked();
+
+    await bulkButton(page)!.trigger("click");
+    await settle();
+
+    // e2 has nothing to translate from and is skipped.
+    expect(requests).toEqual([
+      { entryId: "e1", targetLocaleIds: ["l2"] },
+      { entryId: "e3", targetLocaleIds: ["l2", "l3"] },
+    ]);
+    // The open entry shows its draft; all three wait for Save all.
+    expect(field(page, "l2").element.value).toBe("e1-l2");
+    expect(page.buttons()).toContain(t("common.saveAllCount", { count: 3 }));
+  });
+
+  it("can be stopped between entries", async () => {
+    let answer!: (value: unknown) => void;
+    const { page, requests } = await openWithTicked({
+      answer: (request) =>
+        request.entryId === "e1"
+          ? new Promise((resolve) => (answer = resolve))
+          : undefined,
+    });
+
+    await bulkButton(page)!.trigger("click");
+    await settle();
+    expect(page.wrapper.text()).toContain(
+      t("entries.bulkTranslateProgress", { done: 0, total: 3 }),
+    );
+    const stop = page.wrapper
+      .findAll("button")
+      .find(
+        (button) => button.text().trim() === t("entries.bulkTranslateStop"),
+      )!;
+    await stop.trigger("click");
+    answer({ suggestions: [{ localeId: "l2", translation: "Hallo" }] });
+    await settle();
+
+    expect(requests.map((request) => request.entryId)).toEqual(["e1"]);
+    expect(field(page, "l2").element.value).toBe("Hallo");
+    expect(bulkButton(page)).toBeDefined();
+  });
+
+  it("needs a language to translate into", async () => {
+    const { page } = await openWithTicked({ route: "/entries?locales=en" });
+
+    expect(bulkButton(page)!.attributes("disabled")).toBeDefined();
+    expect(bulkButton(page)!.attributes("title")).toBe(
+      t("entries.bulkTranslateNoLanguages"),
+    );
+  });
+
+  it("is only offered with use_machine_translation", async () => {
+    const { page } = await openWithTicked({
+      permissions: [...VIEWER, "update_entry"],
+    });
+
+    expect(page.wrapper.text()).toContain(t("entries.bulkEditScopes"));
+    expect(bulkButton(page)).toBeUndefined();
   });
 });

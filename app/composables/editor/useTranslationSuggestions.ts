@@ -57,5 +57,9 @@ export function useTranslationSuggestions() {
     return waiting.value[entryId]?.includes(localeId) ?? false;
   }
 
-  return { enabled, pending, suggest, resultFor, isWaitingFor };
+  function isEntryWaiting(entryId: string) {
+    return !!waiting.value[entryId];
+  }
+
+  return { enabled, pending, suggest, resultFor, isWaitingFor, isEntryWaiting };
 }

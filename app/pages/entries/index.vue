@@ -367,32 +367,35 @@ const localizationForms = ref<Record<string, Record<string, string>>>({});
 const savedTranslations = ref<Record<string, Record<string, string>>>({});
 const knownEntries = ref<Record<string, Entry>>({});
 
+// Takes in an entry as loaded from the server; its drafts stay.
+function registerEntry(entry: Entry) {
+  if (!entry.id) return;
+  knownEntries.value[entry.id] = {
+    ...entry,
+    localizations: [...(entry.localizations ?? [])],
+  };
+  const saved = Object.fromEntries(
+    (entry.localizations ?? [])
+      .filter((localization) => !!localization.localeId)
+      .map((localization) => [
+        String(localization.localeId),
+        localization.translation ?? "",
+      ]),
+  );
+  const previous = savedTranslations.value[entry.id] ?? {};
+  const drafts = localizationForms.value[entry.id] ?? {};
+  const next = { ...saved };
+  for (const [localeId, value] of Object.entries(drafts)) {
+    if (value !== (previous[localeId] ?? "")) next[localeId] = value;
+  }
+  localizationForms.value[entry.id] = next;
+  savedTranslations.value[entry.id] = saved;
+}
+
 watch(
   () => detailData.value?.entry,
-  (detail) => {
-    for (const entry of detail ? [detail] : []) {
-      if (!entry.id) continue;
-      knownEntries.value[entry.id] = {
-        ...entry,
-        localizations: [...(entry.localizations ?? [])],
-      };
-      const saved = Object.fromEntries(
-        (entry.localizations ?? [])
-          .filter((localization) => !!localization.localeId)
-          .map((localization) => [
-            String(localization.localeId),
-            localization.translation ?? "",
-          ]),
-      );
-      const previous = savedTranslations.value[entry.id] ?? {};
-      const drafts = localizationForms.value[entry.id] ?? {};
-      const next = { ...saved };
-      for (const [localeId, value] of Object.entries(drafts)) {
-        if (value !== (previous[localeId] ?? "")) next[localeId] = value;
-      }
-      localizationForms.value[entry.id] = next;
-      savedTranslations.value[entry.id] = saved;
-    }
+  (entry) => {
+    if (entry) registerEntry(entry);
   },
   { immediate: true },
 );
@@ -517,7 +520,13 @@ const {
   suggest: suggestTranslations,
   resultFor: suggestionFor,
   isWaitingFor: isTranslatingLocale,
+  isEntryWaiting,
 } = useTranslationSuggestions();
+const canMachineTranslate = computed(
+  () =>
+    translationEnabled.value &&
+    canAll.value(["update_entry", "use_machine_translation"]),
+);
 
 // The server translates the saved default text, so unsaved edits to it must be
 // saved first.
@@ -547,7 +556,7 @@ const entryActions = computed<ActionMenuItem[]>(() => {
   const items: ActionMenuItem[] = [];
   const busy = isSaving.value;
   if (can.value("update_entry")) {
-    if (translationEnabled.value && can.value("use_machine_translation")) {
+    if (canMachineTranslate.value) {
       const hint = isTranslating.value
         ? t("entries.translating")
         : (fillEmptyBlocker.value ??
@@ -622,6 +631,101 @@ async function translateEmptyTranslations() {
   } catch (error) {
     showError(error as Error);
   }
+}
+
+// AI translation of the ticked entries, one after the other: like for one entry,
+// the empty selected languages get drafts to review. Each entry is loaded first,
+// so its drafts save like any other.
+const MAX_BULK_TRANSLATE = 50;
+const bulkTranslation = ref<{ done: number; total: number; stop: boolean }>();
+// Built during setup, which the API client needs; the query key carries the id.
+const entryQuery = api.entries.get.use({ id: "" });
+function loadEntry(id: string) {
+  const [operation, middlewares] = entryQuery.queryKey;
+  return queryClient.fetchQuery({
+    queryKey: [operation, middlewares, { id }] as const,
+    queryFn: entryQuery.queryFn,
+    // Translating needs the saved text as it is now.
+    staleTime: 0,
+  });
+}
+const bulkTargetLocaleIds = computed(() =>
+  selectedLocaleIds.value.filter((id) => id !== defaultLocale.value?.id),
+);
+// Why the ticked entries can't be translated right now, if they can't.
+const bulkTranslateBlocker = computed(() => {
+  if (checkedEntryIds.value.length > MAX_BULK_TRANSLATE)
+    return t("entries.bulkTranslateLimit", { max: MAX_BULK_TRANSLATE });
+  if (!bulkTargetLocaleIds.value.length)
+    return t("entries.bulkTranslateNoLanguages");
+  return undefined;
+});
+
+async function translateCheckedEntries() {
+  const sourceId = defaultLocale.value?.id;
+  if (!sourceId || bulkTranslation.value || bulkTranslateBlocker.value) return;
+  const entryIds = [...checkedEntryIds.value];
+  const targets = [...bulkTargetLocaleIds.value];
+  const result = { languages: 0, entries: 0, skipped: 0, failed: 0 };
+  bulkTranslation.value = { done: 0, total: entryIds.length, stop: false };
+  const progress = bulkTranslation.value;
+  try {
+    for (const entryId of entryIds) {
+      if (progress.stop) break;
+      try {
+        const { entry } = await loadEntry(entryId);
+        if (entry) registerEntry(entry);
+        const empty = targets.filter(
+          (id) => !(localizationForms.value[entryId]?.[id] ?? "").trim(),
+        );
+        // The server translates the saved default text.
+        const source = savedTranslations.value[entryId]?.[sourceId] ?? "";
+        if (
+          !empty.length ||
+          !source.trim() ||
+          isTranslationDirty(entryId, sourceId)
+        ) {
+          result.skipped++;
+          continue;
+        }
+        let filled = 0;
+        for (const { localeId, translation } of await suggestTranslations(
+          entryId,
+          empty,
+        )) {
+          if (!localeId) continue;
+          if (!translation) result.failed++;
+          // Text typed while waiting stays.
+          else if (
+            !(localizationForms.value[entryId]?.[localeId] ?? "").trim()
+          ) {
+            setLocalizationForm(entryId, localeId, translation);
+            filled++;
+          }
+        }
+        result.languages += filled;
+        if (filled) result.entries++;
+      } catch {
+        result.failed++;
+      } finally {
+        progress.done++;
+      }
+    }
+  } finally {
+    bulkTranslation.value = undefined;
+    const message = [
+      progress.stop ? t("entries.bulkTranslateStopped") : "",
+      t("entries.bulkTranslateDone", result),
+    ]
+      .filter(Boolean)
+      .join(" ");
+    if (result.failed && !result.languages) showError(message);
+    else showSuccess(message);
+  }
+}
+
+function stopBulkTranslation() {
+  if (bulkTranslation.value) bulkTranslation.value.stop = true;
 }
 
 function setLocalizationForm(
@@ -884,12 +988,48 @@ async function saveTranslations(
       <span v-if="bulkLimitReached" role="alert" class="text-xs text-red-600">
         {{ t("entries.bulkLimit", { max: MAX_BULK_ENTRIES }) }}
       </span>
+      <span
+        v-if="bulkTranslation"
+        role="status"
+        class="ml-auto flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-300"
+      >
+        <Icon name="sparkle" size="xs" class="animate-pulse" />
+        {{
+          t("entries.bulkTranslateProgress", {
+            done: bulkTranslation.done,
+            total: bulkTranslation.total,
+          })
+        }}
+      </span>
+      <Button
+        v-if="bulkTranslation"
+        type="button"
+        ghost
+        dense
+        :disabled="bulkTranslation.stop"
+        @click="stopBulkTranslation"
+      >
+        {{ t("entries.bulkTranslateStop") }}
+      </Button>
+      <Button
+        v-else-if="canMachineTranslate"
+        type="button"
+        ghost
+        dense
+        icon="sparkle"
+        class="ml-auto"
+        :title="bulkTranslateBlocker"
+        :disabled="isSaving || isTranslating || !!bulkTranslateBlocker"
+        @click="translateCheckedEntries"
+      >
+        {{ t("entries.bulkTranslate") }}
+      </Button>
       <Button
         type="button"
         primary
         dense
         icon="stack"
-        class="ml-auto"
+        :class="{ 'ml-auto': !bulkTranslation && !canMachineTranslate }"
         :disabled="isSaving || bulkLimitReached"
         @click="showScopesDialog = true"
       >
@@ -1027,7 +1167,7 @@ async function saveTranslations(
                 }}</span
               >
               <span
-                v-if="isTranslating"
+                v-if="selectedEntryId && isEntryWaiting(selectedEntryId)"
                 role="status"
                 class="flex items-center gap-1 text-[11.5px] font-semibold whitespace-nowrap text-primary-600 dark:text-primary-300"
               >
