@@ -8,7 +8,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const authStore = useAuthStore();
-  const publicRoutes = ["/login", "/setup"];
+  const publicRoutes = ["/login", "/setup", "/sso/callback"];
 
   // Check if setup is needed (only for non-setup pages)
   if (to.path !== "/setup" && !setupComplete) {

@@ -104,3 +104,75 @@ export const GetCurrentUserResponseSchema = z.object({
     return z.boolean().nullish();
   },
 });
+export type SignInProvider = {
+  id?: string | null;
+  name?: string | null;
+};
+export const SignInProviderSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type ListSignInProvidersRequest = Record<string, never>;
+export const ListSignInProvidersRequestSchema = z.object({});
+export type ListSignInProvidersResponse = {
+  providers?: Array<SignInProvider> | null;
+};
+export const ListSignInProvidersResponseSchema = z.object({
+  get providers(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<SignInProvider>>>
+  > {
+    return z.array(SignInProviderSchema).nullish();
+  },
+});
+export type StartSsoRequest = {
+  providerId?: string | null;
+  redirectUri?: string | null;
+};
+export const StartSsoRequestSchema = z.object({
+  get providerId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get redirectUri(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type StartSsoResponse = {
+  authorizationUrl?: string | null;
+};
+export const StartSsoResponseSchema = z.object({
+  get authorizationUrl(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type FinishSsoRequest = {
+  state?: string | null;
+  code?: string | null;
+};
+export const FinishSsoRequestSchema = z.object({
+  get state(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get code(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type FinishSsoResponse = {
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  user?: User | null;
+};
+export const FinishSsoResponseSchema = z.object({
+  get accessToken(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get refreshToken(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
+    return UserSchema.nullish();
+  },
+});

@@ -12,6 +12,7 @@ export * from "./PermissionSchema";
 export * from "./RoleSchema";
 export * from "./ScopeSchema";
 export * from "./SetupSchema";
+export * from "./SsoSchema";
 export * from "./StatsSchema";
 export * from "./TaskSchema";
 export * from "./TerminologySchema";

@@ -28,6 +28,8 @@ from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
   [Hy-MT2](https://github.com/Tencent-Hunyuan/Hy-MT2) model, for one entry or many.
   Suggestions are drafts to review, never saved on their own.
 - **Users and roles:** permissions per role, down to who may use machine translation.
+- **Single sign-on:** sign in with OpenID Connect providers such as Keycloak,
+  Authentik or Microsoft Entra ID, next to email and password.
 - **Webhooks:** tell your CI, chat or other services when translations await
   approval, are approved or rejected, entries are added, or tasks end: right away
   or as a digest on a schedule, as JSON or as Slack or Discord messages.
@@ -126,6 +128,16 @@ A role is a set of permissions, such as `read_entry`, `update_entry` or
 `delete_locale`. Parlance starts with an admin role that has every permission;
 create roles for everyone else, for example translators who may edit entries but
 not delete languages. Buttons for actions a user may not take are hidden.
+
+### Single sign-on
+
+Under **Settings → Single sign-on**, add your identity provider with its issuer URL,
+client ID and secret, and register the redirect URI shown there with the provider.
+Choose whether people without an account get one, and with which role, or whether
+only existing users may sign in; they are matched by email. The sign-in page then
+offers "Sign in with …" next to the password. See
+[Single sign-on](https://github.com/Kazuto/parlance-server#single-sign-on) in the
+server README for the details.
 
 ### Machine translation
 

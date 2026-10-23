@@ -106,6 +106,23 @@ export const useAuthStore = defineStore("authStore", () => {
     },
   });
 
+  const { mutateAsync: finishSsoCall } = useMutation({
+    ...api.auth.finishSso.use(),
+    onError: (error: Error) => {
+      setToken();
+      user.value = undefined;
+
+      throw error;
+    },
+    onSuccess: (data) => {
+      setToken({
+        refreshToken: data.refreshToken ?? undefined,
+        token: data.accessToken ?? undefined,
+      });
+      user.value = data.user ?? undefined;
+    },
+  });
+
   const refreshEndpoint = api.auth.refreshToken.use();
 
   const { mutateAsync: refreshCall } = useMutation({
@@ -133,6 +150,16 @@ export const useAuthStore = defineStore("authStore", () => {
     });
 
     reloadNuxtApp();
+  }
+
+  /**
+   * Signs in with what a single sign-on provider sent back. The app starts over on
+   * the dashboard, leaving the used code out of the address.
+   */
+  async function finishSso(state: string, code: string) {
+    await finishSsoCall({ state, code });
+
+    reloadNuxtApp({ path: "/" });
   }
 
   function logout() {
@@ -231,6 +258,7 @@ export const useAuthStore = defineStore("authStore", () => {
     isRefreshing: readonly(isRefreshing),
     isRefreshTokenExpired,
     isTokenExpired,
+    finishSso,
     login,
     logout,
     payload: readonly(tokenPayload),

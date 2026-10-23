@@ -17,6 +17,7 @@ import { setup } from "./endpoints/setup";
 import { translationServers } from "./endpoints/translationServers";
 import { tasks } from "./endpoints/tasks";
 import { webhooks } from "./endpoints/webhooks";
+import { ssoProviders } from "./endpoints/ssoProviders";
 
 export const api = defineApi({
   auth,
@@ -37,6 +38,7 @@ export const api = defineApi({
   translationServers,
   tasks,
   webhooks,
+  ssoProviders,
 });
 
 export * from "./schemas";

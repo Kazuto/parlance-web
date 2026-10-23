@@ -133,5 +133,7 @@ const setLanguage = async (localeCode: LocaleObject["code"]) => {
     </Card>
 
     <TranslationServerSettings v-if="can('read_translation_server')" />
+
+    <SsoProviderSettings v-if="can('read_sso_provider')" />
   </div>
 </template>

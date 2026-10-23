@@ -51,6 +51,10 @@ export const ALL_PERMISSIONS = [
   "read_webhook",
   "update_webhook",
   "delete_webhook",
+  "create_sso_provider",
+  "read_sso_provider",
+  "update_sso_provider",
+  "delete_sso_provider",
 ] as const;
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];

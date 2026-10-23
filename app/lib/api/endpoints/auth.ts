@@ -10,9 +10,17 @@ import {
   LogoutResponseSchema,
   GetCurrentUserRequestSchema,
   GetCurrentUserResponseSchema,
+  ListSignInProvidersRequestSchema,
+  ListSignInProvidersResponseSchema,
+  StartSsoRequestSchema,
+  StartSsoResponseSchema,
+  FinishSsoRequestSchema,
+  FinishSsoResponseSchema,
   type RegisterRequest,
   type LoginRequest,
   type RefreshTokenRequest,
+  type StartSsoRequest,
+  type FinishSsoRequest,
 } from "../schemas/parlance/v1/AuthSchema";
 
 export const auth = {
@@ -74,5 +82,35 @@ export const auth = {
       input: GetCurrentUserRequestSchema,
       output: GetCurrentUserResponseSchema,
     },
+  ),
+
+  signInProviders: publicEndpoint.query(
+    () => ({
+      method: "post",
+      url: "/parlance.v1.AuthService/ListSignInProviders",
+      json: {},
+    }),
+    {
+      input: ListSignInProvidersRequestSchema,
+      output: ListSignInProvidersResponseSchema,
+    },
+  ),
+
+  startSso: publicEndpoint.mutate(
+    (data: StartSsoRequest) => ({
+      method: "post",
+      url: "/parlance.v1.AuthService/StartSso",
+      json: data,
+    }),
+    { input: StartSsoRequestSchema, output: StartSsoResponseSchema },
+  ),
+
+  finishSso: publicEndpoint.mutate(
+    (data: FinishSsoRequest) => ({
+      method: "post",
+      url: "/parlance.v1.AuthService/FinishSso",
+      json: data,
+    }),
+    { input: FinishSsoRequestSchema, output: FinishSsoResponseSchema },
   ),
 };
