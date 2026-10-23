@@ -12,6 +12,8 @@ const destroyLocale = localeStore.destroy.mutateAsync;
 const isPending = computed(() => localeStore.destroy.isPending);
 
 const { t } = useI18n();
+const localeName = useLocaleName();
+const name = computed(() => (props.item ? localeName(props.item) : ""));
 const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
@@ -24,7 +26,7 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        showSuccess(t("locales.deleted", { name: props.item?.name ?? "" }));
+        showSuccess(t("locales.deleted", { name: name.value }));
       },
       onError: (error) => {
         showError(error);
@@ -52,7 +54,7 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="t('locales.deleteTitle', { name: props.item?.name ?? '' })"
+    :title="t('locales.deleteTitle', { name })"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"

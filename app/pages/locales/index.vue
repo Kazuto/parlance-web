@@ -117,11 +117,19 @@ const tableColumns: DataTableColumn<Locale>[] = [
 ];
 
 const { mapTranslatable } = useTranslatable<Locale>();
+const localeName = useLocaleName();
 
+// The name in the UI language, so the column also sorts by it.
 const tableItems = computed(() => {
   if (!data.value?.locales) return [];
 
-  return mapTranslatable(data.value.locales, "names");
+  return mapTranslatable(
+    data.value.locales.map((locale) => ({
+      ...locale,
+      name: localeName(locale),
+    })),
+    "names",
+  );
 });
 
 const showDialog = ref(false);

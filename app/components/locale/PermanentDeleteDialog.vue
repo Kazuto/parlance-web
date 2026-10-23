@@ -12,6 +12,8 @@ const permanentDeleteLocale = localeStore.permanentDelete.mutateAsync;
 const isPending = computed(() => localeStore.permanentDelete.isPending);
 
 const { t } = useI18n();
+const localeName = useLocaleName();
+const name = computed(() => (props.item ? localeName(props.item) : ""));
 const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
@@ -24,9 +26,7 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        showSuccess(
-          t("locales.permanentlyDeleted", { name: props.item?.name ?? "" }),
-        );
+        showSuccess(t("locales.permanentlyDeleted", { name: name.value }));
       },
       onError: (error) => {
         showError(error);
@@ -54,7 +54,7 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="t('locales.permanentDeleteTitle', { name: props.item?.name ?? '' })"
+    :title="t('locales.permanentDeleteTitle', { name })"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"

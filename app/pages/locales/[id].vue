@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import {
+  ActionMenu,
+  type ActionMenuItem,
   Badge,
   Button,
   Checkbox,
@@ -12,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { useLocaleList } from "~/composables/locale/useLocaleList";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import { fillLanguageNames, languageName } from "~/lib/languageNames";
 
 type LocaleForm = {
   code: string;
@@ -169,6 +172,106 @@ function selectLocale(item: SplitViewItem) {
   error.value = undefined;
 }
 
+// Language names are known data (CLDR, built into the browser), so filling them
+// needs no translation model.
+const languageCodes = computed(() =>
+  languages.value.map((language) => language.code!),
+);
+
+function fillableNames(id: string) {
+  const draft = drafts.value[id] ?? listForm(id);
+  if (!draft) return 0;
+  return languageCodes.value.filter(
+    (language) =>
+      !(draft.names[language] ?? "").trim() &&
+      !!languageName(draft.code, language),
+  ).length;
+}
+
+// A locale that wasn't opened yet has no draft; its listed data is the baseline.
+function listForm(id: string): LocaleForm | undefined {
+  const locale = languages.value.find((language) => language.id === id);
+  if (!locale) return undefined;
+  return {
+    code: locale.code ?? "",
+    names: { ...locale.names },
+    isDefault: !!locale.isDefault,
+  };
+}
+
+function fillNames(ids: string[]) {
+  let filled = 0;
+  for (const id of ids) {
+    if (!drafts.value[id]) {
+      const form = listForm(id);
+      if (!form) continue;
+      saved.value[id] ??= structuredClone(form);
+      drafts.value[id] = form;
+    }
+    const draft = drafts.value[id]!;
+    filled += fillLanguageNames(
+      draft.names,
+      draft.code,
+      languageCodes.value,
+    ).length;
+  }
+  if (filled) showSuccess(t("locales.namesFilled", { count: filled }));
+}
+
+const localeActions = computed<ActionMenuItem[]>(() => {
+  const items: ActionMenuItem[] = [];
+  const busy = isSaving.value || isLoading.value;
+  if (canUpdate.value) {
+    const here = fillableNames(selectedId.value);
+    const everywhere = languages.value.reduce(
+      (count, language) => count + fillableNames(language.id!),
+      0,
+    );
+    items.push(
+      {
+        value: "fill",
+        label: t("locales.fillNames"),
+        icon: "translate",
+        hint: here ? undefined : t("locales.noKnownMissingNames"),
+        disabled: busy || !here,
+      },
+      {
+        value: "fillAll",
+        label: t("locales.fillAllNames"),
+        icon: "globe-simple",
+        hint: everywhere ? undefined : t("locales.noKnownMissingNames"),
+        disabled: busy || !everywhere,
+      },
+      {
+        value: "edit",
+        label: t("locales.edit"),
+        icon: "pencil-simple",
+        disabled: busy,
+      },
+    );
+  }
+  if (can.value("delete_locale")) {
+    items.push({
+      value: "delete",
+      label: t("locales.delete"),
+      icon: "trash",
+      variant: "danger",
+      divider: items.length > 0,
+      disabled: busy,
+    });
+  }
+  return items;
+});
+
+function onLocaleAction(action: string) {
+  if (action === "fill") fillNames([selectedId.value]);
+  else if (action === "fillAll")
+    fillNames(languages.value.map((language) => language.id!));
+  else if (action === "edit") openEdit();
+  else if (action === "delete")
+    deleteItem.value = data.value?.locale ?? undefined;
+}
+
 function openEdit() {
   if (!form.value) return;
   metadata.value = { code: form.value.code, isDefault: form.value.isDefault };
@@ -307,25 +410,13 @@ async function handleDeleted(id: string) {
               {{ t("locales.namesHint") }}
             </p>
           </div>
-          <div v-if="form" class="flex shrink-0 items-center gap-2">
-            <BaseIconButton
-              v-can="'update_locale'"
-              icon="pencil-simple"
-              :label="t('locales.edit')"
-              :disabled="isSaving || isLoading"
-              class="bg-neutral-100 dark:bg-white/5"
-              @click="openEdit"
-            />
-            <BaseIconButton
-              v-can="'delete_locale'"
-              icon="trash"
-              destructive
-              :label="t('locales.delete')"
-              :disabled="isSaving || isLoading"
-              class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
-              @click="deleteItem = data?.locale ?? undefined"
-            />
-          </div>
+          <ActionMenu
+            v-if="form && localeActions.length"
+            :items="localeActions"
+            :label="t('locales.actions')"
+            class="shrink-0 bg-neutral-100 dark:bg-white/5"
+            @select="onLocaleAction"
+          />
         </div>
       </template>
       <template #default>

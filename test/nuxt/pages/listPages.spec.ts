@@ -202,6 +202,32 @@ describe("locales page", () => {
     ).toEqual([]);
   });
 
+  it("names the locales in the UI language", async () => {
+    const i18n = useNuxtApp().$i18n;
+    await i18n.setLocale("de");
+    try {
+      loginAs(VIEWER);
+      mockRpc("LocaleService/ListLocales", {
+        locales: [
+          {
+            id: "l1",
+            code: "de",
+            name: "German",
+            names: { en: "German", de: "Deutsch" },
+            createdAt,
+          },
+        ],
+        pagination: pagination(1),
+      });
+      const page = await mountPage(LocalesPage);
+
+      expect(page.wrapper.text()).toContain("Deutsch");
+      expect(page.wrapper.text()).not.toContain("German");
+    } finally {
+      await i18n.setLocale("en");
+    }
+  });
+
   it("hides the export without read_entry", async () => {
     const page = await open(["read_locale"]);
     expect(page.headerActions()).toEqual([]);

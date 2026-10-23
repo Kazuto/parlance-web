@@ -11,6 +11,8 @@ const { restore } = useLocaleStore();
 const { mutateAsync: restoreLocale, isPending } = restore;
 
 const { t } = useI18n();
+const localeName = useLocaleName();
+const name = computed(() => (props.item ? localeName(props.item) : ""));
 const { showError, showSuccess } = useErrorHelper();
 
 async function handleSubmit() {
@@ -22,7 +24,7 @@ async function handleSubmit() {
     },
     {
       onSuccess: () => {
-        showSuccess(t("locales.restored", { name: props.item?.name ?? "" }));
+        showSuccess(t("locales.restored", { name: name.value }));
       },
       onError: (error) => {
         showError(error);
@@ -47,7 +49,7 @@ function handleClose() {
 <template>
   <ConfirmDialog
     :open
-    :title="t('locales.restoreTitle', { name: props.item?.name ?? '' })"
+    :title="t('locales.restoreTitle', { name })"
     @cancel="handleClose"
     @close="handleClose"
     @confirm="handleSubmit"
