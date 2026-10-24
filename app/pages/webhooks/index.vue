@@ -190,7 +190,9 @@ async function sendTest(hook: Webhook) {
               </template>
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <!-- On phones the actions take a row of their own, lined up with the
+               details, so those keep the card's width. -->
+          <div class="flex items-center gap-2 max-sm:basis-full max-sm:pl-12">
             <Switch
               v-if="can('update_webhook')"
               dense
@@ -256,9 +258,11 @@ async function sendTest(hook: Webhook) {
               class="text-xs text-neutral-500 dark:text-neutral-400"
               :timestamp="hook.lastDelivery.createdAt"
             />
+            <!-- On phones the result, often an error, goes on a line of its own
+                 below, rather than into a narrow column beside the button. -->
             <WebhookDeliveryResult
               :delivery="hook.lastDelivery"
-              class="flex-1"
+              class="max-sm:order-last max-sm:basis-full sm:flex-1"
             />
           </template>
           <span
@@ -269,6 +273,7 @@ async function sendTest(hook: Webhook) {
           </span>
           <Button
             v-if="hook.id"
+            class="ml-auto"
             dense
             ghost
             :aria-expanded="!!expanded[hook.id]"
