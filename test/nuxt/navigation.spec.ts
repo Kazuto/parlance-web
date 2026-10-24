@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
+import type { DOMWrapper } from "@vue/test-utils";
+import { BottomNav } from "@thkzt/eunoia";
 import DefaultLayout from "~/layouts/default.vue";
 import DashboardPage from "~/pages/index.vue";
 import {
@@ -11,14 +13,32 @@ import {
   settle,
 } from "./helpers";
 
-async function sidebarLinks() {
+async function mountLayout() {
   const wrapper = await mountSuspended(DefaultLayout, {
     slots: { default: () => "content" },
   });
 
   await settle();
 
-  return wrapper.findAll("nav a").map((link) => link.attributes("href"));
+  return wrapper;
+}
+
+function hrefs(links: DOMWrapper<Element>[]) {
+  return links.map((link) => link.attributes("href"));
+}
+
+async function sidebarLinks() {
+  return hrefs((await mountLayout()).findAll("aside a"));
+}
+
+// The links on the phone's bottom bar, and those behind its "More" drawer.
+async function bottomBarLinks() {
+  const bar = (await mountLayout()).findComponent(BottomNav);
+
+  return {
+    bar: hrefs(bar.find("nav").findAll("a")),
+    more: hrefs(bar.findAll("dialog a")),
+  };
 }
 
 describe("sidebar", () => {
@@ -85,6 +105,43 @@ describe("sidebar", () => {
 
     expect(links).not.toContain("/roles");
     expect(links).not.toContain("/users");
+  });
+});
+
+describe("bottom bar", () => {
+  it("puts the pages for translating on the bar and the rest behind More", async () => {
+    loginAs(ALL_PERMISSIONS);
+
+    expect(await bottomBarLinks()).toEqual({
+      bar: ["/", "/locales", "/entries", "/glossary"],
+      more: [
+        "/entries/transfer",
+        "/scopes",
+        "/roles",
+        "/users",
+        "/tasks",
+        "/webhooks",
+        "/settings",
+      ],
+    });
+  });
+
+  it("links a viewer only to the pages it may read", async () => {
+    loginAs(VIEWER);
+
+    expect(await bottomBarLinks()).toEqual({
+      bar: ["/", "/locales", "/entries", "/glossary"],
+      more: ["/entries/transfer", "/scopes", "/settings"],
+    });
+  });
+
+  it("needs no More drawer when the pages fit", async () => {
+    loginAs([]);
+
+    expect(await bottomBarLinks()).toEqual({
+      bar: ["/", "/settings"],
+      more: [],
+    });
   });
 });
 

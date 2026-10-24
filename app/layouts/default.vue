@@ -10,9 +10,12 @@ import {
   type UserMenuItem,
   ToastStack,
   Page,
+  BottomNav,
+  type BottomNavItem,
   useTheme,
 } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
+import { useMediaQuery } from "@vueuse/core";
 import { api } from "~/lib/api";
 
 const authStore = useAuthStore();
@@ -142,6 +145,20 @@ const libraryPageOptions = computed(() => {
   return options;
 });
 
+// Phones get the sidebar's pages as a bar at the bottom. The pages for translating
+// fill the bar; the rest wait behind "More", in the sidebar's order.
+const barPages = ["/", "/locales", "/entries", "/glossary"];
+
+const bottomNavItems = computed<BottomNavItem[]>(() => {
+  const items = [...menuItems.value, ...settingsMenuItems.value];
+  const onBar = (item: MenuItem) => barPages.includes(item.to ?? "");
+
+  return [...items.filter(onBar), ...items.filter((item) => !onBar(item))];
+});
+
+// The bar covers the bottom of the screen on phones, so toasts show at the top there.
+const isPhone = useMediaQuery("(width < 48rem)");
+
 const headerOptions = computed(() => {
   const {
     width: _width,
@@ -157,10 +174,11 @@ const headerOptions = computed(() => {
   <div
     class="flex h-dvh overflow-hidden bg-neutral-100 font-sans dark:bg-neutral-950"
   >
-    <!-- Sidebar runs full height; its toggle sits at the top of it. -->
+    <!-- Sidebar runs full height; its toggle sits at the top of it. Phones get
+         the bottom bar instead. -->
     <Sidebar
       v-model:collapsed="sidebarCollapsed"
-      class="border-neutral-200 bg-transparent dark:border-white/5 dark:bg-transparent"
+      class="hidden border-neutral-200 bg-transparent md:flex dark:border-white/5 dark:bg-transparent"
     >
       <!-- Settings sit at the bottom, apart from the pages; unlike the sidebar
            footer, this stays visible while collapsed. -->
@@ -213,10 +231,19 @@ const headerOptions = computed(() => {
           <slot />
         </Page>
       </main>
+
+      <BottomNav
+        :items="bottomNavItems"
+        :current-path="route.path"
+        class="md:hidden"
+      />
     </div>
   </div>
 
-  <ToastStack ref="toastStack" position="bottom-right" />
+  <ToastStack
+    ref="toastStack"
+    :position="isPhone ? 'top-center' : 'bottom-right'"
+  />
 </template>
 
 <style scoped>
