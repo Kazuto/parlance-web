@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import EntriesPage from "~/pages/entries/index.vue";
 import {
   VIEWER,
@@ -109,6 +109,30 @@ describe("history in the editor", () => {
 
     expect(page.wrapper.text()).toContain("Servus {name}");
     expect(useButtons(page)).toHaveLength(0);
+  });
+});
+
+describe("glossary in the editor", () => {
+  it("shows the default text above what the glossary found", async () => {
+    const page = await openEditor(VIEWER);
+
+    await page.wrapper
+      .find(
+        `button[aria-label="${t("context.openFor", { language: "German" })}"]`,
+      )
+      .trigger("click");
+    await settle();
+
+    const text = () => page.wrapper.text();
+
+    await vi.waitFor(() => expect(text()).toContain(t("context.noTerms")));
+
+    const source = text().indexOf(t("context.source", { language: "English" }));
+
+    expect(source).toBeGreaterThan(-1);
+    expect(text().indexOf("Hello {name}", source)).toBeLessThan(
+      text().indexOf(t("context.noTerms")),
+    );
   });
 });
 

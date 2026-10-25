@@ -87,14 +87,17 @@ function changedBy(item: HistoryItem) {
       >
         {{ t("context.noHistory") }}
       </p>
-      <ol class="flex flex-col gap-2">
+      <!-- The header row has the button's height, so it's the same with or without one. -->
+      <ol
+        class="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-800"
+      >
         <li
           v-for="item in items"
           :key="item.id ?? undefined"
-          class="flex flex-col gap-1.5 rounded-2xl border border-neutral-200 bg-white px-3.5 py-3 squircle dark:border-white/5 dark:bg-neutral-800"
+          class="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0"
         >
           <div
-            class="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
+            class="flex min-h-6.5 flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
           >
             <span class="font-semibold">{{ actionLabel(item.action) }}</span>
             <span class="flex items-center gap-1">
@@ -109,7 +112,7 @@ function changedBy(item: HistoryItem) {
             </span>
           </div>
           <p
-            class="truncate text-xs text-neutral-500 dark:text-neutral-400"
+            class="-mt-1 truncate text-xs text-neutral-500 dark:text-neutral-400"
             :title="changedBy(item)"
           >
             {{ t("context.changedBy", { name: changedBy(item) }) }}

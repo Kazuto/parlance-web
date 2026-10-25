@@ -104,7 +104,11 @@ language always comes first, since it is the source.
 - **Entry menu (⋯):** fill the empty languages with machine translation, copy the
   default text into them, edit the entry, or delete it.
 - **Translation context:** the side panel shows the glossary terms that occur in a
-  text and the history of every language.
+  text, approved translations of similar default texts (the translation memory) and
+  the history of every language.
+- **Outdated translations:** when a default text changes, its translations are
+  marked outdated. The side panel shows the text before and after the change;
+  confirm a translation that still fits, or edit it.
 - **Several entries:** tick entries in the list to change their scopes or to
   machine-translate them all.
 

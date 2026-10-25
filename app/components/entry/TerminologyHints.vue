@@ -3,7 +3,7 @@ import { Icon } from "@thkzt/eunoia";
 import { useTerminologySuggestions } from "~/composables/terminology/useTerminologySuggestions";
 
 // Glossary terms in the source text and how this translation uses them, for the
-// context panel's Terminology tab.
+// context panel's Glossary tab.
 const props = defineProps<{
   sourceText: string;
   targetLocaleId: string;
@@ -88,65 +88,69 @@ const STATUS_COLORS = {
           )
         }}
       </span>
-      <div
-        v-for="(match, index) in matches"
-        :key="match.terminology?.id ?? index"
-        class="flex flex-col gap-1.5 rounded-2xl border border-neutral-200 bg-white px-3.5 py-3 squircle dark:border-white/5 dark:bg-neutral-800"
+      <ul
+        class="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-800"
       >
-        <div class="flex items-center gap-2">
-          <!-- One line of text, so term, arrow and translation share a baseline and wrap together. -->
-          <p
-            class="min-w-0 flex-1 text-[13px] font-bold break-words dark:text-neutral-50"
-          >
-            <span>{{
-              match.terminology?.term ?? match.matchedWords?.join(", ")
-            }}</span>
-            <Icon
-              name="arrow-right"
-              type="bold"
-              size="xs"
-              class="mx-1.5 -mt-px align-middle text-neutral-500 dark:text-neutral-300"
-            />
-            <span class="sr-only"> → </span>
-            <span class="text-primary-700 dark:text-primary-500">{{
-              match.targetTranslation
-            }}</span>
-            <span
-              v-if="match.targetStatus === 'REVIEW_STATUS_DRAFT'"
-              class="ml-1.5 rounded-[6px] bg-yellow-50 px-1.5 py-px align-middle text-[10.5px] font-bold text-yellow-700 squircle dark:bg-amber-400/15 dark:text-amber-300"
-              :title="t('review.draftDefinitionHint')"
-              >{{ t("review.draft") }}</span
+        <li
+          v-for="(match, index) in matches"
+          :key="match.terminology?.id ?? index"
+          class="flex flex-col gap-1.5 py-2.5 first:pt-0 last:pb-0"
+        >
+          <div class="flex items-center gap-2">
+            <!-- One line of text, so term, arrow and translation share a baseline and wrap together. -->
+            <p
+              class="min-w-0 flex-1 text-[13px] font-bold break-words dark:text-neutral-50"
             >
+              <span>{{
+                match.terminology?.term ?? match.matchedWords?.join(", ")
+              }}</span>
+              <Icon
+                name="arrow-right"
+                type="bold"
+                size="xs"
+                class="mx-1.5 -mt-px align-middle text-neutral-500 dark:text-neutral-300"
+              />
+              <span class="sr-only"> → </span>
+              <span class="text-primary-700 dark:text-primary-500">{{
+                match.targetTranslation
+              }}</span>
+              <span
+                v-if="match.targetStatus === 'REVIEW_STATUS_DRAFT'"
+                class="ml-1.5 rounded-[6px] bg-yellow-50 px-1.5 py-px align-middle text-[10.5px] font-bold text-yellow-700 squircle dark:bg-amber-400/15 dark:text-amber-300"
+                :title="t('review.draftDefinitionHint')"
+                >{{ t("review.draft") }}</span
+              >
+            </p>
+            <!-- Icon only, so the term keeps the row's width in every language. -->
+            <BaseIconButton
+              dense
+              :icon="copied === match.targetTranslation ? 'check' : 'copy'"
+              :label="
+                t(
+                  copied === match.targetTranslation
+                    ? 'terminologyHints.copied'
+                    : 'terminologyHints.copy',
+                )
+              "
+              class="shrink-0 bg-neutral-100 text-neutral-600 dark:bg-white/5 dark:text-neutral-300"
+              @click="copyTerm(match.targetTranslation ?? '')"
+            />
+          </div>
+          <p
+            v-if="match.terminology?.description"
+            class="whitespace-pre-wrap text-neutral-500 dark:text-neutral-400"
+          >
+            {{ match.terminology.description }}
           </p>
-          <!-- Icon only, so the term keeps the card's width in every language. -->
-          <BaseIconButton
-            dense
-            :icon="copied === match.targetTranslation ? 'check' : 'copy'"
-            :label="
-              t(
-                copied === match.targetTranslation
-                  ? 'terminologyHints.copied'
-                  : 'terminologyHints.copy',
-              )
-            "
-            class="shrink-0 bg-neutral-100 text-neutral-600 dark:bg-white/5 dark:text-neutral-300"
-            @click="copyTerm(match.targetTranslation ?? '')"
-          />
-        </div>
-        <p
-          v-if="match.terminology?.description"
-          class="whitespace-pre-wrap text-neutral-500 dark:text-neutral-400"
-        >
-          {{ match.terminology.description }}
-        </p>
-        <p
-          class="flex items-center gap-1.5 text-[11.5px] font-semibold"
-          :class="STATUS_COLORS[match.status]"
-        >
-          <span class="size-1.5 rounded-full bg-current" />
-          {{ t(`terminologyHints.status.${match.status}`) }}
-        </p>
-      </div>
+          <p
+            class="flex items-center gap-1.5 text-[11.5px] font-semibold"
+            :class="STATUS_COLORS[match.status]"
+          >
+            <span class="size-1.5 rounded-full bg-current" />
+            {{ t(`terminologyHints.status.${match.status}`) }}
+          </p>
+        </li>
+      </ul>
       <NuxtLink
         to="/glossary"
         class="self-start py-0.5 text-xs font-semibold text-primary-600 no-underline hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400"

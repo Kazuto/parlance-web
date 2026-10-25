@@ -339,3 +339,61 @@ export const ReviewLocalizationsResponseSchema = z.object({
     return z.array(LocalizationSchema).nullish();
   },
 });
+export type SearchTranslationMemoryRequest = {
+  sourceText?: string | null;
+  targetLocaleId?: string | null;
+  excludeEntryId?: string | null;
+  limit?: number | null;
+};
+export const SearchTranslationMemoryRequestSchema = z.object({
+  get sourceText(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get targetLocaleId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get excludeEntryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get limit(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type TranslationMemoryMatch = {
+  entryId?: string | null;
+  key?: string | null;
+  sourceText?: string | null;
+  translation?: string | null;
+  similarity?: number | "NaN" | "Infinity" | "-Infinity" | null;
+};
+export const TranslationMemoryMatchSchema = z.object({
+  get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get sourceText(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get translation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get similarity(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<number | "NaN" | "Infinity" | "-Infinity">>
+  > {
+    return z
+      .union([z.number(), z.enum(["NaN", "Infinity", "-Infinity"])])
+      .nullish();
+  },
+});
+export type SearchTranslationMemoryResponse = {
+  matches?: Array<TranslationMemoryMatch> | null;
+};
+export const SearchTranslationMemoryResponseSchema = z.object({
+  get matches(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<TranslationMemoryMatch>>>
+  > {
+    return z.array(TranslationMemoryMatchSchema).nullish();
+  },
+});

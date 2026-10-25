@@ -715,8 +715,9 @@ async function handleSaveAll() {
   );
 }
 
-// Puts an older text from the history back into the field, as an unsaved change.
-function applyHistoryText(text: string) {
+// Puts a text from the context panel, an older one from the history or a match from
+// the translation memory, into the field as an unsaved change.
+function applyContextText(text: string) {
   const entryId = selectedEntryId.value;
   const localeId = activeLocaleId.value;
 
@@ -1154,7 +1155,7 @@ watch(
       <EntryContextPanel
         v-if="contextOpen && activeLocaleId && selectedEntry"
         v-model:tab="contextTab"
-        class="flex-[0_0_280px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
+        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
         :entry-id="String(selectedEntry.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
@@ -1173,7 +1174,7 @@ watch(
         "
         :can-use="canUpdate && !isSaving"
         @close="contextOpen = false"
-        @use="applyHistoryText"
+        @use="applyContextText"
       />
     </div>
     <div

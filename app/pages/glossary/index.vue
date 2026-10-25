@@ -717,7 +717,7 @@ async function handleSave() {
       </SplitView>
       <TerminologyContextPanel
         v-if="contextOpen && activeLocaleId && selectedTerminology"
-        class="flex-[0_0_280px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
+        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
         :terminology-id="String(selectedTerminology.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"

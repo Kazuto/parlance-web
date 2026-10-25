@@ -24,6 +24,9 @@ import {
   ReviewLocalizationsRequestSchema,
   ReviewLocalizationsResponseSchema,
   type ReviewLocalizationsRequest,
+  SearchTranslationMemoryRequestSchema,
+  SearchTranslationMemoryResponseSchema,
+  type SearchTranslationMemoryRequest,
 } from "../schemas/parlance/v1/LocalizationSchema";
 
 export const localizations = {
@@ -123,6 +126,17 @@ export const localizations = {
     {
       input: ReviewLocalizationsRequestSchema,
       output: ReviewLocalizationsResponseSchema,
+    },
+  ),
+  searchMemory: authedEndpoint.query(
+    (data: SearchTranslationMemoryRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocalizationService/SearchTranslationMemory",
+      json: data,
+    }),
+    {
+      input: SearchTranslationMemoryRequestSchema,
+      output: SearchTranslationMemoryResponseSchema,
     },
   ),
 };

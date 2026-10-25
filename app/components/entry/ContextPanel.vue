@@ -16,7 +16,7 @@ const props = defineProps<{
   isDefault: boolean;
   /** When the translation's default text first changed since; unset while current. */
   outdatedAt?: string | null;
-  /** Whether an older text from the history may replace the field's text. */
+  /** Whether an older text or a match from the memory may replace the field's text. */
   canUse?: boolean;
 }>();
 const emit = defineEmits<{ close: []; use: [text: string] }>();
@@ -24,6 +24,7 @@ const { t } = useI18n();
 const tab = defineModel<string>("tab", { default: "terminology" });
 const tabs = computed(() => [
   { value: "terminology", label: t("context.terminology") },
+  { value: "memory", label: t("context.memory") },
   { value: "history", label: t("context.history") },
 ]);
 const page = ref(1);
@@ -58,7 +59,8 @@ const history = computed(() => data.value?.history ?? []);
     @close="emit('close')"
   >
     <template #default="{ tab: currentTab }">
-      <div v-if="currentTab === 'terminology'" class="flex flex-col gap-4">
+      <!-- The default text first, then the glossary terms found in it. -->
+      <div v-if="currentTab === 'terminology'" class="flex flex-col gap-3">
         <p
           v-if="isDefault"
           class="text-[12.5px] leading-relaxed text-neutral-500 dark:text-neutral-400"
@@ -75,15 +77,9 @@ const history = computed(() => data.value?.history ?? []);
             :outdated-at="outdatedAt"
             :source-text="sourceText"
           />
-          <EntryTerminologyHints
-            :key="`${entryId}-${localeId}`"
-            :source-text="sourceText"
-            :target-locale-id="localeId"
-            :translation="translation"
-          />
           <div
-            v-if="sourceText.trim() && !outdatedAt"
-            class="flex flex-col gap-1.5 rounded-2xl bg-neutral-100 px-3.5 py-3 squircle dark:bg-neutral-950"
+            v-else-if="sourceText.trim()"
+            class="flex flex-col gap-1 border-b border-neutral-200 pb-3 dark:border-neutral-800"
           >
             <span
               class="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400"
@@ -97,8 +93,35 @@ const history = computed(() => data.value?.history ?? []);
               >{{ sourceText }}</span
             >
           </div>
+          <EntryTerminologyHints
+            :key="`${entryId}-${localeId}`"
+            :source-text="sourceText"
+            :target-locale-id="localeId"
+            :translation="translation"
+          />
         </template>
       </div>
+      <template v-else-if="currentTab === 'memory'">
+        <p
+          v-if="isDefault"
+          class="text-[12.5px] leading-relaxed text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("context.memoryDefaultHint") }}
+        </p>
+        <EntryMemoryMatches
+          v-else
+          :entry-id="entryId"
+          :source-text="sourceText"
+          :source-locale-name="sourceLocaleName"
+          :source-locale-code="sourceLocaleCode"
+          :target-locale-id="localeId"
+          :locale-name="localeName"
+          :locale-code="localeCode"
+          :current="translation"
+          :can-use="canUse"
+          @use="emit('use', $event)"
+        />
+      </template>
       <EditorHistoryList
         v-else
         v-model:page="page"
