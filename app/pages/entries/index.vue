@@ -1074,6 +1074,10 @@ function onCommand(value: string) {
                     :suggestion="suggestionFor(String(item.key), localeId)"
                     :value="currentEntryForms[localeId] ?? ''"
                   />
+                  <EditorQaNotice
+                    :source="currentEntryForms[defaultLocale.id] ?? ''"
+                    :value="currentEntryForms[localeId] ?? ''"
+                  />
                 </div>
               </template>
             </EditorTranslationRow>
