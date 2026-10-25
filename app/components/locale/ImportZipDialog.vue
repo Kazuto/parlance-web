@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { Button, Checkbox, Dialog, Dropzone, Select } from "@thkzt/eunoia";
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  Dropzone,
+  Select,
+  Stepper,
+} from "@thkzt/eunoia";
 import { useZipImport } from "~/composables/import/useZipImport";
-import type { ImportMode } from "~/lib/api/schemas/parlance/v1/ImportSchema";
+import type {
+  ImportMode,
+  ImportZipResponse,
+} from "~/lib/api/schemas/parlance/v1/ImportSchema";
+import { languageName } from "~/lib/languageNames";
 
 defineProps<{
   open: boolean;
@@ -11,7 +22,7 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const { t } = useI18n();
+const { t, locale: uiLocale } = useI18n();
 const { showError, showSuccess } = useErrorHelper();
 const { importZip, isPending } = useZipImport();
 
@@ -23,6 +34,31 @@ const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
 
 const hasFile = computed(() => !!file.value);
+// The import is tried first, and its preview confirmed. A preview is only good for
+// the inputs it was made with.
+const preview = ref<ImportZipResponse>();
+
+watch([file, mode, approve], () => {
+  preview.value = undefined;
+});
+
+// The settings and file, then the preview to confirm; going back drops the preview.
+const steps = [
+  { label: t("transfer.stepFile") },
+  { label: t("transfer.stepReview") },
+];
+const step = computed({
+  get: () => (preview.value ? 1 : 0),
+  set: (value) => {
+    if (value === 0) preview.value = undefined;
+  },
+});
+
+const fileName = (code: string) => {
+  const name = languageName(code, uiLocale.value);
+
+  return name ? `${name} (${code})` : code;
+};
 
 const modeOptions = [
   {
@@ -50,13 +86,22 @@ async function handleSubmit() {
     return;
   }
 
+  const dryRun = !preview.value;
+
   try {
     const result = await importZip(
       file.value,
       [],
       mode.value,
       canApprove.value && approve.value,
+      dryRun,
     );
+
+    if (dryRun) {
+      preview.value = result;
+
+      return;
+    }
 
     const totalProcessed = result.results?.length ?? 0;
     const created = result.totalCreated ?? 0;
@@ -82,15 +127,21 @@ async function handleSubmit() {
       );
     }
 
+    reset();
     emit("close");
   } catch (error) {
     showError(error);
   }
 }
 
+function reset() {
+  file.value = undefined;
+  preview.value = undefined;
+}
+
 function handleClose() {
   if (!isPending.value) {
-    file.value = undefined;
+    reset();
     emit("close");
   }
 }
@@ -104,31 +155,63 @@ function handleClose() {
     @close="handleClose"
   >
     <form class="space-y-4" @submit.prevent="handleSubmit">
-      <Dropzone
-        v-model="file"
-        :label="t('import.zip.file')"
-        :description="t('import.zip.description')"
-        accept=".zip,application/zip"
-        :disabled="isPending"
-      />
+      <!-- The stepper has no margin of its own, so the form's spacing misses it. -->
+      <div class="py-2">
+        <Stepper v-model="step" :steps :clickable="!isPending" dense />
+      </div>
 
-      <Select
-        v-model="mode"
-        teleport-to="body"
-        :options="modeOptions"
-        :disabled="isPending"
-      >
-        {{ t("import.mode") }}
-      </Select>
+      <template v-if="!preview">
+        <Dropzone
+          v-model="file"
+          :label="t('import.zip.file')"
+          :description="t('import.zip.description')"
+          accept=".zip,application/zip"
+          :disabled="isPending"
+        />
 
-      <Checkbox
-        v-if="canApprove"
-        v-model="approve"
-        :disabled="isPending"
-        :helper="t('transfer.approveHelp')"
-      >
-        <template #description>{{ t("transfer.approve") }}</template>
-      </Checkbox>
+        <Select
+          v-model="mode"
+          teleport-to="body"
+          :options="modeOptions"
+          :disabled="isPending"
+        >
+          {{ t("import.mode") }}
+        </Select>
+
+        <Checkbox
+          v-if="canApprove"
+          v-model="approve"
+          :disabled="isPending"
+          :helper="t('transfer.approveHelp')"
+        >
+          <template #description>{{ t("transfer.approve") }}</template>
+        </Checkbox>
+      </template>
+
+      <section v-else class="space-y-4" :aria-label="t('importPreview.title')">
+        <p role="status" class="text-sm text-neutral-500 dark:text-neutral-400">
+          {{ t("importPreview.hint") }}
+        </p>
+        <section
+          v-for="item in preview.results ?? []"
+          :key="item.localeCode ?? ''"
+          class="space-y-2"
+          :aria-label="fileName(item.localeCode ?? '')"
+        >
+          <h3 class="text-sm font-bold dark:text-neutral-100">
+            {{ fileName(item.localeCode ?? "") }}
+          </h3>
+          <p v-if="item.error" role="alert" class="text-sm text-red-600">
+            {{ item.error }}
+          </p>
+          <EntryImportPreview
+            v-else-if="item.result"
+            :result="item.result"
+            :locale-code="item.localeCode ?? undefined"
+            :in-zip="(preview.results?.length ?? 0) > 1"
+          />
+        </section>
+      </section>
     </form>
 
     <template #footer>
@@ -136,8 +219,23 @@ function handleClose() {
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ t("common.cancel") }}
         </Button>
+        <Button
+          v-if="preview"
+          type="button"
+          ghost
+          :disabled="isPending"
+          @click="step = 0"
+        >
+          {{ t("common.back") }}
+        </Button>
         <Button primary :disabled="isPending || !hasFile" @click="handleSubmit">
-          {{ isPending ? t("import.importing") : t("import.zip.import") }}
+          {{
+            isPending
+              ? t("import.importing")
+              : preview
+                ? t("import.zip.import")
+                : t("transfer.preview")
+          }}
         </Button>
       </div>
     </template>

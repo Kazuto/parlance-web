@@ -12,6 +12,16 @@ export const ImportModeSchema = z.union([
   z.number().int().min(-2147483648).max(2147483647),
 ]);
 export type ImportMode = z.infer<typeof ImportModeSchema>;
+export const ImportChangeActionSchema = z.union([
+  z.enum([
+    "IMPORT_CHANGE_ACTION_UNSPECIFIED",
+    "IMPORT_CHANGE_ACTION_ADD",
+    "IMPORT_CHANGE_ACTION_CHANGE",
+    "IMPORT_CHANGE_ACTION_REMOVE",
+  ]),
+  z.number().int().min(-2147483648).max(2147483647),
+]);
+export type ImportChangeAction = z.infer<typeof ImportChangeActionSchema>;
 export type ImportPhpRequest = {
   localeId?: string | null;
   scopeIds?: Array<string> | null;
@@ -19,6 +29,7 @@ export type ImportPhpRequest = {
   filename?: string | null;
   mode?: ImportMode | null;
   approve?: boolean | null;
+  dryRun?: boolean | null;
 };
 export const ImportPhpRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -39,6 +50,9 @@ export const ImportPhpRequestSchema = z.object({
   get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportPhpResponse = {
   result?: ImportResult | null;
@@ -55,6 +69,7 @@ export type ImportJsonRequest = {
   filename?: string | null;
   mode?: ImportMode | null;
   approve?: boolean | null;
+  dryRun?: boolean | null;
 };
 export const ImportJsonRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -75,6 +90,9 @@ export const ImportJsonRequestSchema = z.object({
   get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportJsonResponse = {
   result?: ImportResult | null;
@@ -91,6 +109,7 @@ export type ImportPoRequest = {
   filename?: string | null;
   mode?: ImportMode | null;
   approve?: boolean | null;
+  dryRun?: boolean | null;
 };
 export const ImportPoRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -111,6 +130,9 @@ export const ImportPoRequestSchema = z.object({
   get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportPoResponse = {
   result?: ImportResult | null;
@@ -126,6 +148,11 @@ export type ImportResult = {
   entriesSkipped?: number | null;
   entriesFailed?: number | null;
   errors?: Array<ImportError> | null;
+  changes?: Array<ImportChange> | null;
+  translationsAdded?: number | null;
+  translationsChanged?: number | null;
+  translationsRemoved?: number | null;
+  translationsOutdated?: number | null;
 };
 export const ImportResultSchema = z.object({
   get entriesCreated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
@@ -142,6 +169,45 @@ export const ImportResultSchema = z.object({
   },
   get errors(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<ImportError>>>> {
     return z.array(ImportErrorSchema).nullish();
+  },
+  get changes(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<ImportChange>>>> {
+    return z.array(ImportChangeSchema).nullish();
+  },
+  get translationsAdded(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get translationsChanged(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get translationsRemoved(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get translationsOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type ImportChange = {
+  key?: string | null;
+  action?: ImportChangeAction | null;
+  oldTranslation?: string | null;
+  newTranslation?: string | null;
+  sourceTranslation?: string | null;
+};
+export const ImportChangeSchema = z.object({
+  get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get action(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportChangeAction>>> {
+    return ImportChangeActionSchema.nullish();
+  },
+  get oldTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get newTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get sourceTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type ImportError = {
@@ -161,6 +227,7 @@ export type ImportZipRequest = {
   scopeIds?: Array<string> | null;
   mode?: ImportMode | null;
   approve?: boolean | null;
+  dryRun?: boolean | null;
 };
 export const ImportZipRequestSchema = z.object({
   get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -173,6 +240,9 @@ export const ImportZipRequestSchema = z.object({
     return ImportModeSchema.nullish();
   },
   get approve(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });

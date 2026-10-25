@@ -124,7 +124,9 @@ Under Import / export:
 
 An import goes into one language and can add the imported entries to scopes. The
 import mode decides what happens to existing entries: create or update, create
-only, update only, or replace all.
+only, update only, or replace all. Every import shows a preview first: what it adds,
+changes and removes, with the old and new text, and how many translations in other
+languages it would mark outdated. Nothing changes until you confirm.
 
 ### Your account
 

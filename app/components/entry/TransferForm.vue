@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Checkbox, Dropzone, Select } from "@thkzt/eunoia";
+import { Button, Checkbox, Dropzone, Select, Stepper } from "@thkzt/eunoia";
 import { useMutation } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import { useTranslationDataInvalidation } from "~/lib/api/invalidation";
@@ -36,7 +36,17 @@ const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
 const file = ref<File>();
 const error = ref<string>();
+// An import is tried first, and its preview confirmed; then its result shows.
+const preview = ref<ImportResult>();
 const result = ref<ImportResult>();
+// Its steps: the settings and file, then the preview to confirm. Once it's kept, both
+// are done.
+const step = computed({
+  get: () => (result.value ? 2 : preview.value ? 1 : 0),
+  set: (value) => {
+    if (value === 0) back();
+  },
+});
 const { t } = useI18n();
 const localeName = useLocaleName();
 const { showSuccess, showError, getErrorMessage } = useErrorHelper();
@@ -71,6 +81,10 @@ const fileAccept = computed(() =>
       ? ".po,text/x-gettext-translation"
       : ".php",
 );
+const steps = [
+  { label: t("transfer.stepFile") },
+  { label: t("transfer.stepReview") },
+];
 const modeOptions = [
   { label: t("transfer.upsert"), value: "IMPORT_MODE_CREATE_OR_UPDATE" },
   { label: t("transfer.createOnly"), value: "IMPORT_MODE_CREATE_ONLY" },
@@ -92,12 +106,28 @@ watch(
 );
 watch(format, () => {
   file.value = undefined;
-  result.value = undefined;
   error.value = undefined;
 });
-watch(file, () => {
+// A preview is only good for the inputs it was made with.
+watch(
+  [localeId, format, scopeIds, mode, approve, file],
+  () => {
+    preview.value = undefined;
+    result.value = undefined;
+  },
+  { deep: true },
+);
+
+// Back to the settings, which drops the preview made from them
+function back() {
+  preview.value = undefined;
+  error.value = undefined;
+}
+
+function startOver() {
   result.value = undefined;
-});
+  file.value = undefined;
+}
 
 function encodeFile(value: File): Promise<string> {
   return fileToBase64(value).catch(() => {
@@ -105,22 +135,25 @@ function encodeFile(value: File): Promise<string> {
   });
 }
 
+const selectedLocale = computed(() =>
+  props.locales.find((item) => item.id === localeId.value),
+);
+// A finished import is done until something changes.
 const canSubmit = computed(
-  () => !isPending.value && localeOptions.value.length > 0,
+  () => !isPending.value && localeOptions.value.length > 0 && !result.value,
 );
 const submitLabel = computed(() => {
   if (isPending.value) return t("common.processing");
+  if (props.action === "export") return t("transfer.download");
 
-  return props.action === "import"
-    ? t("entries.import")
-    : t("transfer.download");
+  return preview.value ? t("entries.import") : t("transfer.preview");
 });
 
 async function handleSubmit() {
   if (isPending.value) return;
   error.value = undefined;
 
-  const locale = props.locales.find((item) => item.id === localeId.value);
+  const locale = selectedLocale.value;
 
   if (!locale?.id || !locale.code) {
     error.value = t("transfer.languageRequired");
@@ -135,7 +168,6 @@ async function handleSubmit() {
   }
 
   isPending.value = true;
-  result.value = undefined;
 
   try {
     if (props.action === "import") {
@@ -147,6 +179,7 @@ async function handleSubmit() {
         mode: mode.value,
         scopeIds: scopeIds.value,
         approve: canApprove.value && approve.value,
+        dryRun: !preview.value,
       };
       const response = await (format.value === "po"
         ? importPo.mutateAsync(input)
@@ -155,8 +188,14 @@ async function handleSubmit() {
           : importJson.mutateAsync(input));
 
       if (!response.result) throw new Error(t("transfer.missingImportResult"));
-      result.value = response.result;
-      await invalidateTranslationData();
+
+      if (input.dryRun) {
+        preview.value = response.result;
+      } else {
+        preview.value = undefined;
+        result.value = response.result;
+        await invalidateTranslationData();
+      }
     } else {
       const input = {
         localeCode: locale.code,
@@ -199,94 +238,116 @@ defineExpose({
   submitLabel,
   /** An import finished, so its summary shows and only closing is left. */
   done: computed(() => !!result.value),
+  /** An import's preview shows, so its settings can be changed again. */
+  canGoBack: computed(() => step.value === 1),
+  back,
 });
 </script>
 
 <template>
   <form class="space-y-4" @submit.prevent="handleSubmit">
-    <Select
-      v-model="localeId"
-      teleport-to="body"
-      :options="localeOptions"
-      :disabled="isPending"
-      :placeholder="t('transfer.selectLanguage')"
-      >{{ t("common.language") }}</Select
-    >
-    <Select
-      v-model="format"
-      teleport-to="body"
-      :options="formatOptions"
-      :disabled="isPending"
-      >{{ t("common.format") }}</Select
-    >
-    <div class="space-y-1">
-      <Select
-        v-model="scopeIds"
-        teleport-to="body"
-        multiple
-        :options="scopeOptions"
-        :disabled="isPending || scopesLoading"
-        :invalid="!!scopeError"
-        :placeholder="t(action === 'import' ? 'scopes.select' : 'scopes.all')"
-        >{{ t("scopes.title") }}</Select
-      >
-      <p v-if="scopeError" role="alert" class="text-xs text-red-600">
-        {{ t("scopes.loadFailed") }}
-      </p>
-      <p
-        v-else-if="action === 'import'"
-        class="text-xs text-neutral-500 dark:text-neutral-400"
-      >
-        {{ t("transfer.importScopeHelp") }}
-      </p>
+    <!-- The stepper has no margin of its own, so the form's spacing misses it. -->
+    <div v-if="action === 'import'" class="py-2">
+      <Stepper v-model="step" :steps :clickable="!result && !isPending" dense />
     </div>
-    <template v-if="action === 'import'">
+    <template v-if="step === 0">
       <Select
-        v-model="mode"
+        v-model="localeId"
         teleport-to="body"
-        :options="modeOptions"
+        :options="localeOptions"
         :disabled="isPending"
-        >{{ t("transfer.behavior") }}</Select
+        :placeholder="t('transfer.selectLanguage')"
+        >{{ t("common.language") }}</Select
       >
-      <Checkbox
-        v-if="canApprove"
-        v-model="approve"
+      <Select
+        v-model="format"
+        teleport-to="body"
+        :options="formatOptions"
         :disabled="isPending"
-        :helper="t('transfer.approveHelp')"
+        >{{ t("common.format") }}</Select
       >
-        <template #description>{{ t("transfer.approve") }}</template>
-      </Checkbox>
-      <Dropzone
-        v-model="file"
-        :accept="fileAccept"
-        :disabled="isPending"
-        :helper="
-          t(format === 'po' ? 'transfer.poImportHelp' : 'transfer.importHelp')
-        "
-        >{{ t("transfer.file") }}</Dropzone
-      >
-    </template>
-    <Checkbox
-      v-if="action === 'export'"
-      v-model="includeDrafts"
-      :disabled="isPending"
-      :helper="t('transfer.includeDraftsHelp')"
-    >
-      <template #description>{{ t("transfer.includeDrafts") }}</template>
-    </Checkbox>
-    <p
-      v-if="action === 'export'"
-      class="text-sm text-neutral-500 dark:text-neutral-400"
-    >
-      {{
-        selectedScopeNames
-          ? t("transfer.exportScopeHelp", { scopes: selectedScopeNames })
-          : t("transfer.exportHelp")
-      }}
-      <template v-if="format === 'po'">
-        {{ t("transfer.poExportHelp") }}
+      <div class="space-y-1">
+        <Select
+          v-model="scopeIds"
+          teleport-to="body"
+          multiple
+          :options="scopeOptions"
+          :disabled="isPending || scopesLoading"
+          :invalid="!!scopeError"
+          :placeholder="t(action === 'import' ? 'scopes.select' : 'scopes.all')"
+          >{{ t("scopes.title") }}</Select
+        >
+        <p v-if="scopeError" role="alert" class="text-xs text-red-600">
+          {{ t("scopes.loadFailed") }}
+        </p>
+        <p
+          v-else-if="action === 'import'"
+          class="text-xs text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("transfer.importScopeHelp") }}
+        </p>
+      </div>
+      <template v-if="action === 'import'">
+        <Select
+          v-model="mode"
+          teleport-to="body"
+          :options="modeOptions"
+          :disabled="isPending"
+          >{{ t("transfer.behavior") }}</Select
+        >
+        <Checkbox
+          v-if="canApprove"
+          v-model="approve"
+          :disabled="isPending"
+          :helper="t('transfer.approveHelp')"
+        >
+          <template #description>{{ t("transfer.approve") }}</template>
+        </Checkbox>
+        <Dropzone
+          v-model="file"
+          :accept="fileAccept"
+          :disabled="isPending"
+          :helper="
+            t(format === 'po' ? 'transfer.poImportHelp' : 'transfer.importHelp')
+          "
+          >{{ t("transfer.file") }}</Dropzone
+        >
       </template>
-    </p>
+      <Checkbox
+        v-if="action === 'export'"
+        v-model="includeDrafts"
+        :disabled="isPending"
+        :helper="t('transfer.includeDraftsHelp')"
+      >
+        <template #description>{{ t("transfer.includeDrafts") }}</template>
+      </Checkbox>
+      <p
+        v-if="action === 'export'"
+        class="text-sm text-neutral-500 dark:text-neutral-400"
+      >
+        {{
+          selectedScopeNames
+            ? t("transfer.exportScopeHelp", { scopes: selectedScopeNames })
+            : t("transfer.exportHelp")
+        }}
+        <template v-if="format === 'po'">
+          {{ t("transfer.poExportHelp") }}
+        </template>
+      </p>
+    </template>
+    <section
+      v-else-if="step === 1 && preview"
+      class="space-y-3"
+      :aria-label="t('importPreview.title')"
+    >
+      <p role="status" class="text-sm text-neutral-500 dark:text-neutral-400">
+        {{ t("importPreview.hint") }}
+      </p>
+      <EntryImportPreview
+        :result="preview"
+        :locale-code="selectedLocale?.code ?? undefined"
+      />
+    </section>
     <div
       v-if="result"
       role="status"
@@ -313,7 +374,18 @@ defineExpose({
     </div>
     <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
     <div v-if="!externalActions" class="flex justify-end gap-3 pt-4">
-      <Button type="submit" primary :disabled="!canSubmit">{{
+      <Button
+        v-if="step === 1"
+        type="button"
+        ghost
+        :disabled="isPending"
+        @click="back"
+        >{{ t("common.back") }}</Button
+      >
+      <Button v-if="result" type="button" @click="startOver">{{
+        t("transfer.importAnother")
+      }}</Button>
+      <Button v-else type="submit" primary :disabled="!canSubmit">{{
         submitLabel
       }}</Button>
     </div>

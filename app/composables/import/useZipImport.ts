@@ -7,9 +7,11 @@ import type { ImportMode } from "~/lib/api/schemas/parlance/v1/ImportSchema";
 export function useZipImport() {
   const invalidateTranslationData = useTranslationDataInvalidation();
 
+  // A dry run changes nothing to refresh.
   const { mutateAsync, isPending } = useMutation({
     ...api.imports.importZip.use(),
-    onSuccess: invalidateTranslationData,
+    onSuccess: (_data, variables) =>
+      variables.dryRun ? undefined : invalidateTranslationData(),
   });
 
   async function importZip(
@@ -17,12 +19,14 @@ export function useZipImport() {
     scopeIds: string[] = [],
     mode: ImportMode = "IMPORT_MODE_CREATE_OR_UPDATE",
     approve = false,
+    dryRun = false,
   ) {
     return await mutateAsync({
       fileContent: await fileToBase64(file),
       scopeIds,
       mode,
       approve,
+      dryRun,
     });
   }
 

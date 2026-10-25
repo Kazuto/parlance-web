@@ -158,8 +158,17 @@ export const pagination = (total: number) => ({
 });
 
 /** Translates a key the way the app does, so tests need not repeat English copy. */
-export function t(key: string, params?: Record<string, unknown>) {
-  return useNuxtApp().$i18n.t(key, params ?? {});
+/** A message of the app's catalog; `plural` picks the form of a pluralized one. */
+export function t(
+  key: string,
+  params?: Record<string, unknown>,
+  plural?: number,
+) {
+  const { $i18n } = useNuxtApp();
+
+  return plural === undefined
+    ? $i18n.t(key, params ?? {})
+    : $i18n.t(key, params ?? {}, plural);
 }
 
 export type MountedPage = {

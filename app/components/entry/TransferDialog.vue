@@ -18,6 +18,8 @@ const form = ref<{
   canSubmit: boolean;
   submitLabel: string;
   done: boolean;
+  canGoBack: boolean;
+  back: () => void;
 }>();
 
 // Remount the form on every open so it starts from a clean state.
@@ -57,7 +59,21 @@ function handleClose() {
         <Button type="button" ghost :disabled="isPending" @click="handleClose">
           {{ form?.done ? t("common.close") : t("common.cancel") }}
         </Button>
-        <Button primary :disabled="!form?.canSubmit" @click="form?.submit()">
+        <Button
+          v-if="form?.canGoBack"
+          type="button"
+          ghost
+          :disabled="isPending"
+          @click="form?.back()"
+        >
+          {{ t("common.back") }}
+        </Button>
+        <Button
+          v-if="!form?.done"
+          primary
+          :disabled="!form?.canSubmit"
+          @click="form?.submit()"
+        >
           {{ form?.submitLabel }}
         </Button>
       </div>
