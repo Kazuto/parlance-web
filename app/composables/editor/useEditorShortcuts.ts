@@ -9,10 +9,9 @@ export const EDITOR_SHORTCUTS = {
   next: "Alt+ArrowDown",
   approveAll: "Alt+Enter",
   copySource: "Mod+D",
-  palette: "Mod+K",
 } as const;
 
-type EditorAction = Exclude<keyof typeof EDITOR_SHORTCUTS, "palette">;
+type EditorAction = keyof typeof EDITOR_SHORTCUTS;
 
 /**
  * Binds the editor's shortcuts while the page is open. They work while typing in a

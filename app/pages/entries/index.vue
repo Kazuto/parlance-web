@@ -6,9 +6,7 @@ import {
   SplitView,
   type SplitViewItem,
   Chip,
-  CommandPalette,
   Input,
-  Kbd,
 } from "@thkzt/eunoia";
 import { useEditorCommands } from "~/composables/editor/useEditorCommands";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
@@ -16,10 +14,7 @@ import { useEditorContextPanel } from "~/composables/editor/useEditorContextPane
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
-import {
-  EDITOR_SHORTCUTS,
-  useEditorShortcuts,
-} from "~/composables/editor/useEditorShortcuts";
+import { useEditorShortcuts } from "~/composables/editor/useEditorShortcuts";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
@@ -760,21 +755,11 @@ useEditorShortcuts({
   copySource: () => copySourceTo(focusedLocaleId()),
 });
 
-const paletteOpen = ref(false);
 // The palette takes the focus once it shows, so the language its commands act on
 // is read the moment it opens.
 const paletteLocaleId = ref<string>();
-
-watch(
-  paletteOpen,
-  (open) => {
-    if (open) paletteLocaleId.value = focusedLocaleId();
-  },
-  { flush: "sync" },
-);
-
 const searchBox = useTemplateRef<HTMLElement>("searchBox");
-const { items: commandItems, run: runCommand } = useEditorCommands({
+const { open: paletteOpen } = useEditorCommands({
   entryActions,
   entries: splitViewItems,
   statusOptions,
@@ -825,11 +810,13 @@ const { items: commandItems, run: runCommand } = useEditorCommands({
   },
 });
 
-// Closing the palette gives the focus back to where it was, so commands that move
-// the focus or open a dialog wait until it has closed.
-function onCommand(value: string) {
-  setTimeout(() => runCommand(value));
-}
+watch(
+  paletteOpen,
+  (open) => {
+    if (open) paletteLocaleId.value = focusedLocaleId();
+  },
+  { flush: "sync" },
+);
 </script>
 
 <template>
@@ -1153,14 +1140,7 @@ function onCommand(value: string) {
             }}</span
           >
         </span>
-        <button
-          type="button"
-          class="flex cursor-pointer items-center gap-1.5 rounded-lg text-xs text-neutral-500 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none max-sm:hidden dark:text-neutral-400 dark:hover:text-neutral-100"
-          @click="paletteOpen = true"
-        >
-          <Kbd :shortcut="EDITOR_SHORTCUTS.palette" dense />
-          {{ t("commands.open") }}
-        </button>
+        <CommandPaletteHint class="max-sm:hidden" />
       </div>
       <EditorWorkspaceActions
         v-can="'update_entry'"
@@ -1174,12 +1154,6 @@ function onCommand(value: string) {
       />
     </div>
   </section>
-  <CommandPalette
-    v-model:open="paletteOpen"
-    :items="commandItems"
-    :shortcut="EDITOR_SHORTCUTS.palette"
-    @select="onCommand"
-  />
   <EditorSaveAllDialog
     :open="showSaveAllDialog"
     :title="t('entries.saveAllTitle')"

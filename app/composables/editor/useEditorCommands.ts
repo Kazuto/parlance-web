@@ -1,17 +1,14 @@
-import type {
-  ActionMenuItem,
-  CommandPaletteItem,
-  SplitViewItem,
-} from "@thkzt/eunoia";
+import type { ActionMenuItem, SplitViewItem } from "@thkzt/eunoia";
 import type { Ref } from "vue";
 import { EDITOR_SHORTCUTS } from "~/composables/editor/useEditorShortcuts";
+import { useCommands, type AppCommand } from "~/composables/useCommands";
 
 // Searching thousands of keys would slow the palette down; the list search is for that.
 const MAX_ENTRIES = 500;
 
 /**
- * The command palette of the entry editor: what can be done with the open entry,
- * the loaded entries to jump to, the status filters and the other pages.
+ * What the entry editor adds to the command palette: what can be done with the
+ * open entry, the loaded entries to jump to and the status filters.
  */
 export function useEditorCommands(options: {
   /** The entry header's actions, which bring their own permissions and blockers. */
@@ -42,14 +39,15 @@ export function useEditorCommands(options: {
   };
 }) {
   const { t } = useI18n();
-  const { mainItems, settingsItems } = useNavigation();
+  const { handlers } = options;
 
-  const items = computed<CommandPaletteItem[]>(() => {
+  const commands = computed<AppCommand[]>(() => {
     const entryGroup = t("commands.groupEntry");
-    const commands: CommandPaletteItem[] = [
+    const commands: AppCommand[] = [
       {
         label: t("common.saveChanges"),
         value: "save",
+        run: handlers.save,
         group: entryGroup,
         icon: "floppy-disk",
         shortcut: EDITOR_SHORTCUTS.save,
@@ -58,6 +56,7 @@ export function useEditorCommands(options: {
       {
         label: t("commands.saveAndNext"),
         value: "saveAndNext",
+        run: handlers.saveAndNext,
         group: entryGroup,
         icon: "arrow-down",
         shortcut: EDITOR_SHORTCUTS.saveAndNext,
@@ -65,6 +64,7 @@ export function useEditorCommands(options: {
       {
         label: t("commands.previousEntry"),
         value: "previous",
+        run: handlers.previous,
         group: entryGroup,
         icon: "caret-up",
         shortcut: EDITOR_SHORTCUTS.previous,
@@ -72,6 +72,7 @@ export function useEditorCommands(options: {
       {
         label: t("commands.nextEntry"),
         value: "next",
+        run: handlers.next,
         group: entryGroup,
         icon: "caret-down",
         shortcut: EDITOR_SHORTCUTS.next,
@@ -82,6 +83,7 @@ export function useEditorCommands(options: {
       commands.push({
         label: t("commands.approveAll"),
         value: "approveAll",
+        run: handlers.approveAll,
         group: entryGroup,
         icon: "seal-check",
         shortcut: EDITOR_SHORTCUTS.approveAll,
@@ -99,6 +101,7 @@ export function useEditorCommands(options: {
           ? t("commands.copySourceTo", { language: focused.name })
           : t("commands.copySourceFocused"),
         value: "copySource",
+        run: handlers.copySource,
         group: entryGroup,
         icon: "copy",
         shortcut: EDITOR_SHORTCUTS.copySource,
@@ -113,6 +116,7 @@ export function useEditorCommands(options: {
         .map((action) => ({
           label: action.label,
           value: `action:${action.value}`,
+          run: () => handlers.action(action.value),
           group: entryGroup,
           icon: action.icon,
           disabled: action.disabled,
@@ -120,12 +124,14 @@ export function useEditorCommands(options: {
       {
         label: t("commands.toggleContext"),
         value: "toggleContext",
+        run: handlers.toggleContext,
         group: entryGroup,
         icon: "sidebar",
       },
       {
         label: t("commands.focusSearch"),
         value: "focusSearch",
+        run: handlers.focusSearch,
         group: entryGroup,
         icon: "magnifying-glass",
         shortcut: "/",
@@ -136,6 +142,7 @@ export function useEditorCommands(options: {
       commands.push({
         label: t("entries.create"),
         value: "create",
+        run: handlers.create,
         group: entryGroup,
         icon: "plus",
       });
@@ -147,6 +154,7 @@ export function useEditorCommands(options: {
       commands.push({
         label: t("commands.showStatus", { status: option.label }),
         value: `status:${option.value}`,
+        run: () => handlers.status(option.value),
         group: filterGroup,
         icon: "funnel",
       });
@@ -158,41 +166,15 @@ export function useEditorCommands(options: {
       commands.push({
         label: entry.label,
         value: `entry:${entry.key}`,
+        run: () => handlers.entry(String(entry.key)),
         group: entriesGroup,
         icon: "translate",
         keywords: [String(entry.defaultTranslation ?? "")],
       });
     }
 
-    const pagesGroup = t("commands.groupPages");
-
-    for (const page of [...mainItems.value, ...settingsItems.value]) {
-      if (!page.to) continue;
-      commands.push({
-        label: page.label,
-        value: `page:${page.to}`,
-        group: pagesGroup,
-        icon: page.icon,
-      });
-    }
-
     return commands;
   });
 
-  function run(value: string) {
-    // Page paths and ids follow the first colon; plain commands have none.
-    const separator = value.indexOf(":");
-    const kind = separator < 0 ? value : value.slice(0, separator);
-    const argument = value.slice(separator + 1);
-    const { handlers } = options;
-
-    if (kind === "action") handlers.action(argument);
-    else if (kind === "entry") handlers.entry(argument);
-    else if (kind === "status") handlers.status(argument);
-    else if (kind === "page") navigateTo(argument);
-    else if (kind in handlers)
-      (handlers[kind as keyof typeof handlers] as () => unknown)();
-  }
-
-  return { items, run };
+  return useCommands(() => commands.value);
 }

@@ -69,6 +69,9 @@ provide("toastStack", toastStack);
 
 const pageOptions = usePageProvider();
 
+// The command palette opens on every page, with what the open page adds to it.
+const { open: paletteOpen, commands: pageCommands } = useCommandsProvider();
+
 const isWorkspace = computed(() => pageOptions.value.layout === "workspace");
 
 const libraryPageOptions = computed(() => {
@@ -126,6 +129,8 @@ const headerOptions = computed(() => {
             :items="settingsMenuItems"
             :current-path="route.path"
           />
+          <!-- Collapsed, the sidebar is only as wide as its icons. -->
+          <CommandPaletteHint v-if="!sidebarCollapsed" class="mx-5 mb-4" />
         </div>
       </div>
     </Sidebar>
@@ -171,6 +176,8 @@ const headerOptions = computed(() => {
       />
     </div>
   </div>
+
+  <AppCommandPalette v-model:open="paletteOpen" :commands="pageCommands" />
 
   <ToastStack
     ref="toastStack"

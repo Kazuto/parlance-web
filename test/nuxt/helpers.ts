@@ -3,6 +3,7 @@ import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { useQueryClient } from "@tanstack/vue-query";
 import type { Component } from "vue";
 import type { RouteLocationRaw } from "vue-router";
+import AppCommandPalette from "~/components/AppCommandPalette.vue";
 import type { AppPageOptions } from "~/composables/usePage";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
@@ -175,9 +176,9 @@ export type MountedPage = {
 };
 
 /**
- * Mounts a page under a stand-in for the layout, which provides the page options.
- * Pages that look fields up by id or move the focus need to be attached to the
- * document.
+ * Mounts a page under a stand-in for the layout, which provides the page options
+ * and the command palette. Pages that look fields up by id or move the focus need
+ * to be attached to the document.
  */
 export async function mountPage(
   page: Component,
@@ -190,7 +191,16 @@ export async function mountPage(
       // The layout provides the toast stack the pages report through.
       provide("toastStack", ref(null));
 
-      return () => h(page);
+      const palette = useCommandsProvider();
+
+      return () => [
+        h(page),
+        h(AppCommandPalette, {
+          open: palette.open.value,
+          "onUpdate:open": (open: boolean) => (palette.open.value = open),
+          commands: palette.commands.value,
+        }),
+      ];
     },
   });
 
