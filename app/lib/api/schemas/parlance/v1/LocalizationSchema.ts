@@ -27,6 +27,8 @@ export type Localization = {
   reviewedBy?: string | null;
   reviewedAt?: string | null;
   reviewComment?: string | null;
+  outdated?: boolean | null;
+  outdatedAt?: string | null;
 };
 export const LocalizationSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -66,6 +68,12 @@ export const LocalizationSchema = z.object({
     return z.string().nullish();
   },
   get reviewComment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get outdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get outdatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -294,6 +302,7 @@ export type ReviewLocalizationsRequest = {
   decision?: ReviewDecision | null;
   comment?: string | null;
   skipApproved?: boolean | null;
+  confirmOutdated?: boolean | null;
 };
 export const ReviewLocalizationsRequestSchema = z.object({
   get localizationIds(): z.ZodOptional<
@@ -314,6 +323,9 @@ export const ReviewLocalizationsRequestSchema = z.object({
     return z.string().nullish();
   },
   get skipApproved(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get confirmOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });

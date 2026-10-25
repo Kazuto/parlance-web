@@ -2,7 +2,7 @@
 import { Tooltip } from "@thkzt/eunoia";
 
 // A row in the editor's list: the item's label, plus how many of the selected
-// languages are still missing or wait for review.
+// languages are still missing, wait for review or are outdated.
 defineProps<{
   label: string;
   missingCount: number;
@@ -10,6 +10,8 @@ defineProps<{
   missingLabel: string;
   draftCount?: number;
   draftLabel?: string;
+  outdatedCount?: number;
+  outdatedLabel?: string;
 }>();
 defineSlots<{
   /** Shown when the pointer rests on the label; replaces the plain title. */
@@ -53,6 +55,13 @@ const { t } = useI18n();
           class="grid h-4 min-w-4 shrink-0 place-items-center rounded-[6px] bg-yellow-50 px-1 text-[10px] font-bold text-yellow-700 squircle dark:bg-amber-400/15 dark:text-amber-300"
           :aria-label="draftLabel"
           >{{ draftCount }}</span
+        >
+      </Tooltip>
+      <Tooltip v-if="outdatedCount" :content="outdatedLabel">
+        <span
+          class="grid h-4 min-w-4 shrink-0 place-items-center rounded-[6px] bg-orange-50 px-1 text-[10px] font-bold text-orange-700 squircle dark:bg-orange-400/15 dark:text-orange-300"
+          :aria-label="outdatedLabel"
+          >{{ outdatedCount }}</span
         >
       </Tooltip>
       <Tooltip v-if="missingCount > 0" :content="missingLabel">

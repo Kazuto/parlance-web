@@ -115,11 +115,13 @@ describe("reviewing translations in the editor", () => {
     ).trigger("click");
     await settle();
 
+    // Approving one translation also confirms it if its default text changed.
     expect(reviews).toEqual([
       {
         entryIds: ["e1"],
         localeIds: ["l2"],
         decision: "REVIEW_DECISION_APPROVE",
+        confirmOutdated: true,
       },
     ]);
   });

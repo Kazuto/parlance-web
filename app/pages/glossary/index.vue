@@ -377,7 +377,7 @@ const {
   confirmReject,
 } = useReviewActions({
   review: () => definitionStore.review,
-  request: (terminologyIds, localeIds, decision, comment) => ({
+  request: (terminologyIds, localeIds, decision, { comment }) => ({
     terminologyIds,
     localeIds,
     decision,

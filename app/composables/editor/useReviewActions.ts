@@ -5,19 +5,27 @@ type ReviewMutation<Request> = {
   mutateAsync: (request: Request) => Promise<unknown>;
 };
 
+/** How a review treats the translations it picks. */
+export type ReviewDetails = {
+  /** Required when rejecting: what should change. */
+  comment?: string;
+  /** Leaves approved translations out, e.g. when rejecting ticked items. */
+  onlyDrafts?: boolean;
+  /** Approves outdated translations again too, confirming they still fit. */
+  confirmOutdated?: boolean;
+};
+
 /**
  * Approving and sending back translations in an editor page. The page says how
  * to pick items × languages in its request, e.g. by entry ids.
  */
 export function useReviewActions<Request>(options: {
   review: () => ReviewMutation<Request>;
-  /** `onlyDrafts` leaves approved translations out, e.g. when rejecting ticked items. */
   request: (
     itemIds: string[],
     localeIds: string[],
     decision: ReviewDecision,
-    comment?: string,
-    onlyDrafts?: boolean,
+    details: ReviewDetails,
   ) => Request;
   /** Reloads what shows the review state, e.g. the list and the open item. */
   afterReview: () => Promise<unknown>;
@@ -56,13 +64,25 @@ export function useReviewActions<Request>(options: {
     }
   }
 
-  /** Approves the drafts of the items in the languages. */
-  function approve(itemIds: string[], localeIds: string[]) {
+  /**
+   * Approves the drafts of the items in the languages, and with `confirmOutdated`
+   * their approved translations whose default text changed since.
+   */
+  function approve(
+    itemIds: string[],
+    localeIds: string[],
+    { confirmOutdated }: Pick<ReviewDetails, "confirmOutdated"> = {},
+  ) {
     if (!itemIds.length || !localeIds.length || isReviewing.value) return;
 
     return run(
-      options.request(itemIds, localeIds, "REVIEW_DECISION_APPROVE"),
-      (count) => t("review.approvedCount", { count }, count),
+      options.request(itemIds, localeIds, "REVIEW_DECISION_APPROVE", {
+        confirmOutdated,
+      }),
+      (count) =>
+        confirmOutdated
+          ? t("review.approvedTranslations", { count }, count)
+          : t("review.approvedCount", { count }, count),
     );
   }
 
@@ -91,8 +111,10 @@ export function useReviewActions<Request>(options: {
         target.itemIds,
         target.localeIds,
         "REVIEW_DECISION_REJECT",
-        comment,
-        target.onlyDrafts,
+        {
+          comment,
+          onlyDrafts: target.onlyDrafts,
+        },
       ),
       (count) =>
         language

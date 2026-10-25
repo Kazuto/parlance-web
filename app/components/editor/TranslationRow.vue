@@ -25,11 +25,15 @@ const props = defineProps<{
   status?: ReviewStatus | null;
   /** Why a reviewer sent the text back. */
   reviewComment?: string | null;
+  /** The default text changed since the saved text was written or approved. */
+  outdated?: boolean;
   /** The user may approve the text or send it back. */
   canReview?: boolean;
 }>();
 const emit = defineEmits<{
   "open-context": [];
+  /** Asks to show how the default text changed. */
+  "show-change": [];
   focus: [];
   revert: [];
   approve: [];
@@ -73,12 +77,16 @@ const markerPadding = computed(() => {
   return marker.value ? "pr-10" : "";
 });
 
-// Review judges the saved text, so it waits for unsaved edits.
+// Review judges the saved text, so it waits for unsaved edits. Approved text is
+// reviewed again once its default text changed, to confirm it still fits.
+const confirming = computed(
+  () => review.value === "approved" && !!props.outdated,
+);
 const reviewable = computed(
   () =>
     props.canReview &&
-    review.value !== "approved" &&
     !!review.value &&
+    (review.value !== "approved" || confirming.value) &&
     !props.dirty &&
     !props.translating,
 );
@@ -156,6 +164,20 @@ const contextButtonClass = computed(() => {
         class="pl-3 text-[10.5px] font-bold text-primary-600 dark:text-primary-300"
         >{{ t("common.default") }}</span
       >
+      <Tooltip
+        v-else-if="outdated"
+        :content="t('review.outdatedHint')"
+        class="self-start"
+      >
+        <button
+          type="button"
+          class="ml-3 cursor-pointer rounded-[6px] bg-orange-50 px-1.5 py-0.5 text-[10.5px] font-bold text-orange-700 squircle hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none dark:bg-orange-400/15 dark:text-orange-300 dark:hover:bg-orange-400/25"
+          :aria-label="t('review.showChangeFor', { language: localeName })"
+          @click="emit('show-change')"
+        >
+          {{ t("review.outdated") }}
+        </button>
+      </Tooltip>
       <div v-if="$slots.meta" class="pl-3">
         <slot name="meta" />
       </div>
@@ -247,7 +269,11 @@ const contextButtonClass = computed(() => {
       <template v-if="reviewable">
         <BaseIconButton
           icon="check"
-          :label="t('review.approveFor', { language: localeName })"
+          :label="
+            t(confirming ? 'review.confirmFor' : 'review.approveFor', {
+              language: localeName,
+            })
+          "
           class="bg-white text-green-600 dark:bg-white/5 dark:text-green-300"
           @click="emit('approve')"
         />

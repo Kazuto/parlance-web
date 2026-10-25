@@ -9,10 +9,13 @@ const props = defineProps<{
   localeName: string;
   localeCode?: string;
   sourceText: string;
+  sourceLocaleId?: string;
   sourceLocaleName: string;
   sourceLocaleCode?: string;
   translation: string;
   isDefault: boolean;
+  /** When the translation's default text first changed since; unset while current. */
+  outdatedAt?: string | null;
   /** Whether an older text from the history may replace the field's text. */
   canUse?: boolean;
 }>();
@@ -63,6 +66,15 @@ const history = computed(() => data.value?.history ?? []);
           {{ t("context.defaultHint") }}
         </p>
         <template v-else>
+          <EntrySourceChange
+            v-if="outdatedAt && sourceLocaleId"
+            :entry-id="entryId"
+            :source-locale-id="sourceLocaleId"
+            :source-locale-name="sourceLocaleName"
+            :source-locale-code="sourceLocaleCode"
+            :outdated-at="outdatedAt"
+            :source-text="sourceText"
+          />
           <EntryTerminologyHints
             :key="`${entryId}-${localeId}`"
             :source-text="sourceText"
@@ -70,7 +82,7 @@ const history = computed(() => data.value?.history ?? []);
             :translation="translation"
           />
           <div
-            v-if="sourceText.trim()"
+            v-if="sourceText.trim() && !outdatedAt"
             class="flex flex-col gap-1.5 rounded-2xl bg-neutral-100 px-3.5 py-3 squircle dark:bg-neutral-950"
           >
             <span

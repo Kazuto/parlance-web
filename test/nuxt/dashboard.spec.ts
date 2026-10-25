@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import DashboardPage from "~/pages/index.vue";
 import { VIEWER, loginAs, mockRpc, mountPage, t } from "./helpers";
 
-// German waits for review and misses two entries; English is done; "tlh-x"
-// has no name the browser knows.
+// German waits for review, misses two entries and has an outdated one; English is
+// done; "tlh-x" has no name the browser knows.
 const stats = {
   totalEntries: 10,
   byLocale: [
@@ -14,6 +14,7 @@ const stats = {
       approved: 5,
       drafts: 3,
       missing: 2,
+      outdated: 1,
       percentage: 80,
     },
     {
@@ -64,6 +65,11 @@ describe("progress by language", () => {
     expect(rows[1]).toContain(t("dashboard.progressApproved", { count: "5" }));
     expect(rows[1]).toContain(t("dashboard.progressDrafts", { count: "3" }));
     expect(rows[1]).toContain(t("dashboard.progressMissing", { count: "2" }));
+    expect(rows[1]).toContain(t("dashboard.progressOutdated", { count: "1" }));
+    // Only languages with outdated translations mention them.
+    expect(rows[0]).not.toContain(
+      t("dashboard.progressOutdated", { count: "0" }),
+    );
   });
 
   it("opens the entries that need work in that language", async () => {
@@ -74,6 +80,7 @@ describe("progress by language", () => {
     expect(links).toEqual([
       "/entries?locales=de&status=review",
       "/entries?locales=de&status=missing",
+      "/entries?locales=de&status=outdated",
       "/entries?locales=tlh-x&status=missing",
     ]);
   });

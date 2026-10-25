@@ -127,6 +127,7 @@ const statusOptions = computed(() => [
   { label: t("entries.filterMissing"), value: "missing" },
   { label: t("entries.filterComplete"), value: "complete" },
   { label: t("entries.filterReview"), value: "review" },
+  { label: t("entries.filterOutdated"), value: "outdated" },
 ]);
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -310,6 +311,7 @@ const splitViewItems = computed((): SplitViewItem[] =>
       label: entry.key ?? "",
       missingLocaleIds: entry.missingLocaleIds ?? [],
       draftLocaleIds: entry.draftLocaleIds ?? [],
+      outdatedLocaleIds: entry.outdatedLocaleIds ?? [],
       defaultTranslation: entry.defaultTranslation ?? "",
     })),
 );
@@ -324,6 +326,12 @@ function draftCount(item: SplitViewItem) {
   const drafts = (item.draftLocaleIds as string[] | undefined) ?? [];
 
   return selectedLocaleIds.value.filter((id) => drafts.includes(id)).length;
+}
+
+function outdatedCount(item: SplitViewItem) {
+  const outdated = (item.outdatedLocaleIds as string[] | undefined) ?? [];
+
+  return selectedLocaleIds.value.filter((id) => outdated.includes(id)).length;
 }
 
 watch(
@@ -423,12 +431,13 @@ const {
   confirmReject,
 } = useReviewActions({
   review: () => localizationStore.review,
-  request: (entryIds, localeIds, decision, comment, onlyDrafts) => ({
+  request: (entryIds, localeIds, decision, details) => ({
     entryIds,
     localeIds,
     decision,
-    comment,
-    skipApproved: onlyDrafts,
+    comment: details.comment,
+    skipApproved: details.onlyDrafts,
+    confirmOutdated: details.confirmOutdated,
   }),
   afterReview: () =>
     Promise.all([
@@ -993,6 +1002,14 @@ watch(
                 draftCount(item),
               )
             "
+            :outdated-count="outdatedCount(item)"
+            :outdated-label="
+              t(
+                'review.outdatedCount',
+                { count: outdatedCount(item) },
+                outdatedCount(item),
+              )
+            "
             :unsaved="hasUnsavedTranslations(String(item.key))"
             :missing-label="
               t(
@@ -1067,6 +1084,9 @@ watch(
               :review-comment="
                 savedLocalization(String(item.key), localeId)?.reviewComment
               "
+              :outdated="
+                !!savedLocalization(String(item.key), localeId)?.outdated
+              "
               :can-review="canReview && !isReviewing"
               :model-value="currentEntryForms[localeId] ?? ''"
               @update:model-value="
@@ -1081,7 +1101,12 @@ watch(
                 )
               "
               @open-context="toggleContext(localeId)"
-              @approve="approveTranslations([String(item.key)], [localeId])"
+              @show-change="openContext(localeId, 'terminology')"
+              @approve="
+                approveTranslations([String(item.key)], [localeId], {
+                  confirmOutdated: true,
+                })
+              "
               @reject="
                 requestReject(
                   String(item.key),
@@ -1134,6 +1159,7 @@ watch(
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
         :locale-code="localeOption(activeLocaleId)?.code"
+        :source-locale-id="defaultLocale?.id ?? undefined"
         :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
         :source-locale-code="localeOption(defaultLocale?.id)?.code"
         :source-text="
@@ -1141,6 +1167,10 @@ watch(
         "
         :translation="currentEntryForms[activeLocaleId] ?? ''"
         :is-default="activeLocaleId === defaultLocale?.id"
+        :outdated-at="
+          savedLocalization(String(selectedEntry.key), activeLocaleId)
+            ?.outdatedAt
+        "
         :can-use="canUpdate && !isSaving"
         @close="contextOpen = false"
         @use="applyHistoryText"

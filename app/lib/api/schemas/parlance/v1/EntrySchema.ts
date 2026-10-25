@@ -30,6 +30,7 @@ export type Entry = {
   missingLocaleIds?: Array<string> | null;
   defaultTranslation?: string | null;
   draftLocaleIds?: Array<string> | null;
+  outdatedLocaleIds?: Array<string> | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -73,6 +74,11 @@ export const EntrySchema = z.object({
     return z.string().nullish();
   },
   get draftLocaleIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get outdatedLocaleIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
     return z.array(z.string()).nullish();
   },
 });
@@ -302,6 +308,7 @@ export type GetEntryHistoryRequest = {
   entryId?: string | null;
   pagination?: PaginationRequest | null;
   localeId?: string | null;
+  before?: string | null;
 };
 export const GetEntryHistoryRequestSchema = z.object({
   get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -311,6 +318,9 @@ export const GetEntryHistoryRequestSchema = z.object({
     return PaginationRequestSchema.nullish();
   },
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get before(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });

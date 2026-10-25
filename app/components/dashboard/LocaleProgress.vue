@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card } from "@thkzt/eunoia";
+import { Card, Icon } from "@thkzt/eunoia";
 import { NuxtLink } from "#components";
 import { entriesLink } from "~/composables/entry/useEntryFilterQuery";
 import { languageName } from "~/lib/languageNames";
@@ -7,7 +7,7 @@ import type { LocaleStats } from "~/lib/api/schemas/parlance/v1/StatsSchema";
 
 // How far each language is: its approved translations, the drafts awaiting review
 // and the missing ones, out of all entries. Drafts and missing ones open the
-// entries that need work.
+// entries that need work, as do outdated ones, approved or not, when there are any.
 const props = defineProps<{ locales: LocaleStats[]; total: number }>();
 const { t, n, locale: uiLocale } = useI18n();
 
@@ -27,8 +27,10 @@ const rows = computed(() =>
         approved: stats.approved ?? 0,
         drafts: stats.drafts ?? 0,
         missing: stats.missing ?? 0,
+        outdated: stats.outdated ?? 0,
         reviewLink: entriesLink({ locales: [code], status: "review" }),
         missingLink: entriesLink({ locales: [code], status: "missing" }),
+        outdatedLink: entriesLink({ locales: [code], status: "outdated" }),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, uiLocale.value)),
@@ -111,6 +113,14 @@ const rows = computed(() =>
             />
             {{ t("dashboard.progressMissing", { count: n(row.missing) }) }}
           </component>
+          <NuxtLink
+            v-if="row.outdated"
+            :to="row.outdatedLink"
+            class="flex items-center gap-1 text-orange-700 hover:underline dark:text-orange-300"
+          >
+            <Icon name="clock-counter-clockwise" size="xs" />
+            {{ t("dashboard.progressOutdated", { count: n(row.outdated) }) }}
+          </NuxtLink>
         </p>
       </li>
     </ul>
