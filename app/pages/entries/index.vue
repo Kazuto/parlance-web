@@ -685,6 +685,17 @@ async function handleSaveAll() {
   );
 }
 
+// Puts an older text from the history back into the field, as an unsaved change.
+function applyHistoryText(text: string) {
+  const entryId = selectedEntryId.value;
+  const localeId = activeLocaleId.value;
+
+  if (!entryId || !localeId || isSaving.value || !canUpdate.value) return;
+
+  setLocalizationForm(entryId, localeId, text);
+  nextTick(() => document.getElementById(fieldId(entryId, localeId))?.focus());
+}
+
 const fieldId = (entryId: string, localeId: string) =>
   `entry-${entryId}-${localeId}`;
 
@@ -1108,7 +1119,9 @@ function onCommand(value: string) {
         "
         :translation="currentEntryForms[activeLocaleId] ?? ''"
         :is-default="activeLocaleId === defaultLocale?.id"
+        :can-use="canUpdate && !isSaving"
         @close="contextOpen = false"
+        @use="applyHistoryText"
       />
     </div>
     <div

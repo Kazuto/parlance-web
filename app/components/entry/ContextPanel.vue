@@ -10,8 +10,10 @@ const props = defineProps<{
   sourceLocaleName: string;
   translation: string;
   isDefault: boolean;
+  /** Whether an older text from the history may replace the field's text. */
+  canUse?: boolean;
 }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; use: [text: string] }>();
 const { t } = useI18n();
 const tab = defineModel<string>("tab", { default: "terminology" });
 const tabs = computed(() => [
@@ -86,7 +88,10 @@ const history = computed(() => data.value?.history ?? []);
         :loading="isFetching && !data"
         :failed="!!error && !data"
         :total-pages="data?.pagination?.totalPages ?? 0"
+        :can-use="canUse"
+        :current="translation"
         @retry="refetch()"
+        @use="emit('use', $event)"
       />
     </template>
   </BaseContextPanel>

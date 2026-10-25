@@ -126,6 +126,7 @@
   "context.terminology": "术语",
   "context.title": "翻译上下文",
   "context.unknownUser": "未知用户",
+  "context.useVersion": "使用此文本",
   "dashboard.awaitingReview": "等待审核",
   "dashboard.completed": "完成",
   "dashboard.description": "您的翻译概览，可快速访问所有区域",

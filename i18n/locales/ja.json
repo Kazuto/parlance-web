@@ -126,6 +126,7 @@
   "context.terminology": "用語",
   "context.title": "翻訳コンテキスト",
   "context.unknownUser": "不明なユーザー",
+  "context.useVersion": "このテキストを使う",
   "dashboard.awaitingReview": "レビューを待っています",
   "dashboard.completed": "完了しました",
   "dashboard.description": "翻訳内容の概要。各項目に迅速にアクセス可能",

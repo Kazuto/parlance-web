@@ -126,6 +126,7 @@
   "context.terminology": "Terminology",
   "context.title": "Translation context",
   "context.unknownUser": "Unknown user",
+  "context.useVersion": "Use this text",
   "dashboard.awaitingReview": "Awaiting review",
   "dashboard.completed": "Completed",
   "dashboard.description": "An overview of your translations, with quick access to every area",

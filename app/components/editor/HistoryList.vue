@@ -14,16 +14,26 @@ type HistoryItem = {
   user?: User | null;
 };
 
-defineProps<{
+const props = defineProps<{
   items: HistoryItem[];
   loading: boolean;
   failed: boolean;
   totalPages: number;
+  /** Whether an older text may be put back into the field. */
+  canUse?: boolean;
+  /** The field's text now, which needs no button to bring back. */
+  current?: string;
 }>();
 
-const emit = defineEmits<{ retry: [] }>();
+const emit = defineEmits<{ retry: []; use: [text: string] }>();
 const page = defineModel<number>("page", { required: true });
 const { t } = useI18n();
+
+function usable(item: HistoryItem) {
+  return (
+    props.canUse && !!item.translation && item.translation !== props.current
+  );
+}
 
 function actionLabel(action: string | null | undefined) {
   return ["created", "updated", "deleted", "approved", "rejected"].includes(
@@ -81,7 +91,16 @@ function changedBy(item: HistoryItem) {
             class="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
           >
             <span class="font-semibold">{{ actionLabel(item.action) }}</span>
-            <RelativeTime v-if="item.changedAt" :timestamp="item.changedAt" />
+            <span class="flex items-center gap-1">
+              <RelativeTime v-if="item.changedAt" :timestamp="item.changedAt" />
+              <BaseIconButton
+                v-if="usable(item)"
+                dense
+                icon="arrow-counter-clockwise"
+                :label="t('context.useVersion')"
+                @click="emit('use', item.translation ?? '')"
+              />
+            </span>
           </div>
           <p
             class="truncate text-xs text-neutral-500 dark:text-neutral-400"
