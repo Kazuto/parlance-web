@@ -44,3 +44,75 @@ export const ChangePasswordRequestSchema = z.object({
 });
 export type ChangePasswordResponse = Record<string, never>;
 export const ChangePasswordResponseSchema = z.object({});
+export type ApiToken = {
+  id?: string | null;
+  name?: string | null;
+  prefix?: string | null;
+  createdAt?: string | null;
+  lastUsedAt?: string | null;
+  expiresAt?: string | null;
+};
+export const ApiTokenSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get prefix(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get createdAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get lastUsedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get expiresAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type ListApiTokensRequest = Record<string, never>;
+export const ListApiTokensRequestSchema = z.object({});
+export type ListApiTokensResponse = {
+  tokens?: Array<ApiToken> | null;
+};
+export const ListApiTokensResponseSchema = z.object({
+  get tokens(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<ApiToken>>>> {
+    return z.array(ApiTokenSchema).nullish();
+  },
+});
+export type CreateApiTokenRequest = {
+  name?: string | null;
+  expiresInDays?: number | null;
+};
+export const CreateApiTokenRequestSchema = z.object({
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get expiresInDays(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type CreateApiTokenResponse = {
+  token?: ApiToken | null;
+  secret?: string | null;
+};
+export const CreateApiTokenResponseSchema = z.object({
+  get token(): z.ZodOptional<z.ZodNullable<z.ZodType<ApiToken>>> {
+    return ApiTokenSchema.nullish();
+  },
+  get secret(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type DeleteApiTokenRequest = {
+  id?: string | null;
+};
+export const DeleteApiTokenRequestSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type DeleteApiTokenResponse = Record<string, never>;
+export const DeleteApiTokenResponseSchema = z.object({});

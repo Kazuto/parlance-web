@@ -5,11 +5,11 @@ import { api } from "~/lib/api";
 export const useAccountStore = defineStore("accountStore", () => {
   const queryClient = useQueryClient();
   const authStore = useAuthStore();
+  // Query keys need the setup context, so they are taken here.
+  const currentUserKey = api.auth.getCurrentUser.getQueryKey();
+  const apiTokensKey = api.account.apiTokens.getQueryKey();
   // Lists show the user's name and avatar too.
-  const queryKeys = [
-    api.users.list.getQueryKey(),
-    api.auth.getCurrentUser.getQueryKey(),
-  ];
+  const queryKeys = [api.users.list.getQueryKey(), currentUserKey];
 
   const update = useMutation({
     ...api.account.update.use(),
@@ -27,10 +27,19 @@ export const useAccountStore = defineStore("accountStore", () => {
   const changePassword = useMutation({
     ...api.account.changePassword.use(),
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: api.auth.getCurrentUser.getQueryKey(),
-      }),
+      queryClient.invalidateQueries({ queryKey: currentUserKey }),
   });
 
-  return { update, changePassword };
+  const invalidateApiTokens = () =>
+    queryClient.invalidateQueries({ queryKey: apiTokensKey });
+  const createApiToken = useMutation({
+    ...api.account.createApiToken.use(),
+    onSuccess: invalidateApiTokens,
+  });
+  const deleteApiToken = useMutation({
+    ...api.account.deleteApiToken.use(),
+    onSuccess: invalidateApiTokens,
+  });
+
+  return { update, changePassword, createApiToken, deleteApiToken };
 });

@@ -18,6 +18,11 @@ import {
   type RestoreUserRequest,
   RestoreUserResponseSchema,
   RestoreUserRequestSchema,
+  GetRegistrationSettingsRequestSchema,
+  GetRegistrationSettingsResponseSchema,
+  UpdateRegistrationSettingsRequestSchema,
+  UpdateRegistrationSettingsResponseSchema,
+  type UpdateRegistrationSettingsRequest,
 } from "../schemas/parlance/v1/UserSchema";
 
 export const users = {
@@ -90,6 +95,30 @@ export const users = {
     {
       input: RestoreUserRequestSchema,
       output: RestoreUserResponseSchema,
+    },
+  ),
+
+  registrationSettings: authedEndpoint.query(
+    () => ({
+      method: "post",
+      url: "/parlance.v1.UserService/GetRegistrationSettings",
+      json: {},
+    }),
+    {
+      input: GetRegistrationSettingsRequestSchema,
+      output: GetRegistrationSettingsResponseSchema,
+    },
+  ),
+
+  updateRegistrationSettings: authedEndpoint.mutate(
+    (data: UpdateRegistrationSettingsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.UserService/UpdateRegistrationSettings",
+      json: data,
+    }),
+    {
+      input: UpdateRegistrationSettingsRequestSchema,
+      output: UpdateRegistrationSettingsResponseSchema,
     },
   ),
 };

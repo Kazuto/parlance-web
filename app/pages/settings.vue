@@ -6,7 +6,7 @@ definePageMeta({
   middleware: () => {
     const { canAny } = usePermission();
 
-    if (!canAny.value(["read_translation_server", "read_sso_provider"]))
+    if (!canAny.value(INSTANCE_SETTINGS_PERMISSIONS))
       return navigateTo("/account", { replace: true });
   },
 });
@@ -26,5 +26,6 @@ usePage(() => ({
   <div class="space-y-6">
     <TranslationServerSettings v-if="can('read_translation_server')" />
     <SsoProviderSettings v-if="can('read_sso_provider')" />
+    <UserRegistrationSettings v-if="can('read_user')" />
   </div>
 </template>

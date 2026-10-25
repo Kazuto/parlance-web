@@ -28,6 +28,9 @@ from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
   [Hy-MT2](https://github.com/Tencent-Hunyuan/Hy-MT2) model, for one entry or many.
   Suggestions are drafts to review, never saved on their own.
 - **Users and roles:** permissions per role, down to who may use machine translation.
+  Admins decide whether people may sign up on their own.
+- **API tokens:** let scripts and CI use the API as you, for example to export
+  translations in a build.
 - **Single sign-on:** sign in with OpenID Connect providers such as Keycloak,
   Authentik or Microsoft Entra ID, next to email and password.
 - **Webhooks:** tell your CI, chat or other services when translations await
@@ -130,8 +133,16 @@ languages it would mark outdated. Nothing changes until you confirm.
 
 ### Your account
 
-Under **Settings → Your account**, everyone can change their own name, email
-address, picture and password, and their language, whatever their role.
+Under **My account**, everyone can change their own name, email address, picture
+and password, and their language, whatever their role.
+
+**API tokens** there let scripts and CI use the API as you, with your permissions.
+Give each a name and a lifetime (30, 90 or 365 days, or none); its secret is shown
+once, when created, so copy it then. The list shows when each token was last used,
+and revoking one stops it right away. A token can't manage tokens or change your
+password or email address. See
+[API tokens](https://github.com/Kazuto/parlance-server#api-tokens) in the server
+README for an example.
 
 ### Users, roles and permissions
 
@@ -139,6 +150,9 @@ A role is a set of permissions, such as `read_entry`, `update_entry` or
 `delete_locale`. Parlance starts with an admin role that has every permission;
 create roles for everyone else, for example translators who may edit entries but
 not delete languages. Buttons for actions a user may not take are hidden.
+
+Anyone can create a viewer account through the API until you turn off
+**Settings → Registration** (needs `create_user`); admins still add users either way.
 
 ### Single sign-on
 

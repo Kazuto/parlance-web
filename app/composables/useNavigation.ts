@@ -1,5 +1,12 @@
 import type { MenuItem } from "@thkzt/eunoia";
 
+/** The settings page has a part for each of these permissions. */
+export const INSTANCE_SETTINGS_PERMISSIONS = [
+  "read_translation_server",
+  "read_sso_provider",
+  "read_user",
+];
+
 /**
  * The pages the user can open: the main ones, those configuring the instance, and
  * their own account. The sidebar, the bottom bar and the command palette list the
@@ -85,7 +92,7 @@ export function useNavigation() {
     ...(can.value("read_webhook")
       ? [{ label: t("nav.webhooks"), to: "/webhooks", icon: "webhooks-logo" }]
       : []),
-    ...(canAny.value(["read_translation_server", "read_sso_provider"])
+    ...(canAny.value(INSTANCE_SETTINGS_PERMISSIONS)
       ? [{ label: t("nav.settings"), to: "/settings", icon: "gear" }]
       : []),
   ]);

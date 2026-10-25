@@ -220,3 +220,45 @@ export const AssignRoleResponseSchema = z.object({
     return UserSchema.nullish();
   },
 });
+export type RegistrationSettings = {
+  open?: boolean | null;
+  updatedAt?: string | null;
+};
+export const RegistrationSettingsSchema = z.object({
+  get open(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get updatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type GetRegistrationSettingsRequest = Record<string, never>;
+export const GetRegistrationSettingsRequestSchema = z.object({});
+export type GetRegistrationSettingsResponse = {
+  settings?: RegistrationSettings | null;
+};
+export const GetRegistrationSettingsResponseSchema = z.object({
+  get settings(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<RegistrationSettings>>
+  > {
+    return RegistrationSettingsSchema.nullish();
+  },
+});
+export type UpdateRegistrationSettingsRequest = {
+  open?: boolean | null;
+};
+export const UpdateRegistrationSettingsRequestSchema = z.object({
+  get open(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+});
+export type UpdateRegistrationSettingsResponse = {
+  settings?: RegistrationSettings | null;
+};
+export const UpdateRegistrationSettingsResponseSchema = z.object({
+  get settings(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<RegistrationSettings>>
+  > {
+    return RegistrationSettingsSchema.nullish();
+  },
+});

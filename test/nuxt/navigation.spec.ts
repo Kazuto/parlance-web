@@ -98,18 +98,15 @@ describe("sidebar", () => {
     expect(await sidebarLinks()).toEqual(["/"]);
   });
 
-  it("links the instance settings for either of their parts", async () => {
-    for (const permission of ["read_translation_server", "read_sso_provider"]) {
+  it("links the instance settings for any of their parts", async () => {
+    const parts = ["read_translation_server", "read_sso_provider", "read_user"];
+
+    for (const permission of parts) {
       loginAs([permission]);
       expect(await sidebarLinks()).toContain("/settings");
     }
 
-    loginAs(
-      ALL_PERMISSIONS.filter(
-        (name) =>
-          !["read_translation_server", "read_sso_provider"].includes(name),
-      ),
-    );
+    loginAs(ALL_PERMISSIONS.filter((name) => !parts.includes(name)));
     expect(await sidebarLinks()).not.toContain("/settings");
   });
 

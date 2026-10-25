@@ -3,7 +3,9 @@ import { api } from "~/lib/api";
 
 export const useUserStore = defineStore("userStore", () => {
   const queryClient = useQueryClient();
+  // Query keys need the setup context, so they are taken here.
   const queryKey = api.users.list.getQueryKey();
+  const registrationKey = api.users.registrationSettings.getQueryKey();
 
   const create = useMutation({
     ...api.users.create.use(),
@@ -33,10 +35,18 @@ export const useUserStore = defineStore("userStore", () => {
     },
   });
 
+  // Whether people may sign up on their own.
+  const updateRegistrationSettings = useMutation({
+    ...api.users.updateRegistrationSettings.use(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: registrationKey }),
+  });
+
   return {
     create,
     update,
     destroy,
     restore,
+    updateRegistrationSettings,
   };
 });
