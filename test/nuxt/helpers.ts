@@ -174,10 +174,14 @@ export type MountedPage = {
   hasButton: (label: string) => boolean;
 };
 
-/** Mounts a page under a stand-in for the layout, which provides the page options. */
+/**
+ * Mounts a page under a stand-in for the layout, which provides the page options.
+ * Pages that look fields up by id or move the focus need to be attached to the
+ * document.
+ */
 export async function mountPage(
   page: Component,
-  options: { route?: RouteLocationRaw } = {},
+  options: { route?: RouteLocationRaw; attach?: boolean } = {},
 ): Promise<MountedPage> {
   let pageOptions: Ref<AppPageOptions> | undefined;
   const Host = defineComponent({
@@ -190,7 +194,10 @@ export async function mountPage(
     },
   });
 
-  const wrapper = await mountSuspended(Host, { route: options.route });
+  const wrapper = await mountSuspended(Host, {
+    route: options.route,
+    attachTo: options.attach ? document.body : undefined,
+  });
 
   await settle();
 

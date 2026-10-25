@@ -6,16 +6,24 @@ import {
   SplitView,
   type SplitViewItem,
   Chip,
+  CommandPalette,
   Input,
+  Kbd,
 } from "@thkzt/eunoia";
+import { useEditorCommands } from "~/composables/editor/useEditorCommands";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
+import {
+  EDITOR_SHORTCUTS,
+  useEditorShortcuts,
+} from "~/composables/editor/useEditorShortcuts";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
+import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
@@ -676,6 +684,141 @@ async function handleSaveAll() {
     t("entries.translations"),
   );
 }
+
+const fieldId = (entryId: string, localeId: string) =>
+  `entry-${entryId}-${localeId}`;
+
+// The language whose field has the focus, if it belongs to the open entry.
+function focusedLocaleId() {
+  const entryId = selectedEntryId.value;
+  const id = document.activeElement?.id ?? "";
+  const prefix = entryId ? fieldId(entryId, "") : undefined;
+
+  return prefix && id.startsWith(prefix) ? id.slice(prefix.length) : undefined;
+}
+
+const navigation = useEntryNavigation({
+  items: splitViewItems,
+  selected: selectedEntry,
+  select: selectEntry,
+  hasMore: () => !!hasNextPage.value,
+  loadMore: () => fetchNextPage(),
+  ready: () => !isEditorLoading.value && !!selectedEntryData.value,
+  fieldId,
+  focusedLocaleId,
+});
+
+async function saveAndNext() {
+  if (isSaving.value) return;
+  await handleSave();
+  // A failed save keeps the entry open with what is left to save.
+  if (!selectedUnsavedLocaleIds.value.length) await navigation.next();
+}
+
+// Approves every draft of the open entry in the shown languages.
+function approveShown() {
+  const entryId = selectedEntryId.value;
+
+  if (!entryId || !canReview.value || isSaving.value || isReviewing.value)
+    return;
+  if (!reviewableLocaleIds.value.length) return;
+
+  approveTranslations([entryId], reviewableLocaleIds.value);
+}
+
+function copySourceTo(localeId: string | undefined) {
+  const entryId = selectedEntryId.value;
+  const sourceId = defaultLocale.value?.id;
+
+  if (!entryId || !localeId || !sourceId || localeId === sourceId) return;
+  if (isSaving.value || !canUpdate.value) return;
+
+  setLocalizationForm(
+    entryId,
+    localeId,
+    currentEntryForms.value[sourceId] ?? "",
+  );
+}
+
+useEditorShortcuts({
+  save: () => canUpdate.value && handleSave(),
+  saveAndNext: () => canUpdate.value && saveAndNext(),
+  previous: () => !isSaving.value && navigation.previous(),
+  next: () => !isSaving.value && navigation.next(),
+  approveAll: approveShown,
+  copySource: () => copySourceTo(focusedLocaleId()),
+});
+
+const paletteOpen = ref(false);
+// The palette takes the focus once it shows, so the language its commands act on
+// is read the moment it opens.
+const paletteLocaleId = ref<string>();
+
+watch(
+  paletteOpen,
+  (open) => {
+    if (open) paletteLocaleId.value = focusedLocaleId();
+  },
+  { flush: "sync" },
+);
+
+const searchBox = useTemplateRef<HTMLElement>("searchBox");
+const { items: commandItems, run: runCommand } = useEditorCommands({
+  entryActions,
+  entries: splitViewItems,
+  statusOptions,
+  canSave: () =>
+    canUpdate.value &&
+    !!selectedEntryData.value &&
+    !!selectedUnsavedLocaleIds.value.length &&
+    !isSaving.value,
+  canCreate: () => can.value("create_entry"),
+  canReview: () => canReview.value,
+  hasDrafts: () =>
+    !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
+  canEdit: () => canUpdate.value && !isSaving.value,
+  focusedLanguage: () => {
+    const localeId = paletteLocaleId.value;
+
+    if (!localeId) return undefined;
+
+    return {
+      name: localeOption(localeId)?.label ?? localeId,
+      isDefault: localeId === defaultLocale.value?.id,
+    };
+  },
+  handlers: {
+    action: onEntryAction,
+    save: () => canUpdate.value && handleSave(),
+    saveAndNext: () => canUpdate.value && saveAndNext(),
+    previous: () => !isSaving.value && navigation.previous(),
+    next: () => !isSaving.value && navigation.next(),
+    approveAll: approveShown,
+    copySource: () => copySourceTo(paletteLocaleId.value),
+    toggleContext: () => {
+      const localeId =
+        activeLocaleId.value ?? orderedSelectedLocaleIds.value[0];
+
+      if (localeId) toggleContext(localeId);
+    },
+    focusSearch: () => searchBox.value?.querySelector("input")?.focus(),
+    create: () => (showCreateDialog.value = true),
+    entry: (id) => {
+      const item = splitViewItems.value.find((entry) => entry.key === id);
+
+      if (item) selectEntry(item);
+    },
+    status: (value) => {
+      if (!isSaving.value) translationStatus.value = value;
+    },
+  },
+});
+
+// Closing the palette gives the focus back to where it was, so commands that move
+// the focus or open a dialog wait until it has closed.
+function onCommand(value: string) {
+  setTimeout(() => runCommand(value));
+}
 </script>
 
 <template>
@@ -699,7 +842,7 @@ async function handleSaveAll() {
     <div
       class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
-      <div class="w-full sm:w-56" @keydown="onSearchKeydown">
+      <div ref="searchBox" class="w-full sm:w-56" @keydown="onSearchKeydown">
         <Input
           v-model="search"
           dense
@@ -879,7 +1022,7 @@ async function handleSaveAll() {
             <EditorTranslationRow
               v-for="localeId in orderedSelectedLocaleIds"
               :key="localeId"
-              :input-id="`entry-${item.key}-${localeId}`"
+              :input-id="fieldId(String(item.key), localeId)"
               :locale-name="localeOption(localeId)?.label ?? localeId"
               :locale-code="localeOption(localeId)?.code ?? ''"
               :is-default="localeId === defaultLocale?.id"
@@ -967,28 +1110,38 @@ async function handleSaveAll() {
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <span class="text-xs text-neutral-500 dark:text-neutral-400">
-        <template v-if="entryTotal !== undefined"
-          >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
-        </template>
-        {{
-          t(
-            "entries.selectedLanguages",
-            { count: selectedLocaleIds.length },
-            selectedLocaleIds.length,
-          )
-        }}
-        <span
-          v-if="unsavedLocaleIds.length"
-          class="ml-2 text-yellow-700 dark:text-amber-300"
-          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
-          }}{{
-            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-              ? t("common.hiddenLanguages")
-              : ""
-          }}</span
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">
+          <template v-if="entryTotal !== undefined"
+            >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+          </template>
+          {{
+            t(
+              "entries.selectedLanguages",
+              { count: selectedLocaleIds.length },
+              selectedLocaleIds.length,
+            )
+          }}
+          <span
+            v-if="unsavedLocaleIds.length"
+            class="ml-2 text-yellow-700 dark:text-amber-300"
+            >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+            }}{{
+              unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+                ? t("common.hiddenLanguages")
+                : ""
+            }}</span
+          >
+        </span>
+        <button
+          type="button"
+          class="flex cursor-pointer items-center gap-1.5 rounded-lg text-xs text-neutral-500 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none max-sm:hidden dark:text-neutral-400 dark:hover:text-neutral-100"
+          @click="paletteOpen = true"
         >
-      </span>
+          <Kbd :shortcut="EDITOR_SHORTCUTS.palette" dense />
+          {{ t("commands.open") }}
+        </button>
+      </div>
       <EditorWorkspaceActions
         v-can="'update_entry'"
         show-save-all
@@ -1001,6 +1154,12 @@ async function handleSaveAll() {
       />
     </div>
   </section>
+  <CommandPalette
+    v-model:open="paletteOpen"
+    :items="commandItems"
+    :shortcut="EDITOR_SHORTCUTS.palette"
+    @select="onCommand"
+  />
   <EditorSaveAllDialog
     :open="showSaveAllDialog"
     :title="t('entries.saveAllTitle')"

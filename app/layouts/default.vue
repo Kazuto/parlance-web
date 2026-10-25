@@ -52,79 +52,11 @@ const onMenuSelect = (label: string) => {
   }
 };
 
-const { can, canAny } = usePermission();
 const avatarUrl = useAvatarUrl();
 
-// Only link pages the user can open; items without a permission are always shown.
-const menuItems = computed<MenuItem[]>(() =>
-  (
-    [
-      { label: t("nav.dashboard"), to: "/", icon: "house-simple" },
-      {
-        label: t("nav.locales"),
-        to: "/locales",
-        icon: "globe-simple",
-        permission: "read_locale",
-      },
-      {
-        label: t("nav.entries"),
-        to: "/entries",
-        icon: "translate",
-        permission: "read_entry",
-      },
-      {
-        label: t("nav.transfer"),
-        to: "/entries/transfer",
-        icon: "arrows-down-up",
-        permission: ["import_entry", "export_entry"],
-      },
-      {
-        label: t("nav.glossary"),
-        to: "/glossary",
-        icon: "book-open-text",
-        permission: "read_terminology",
-      },
-      {
-        label: t("nav.scopes"),
-        to: "/scopes",
-        icon: "stack",
-        permission: "read_scope",
-      },
-      {
-        label: t("nav.roles"),
-        to: "/roles",
-        icon: "shield",
-        permission: "read_role",
-      },
-      {
-        label: t("nav.users"),
-        to: "/users",
-        icon: "users",
-        permission: "read_user",
-      },
-    ] satisfies (MenuItem & { permission?: string | string[] })[]
-  )
-    // A list of permissions shows the item for any of them.
-    .filter(
-      (item) =>
-        !item.permission ||
-        (Array.isArray(item.permission)
-          ? canAny.value(item.permission)
-          : can.value(item.permission)),
-    )
-    .map(({ permission: _permission, ...item }) => item),
-);
-
-// Configuring the instance: automation for those who may see it, and settings.
-const settingsMenuItems = computed<MenuItem[]>(() => [
-  ...(can.value("read_task")
-    ? [{ label: t("nav.tasks"), to: "/tasks", icon: "lightning" }]
-    : []),
-  ...(can.value("read_webhook")
-    ? [{ label: t("nav.webhooks"), to: "/webhooks", icon: "webhooks-logo" }]
-    : []),
-  { label: t("nav.settings"), to: "/settings", icon: "gear" },
-]);
+// Only link pages the user can open.
+const { mainItems: menuItems, settingsItems: settingsMenuItems } =
+  useNavigation();
 
 const userMenuItems = computed<UserMenuItem[]>(() => [
   { label: t("nav.settings"), icon: "gear", to: "/settings" },
