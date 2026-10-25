@@ -111,3 +111,12 @@ describe("history in the editor", () => {
     expect(useButtons(page)).toHaveLength(0);
   });
 });
+
+describe("writing direction in the editor", () => {
+  it("writes each language in its direction", async () => {
+    const page = await openEditor(VIEWER);
+
+    expect(field(page, "l1").attributes("dir")).toBe("ltr");
+    expect(field(page, "l3").attributes("dir")).toBe("rtl");
+  });
+});

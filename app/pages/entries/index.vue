@@ -987,6 +987,7 @@ function onCommand(value: string) {
               <EntryDefaultTranslation
                 :translation="item.defaultTranslation as string"
                 :locale-name="localeOption(defaultLocale.id)?.label ?? ''"
+                :locale-code="localeOption(defaultLocale.id)?.code"
               />
             </template>
           </EditorListItem>
@@ -1113,7 +1114,9 @@ function onCommand(value: string) {
         :entry-id="String(selectedEntry.key)"
         :locale-id="activeLocaleId"
         :locale-name="activeLocaleName"
+        :locale-code="localeOption(activeLocaleId)?.code"
         :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
+        :source-locale-code="localeOption(defaultLocale?.id)?.code"
         :source-text="
           defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
         "

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Pagination } from "@thkzt/eunoia";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
+import { textDirection } from "~/lib/textDirection";
 
 // Change history of one language, shared by the entry and glossary context panels.
 type HistoryItem = {
@@ -19,6 +20,8 @@ const props = defineProps<{
   loading: boolean;
   failed: boolean;
   totalPages: number;
+  /** The language's code, for the writing direction of the texts. */
+  localeCode?: string;
   /** Whether an older text may be put back into the field. */
   canUse?: boolean;
   /** The field's text now, which needs no button to bring back. */
@@ -28,6 +31,9 @@ const props = defineProps<{
 const emit = defineEmits<{ retry: []; use: [text: string] }>();
 const page = defineModel<number>("page", { required: true });
 const { t } = useI18n();
+const direction = computed(() =>
+  props.localeCode ? textDirection(props.localeCode) : undefined,
+);
 
 function usable(item: HistoryItem) {
   return (
@@ -110,6 +116,7 @@ function changedBy(item: HistoryItem) {
           </p>
           <p
             class="text-sm break-words whitespace-pre-wrap dark:text-neutral-100"
+            :dir="item.translation ? direction : undefined"
           >
             {{ item.translation || t("context.emptyTranslation") }}
           </p>

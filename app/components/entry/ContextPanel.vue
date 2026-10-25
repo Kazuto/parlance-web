@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
+import { textDirection } from "~/lib/textDirection";
 
 const props = defineProps<{
   entryId: string;
   localeId: string;
   localeName: string;
+  localeCode?: string;
   sourceText: string;
   sourceLocaleName: string;
+  sourceLocaleCode?: string;
   translation: string;
   isDefault: boolean;
   /** Whether an older text from the history may replace the field's text. */
@@ -76,6 +79,9 @@ const history = computed(() => data.value?.history ?? []);
             >
             <span
               class="text-[13px] leading-normal whitespace-pre-wrap dark:text-neutral-100"
+              :dir="
+                sourceLocaleCode ? textDirection(sourceLocaleCode) : undefined
+              "
               >{{ sourceText }}</span
             >
           </div>
@@ -88,6 +94,7 @@ const history = computed(() => data.value?.history ?? []);
         :loading="isFetching && !data"
         :failed="!!error && !data"
         :total-pages="data?.pagination?.totalPages ?? 0"
+        :locale-code="localeCode"
         :can-use="canUse"
         :current="translation"
         @retry="refetch()"

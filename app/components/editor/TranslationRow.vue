@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon, Tooltip } from "@thkzt/eunoia";
 import type { ReviewStatus } from "~/lib/api/schemas/parlance/v1/CommonSchema";
+import { textDirection } from "~/lib/textDirection";
 
 // One language of the item being edited: label column, text field, and the button
 // that opens this language in the context panel.
@@ -43,6 +44,7 @@ defineSlots<{
 const value = defineModel<string>({ default: "" });
 const { t } = useI18n();
 
+const direction = computed(() => textDirection(props.localeCode));
 const contextLabel = computed(() =>
   t("context.openFor", { language: props.localeName }),
 );
@@ -165,6 +167,7 @@ const contextButtonClass = computed(() => {
       <textarea
         :id="inputId"
         v-model="value"
+        :dir="direction"
         :readonly="readonly || translating"
         :aria-busy="translating || undefined"
         :placeholder="translating ? undefined : placeholder"
