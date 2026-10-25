@@ -2,7 +2,8 @@ import type { MenuItem } from "@thkzt/eunoia";
 
 /**
  * The pages the user can open: the main ones, and those configuring the instance.
- * The sidebar, the bottom bar and the command palette list the same pages.
+ * The sidebar, the bottom bar and the command palette list the same pages; the
+ * open sidebar nests some of them, see sidebarItems.
  */
 export function useNavigation() {
   const { t } = useI18n();
@@ -30,6 +31,12 @@ export function useNavigation() {
           to: "/entries/transfer",
           icon: "arrows-down-up",
           permission: ["import_entry", "export_entry"],
+        },
+        {
+          label: t("entries.deletedEntries"),
+          to: "/entries/deleted",
+          icon: "trash",
+          permission: "delete_entry",
         },
         {
           label: t("nav.glossary"),
@@ -79,5 +86,30 @@ export function useNavigation() {
     { label: t("nav.settings"), to: "/settings", icon: "gear" },
   ]);
 
-  return { mainItems, settingsItems };
+  // The open sidebar groups the pages below the entries, e.g. the transfer, under
+  // them. A section is no link itself, so the entries page becomes its first item.
+  // Without the entries page, or any page below it, there is nothing to group.
+  const sidebarItems = computed<MenuItem[]>(() => {
+    const entries = mainItems.value.find((item) => item.to === "/entries");
+    const below = mainItems.value.filter((item) =>
+      item.to?.startsWith("/entries/"),
+    );
+
+    if (!entries || !below.length) return mainItems.value;
+
+    return mainItems.value.flatMap((item) => {
+      if (below.includes(item)) return [];
+      if (item !== entries) return [item];
+
+      return [
+        {
+          label: entries.label,
+          icon: entries.icon,
+          items: [{ ...entries, label: t("nav.allEntries") }, ...below],
+        },
+      ];
+    });
+  });
+
+  return { mainItems, sidebarItems, settingsItems };
 }

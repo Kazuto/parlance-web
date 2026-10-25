@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import type { DOMWrapper } from "@vue/test-utils";
-import { BottomNav } from "@thkzt/eunoia";
+import { BottomNav, SidebarToggle } from "@thkzt/eunoia";
 import DefaultLayout from "~/layouts/default.vue";
 import DashboardPage from "~/pages/index.vue";
 import {
@@ -11,6 +11,7 @@ import {
   makeUser,
   mountPage,
   settle,
+  t,
 } from "./helpers";
 
 async function mountLayout() {
@@ -64,6 +65,7 @@ describe("sidebar", () => {
       "/locales",
       "/entries",
       "/entries/transfer",
+      "/entries/deleted",
       "/glossary",
       "/scopes",
       "/roles",
@@ -77,6 +79,7 @@ describe("sidebar", () => {
   it.each([
     ["read_locale", "/locales"],
     ["read_entry", "/entries"],
+    ["delete_entry", "/entries/deleted"],
     ["read_terminology", "/glossary"],
     ["read_scope", "/scopes"],
     ["read_task", "/tasks"],
@@ -108,6 +111,50 @@ describe("sidebar", () => {
   });
 });
 
+describe("entries section", () => {
+  // The pages listed inside the sidebar's sections.
+  async function nested(wrapper: Awaited<ReturnType<typeof mountLayout>>) {
+    return wrapper.findAll('aside ul[role="group"] a').map((link) => ({
+      href: link.attributes("href"),
+      label: link.text(),
+    }));
+  }
+
+  it("groups the pages below the entries under them", async () => {
+    loginAs([...VIEWER, "delete_entry"]);
+
+    const wrapper = await mountLayout();
+
+    expect(await nested(wrapper)).toEqual([
+      { href: "/entries", label: t("nav.allEntries") },
+      { href: "/entries/transfer", label: t("nav.transfer") },
+      { href: "/entries/deleted", label: t("entries.deletedEntries") },
+    ]);
+  });
+
+  it("lists them one by one in the collapsed sidebar", async () => {
+    loginAs([...VIEWER, "delete_entry"]);
+
+    const wrapper = await mountLayout();
+
+    await wrapper.findComponent(SidebarToggle).find("button").trigger("click");
+    await settle();
+
+    // A collapsed section would hide its pages behind an icon that opens nothing.
+    expect(await nested(wrapper)).toEqual([]);
+    expect(hrefs(wrapper.findAll("aside a"))).toEqual(
+      expect.arrayContaining(["/entries", "/entries/deleted"]),
+    );
+  });
+
+  it("keeps the entries a plain link without pages below them", async () => {
+    // Neither transfer permission, nor delete_entry.
+    loginAs(VIEWER.filter((name) => name !== "export_entry"));
+
+    expect(await nested(await mountLayout())).toEqual([]);
+  });
+});
+
 describe("bottom bar", () => {
   it("puts the pages for translating on the bar and the rest behind More", async () => {
     loginAs(ALL_PERMISSIONS);
@@ -116,6 +163,7 @@ describe("bottom bar", () => {
       bar: ["/", "/locales", "/entries", "/glossary"],
       more: [
         "/entries/transfer",
+        "/entries/deleted",
         "/scopes",
         "/roles",
         "/users",

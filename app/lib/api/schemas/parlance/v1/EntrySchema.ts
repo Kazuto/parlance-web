@@ -86,6 +86,7 @@ export type ListEntriesRequest = {
   scopeIds?: Array<string> | null;
   cursor?: string | null;
   summary?: boolean | null;
+  deletedOnly?: boolean | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -115,6 +116,9 @@ export const ListEntriesRequestSchema = z.object({
     return z.string().nullish();
   },
   get summary(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get deletedOnly(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });
@@ -232,6 +236,22 @@ export const DeleteEntryRequestSchema = z.object({
 });
 export type DeleteEntryResponse = Record<string, never>;
 export const DeleteEntryResponseSchema = z.object({});
+export type DeleteEntriesRequest = {
+  ids?: Array<string> | null;
+};
+export const DeleteEntriesRequestSchema = z.object({
+  get ids(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type DeleteEntriesResponse = {
+  deletedCount?: number | null;
+};
+export const DeleteEntriesResponseSchema = z.object({
+  get deletedCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
 export type RestoreEntryRequest = {
   id?: string | null;
 };

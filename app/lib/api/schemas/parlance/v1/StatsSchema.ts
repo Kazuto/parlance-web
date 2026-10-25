@@ -10,6 +10,7 @@ export type LocaleStats = {
   missing?: number | null;
   percentage?: number | null;
   drafts?: number | null;
+  approved?: number | null;
 };
 export const LocaleStatsSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -28,6 +29,9 @@ export const LocaleStatsSchema = z.object({
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
   get drafts(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get approved(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });

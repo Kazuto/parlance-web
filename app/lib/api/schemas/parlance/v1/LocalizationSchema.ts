@@ -293,6 +293,7 @@ export type ReviewLocalizationsRequest = {
   localeIds?: Array<string> | null;
   decision?: ReviewDecision | null;
   comment?: string | null;
+  skipApproved?: boolean | null;
 };
 export const ReviewLocalizationsRequestSchema = z.object({
   get localizationIds(): z.ZodOptional<
@@ -311,6 +312,9 @@ export const ReviewLocalizationsRequestSchema = z.object({
   },
   get comment(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get skipApproved(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ReviewLocalizationsResponse = {

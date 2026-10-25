@@ -11,11 +11,13 @@ type ReviewMutation<Request> = {
  */
 export function useReviewActions<Request>(options: {
   review: () => ReviewMutation<Request>;
+  /** `onlyDrafts` leaves approved translations out, e.g. when rejecting ticked items. */
   request: (
     itemIds: string[],
     localeIds: string[],
     decision: ReviewDecision,
     comment?: string,
+    onlyDrafts?: boolean,
   ) => Request;
   /** Reloads what shows the review state, e.g. the list and the open item. */
   afterReview: () => Promise<unknown>;
@@ -23,11 +25,16 @@ export function useReviewActions<Request>(options: {
   const { t } = useI18n();
   const { showSuccess, showError } = useErrorHelper();
   const isReviewing = computed(() => options.review().isPending);
-  /** The translation a reviewer is about to send back. */
+  /**
+   * What a reviewer is about to send back: one translation, named by its
+   * language, or the drafts of ticked items.
+   */
   const rejecting = ref<{
-    itemId: string;
-    localeId: string;
-    language: string;
+    itemIds: string[];
+    localeIds: string[];
+    language?: string;
+    /** Leaves approved translations among the items approved. */
+    onlyDrafts?: boolean;
   }>();
 
   async function run(request: Request, message: (count: number) => string) {
@@ -60,7 +67,17 @@ export function useReviewActions<Request>(options: {
   }
 
   function requestReject(itemId: string, localeId: string, language: string) {
-    rejecting.value = { itemId, localeId, language };
+    rejecting.value = { itemIds: [itemId], localeIds: [localeId], language };
+  }
+
+  /** Asks to send back the drafts of the items in the languages. */
+  function requestRejectMany(itemIds: string[], localeIds: string[]) {
+    if (!itemIds.length || !localeIds.length) return;
+    rejecting.value = {
+      itemIds: [...itemIds],
+      localeIds: [...localeIds],
+      onlyDrafts: true,
+    };
   }
 
   async function confirmReject(comment: string) {
@@ -68,18 +85,30 @@ export function useReviewActions<Request>(options: {
 
     if (!target || isReviewing.value) return;
 
+    const { language } = target;
     const done = await run(
       options.request(
-        [target.itemId],
-        [target.localeId],
+        target.itemIds,
+        target.localeIds,
         "REVIEW_DECISION_REJECT",
         comment,
+        target.onlyDrafts,
       ),
-      () => t("review.rejectedToast", { language: target.language }),
+      (count) =>
+        language
+          ? t("review.rejectedToast", { language })
+          : t("review.rejectedCount", { count }, count),
     );
 
     if (done) rejecting.value = undefined;
   }
 
-  return { isReviewing, rejecting, approve, requestReject, confirmReject };
+  return {
+    isReviewing,
+    rejecting,
+    approve,
+    requestReject,
+    requestRejectMany,
+    confirmReject,
+  };
 }

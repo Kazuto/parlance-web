@@ -4,6 +4,10 @@ import { api } from "~/lib/api";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 
 const MAX_BULK_TRANSLATE = 50;
+// Copying asks no translation service, it only loads each entry.
+const MAX_BULK_COPY = 200;
+
+type Mode = "translate" | "copy";
 
 /** The drafts the translations go into, see useTranslationDrafts. */
 type Drafts = {
@@ -16,8 +20,9 @@ type Drafts = {
 
 /**
  * AI translation of the ticked entries, one after the other: like for one entry,
- * the empty selected languages get drafts to review. Each entry is loaded first,
- * so its drafts save like any other.
+ * the empty selected languages get drafts to review. Copying fills them with the
+ * default text instead. Each entry is loaded first, so its drafts save like any
+ * other.
  */
 export function useBulkTranslate(options: {
   entryIds: Ref<string[]>;
@@ -33,7 +38,12 @@ export function useBulkTranslate(options: {
   const { showSuccess, showError } = useErrorHelper();
   const queryClient = useQueryClient();
   const drafts = options.drafts;
-  const state = ref<{ done: number; total: number; stop: boolean }>();
+  const state = ref<{
+    mode: Mode;
+    done: number;
+    total: number;
+    stop: boolean;
+  }>();
 
   // Built during setup, which the API client needs; the query key carries the id.
   const entryQuery = api.entries.get.use({ id: "" });
@@ -54,26 +64,39 @@ export function useBulkTranslate(options: {
       (id) => id !== options.sourceLocaleId(),
     ),
   );
-  // Why the ticked entries can't be translated right now, if they can't.
-  const blocker = computed(() => {
-    if (options.entryIds.value.length > MAX_BULK_TRANSLATE)
-      return t("entries.bulkTranslateLimit", { max: MAX_BULK_TRANSLATE });
+
+  // Why the ticked entries can't be translated or copied right now, if they can't.
+  function blockerFor(mode: Mode) {
+    const copy = mode === "copy";
+    const max = copy ? MAX_BULK_COPY : MAX_BULK_TRANSLATE;
+
+    if (options.entryIds.value.length > max)
+      return t(copy ? "entries.bulkCopyLimit" : "entries.bulkTranslateLimit", {
+        max,
+      });
     if (!targetLocaleIds.value.length)
-      return t("entries.bulkTranslateNoLanguages");
+      return t(
+        copy
+          ? "entries.bulkCopyNoLanguages"
+          : "entries.bulkTranslateNoLanguages",
+      );
 
     return undefined;
-  });
+  }
 
-  async function run() {
+  const blocker = computed(() => blockerFor("translate"));
+  const copyBlocker = computed(() => blockerFor("copy"));
+
+  async function run(mode: Mode = "translate") {
     const sourceId = options.sourceLocaleId();
 
-    if (!sourceId || state.value || blocker.value) return;
+    if (!sourceId || state.value || blockerFor(mode)) return;
 
     const entryIds = [...options.entryIds.value];
     const targets = [...targetLocaleIds.value];
     const result = { languages: 0, entries: 0, skipped: 0, failed: 0 };
 
-    state.value = { done: 0, total: entryIds.length, stop: false };
+    state.value = { mode, done: 0, total: entryIds.length, stop: false };
 
     const progress = state.value;
 
@@ -89,7 +112,7 @@ export function useBulkTranslate(options: {
           const empty = targets.filter(
             (id) => !(drafts.forms.value[entryId]?.[id] ?? "").trim(),
           );
-          // The server translates the saved default text.
+          // The server translates the saved default text, and copies take it too.
           const source = drafts.saved.value[entryId]?.[sourceId] ?? "";
 
           if (
@@ -103,11 +126,12 @@ export function useBulkTranslate(options: {
           }
 
           let filled = 0;
+          const texts =
+            mode === "copy"
+              ? empty.map((localeId) => ({ localeId, translation: source }))
+              : await options.suggest(entryId, empty);
 
-          for (const { localeId, translation } of await options.suggest(
-            entryId,
-            empty,
-          )) {
+          for (const { localeId, translation } of texts) {
             if (!localeId) continue;
 
             if (!translation) result.failed++;
@@ -131,7 +155,12 @@ export function useBulkTranslate(options: {
 
       const message = [
         progress.stop ? t("entries.bulkTranslateStopped") : "",
-        t("entries.bulkTranslateDone", result),
+        t(
+          mode === "copy"
+            ? "entries.bulkCopyDone"
+            : "entries.bulkTranslateDone",
+          result,
+        ),
       ]
         .filter(Boolean)
         .join(" ");
@@ -145,5 +174,5 @@ export function useBulkTranslate(options: {
     if (state.value) state.value.stop = true;
   }
 
-  return { progress: state, blocker, run, stop };
+  return { progress: state, blocker, copyBlocker, run, stop };
 }

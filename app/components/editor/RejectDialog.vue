@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { Button, Dialog, Textarea } from "@thkzt/eunoia";
 
-// Asks a reviewer what should change before sending a translation back.
-const props = defineProps<{ open: boolean; language: string }>();
+// Asks a reviewer what should change before sending translations back.
+const props = defineProps<{
+  open: boolean;
+  language: string;
+  /** Replaces the title naming the language, e.g. for several entries. */
+  title?: string;
+}>();
 const emit = defineEmits<{ close: []; confirm: [comment: string] }>();
 const { t } = useI18n();
 
@@ -25,7 +30,7 @@ function confirm() {
 <template>
   <Dialog
     :open
-    :title="t('review.rejectTitle', { language })"
+    :title="title ?? t('review.rejectTitle', { language })"
     @close="emit('close')"
   >
     <form class="space-y-4" @submit.prevent="confirm">

@@ -141,6 +141,11 @@ describe("entries page", () => {
   it("lets delete_entry delete but not edit", async () => {
     const page = await open([...VIEWER, "delete_entry"]);
 
+    // Deleted entries open from the header, to restore them.
+    expect(page.headerActions()).toEqual([
+      t("entries.export"),
+      t("entries.deletedEntries"),
+    ]);
     expect(await entryActions(page)).toEqual([t("actions.deleteEntry")]);
     expect(fields(page)).not.toContain("editable");
   });
@@ -152,6 +157,7 @@ describe("entries page", () => {
       t("entries.create"),
       t("entries.import"),
       t("entries.export"),
+      t("entries.deletedEntries"),
     ]);
     expect(await entryActions(page)).toEqual([
       t("entries.copyDefaultToEmpty"),

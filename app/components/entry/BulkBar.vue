@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Button, Icon } from "@thkzt/eunoia";
+import { ActionMenu, Button, Icon, type ActionMenuItem } from "@thkzt/eunoia";
 
 // Actions on the entries ticked in the list.
-defineProps<{
+const props = defineProps<{
   count: number;
   loadedCount: number;
   allLoadedChecked: boolean;
@@ -12,11 +12,20 @@ defineProps<{
   isTranslating: boolean;
   canTranslate: boolean;
   translateBlocker?: string;
-  /** The running bulk translation, if any. */
-  progress?: { done: number; total: number; stop: boolean };
-  /** The user may approve the ticked entries' drafts. */
-  canApprove?: boolean;
+  /** The running bulk translation or copy, if any. */
+  progress?: {
+    mode: "translate" | "copy";
+    done: number;
+    total: number;
+    stop: boolean;
+  };
+  /** The user may approve and reject the ticked entries' drafts. */
+  canReview?: boolean;
   isReviewing?: boolean;
+  /** The user may copy the default text into the empty languages. */
+  canCopy?: boolean;
+  copyBlocker?: string;
+  canDelete?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -26,8 +35,59 @@ const emit = defineEmits<{
   stopTranslate: [];
   editScopes: [];
   approve: [];
+  reject: [];
+  copy: [];
+  delete: [];
 }>();
 const { t } = useI18n();
+
+// Rarer actions wait behind "More", so the bar fits next to the list.
+const moreItems = computed<ActionMenuItem[]>(() => [
+  ...(props.canReview
+    ? [
+        {
+          value: "reject",
+          label: t("review.rejectTicked"),
+          icon: "arrow-u-up-left",
+          hint: t("review.rejectTickedHint"),
+          disabled: props.isSaving || props.isReviewing || props.limitReached,
+        },
+      ]
+    : []),
+  ...(props.canCopy
+    ? [
+        {
+          value: "copy",
+          label: t("entries.copyDefaultToEmpty"),
+          icon: "copy",
+          hint: props.copyBlocker,
+          disabled:
+            props.isSaving ||
+            props.isTranslating ||
+            !!props.progress ||
+            !!props.copyBlocker,
+        },
+      ]
+    : []),
+  ...(props.canDelete
+    ? [
+        {
+          value: "delete",
+          label: t("entries.bulkDelete"),
+          icon: "trash",
+          variant: "danger" as const,
+          divider: !!props.canReview || !!props.canCopy,
+          disabled: props.isSaving || props.limitReached,
+        },
+      ]
+    : []),
+]);
+
+function onMore(value: string) {
+  if (value === "reject") emit("reject");
+  else if (value === "copy") emit("copy");
+  else if (value === "delete") emit("delete");
+}
 </script>
 
 <template>
@@ -66,12 +126,18 @@ const { t } = useI18n();
       role="status"
       class="ml-auto flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-300"
     >
-      <Icon name="sparkle" size="xs" class="animate-pulse" />
+      <Icon
+        :name="progress.mode === 'copy' ? 'copy' : 'sparkle'"
+        size="xs"
+        class="animate-pulse"
+      />
       {{
-        t("entries.bulkTranslateProgress", {
-          done: progress.done,
-          total: progress.total,
-        })
+        t(
+          progress.mode === "copy"
+            ? "entries.bulkCopyProgress"
+            : "entries.bulkTranslateProgress",
+          { done: progress.done, total: progress.total },
+        )
       }}
     </span>
     <Button
@@ -98,7 +164,7 @@ const { t } = useI18n();
       {{ t("entries.bulkTranslate") }}
     </Button>
     <Button
-      v-if="canApprove"
+      v-if="canReview"
       type="button"
       ghost
       dense
@@ -115,11 +181,19 @@ const { t } = useI18n();
       primary
       dense
       icon="stack"
-      :class="{ 'ml-auto': !progress && !canTranslate && !canApprove }"
+      :class="{ 'ml-auto': !progress && !canTranslate && !canReview }"
       :disabled="isSaving || limitReached"
       @click="emit('editScopes')"
     >
       {{ t("entries.bulkEditScopes") }}
     </Button>
+    <ActionMenu
+      v-if="moreItems.length"
+      :items="moreItems"
+      :label="t('entries.bulkMore')"
+      placement="bottom-end"
+      dense
+      @select="onMore"
+    />
   </div>
 </template>

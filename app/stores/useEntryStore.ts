@@ -5,6 +5,8 @@ export const useEntryStore = defineStore("entryStore", () => {
   const queryClient = useQueryClient();
   const feedQueryKey = api.entries.feed.getQueryKey();
   const detailQueryKey = api.entries.get.getQueryKey();
+  // Deleting and restoring also change the list of deleted entries.
+  const listQueryKey = api.entries.list.getQueryKey();
 
   const create = useMutation({
     ...api.entries.create.use(),
@@ -32,6 +34,15 @@ export const useEntryStore = defineStore("entryStore", () => {
     ...api.entries.delete.use(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: listQueryKey });
+    },
+  });
+
+  const destroyMany = useMutation({
+    ...api.entries.deleteMany.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: listQueryKey });
     },
   });
 
@@ -39,6 +50,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     ...api.entries.restore.use(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: listQueryKey });
     },
   });
 
@@ -47,6 +59,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     update,
     updateScopes,
     destroy,
+    destroyMany,
     restore,
   };
 });

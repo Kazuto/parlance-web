@@ -10,12 +10,15 @@ import {
   UpdateEntryResponseSchema,
   DeleteEntryRequestSchema,
   DeleteEntryResponseSchema,
+  DeleteEntriesRequestSchema,
+  DeleteEntriesResponseSchema,
   type ListEntriesRequest,
   type ListEntriesResponse,
   type GetEntryRequest,
   type CreateEntryRequest,
   type UpdateEntryRequest,
   type DeleteEntryRequest,
+  type DeleteEntriesRequest,
   type RestoreEntryRequest,
   RestoreEntryResponseSchema,
   RestoreEntryRequestSchema,
@@ -128,6 +131,18 @@ export const entries = {
     {
       input: DeleteEntryRequestSchema,
       output: DeleteEntryResponseSchema,
+    },
+  ),
+
+  deleteMany: authedEndpoint.mutate(
+    (data: DeleteEntriesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/DeleteEntries",
+      json: data,
+    }),
+    {
+      input: DeleteEntriesRequestSchema,
+      output: DeleteEntriesResponseSchema,
     },
   ),
 

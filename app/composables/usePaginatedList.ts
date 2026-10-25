@@ -13,16 +13,30 @@ type ListRequest = {
 
 /**
  * One page of a list endpoint. The returned pagination and filter refs drive the
- * query, e.g. from a table's pager and search box.
+ * query, e.g. from a table's pager and search box. `params` are the endpoint's
+ * other fields, sent with every page.
  */
 export function usePaginatedList<Input extends ListRequest, Output>(
   endpoint: QueryOperation<Input, Output>,
-  { perPage = 20, includeDeleted = false } = {},
+  {
+    perPage = 20,
+    includeDeleted = false,
+    sort,
+    params,
+  }: {
+    perPage?: number;
+    includeDeleted?: boolean;
+    /** The order the list starts in, e.g. `{ sort: "deleted_at", order: "desc" }`. */
+    sort?: Pick<FilterRequest, "sort" | "order">;
+    params?: Omit<Partial<Input>, keyof ListRequest>;
+  } = {},
 ) {
   const pagination = ref<PaginationRequest>({ page: 1, perPage });
-  const filter = ref<FilterRequest>({ includeDeleted });
+  const filter = ref<FilterRequest>({ includeDeleted, ...sort });
 
-  const query = useQuery(endpoint.use({ pagination, filter } as never));
+  const query = useQuery(
+    endpoint.use({ ...params, pagination, filter } as never),
+  );
 
   return { ...query, pagination, filter };
 }

@@ -93,6 +93,15 @@ usePage(() => ({
           },
         ]
       : []),
+    ...(can.value("delete_entry")
+      ? [
+          {
+            content: t("entries.deletedEntries"),
+            icon: "trash",
+            onClick: () => navigateTo("/entries/deleted"),
+          },
+        ]
+      : []),
   ],
 }));
 
@@ -279,6 +288,20 @@ async function handleDeleted(id: string) {
   await refetch();
 }
 
+const showBulkDeleteDialog = ref(false);
+
+async function handleBulkDeleted(ids: string[]) {
+  checkedEntryIds.value = [];
+  ids.forEach(forgetEntry);
+
+  if (selectedEntryId.value && ids.includes(selectedEntryId.value)) {
+    pinnedEntryId.value = undefined;
+    selectedEntry.value = undefined;
+  }
+
+  await refetch();
+}
+
 const splitViewItems = computed((): SplitViewItem[] =>
   feedEntries.value
     .filter((entry) => !!entry.id)
@@ -396,14 +419,16 @@ const {
   rejecting,
   approve: approveTranslations,
   requestReject,
+  requestRejectMany,
   confirmReject,
 } = useReviewActions({
   review: () => localizationStore.review,
-  request: (entryIds, localeIds, decision, comment) => ({
+  request: (entryIds, localeIds, decision, comment, onlyDrafts) => ({
     entryIds,
     localeIds,
     decision,
     comment,
+    skipApproved: onlyDrafts,
   }),
   afterReview: () =>
     Promise.all([
@@ -634,7 +659,8 @@ async function translateEmptyTranslations() {
 const {
   progress: bulkTranslation,
   blocker: bulkTranslateBlocker,
-  run: translateCheckedEntries,
+  copyBlocker: bulkCopyBlocker,
+  run: runBulkTranslation,
   stop: stopBulkTranslation,
 } = useBulkTranslate({
   entryIds: checkedEntryIds,
@@ -911,14 +937,20 @@ watch(
       :can-translate="canMachineTranslate"
       :translate-blocker="bulkTranslateBlocker"
       :progress="bulkTranslation"
-      :can-approve="canReview"
+      :can-review="canReview"
       :is-reviewing="isReviewing"
+      :can-copy="canUpdate"
+      :copy-blocker="bulkCopyBlocker"
+      :can-delete="can('delete_entry')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
-      @translate="translateCheckedEntries"
+      @translate="runBulkTranslation()"
       @stop-translate="stopBulkTranslation"
       @edit-scopes="showScopesDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
+      @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
+      @copy="runBulkTranslation('copy')"
+      @delete="showBulkDeleteDialog = true"
     />
     <div class="relative flex flex-1 min-h-0 overflow-hidden">
       <SplitView
@@ -1171,6 +1203,15 @@ watch(
   <EditorRejectDialog
     :open="!!rejecting"
     :language="rejecting?.language ?? ''"
+    :title="
+      rejecting && !rejecting.language
+        ? t(
+            'review.rejectTickedTitle',
+            { count: rejecting.itemIds.length },
+            rejecting.itemIds.length,
+          )
+        : undefined
+    "
     @close="rejecting = undefined"
     @confirm="confirmReject"
   />
@@ -1208,6 +1249,12 @@ watch(
     :item="deleteDialogItem"
     @close="deleteDialogItem = undefined"
     @deleted="handleDeleted"
+  />
+  <EntryBulkDeleteDialog
+    :open="showBulkDeleteDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showBulkDeleteDialog = false"
+    @deleted="handleBulkDeleted"
   />
 </template>
 

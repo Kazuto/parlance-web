@@ -265,6 +265,13 @@ const visibleCards = computed(() =>
     </div>
   </div>
 
+  <div v-if="can('read_entry') && statsData?.byLocale?.length" class="mb-8">
+    <DashboardLocaleProgress
+      :locales="statsData.byLocale"
+      :total="entryCount"
+    />
+  </div>
+
   <!-- Recent Activity -->
   <div>
     <DashboardRecentActivity v-if="can('read_entry')" />

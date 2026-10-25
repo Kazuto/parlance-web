@@ -55,8 +55,11 @@ const onMenuSelect = (label: string) => {
 const avatarUrl = useAvatarUrl();
 
 // Only link pages the user can open.
-const { mainItems: menuItems, settingsItems: settingsMenuItems } =
-  useNavigation();
+const {
+  mainItems: menuItems,
+  sidebarItems,
+  settingsItems: settingsMenuItems,
+} = useNavigation();
 
 const userMenuItems = computed<UserMenuItem[]>(() => [
   { label: t("nav.settings"), icon: "gear", to: "/settings" },
@@ -121,7 +124,13 @@ const headerOptions = computed(() => {
         <div class="flex px-3 pt-3.5 pb-1">
           <SidebarToggle v-model:collapsed="sidebarCollapsed" />
         </div>
-        <Menu class="p-3 pt-1" :items="menuItems" :current-path="route.path" />
+        <!-- Collapsed, a section shows only its icon and hides its pages, so
+             they are listed one by one. -->
+        <Menu
+          class="p-3 pt-1"
+          :items="sidebarCollapsed ? menuItems : sidebarItems"
+          :current-path="route.path"
+        />
         <!-- Menu puts its class on the list inside, so a wrapper does the pushing. -->
         <div class="mt-auto">
           <Menu
