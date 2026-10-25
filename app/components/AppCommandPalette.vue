@@ -10,21 +10,22 @@ const props = defineProps<{
 }>();
 const open = defineModel<boolean>("open", { default: false });
 const { t } = useI18n();
-const { mainItems, settingsItems } = useNavigation();
+const { mainItems, settingsItems, accountItem } = useNavigation();
 
 const pages = computed<AppCommand[]>(() =>
-  [...mainItems.value, ...settingsItems.value].flatMap((page) =>
-    page.to
-      ? [
-          {
-            label: page.label,
-            value: `page:${page.to}`,
-            group: t("commands.groupPages"),
-            icon: page.icon,
-            run: () => navigateTo(page.to),
-          },
-        ]
-      : [],
+  [...mainItems.value, ...settingsItems.value, accountItem.value].flatMap(
+    (page) =>
+      page.to
+        ? [
+            {
+              label: page.label,
+              value: `page:${page.to}`,
+              group: t("commands.groupPages"),
+              icon: page.icon,
+              run: () => navigateTo(page.to),
+            },
+          ]
+        : [],
   ),
 );
 const commands = computed(() => [...props.commands, ...pages.value]);

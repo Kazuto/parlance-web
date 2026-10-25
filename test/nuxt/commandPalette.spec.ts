@@ -57,7 +57,7 @@ describe("command palette", () => {
       t("nav.transfer"),
       t("nav.glossary"),
       t("nav.scopes"),
-      t("nav.settings"),
+      t("nav.account"),
     ]);
   });
 
@@ -87,7 +87,7 @@ describe("command palette", () => {
     expect(await labels(wrapper)).toEqual([
       "Reload the list",
       t("nav.dashboard"),
-      t("nav.settings"),
+      t("nav.account"),
     ]);
 
     await (await openPalette(wrapper))[0]!.trigger("click");
@@ -99,7 +99,7 @@ describe("command palette", () => {
 
     expect(await labels(wrapper)).toEqual([
       t("nav.dashboard"),
-      t("nav.settings"),
+      t("nav.account"),
     ]);
   });
 

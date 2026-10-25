@@ -1,9 +1,10 @@
 import type { MenuItem } from "@thkzt/eunoia";
 
 /**
- * The pages the user can open: the main ones, and those configuring the instance.
- * The sidebar, the bottom bar and the command palette list the same pages; the
- * open sidebar nests some of them, see sidebarItems.
+ * The pages the user can open: the main ones, those configuring the instance, and
+ * their own account. The sidebar, the bottom bar and the command palette list the
+ * same pages; the open sidebar nests some of them, see sidebarItems. The account
+ * opens from the user menu.
  */
 export function useNavigation() {
   const { t } = useI18n();
@@ -75,7 +76,8 @@ export function useNavigation() {
       .map(({ permission: _permission, ...item }) => item),
   );
 
-  // Configuring the instance: automation for those who may see it, and settings.
+  // Configuring the instance, for those who may see each part. The settings page
+  // lets the same permissions in.
   const settingsItems = computed<MenuItem[]>(() => [
     ...(can.value("read_task")
       ? [{ label: t("nav.tasks"), to: "/tasks", icon: "lightning" }]
@@ -83,8 +85,17 @@ export function useNavigation() {
     ...(can.value("read_webhook")
       ? [{ label: t("nav.webhooks"), to: "/webhooks", icon: "webhooks-logo" }]
       : []),
-    { label: t("nav.settings"), to: "/settings", icon: "gear" },
+    ...(canAny.value(["read_translation_server", "read_sso_provider"])
+      ? [{ label: t("nav.settings"), to: "/settings", icon: "gear" }]
+      : []),
   ]);
+
+  // Everyone's own settings.
+  const accountItem = computed<MenuItem>(() => ({
+    label: t("nav.account"),
+    to: "/account",
+    icon: "user-circle",
+  }));
 
   // The open sidebar groups the pages below the entries, e.g. the transfer, under
   // them. A section is no link itself, so the entries page becomes its first item.
@@ -111,5 +122,5 @@ export function useNavigation() {
     });
   });
 
-  return { mainItems, sidebarItems, settingsItems };
+  return { mainItems, sidebarItems, settingsItems, accountItem };
 }

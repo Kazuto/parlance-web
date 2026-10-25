@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import SettingsPage from "~/pages/settings.vue";
+import AccountPage from "~/pages/account.vue";
 import {
   VIEWER,
   loginAs,
@@ -12,8 +12,8 @@ import {
 } from "./helpers";
 import type { User } from "~/lib/api/schemas/parlance/v1/UserSchema";
 
-/** Opens the settings as a viewer, who may change nothing but their own account. */
-async function openSettings(account: Partial<User> = {}) {
+/** Opens "My account" as a viewer, who may change nothing but their own account. */
+async function openAccount(account: Partial<User> = {}) {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
 
   loginAs(VIEWER);
@@ -41,7 +41,7 @@ async function openSettings(account: Partial<User> = {}) {
     });
   }
 
-  const page = await mountPage(SettingsPage);
+  const page = await mountPage(AccountPage);
 
   return { page, calls };
 }
@@ -65,7 +65,7 @@ describe("account settings", () => {
   });
 
   it("lets a viewer change their language", async () => {
-    const { page, calls } = await openSettings();
+    const { page, calls } = await openAccount();
 
     await page.wrapper
       .findAll("button")
@@ -81,7 +81,7 @@ describe("account settings", () => {
   });
 
   it("saves the name and email", async () => {
-    const { page, calls } = await openSettings();
+    const { page, calls } = await openAccount();
 
     await field(page, t("common.name")).setValue("Ada Lovelace");
     await page.wrapper.findAll("form")[0]!.trigger("submit");
@@ -96,7 +96,7 @@ describe("account settings", () => {
   });
 
   it("changes the password with the current one", async () => {
-    const { page, calls } = await openSettings({ hasPassword: true });
+    const { page, calls } = await openAccount({ hasPassword: true });
 
     await field(page, t("account.currentPassword")).setValue("old");
     await field(page, t("account.newPassword")).setValue("new-password");
@@ -120,7 +120,7 @@ describe("account settings", () => {
   });
 
   it("sets a first password without asking for one", async () => {
-    const { page } = await openSettings();
+    const { page } = await openAccount();
 
     expect(page.wrapper.text()).toContain(t("account.noPassword"));
     expect(page.wrapper.text()).not.toContain(t("account.currentPassword"));
@@ -128,7 +128,7 @@ describe("account settings", () => {
   });
 
   it("uploads and removes the avatar, loaded from the API", async () => {
-    const { page, calls } = await openSettings({
+    const { page, calls } = await openAccount({
       avatar: "/avatars/user-1?v=1",
     });
 

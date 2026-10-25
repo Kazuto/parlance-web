@@ -44,12 +44,14 @@ const sidebarCollapsed = ref(false);
 // The header lines its title and actions up with the page column inside <main>.
 const mainEl = useTemplateRef<HTMLElement>("mainEl");
 
+// The user menu only links an item's label, so a click beside it, or Enter,
+// arrives here as a selection.
 const onMenuSelect = (label: string) => {
-  if (label === t("nav.signOut")) {
-    logout();
-  } else if (label === t("nav.settings")) {
-    navigateTo("/settings");
-  }
+  if (label === t("nav.signOut")) return logout();
+
+  const to = userMenuItems.value.find((item) => item.label === label)?.to;
+
+  if (to) navigateTo(to);
 };
 
 const avatarUrl = useAvatarUrl();
@@ -59,10 +61,11 @@ const {
   mainItems: menuItems,
   sidebarItems,
   settingsItems: settingsMenuItems,
+  accountItem,
 } = useNavigation();
 
 const userMenuItems = computed<UserMenuItem[]>(() => [
-  { label: t("nav.settings"), icon: "gear", to: "/settings" },
+  accountItem.value,
   { label: t("nav.signOut"), icon: "sign-out", variant: "danger" },
 ]);
 

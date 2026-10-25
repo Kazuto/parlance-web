@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import type { DOMWrapper } from "@vue/test-utils";
-import { BottomNav, SidebarToggle } from "@thkzt/eunoia";
+import { BottomNav, SidebarToggle, UserMenu } from "@thkzt/eunoia";
 import DefaultLayout from "~/layouts/default.vue";
 import DashboardPage from "~/pages/index.vue";
 import {
@@ -53,7 +53,6 @@ describe("sidebar", () => {
       "/entries/transfer",
       "/glossary",
       "/scopes",
-      "/settings",
     ]);
   });
 
@@ -94,9 +93,24 @@ describe("sidebar", () => {
     expect(await sidebarLinks()).toContain(href);
   });
 
-  it("always links the dashboard and the settings", async () => {
+  it("always links the dashboard", async () => {
     loginAs([]);
-    expect(await sidebarLinks()).toEqual(["/", "/settings"]);
+    expect(await sidebarLinks()).toEqual(["/"]);
+  });
+
+  it("links the instance settings for either of their parts", async () => {
+    for (const permission of ["read_translation_server", "read_sso_provider"]) {
+      loginAs([permission]);
+      expect(await sidebarLinks()).toContain("/settings");
+    }
+
+    loginAs(
+      ALL_PERMISSIONS.filter(
+        (name) =>
+          !["read_translation_server", "read_sso_provider"].includes(name),
+      ),
+    );
+    expect(await sidebarLinks()).not.toContain("/settings");
   });
 
   it("reloads the user so role changes made since sign-in apply", async () => {
@@ -108,6 +122,50 @@ describe("sidebar", () => {
 
     expect(links).not.toContain("/roles");
     expect(links).not.toContain("/users");
+  });
+});
+
+describe("own account", () => {
+  it("opens from the user menu, whatever the permissions", async () => {
+    loginAs([]);
+
+    const menu = (await mountLayout()).findComponent(UserMenu);
+
+    expect(menu.props("items")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: t("nav.account"), to: "/account" }),
+      ]),
+    );
+  });
+
+  it("opens when chosen anywhere on its row, or by keyboard", async () => {
+    loginAs([]);
+
+    // Only the label is a link; choosing the row otherwise just selects it.
+    (await mountLayout())
+      .findComponent(UserMenu)
+      .vm.$emit("select", t("nav.account"));
+
+    await vi.waitFor(() =>
+      expect(useRouter().currentRoute.value.path).toBe("/account"),
+    );
+  });
+
+  it("is where the settings send users who may change no instance settings", async () => {
+    loginAs(VIEWER);
+    await useRouter().push("/settings");
+
+    await vi.waitFor(() =>
+      expect(useRouter().currentRoute.value.path).toBe("/account"),
+    );
+  });
+
+  it("leaves the settings to those who may change some", async () => {
+    loginAs(["read_sso_provider"]);
+    await useRouter().push("/settings");
+    await settle();
+
+    expect(useRouter().currentRoute.value.path).toBe("/settings");
   });
 });
 
@@ -179,17 +237,14 @@ describe("bottom bar", () => {
 
     expect(await bottomBarLinks()).toEqual({
       bar: ["/", "/locales", "/entries", "/glossary"],
-      more: ["/entries/transfer", "/scopes", "/settings"],
+      more: ["/entries/transfer", "/scopes"],
     });
   });
 
   it("needs no More drawer when the pages fit", async () => {
     loginAs([]);
 
-    expect(await bottomBarLinks()).toEqual({
-      bar: ["/", "/settings"],
-      more: [],
-    });
+    expect(await bottomBarLinks()).toEqual({ bar: ["/"], more: [] });
   });
 });
 
