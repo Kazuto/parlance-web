@@ -2,15 +2,21 @@ import { useQuery } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import { api } from "~/lib/api";
 import type { TerminologySuggestion } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
+import { withoutPlaceholders } from "~/lib/qa";
 
 /** How a glossary term shows up in a translation. */
 export type TermStatus = "untranslated" | "unused" | "used";
 
 export type TermMatch = TerminologySuggestion & { status: TermStatus };
 
-/** Whether `term` appears as a whole word in `text`, ignoring case and width. */
+/**
+ * Whether `term` appears as a whole word in `text`, ignoring case, width and the
+ * placeholders. The server leaves placeholders out of the source text likewise.
+ */
 function containsTerm(text: string, term: string) {
-  const normalized = text.normalize("NFKC").toLocaleLowerCase();
+  const normalized = withoutPlaceholders(text)
+    .normalize("NFKC")
+    .toLocaleLowerCase();
   const needle = term.normalize("NFKC").toLocaleLowerCase();
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

@@ -98,6 +98,14 @@ function placeholders(text: string): string[] {
   return text.replaceAll("%%", "").match(PLACEHOLDER) ?? [];
 }
 
+/**
+ * The text with its placeholders blanked out. They stay as they are, so "{name}"
+ * doesn't use the glossary term "Name".
+ */
+export function withoutPlaceholders(text: string) {
+  return text.replaceAll("%%", " ").replace(PLACEHOLDER, " ");
+}
+
 function tags(text: string) {
   return [...text.matchAll(TAG)].map(
     ([, closing, name]) => `<${closing}${name!.toLowerCase()}>`,
