@@ -258,12 +258,16 @@ export const DefinitionHistorySchema = z.object({
 export type SuggestTerminologiesRequest = {
   sourceText?: string | null;
   targetLocaleId?: string | null;
+  translation?: string | null;
 };
 export const SuggestTerminologiesRequestSchema = z.object({
   get sourceText(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
   get targetLocaleId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get translation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -282,6 +286,7 @@ export type TerminologySuggestion = {
   targetTranslation?: string | null;
   matchedWords?: Array<string> | null;
   targetStatus?: ReviewStatus | null;
+  used?: boolean | null;
 };
 export const TerminologySuggestionSchema = z.object({
   get terminology(): z.ZodOptional<z.ZodNullable<z.ZodType<Terminology>>> {
@@ -295,5 +300,8 @@ export const TerminologySuggestionSchema = z.object({
   },
   get targetStatus(): z.ZodOptional<z.ZodNullable<z.ZodType<ReviewStatus>>> {
     return ReviewStatusSchema.nullish();
+  },
+  get used(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
