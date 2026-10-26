@@ -21,7 +21,9 @@ from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
 - **Glossary:** define terms and their translation per language. The editor shows
   the terms that occur in a text, so the same word is translated the same way.
 - **Languages:** add languages, choose the default (source) language, and name each
-  language in every language. Missing names can be filled in automatically.
+  language in every language. Missing names can be filled in automatically. Set
+  whether a language addresses the reader formally ("Sie", "vous") or informally
+  ("du", "tu").
 - **Import and export:** flat or nested JSON, PHP arrays (Laravel), gettext PO, and
   ZIP files with one file per language.
 - **Machine translation (optional):** suggestions from a self-hosted
@@ -183,6 +185,15 @@ in the server README.
 The results appear as drafts in the empty languages. Check them, especially those
 marked "Check": a placeholder may be missing or the plural forms may not match.
 Then save.
+
+**Form of address:** without it, the model picks formal or informal per text, and
+mixes them. Set **Form of address** in a language's settings (**Edit locale**) to
+formal or informal, and machine translation asks for it. The editor then marks
+texts in the other form with "Check", whoever wrote them: for example "du" in a
+language set to formal. This check covers German, French, Spanish, Italian, Dutch
+and Russian. Machine translation asks for the form in every language, but the
+model doesn't always follow it: in the editor such a suggestion is a draft marked
+"Check", and the machine translation task leaves it out.
 
 ### Webhooks
 

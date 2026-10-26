@@ -5,8 +5,10 @@ import {
   Checkbox,
   Dialog,
   Input,
+  Select,
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
+import type { Formality } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: [] }>();
@@ -15,11 +17,13 @@ const form = ref({
   code: "",
   names: {} as Record<string, string>,
   isDefault: false,
+  formality: "FORMALITY_UNSPECIFIED" as Formality,
 });
 
 const localeStore = useLocaleStore();
 const { t } = useI18n();
 const { showSuccess } = useErrorHelper();
+const formalityOptions = useFormalityOptions();
 
 const { placeholder: codePlaceholder } = useTypingPlaceholder([
   "en-US",
@@ -52,7 +56,12 @@ const { error, isPending, submit, cancel } = useFormDialog({
   open: () => props.open,
   isPending: () => localeStore.create.isPending,
   reset: () => {
-    form.value = { code: "", names: {}, isDefault: false };
+    form.value = {
+      code: "",
+      names: {},
+      isDefault: false,
+      formality: "FORMALITY_UNSPECIFIED",
+    };
   },
   close: () => emit("close"),
 });
@@ -69,6 +78,7 @@ function handleSubmit() {
       code: form.value.code,
       names: { values: form.value.names },
       isDefault: form.value.isDefault,
+      formality: form.value.formality,
     });
 
     showSuccess(
@@ -105,6 +115,19 @@ function handleSubmit() {
       >
         {{ t("locales.englishName") }}
       </Input>
+
+      <div class="space-y-1">
+        <Select
+          v-model="form.formality"
+          teleport-to="body"
+          :options="formalityOptions"
+          :disabled="isPending"
+          >{{ t("locales.formality") }}</Select
+        >
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("locales.formalityHelp") }}
+        </p>
+      </div>
 
       <Checkbox
         v-model="form.isDefault"

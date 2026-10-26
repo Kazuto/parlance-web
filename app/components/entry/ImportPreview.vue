@@ -3,6 +3,7 @@ import type {
   ImportChangeAction,
   ImportResult,
 } from "~/lib/api/schemas/parlance/v1/ImportSchema";
+import type { Formality } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { textDirection } from "~/lib/textDirection";
 
 // What an import would do, from its dry run: how many translations it adds, changes
@@ -12,6 +13,8 @@ const props = defineProps<{
   result: ImportResult;
   /** The language imported into, for the writing direction of the texts. */
   localeCode?: string;
+  /** Its form of address, which the checks compare the texts with. */
+  formality?: Formality | null;
   /** One file of a ZIP, whose other files may update the outdated translations. */
   inZip?: boolean;
 }>();
@@ -130,6 +133,7 @@ const unlisted = computed(() => totals.value.changes - changes.value.length);
             v-if="change.sourceTranslation && change.newTranslation"
             :source="change.sourceTranslation"
             :value="change.newTranslation"
+            :target="{ code: localeCode, formality }"
           />
         </div>
         <p

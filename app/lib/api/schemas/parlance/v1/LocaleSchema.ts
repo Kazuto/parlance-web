@@ -11,6 +11,11 @@ import {
   StringMapSchema,
   type StringMap,
 } from "./CommonSchema";
+export const FormalitySchema = z.union([
+  z.enum(["FORMALITY_UNSPECIFIED", "FORMALITY_FORMAL", "FORMALITY_INFORMAL"]),
+  z.number().int().min(-2147483648).max(2147483647),
+]);
+export type Formality = z.infer<typeof FormalitySchema>;
 export type Locale = {
   id?: string | null;
   code?: string | null;
@@ -20,6 +25,7 @@ export type Locale = {
   createdAt?: string | null;
   updatedAt?: string | null;
   deletedAt?: string | null;
+  formality?: Formality | null;
 };
 export const LocaleSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -45,6 +51,9 @@ export const LocaleSchema = z.object({
   },
   get deletedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get formality(): z.ZodOptional<z.ZodNullable<z.ZodType<Formality>>> {
+    return FormalitySchema.nullish();
   },
 });
 export type ListLocalesRequest = {
@@ -93,6 +102,7 @@ export type CreateLocaleRequest = {
   code?: string | null;
   isDefault?: boolean | null;
   names?: StringMap | null;
+  formality?: Formality | null;
 };
 export const CreateLocaleRequestSchema = z.object({
   get code(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -103,6 +113,9 @@ export const CreateLocaleRequestSchema = z.object({
   },
   get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
     return StringMapSchema.nullish();
+  },
+  get formality(): z.ZodOptional<z.ZodNullable<z.ZodType<Formality>>> {
+    return FormalitySchema.nullish();
   },
 });
 export type CreateLocaleResponse = {
@@ -118,6 +131,7 @@ export type UpdateLocaleRequest = {
   code?: string | null;
   isDefault?: boolean | null;
   names?: StringMap | null;
+  formality?: Formality | null;
 };
 export const UpdateLocaleRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -131,6 +145,9 @@ export const UpdateLocaleRequestSchema = z.object({
   },
   get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
     return StringMapSchema.nullish();
+  },
+  get formality(): z.ZodOptional<z.ZodNullable<z.ZodType<Formality>>> {
+    return FormalitySchema.nullish();
   },
 });
 export type UpdateLocaleResponse = {

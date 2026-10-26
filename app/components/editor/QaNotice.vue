@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { Tooltip } from "@thkzt/eunoia";
-import { checkTranslation } from "~/lib/qa";
+import { checkTranslation, type QaTarget } from "~/lib/qa";
 
 // What to check in a translation against the source text, whether a person or the
 // translation model wrote it. It follows the field as it is typed.
 const props = defineProps<{
   source: string;
   value: string;
+  /** The translation's language, for its form of address. */
+  target?: QaTarget;
 }>();
 const { t } = useI18n();
 
 const problems = computed(() =>
-  checkTranslation(props.source, props.value).map((warning) =>
+  checkTranslation(props.source, props.value, props.target).map((warning) =>
     t(`entries.suggestionWarning.${warning.code}`, {
       placeholder: warning.detail ?? "",
     }),

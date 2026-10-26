@@ -1134,6 +1134,7 @@ watch(
                   <EditorQaNotice
                     :source="currentEntryForms[defaultLocale.id] ?? ''"
                     :value="currentEntryForms[localeId] ?? ''"
+                    :target="localeOption(localeId)"
                   />
                 </div>
               </template>

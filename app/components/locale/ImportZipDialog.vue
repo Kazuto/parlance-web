@@ -8,6 +8,7 @@ import {
   Stepper,
 } from "@thkzt/eunoia";
 import { useZipImport } from "~/composables/import/useZipImport";
+import { api } from "~/lib/api";
 import type {
   ImportMode,
   ImportZipResponse,
@@ -25,6 +26,14 @@ const emit = defineEmits<{
 const { t, locale: uiLocale } = useI18n();
 const { showError, showSuccess } = useErrorHelper();
 const { importZip, isPending } = useZipImport();
+// The files are named by language code; their languages' forms of address go
+// into the preview's checks.
+const { items: locales } = useAllPages(
+  api.locales.list,
+  (response) => response.locales,
+);
+const localeFormality = (code?: string | null) =>
+  formalityOf(locales.value.find((locale) => locale.code === code));
 
 const file = ref<File | undefined>(undefined);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
@@ -208,6 +217,7 @@ function handleClose() {
             v-else-if="item.result"
             :result="item.result"
             :locale-code="item.localeCode ?? undefined"
+            :formality="localeFormality(item.localeCode)"
             :in-zip="(preview.results?.length ?? 0) > 1"
           />
         </section>

@@ -7,18 +7,23 @@ import {
   Checkbox,
   Dialog,
   Input,
+  Select,
   SplitView,
   type SplitViewItem,
 } from "@thkzt/eunoia";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import type {
+  Formality,
+  Locale,
+} from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { fillLanguageNames, languageName } from "~/lib/languageNames";
 
 type LocaleForm = {
   code: string;
   names: Record<string, string>;
   isDefault: boolean;
+  formality: Formality;
 };
 
 const route = useRoute();
@@ -50,7 +55,12 @@ const drafts = ref<Record<string, LocaleForm>>({});
 const saved = ref<Record<string, LocaleForm>>({});
 const error = ref<string>();
 const editOpen = ref(false);
-const metadata = ref({ code: "", isDefault: false });
+const metadata = ref({
+  code: "",
+  isDefault: false,
+  formality: "FORMALITY_UNSPECIFIED" as Formality,
+});
+const formalityOptions = useFormalityOptions();
 const deleteItem = ref<Locale>();
 
 const languages = computed(() =>
@@ -83,6 +93,14 @@ const selectedItem = computed<SplitViewItem | undefined>(() => {
     : undefined;
 });
 const form = computed(() => drafts.value[selectedId.value]);
+// Shown next to the name once set.
+const formalityBadge = computed(() =>
+  form.value && form.value.formality !== "FORMALITY_UNSPECIFIED"
+    ? formalityOptions.value.find(
+        (option) => option.value === form.value?.formality,
+      )?.label
+    : undefined,
+);
 
 // Languages this locale has no name for yet, from the draft if there is one.
 function missingNames(id: string) {
@@ -111,7 +129,8 @@ function changedFields(id: string) {
       (code) => (draft.names[code] ?? "") !== (baseline.names[code] ?? ""),
     ).length +
     Number(draft.code !== baseline.code) +
-    Number(draft.isDefault !== baseline.isDefault)
+    Number(draft.isDefault !== baseline.isDefault) +
+    Number(draft.formality !== baseline.formality)
   );
 }
 
@@ -162,6 +181,7 @@ watch(
       code: locale.code ?? "",
       names: { ...locale.names },
       isDefault: !!locale.isDefault,
+      formality: formalityOf(locale),
     };
 
     if (!changedFields(locale.id))
@@ -213,6 +233,7 @@ function listForm(id: string): LocaleForm | undefined {
     code: locale.code ?? "",
     names: { ...locale.names },
     isDefault: !!locale.isDefault,
+    formality: formalityOf(locale),
   };
 }
 
@@ -300,7 +321,11 @@ function onLocaleAction(action: string) {
 
 function openEdit() {
   if (!form.value) return;
-  metadata.value = { code: form.value.code, isDefault: form.value.isDefault };
+  metadata.value = {
+    code: form.value.code,
+    isDefault: form.value.isDefault,
+    formality: form.value.formality,
+  };
   editOpen.value = true;
 }
 
@@ -308,6 +333,7 @@ function applyMetadata() {
   if (!form.value || !metadata.value.code.trim()) return;
   form.value.code = metadata.value.code.trim();
   form.value.isDefault = metadata.value.isDefault;
+  form.value.formality = metadata.value.formality;
   editOpen.value = false;
 }
 
@@ -359,6 +385,7 @@ async function saveLocales(ids: string[]) {
           code: submitted.code,
           isDefault: submitted.isDefault,
           names: { values: submitted.names },
+          formality: submitted.formality,
         });
         const locale = response.locale;
 
@@ -367,6 +394,7 @@ async function saveLocales(ids: string[]) {
               code: locale.code ?? submitted.code,
               names: { ...locale.names },
               isDefault: !!locale.isDefault,
+              formality: formalityOf(locale),
             }
           : submitted;
         drafts.value[id] = {
@@ -441,6 +469,7 @@ async function handleDeleted(id: string) {
             <h2 class="flex flex-wrap items-center gap-2 font-semibold">
               {{ selectedItem?.label ?? t("locales.locale") }}
               <Badge v-if="form?.isDefault">{{ t("common.default") }}</Badge>
+              <Badge v-if="formalityBadge">{{ formalityBadge }}</Badge>
             </h2>
             <p class="mt-1 text-sm text-neutral-500">
               {{ t("locales.namesHint") }}
@@ -551,6 +580,14 @@ async function handleDeleted(id: string) {
   <Dialog :open="editOpen" :title="t('locales.edit')" @close="editOpen = false">
     <form class="space-y-4" @submit.prevent="applyMetadata">
       <Input v-model="metadata.code" required>{{ t("common.code") }}</Input>
+      <div class="space-y-1">
+        <Select v-model="metadata.formality" :options="formalityOptions">{{
+          t("locales.formality")
+        }}</Select>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("locales.formalityHelp") }}
+        </p>
+      </div>
       <Checkbox v-model="metadata.isDefault" :helper="t('locales.defaultHelp')">
         <template #description>{{ t("locales.setDefault") }}</template>
       </Checkbox>

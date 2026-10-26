@@ -76,3 +76,69 @@ describe("translation checks", () => {
     expect(codes("  ", "Hallo")).toEqual([]);
   });
 });
+
+describe("form of address", () => {
+  const FORMAL = "FORMALITY_FORMAL";
+  const INFORMAL = "FORMALITY_INFORMAL";
+  const wrong = (
+    code: string,
+    formality: typeof FORMAL | typeof INFORMAL | undefined,
+    translation: string,
+  ) =>
+    checkTranslation("Text", translation, { code, formality })
+      .filter((warning) => warning.code === "FORMALITY")
+      .map((warning) => warning.detail);
+
+  // The cases of the server's check of machine translations (formality_test.go).
+  it.each([
+    ["de", INFORMAL, "Geben Sie Ihren Namen ein.", ["Sie"]],
+    ["de", INFORMAL, "Sie können Ihr Passwort ändern.", ["Ihr"]],
+    ["de", INFORMAL, "Du kannst dein Passwort ändern.", []],
+    ["de", INFORMAL, "Einträge gelöscht. Sie sind im Papierkorb.", []],
+    ["de", INFORMAL, "„Sie sind gelöscht“", []],
+    ["de", INFORMAL, "Hinweis: Sie sind gelöscht.", []],
+    ["de", INFORMAL, "Gelöscht\nSie sind im Papierkorb.", []],
+    ["de", INFORMAL, "Wenn sie es freigibt, ist es fertig.", []],
+    [
+      "de",
+      FORMAL,
+      "Kopiere den Token. Danach siehst DU ihn nicht mehr.",
+      ["DU"],
+    ],
+    [
+      "de",
+      FORMAL,
+      "Sind Sie sicher, dass Sie den Eintrag löschen möchten?",
+      [],
+    ],
+    ["de", FORMAL, "Duplikate sind verboten.", []],
+    ["de", FORMAL, "Hallo {du}, willkommen.", []],
+    ["fr", INFORMAL, "Vous pouvez changer votre mot de passe.", ["Vous"]],
+    ["fr", FORMAL, "Entre ton nom.", ["ton"]],
+    ["es", FORMAL, "Ingresa tu nombre.", ["tu"]],
+    ["es", INFORMAL, "Usted puede cambiar su contraseña.", ["Usted"]],
+    ["es", INFORMAL, "Puede cambiar su contraseña.", []],
+    ["it", INFORMAL, "Grazie per la Sua pazienza.", ["Sua"]],
+    ["it", FORMAL, "Inserisci il tuo nome.", ["tuo"]],
+    ["nl", INFORMAL, "Vul uw naam in.", ["uw"]],
+    ["nl", FORMAL, "Weet je het zeker?", ["je"]],
+    ["ru", INFORMAL, "Вы уверены?", ["Вы"]],
+    ["ru", FORMAL, "Ты точно хочешь удалить эту запись?", ["Ты"]],
+    ["ja", FORMAL, "削除してもよろしいですか？", []],
+    ["de", undefined, "Du kannst Sie fragen.", []],
+  ] as const)(
+    "checks %s set to %s in %j like the server",
+    (code, formality, translation, want) => {
+      expect(wrong(code, formality, translation)).toEqual(want);
+    },
+  );
+
+  it("goes by the language of a regional code", () => {
+    expect(wrong("de-AT", FORMAL, "Du kannst es ändern.")).toEqual(["Du"]);
+    expect(wrong("pt_BR", FORMAL, "Você pode mudar.")).toEqual([]);
+  });
+
+  it("is only checked with a target language", () => {
+    expect(checkTranslation("Text.", "Du kannst Sie fragen.")).toEqual([]);
+  });
+});

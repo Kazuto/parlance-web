@@ -346,6 +346,7 @@ defineExpose({
       <EntryImportPreview
         :result="preview"
         :locale-code="selectedLocale?.code ?? undefined"
+        :formality="selectedLocale?.formality"
       />
     </section>
     <div

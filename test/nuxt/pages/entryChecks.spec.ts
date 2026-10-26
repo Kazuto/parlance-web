@@ -27,11 +27,14 @@ const entry = {
   ],
 };
 
-async function openEditor(localizations = entry.localizations) {
+async function openEditor(
+  localizations = entry.localizations,
+  languages: object[] = locales,
+) {
   loginAs([...VIEWER, "update_entry"]);
   mockRpc("LocaleService/ListLocales", {
-    locales,
-    pagination: pagination(locales.length),
+    locales: languages,
+    pagination: pagination(languages.length),
   });
   mockRpc("EntryService/ListEntries", {
     entries: [{ ...entry, localizations }],
@@ -71,5 +74,29 @@ describe("checks in the editor", () => {
     ]);
 
     expect(page.wrapper.text()).toContain(missingName());
+  });
+
+  it("flags the other form of address than the language asks for", async () => {
+    const page = await openEditor(entry.localizations, [
+      locales[0]!,
+      { ...locales[1]!, formality: "FORMALITY_INFORMAL" },
+      locales[2]!,
+    ]);
+    const wrongForm = t("entries.suggestionWarning.FORMALITY", {
+      placeholder: "Sie",
+    });
+
+    await field(page, "l2").setValue("Hallo {name}, können Sie das prüfen?");
+    await settle();
+    expect(page.wrapper.text()).toContain(wrongForm);
+
+    await field(page, "l2").setValue("Hallo {name}, kannst du das prüfen?");
+    await settle();
+    expect(page.wrapper.text()).not.toContain(t("entries.suggestionCheck"));
+
+    // French asks for neither, so either form passes.
+    await field(page, "l3").setValue("Bonjour {name}, pouvez-vous vérifier ?");
+    await settle();
+    expect(page.wrapper.text()).not.toContain(t("entries.suggestionCheck"));
   });
 });

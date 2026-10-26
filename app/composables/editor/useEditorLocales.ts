@@ -1,6 +1,14 @@
-import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import type {
+  Formality,
+  Locale,
+} from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-export type LocaleOption = { label: string; value: string; code: string };
+export type LocaleOption = {
+  label: string;
+  value: string;
+  code: string;
+  formality?: Formality | null;
+};
 
 const MAX_LISTED_LANGUAGES = 3;
 
@@ -33,6 +41,7 @@ export function useEditorLocales(
           label: localeName(locale),
           value: locale.id ?? "",
           code: locale.code ?? "",
+          formality: locale.formality,
         })) ?? [],
   );
 
