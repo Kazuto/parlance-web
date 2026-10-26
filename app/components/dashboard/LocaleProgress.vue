@@ -8,11 +8,23 @@ import type { LocaleStats } from "~/lib/api/schemas/parlance/v1/StatsSchema";
 // How far each language is: its approved translations, the drafts awaiting review
 // and the missing ones, out of all entries. Drafts and missing ones open the
 // entries that need work, as do outdated ones, approved or not, when there are any.
-const props = defineProps<{ locales: LocaleStats[]; total: number }>();
+const props = defineProps<{
+  locales: LocaleStats[];
+  total: number;
+  /** Shown next to each language in its links, as the source to compare with. */
+  defaultCode?: string;
+}>();
 const { t, n, locale: uiLocale } = useI18n();
 
 const share = (count: number) =>
   props.total ? `${(count / props.total) * 100}%` : "0%";
+
+/** The languages a link shows: the default one, then the language itself. */
+const shown = (code: string) => [
+  ...new Set(
+    [props.defaultCode, code].filter((item): item is string => !!item),
+  ),
+];
 
 const rows = computed(() =>
   props.locales
@@ -28,9 +40,9 @@ const rows = computed(() =>
         drafts: stats.drafts ?? 0,
         missing: stats.missing ?? 0,
         outdated: stats.outdated ?? 0,
-        reviewLink: entriesLink({ locales: [code], status: "review" }),
-        missingLink: entriesLink({ locales: [code], status: "missing" }),
-        outdatedLink: entriesLink({ locales: [code], status: "outdated" }),
+        reviewLink: entriesLink({ locales: shown(code), status: "review" }),
+        missingLink: entriesLink({ locales: shown(code), status: "missing" }),
+        outdatedLink: entriesLink({ locales: shown(code), status: "outdated" }),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, uiLocale.value)),

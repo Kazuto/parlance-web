@@ -259,7 +259,7 @@
   "entries.filterMissing": "Fehlende Übersetzungen",
   "entries.filterOutdated": "Veraltete Übersetzungen",
   "entries.filterReview": "Zu prüfen",
-  "entries.filterSelectedHelp": "Status prüft gespeicherte Übersetzungen in den ausgewählten Sprachen.",
+  "entries.filterSelectedHelp": "Der Status prüft die gespeicherten Übersetzungen in den ausgewählten Sprachen, ohne die Standardsprache, außer sie ist als einzige ausgewählt.",
   "entries.filters": "Filter",
   "entries.import": "Einträge importieren",
   "entries.keyExample": "z. B. button.save",

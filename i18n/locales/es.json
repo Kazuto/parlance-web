@@ -259,7 +259,7 @@
   "entries.filterMissing": "Traducciones faltantes",
   "entries.filterOutdated": "Traducciones desactualizadas",
   "entries.filterReview": "Por revisar",
-  "entries.filterSelectedHelp": "El estado verifica las traducciones guardadas en los idiomas seleccionados.",
+  "entries.filterSelectedHelp": "El estado comprueba las traducciones guardadas en los idiomas seleccionados, sin el idioma predeterminado salvo que sea el único.",
   "entries.filters": "Filtros",
   "entries.import": "Importar entradas",
   "entries.keyExample": "por ej., button.save",

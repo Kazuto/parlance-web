@@ -32,6 +32,16 @@ const missingUrl = computed(() =>
 const completeUrl = computed(() =>
   entriesLink({ locales: allLocaleCodes.value, status: "complete" }),
 );
+// The language links open next to the default one, whose text is the source.
+const { items: locales } = useAllPages(
+  api.locales.list,
+  (response) => response.locales,
+);
+const defaultLocaleCode = computed(
+  () =>
+    locales.value.find((locale) => locale.isDefault && !locale.deletedAt)
+      ?.code ?? undefined,
+);
 const draftCount = computed(() => statsData.value?.draftTranslations ?? 0);
 const reviewUrl = computed(() =>
   entriesLink({ locales: allLocaleCodes.value, status: "review" }),
@@ -269,6 +279,7 @@ const visibleCards = computed(() =>
     <DashboardLocaleProgress
       :locales="statsData.byLocale"
       :total="entryCount"
+      :default-code="defaultLocaleCode"
     />
   </div>
 

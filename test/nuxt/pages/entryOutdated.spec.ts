@@ -215,6 +215,25 @@ describe("check warnings filter", () => {
 
     expect(lists.at(-1)).toMatchObject({ translationStatus: "check" });
   });
+
+  it("checks the translations, not the default language shown as the source", async () => {
+    const { lists } = await openEditor(VIEWER, {
+      route: "/entries?locales=en,de,fr&status=review",
+    });
+
+    expect(lists.at(-1)).toMatchObject({
+      targetLocaleIds: ["l1", "l2", "l3"],
+      statusLocaleIds: ["l2", "l3"],
+    });
+  });
+
+  it("checks the default language when it is the only one", async () => {
+    const { lists } = await openEditor(VIEWER, {
+      route: "/entries?locales=en&status=review",
+    });
+
+    expect(lists.at(-1)).toMatchObject({ statusLocaleIds: ["l1"] });
+  });
 });
 
 describe("outdated count in the entry list", () => {

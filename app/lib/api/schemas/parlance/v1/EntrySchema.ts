@@ -93,6 +93,7 @@ export type ListEntriesRequest = {
   cursor?: string | null;
   summary?: boolean | null;
   deletedOnly?: boolean | null;
+  statusLocaleIds?: Array<string> | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -126,6 +127,11 @@ export const ListEntriesRequestSchema = z.object({
   },
   get deletedOnly(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get statusLocaleIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
   },
 });
 export type ListEntriesResponse = {

@@ -18,6 +18,8 @@ export function useEntryFeed(perPage = 100) {
   const scopeIds = ref<string[]>([]);
   const translationStatus = ref("");
   const targetLocaleIds = ref<string[]>([]);
+  // The languages the status filter checks; the target languages when empty.
+  const statusLocaleIds = ref<string[]>([]);
 
   const params = computed(() => ({
     summary: true,
@@ -26,6 +28,7 @@ export function useEntryFeed(perPage = 100) {
     scopeIds: [...scopeIds.value],
     translationStatus: translationStatus.value,
     targetLocaleIds: [...targetLocaleIds.value],
+    statusLocaleIds: [...statusLocaleIds.value],
   }));
 
   const query = useInfiniteQuery({
@@ -50,6 +53,7 @@ export function useEntryFeed(perPage = 100) {
     scopeIds,
     translationStatus,
     targetLocaleIds,
+    statusLocaleIds,
   };
 }
 

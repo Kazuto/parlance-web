@@ -120,6 +120,7 @@ const {
   scopeIds,
   translationStatus,
   targetLocaleIds,
+  statusLocaleIds,
 } = useEntryFeed(100);
 const { options: scopeOptions, error: scopeError } = useScopeOptions();
 const statusOptions = computed(() => [
@@ -137,10 +138,18 @@ const { items: locales } = useAllPages(
 
 const selectedLocaleIds = ref<string[]>([]);
 
+// The status filter checks the translations, not the default language's source
+// text shown next to them, unless that is the only language selected.
 watch(
-  selectedLocaleIds,
-  (ids) => {
+  [selectedLocaleIds, locales],
+  ([ids, list]) => {
+    const defaultId = list.find(
+      (locale) => locale.isDefault && !locale.deletedAt,
+    )?.id;
+    const translated = ids.filter((id) => id !== defaultId);
+
     targetLocaleIds.value = [...ids];
+    statusLocaleIds.value = translated.length ? translated : [...ids];
   },
   { deep: true },
 );
