@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Inviando…",
   "webhooks.updated": "Salvato {name}",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Ogni evento viene pubblicato qui in formato JSON. Anche indirizzi nella propria rete funzionano."
+  "webhooks.urlHelp": "Ogni evento viene pubblicato qui in formato JSON. Anche indirizzi nella propria rete funzionano.",
+  "entries.filterCheck": "Avvisi di verifica",
+  "tasks.ai.redo": "Rifai anche le bozze automatiche di altri modelli",
+  "tasks.ai.redoHelp": "Le bozze automatiche non modificate di un modello che i server di traduzione non offrono più vengono ritradotte, ad es. dopo il passaggio a un modello più grande. Le traduzioni mancanti hanno la precedenza; quelle approvate, modificate o rifiutate restano.",
+  "tasks.summary.redone": "{count} rifatte"
 }

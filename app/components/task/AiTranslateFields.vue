@@ -71,6 +71,13 @@ const targetOptions = computed(() =>
     >
       <template #description>{{ t("tasks.ai.applyTerminology") }}</template>
     </Checkbox>
+    <Checkbox
+      v-model="form.redoMachineDrafts"
+      :disabled
+      :helper="t('tasks.ai.redoHelp')"
+    >
+      <template #description>{{ t("tasks.ai.redo") }}</template>
+    </Checkbox>
     <p class="text-xs text-neutral-500 dark:text-neutral-400">
       {{ t("tasks.ai.draftsNote") }}
     </p>

@@ -29,6 +29,8 @@ export type Localization = {
   reviewComment?: string | null;
   outdated?: boolean | null;
   outdatedAt?: string | null;
+  machine?: boolean | null;
+  machineModel?: string | null;
 };
 export const LocalizationSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -74,6 +76,12 @@ export const LocalizationSchema = z.object({
     return z.boolean().nullish();
   },
   get outdatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get machine(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -129,6 +137,7 @@ export type CreateLocalizationRequest = {
   entryId?: string | null;
   localeId?: string | null;
   translation?: string | null;
+  machineModel?: string | null;
 };
 export const CreateLocalizationRequestSchema = z.object({
   get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -138,6 +147,9 @@ export const CreateLocalizationRequestSchema = z.object({
     return z.string().nullish();
   },
   get translation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -152,12 +164,16 @@ export const CreateLocalizationResponseSchema = z.object({
 export type UpdateLocalizationRequest = {
   id?: string | null;
   translation?: string | null;
+  machineModel?: string | null;
 };
 export const UpdateLocalizationRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
   get translation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -226,6 +242,7 @@ export type TranslationSuggestion = {
   translation?: string | null;
   warnings?: Array<TranslationWarning> | null;
   errorCode?: string | null;
+  model?: string | null;
 };
 export const TranslationSuggestionSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -240,6 +257,9 @@ export const TranslationSuggestionSchema = z.object({
     return z.array(TranslationWarningSchema).nullish();
   },
   get errorCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get model(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });

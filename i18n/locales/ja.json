@@ -1023,5 +1023,9 @@
   "webhooks.testing": "送信中…",
   "webhooks.updated": "保存済み {name}",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "各イベントはJSON形式でここに掲載されます。自分のネットワーク内のアドレスでも対応します。"
+  "webhooks.urlHelp": "各イベントはJSON形式でここに掲載されます。自分のネットワーク内のアドレスでも対応します。",
+  "entries.filterCheck": "チェックの警告",
+  "tasks.ai.redo": "他のモデルによる機械翻訳の下書きもやり直す",
+  "tasks.ai.redoHelp": "翻訳サーバーが提供しなくなったモデルによる未編集の機械翻訳の下書きを再翻訳します（例：より大きなモデルに切り替えた後）。未翻訳のものが先に処理され、承認済み・編集済み・却下されたものはそのまま残ります。",
+  "tasks.summary.redone": "{count}件をやり直し"
 }

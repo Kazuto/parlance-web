@@ -128,6 +128,7 @@ const statusOptions = computed(() => [
   { label: t("entries.filterComplete"), value: "complete" },
   { label: t("entries.filterReview"), value: "review" },
   { label: t("entries.filterOutdated"), value: "outdated" },
+  { label: t("entries.filterCheck"), value: "check" },
 ]);
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -382,12 +383,20 @@ const {
   selectedId: selectedEntryId,
   rows: (entry) => entry.localizations,
   setRows: (entry, localizations) => (entry.localizations = localizations),
-  upsert: async ({ itemId, localeId, translation }, existing) =>
-    existing
+  upsert: async ({ itemId, localeId, translation }, existing) => {
+    // A suggestion saved as it is stays the model's text; any edit makes it the user's.
+    const suggestion = suggestionFor(itemId, localeId);
+    const machineModel =
+      suggestion?.model && suggestion.translation === translation
+        ? suggestion.model
+        : undefined;
+
+    return existing
       ? (
           await localizationStore.update.mutateAsync({
             id: existing.id,
             translation,
+            machineModel,
           })
         ).localization
       : (
@@ -395,8 +404,10 @@ const {
             entryId: itemId,
             localeId,
             translation,
+            machineModel,
           })
-        ).localization,
+        ).localization;
+  },
   describe: ({ itemId, localeId }, entry) =>
     `${entry?.key ?? itemId}: ${localeOption(localeId)?.label ?? localeId}`,
   messages: { saved: "entries.saved", partial: "entries.partialSave" },

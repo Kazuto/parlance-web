@@ -252,6 +252,7 @@ describe("tasks page", () => {
             scopeIds: [],
             applyTerminology: true,
             maxPairs: 200,
+            redoMachineDrafts: false,
           },
         },
       },

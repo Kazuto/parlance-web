@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Enviando…",
   "webhooks.updated": "{name} guardado",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Cada evento se envía aquí como JSON. Las direcciones de tu propia red también funcionan."
+  "webhooks.urlHelp": "Cada evento se envía aquí como JSON. Las direcciones de tu propia red también funcionan.",
+  "entries.filterCheck": "Avisos de verificación",
+  "tasks.ai.redo": "Rehacer también los borradores automáticos de otros modelos",
+  "tasks.ai.redoHelp": "Los borradores automáticos sin editar de un modelo que los servidores de traducción ya no ofrecen se traducen de nuevo, p. ej. tras cambiar a un modelo más grande. Las traducciones que faltan van primero; las aprobadas, editadas y rechazadas se mantienen.",
+  "tasks.summary.redone": "{count} rehechas"
 }

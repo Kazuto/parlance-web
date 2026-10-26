@@ -60,6 +60,7 @@ export type AiTranslateConfig = {
   scopeIds?: Array<string> | null;
   applyTerminology?: boolean | null;
   maxPairs?: number | null;
+  redoMachineDrafts?: boolean | null;
 };
 export const AiTranslateConfigSchema = z.object({
   get sourceLocaleId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -78,6 +79,9 @@ export const AiTranslateConfigSchema = z.object({
   },
   get maxPairs(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get redoMachineDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type GitExportFile = {
@@ -135,6 +139,7 @@ export type TaskRunSummary = {
   pullRequestUrl?: string | null;
   changedFiles?: Array<string> | null;
   outcome?: string | null;
+  redone?: number | null;
 };
 export const TaskRunSummarySchema = z.object({
   get translated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
@@ -154,6 +159,9 @@ export const TaskRunSummarySchema = z.object({
   },
   get outcome(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get redone(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });
 export type TaskRun = {

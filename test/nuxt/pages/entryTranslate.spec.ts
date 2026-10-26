@@ -35,6 +35,7 @@ type Suggestion = {
   translation?: string;
   warnings?: { code: string; detail?: string }[];
   errorCode?: string;
+  model?: string;
 };
 
 async function openEditor(
@@ -46,6 +47,7 @@ async function openEditor(
 ) {
   const requests: { entryId?: string; targetLocaleIds?: string[] }[] = [];
   const saves: string[] = [];
+  const saved: Record<string, unknown>[] = [];
 
   loginAs(
     options.permissions ?? [
@@ -73,8 +75,9 @@ async function openEditor(
   });
 
   for (const method of ["CreateLocalization", "UpdateLocalization"]) {
-    mockRpc(`LocalizationService/${method}`, () => {
+    mockRpc(`LocalizationService/${method}`, (body) => {
       saves.push(method);
+      saved.push(body);
 
       return {};
     });
@@ -84,7 +87,7 @@ async function openEditor(
     route: "/entries?locales=en,de,fr",
   });
 
-  return { page, requests, saves };
+  return { page, requests, saves, saved };
 }
 
 const field = (page: MountedPage, localeId: string) =>
@@ -116,6 +119,37 @@ describe("machine translation in the editor", () => {
     // The draft waits for review: nothing is saved yet.
     expect(saves).toEqual([]);
     expect(page.buttons()).toContain(t("common.saveChanges"));
+  });
+
+  it("saves a suggestion as the model's text until it is edited", async () => {
+    const { page, saved } = await openEditor({
+      suggestions: [
+        { localeId: "l2", translation: "Hallo {name}", model: "hy-mt2-7b" },
+      ],
+    });
+    const save = async () => {
+      await page.wrapper
+        .findAll("button")
+        .find((button) => button.text().trim() === t("common.saveChanges"))!
+        .trigger("click");
+      await settle();
+    };
+
+    await translate(page);
+    await save();
+
+    expect(saved.at(-1)).toMatchObject({
+      localeId: "l2",
+      translation: "Hallo {name}",
+      machineModel: "hy-mt2-7b",
+    });
+
+    await translate(page);
+    await field(page, "l2").setValue("Servus {name}");
+    await save();
+
+    expect(saved.at(-1)).toMatchObject({ translation: "Servus {name}" });
+    expect(saved.at(-1)).not.toHaveProperty("machineModel");
   });
 
   it("flags a suggestion to check until it is edited", async () => {

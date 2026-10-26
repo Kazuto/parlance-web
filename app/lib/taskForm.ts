@@ -19,6 +19,7 @@ export type AiTranslateForm = {
   scopeIds: string[];
   applyTerminology: boolean;
   maxPairs: number;
+  redoMachineDrafts: boolean;
 };
 
 export type ExportFileForm = { format: ExportFormat; path: string };
@@ -80,6 +81,7 @@ export function taskToForm(
       scopeIds: [...(ai?.scopeIds ?? [])],
       applyTerminology: task ? !!ai?.applyTerminology : true,
       maxPairs: ai?.maxPairs || DEFAULT_MAX_PAIRS,
+      redoMachineDrafts: !!ai?.redoMachineDrafts,
     },
     git: {
       apiUrl: git?.apiUrl ?? "",

@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Enviando…",
   "webhooks.updated": "Salvo {name}",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Cada evento é publicado aqui em formato JSON. Os endereços na sua própria rede também funcionam."
+  "webhooks.urlHelp": "Cada evento é publicado aqui em formato JSON. Os endereços na sua própria rede também funcionam.",
+  "entries.filterCheck": "Avisos de verificação",
+  "tasks.ai.redo": "Refazer também os rascunhos automáticos de outros modelos",
+  "tasks.ai.redoHelp": "Os rascunhos automáticos não editados de um modelo que os servidores de tradução já não oferecem são traduzidos de novo, por ex. após mudar para um modelo maior. As traduções em falta vêm primeiro; as aprovadas, editadas e rejeitadas mantêm-se.",
+  "tasks.summary.redone": "{count} refeitas"
 }

@@ -1023,5 +1023,9 @@
   "webhooks.testing": "发送中…",
   "webhooks.updated": "已保存 {name}",
   "webhooks.url": "网址",
-  "webhooks.urlHelp": "每个事件都以 JSON 格式在此发布。您自己网络中的地址同样适用。"
+  "webhooks.urlHelp": "每个事件都以 JSON 格式在此发布。您自己网络中的地址同样适用。",
+  "entries.filterCheck": "检查警告",
+  "tasks.ai.redo": "同时重新翻译其他模型生成的机器草稿",
+  "tasks.ai.redoHelp": "翻译服务器不再提供的模型所生成且未经编辑的机器草稿将被重新翻译，例如在切换到更大的模型之后。缺失的翻译优先处理；已批准、已编辑和已拒绝的翻译保持不变。",
+  "tasks.summary.redone": "重新翻译 {count} 条"
 }

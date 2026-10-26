@@ -19,6 +19,9 @@ const { t } = useI18n();
           failed: run.summary.failed ?? 0,
         })
       }}
+      <template v-if="run.summary.redone">
+        · {{ t("tasks.summary.redone", { count: run.summary.redone }) }}
+      </template>
       <template v-if="run.summary.remaining">
         ·
         {{ t("tasks.summary.remaining", { count: run.summary.remaining }) }}

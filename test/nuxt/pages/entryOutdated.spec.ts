@@ -207,6 +207,16 @@ describe("outdated translations in the editor", () => {
   });
 });
 
+describe("check warnings filter", () => {
+  it("filters for translations the checks flag", async () => {
+    const { lists } = await openEditor(VIEWER, {
+      route: "/entries?locales=en,de,fr&status=check",
+    });
+
+    expect(lists.at(-1)).toMatchObject({ translationStatus: "check" });
+  });
+});
+
 describe("outdated count in the entry list", () => {
   it("shows how many shown languages are outdated", async () => {
     const label = t("review.outdatedCount", { count: 2 });

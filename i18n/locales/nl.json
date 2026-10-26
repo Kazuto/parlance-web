@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Verzenden…",
   "webhooks.updated": "Bewaard {name}",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Elke gebeurtenis wordt hier opgeslagen als JSON. Adressen in uw eigen netwerk werken ook."
+  "webhooks.urlHelp": "Elke gebeurtenis wordt hier opgeslagen als JSON. Adressen in uw eigen netwerk werken ook.",
+  "entries.filterCheck": "Controlewaarschuwingen",
+  "tasks.ai.redo": "Ook machineconcepten van andere modellen opnieuw vertalen",
+  "tasks.ai.redoHelp": "Onbewerkte machineconcepten van een model dat de vertaalservers niet meer aanbieden, worden opnieuw vertaald, bijv. na de overstap naar een groter model. Ontbrekende vertalingen gaan voor; goedgekeurde, bewerkte en afgewezen blijven staan.",
+  "tasks.summary.redone": "{count} opnieuw vertaald"
 }

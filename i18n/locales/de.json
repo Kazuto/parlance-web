@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Sende…",
   "webhooks.updated": "{name} gespeichert",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Jedes Ereignis wird als JSON hierhin gesendet. Adressen im eigenen Netzwerk funktionieren auch."
+  "webhooks.urlHelp": "Jedes Ereignis wird als JSON hierhin gesendet. Adressen im eigenen Netzwerk funktionieren auch.",
+  "entries.filterCheck": "Prüfhinweise",
+  "tasks.ai.redo": "Auch Maschinenentwürfe anderer Modelle neu übersetzen",
+  "tasks.ai.redoHelp": "Unbearbeitete Maschinenentwürfe eines Modells, das die Übersetzungsserver nicht mehr anbieten, werden neu übersetzt, z. B. nach dem Wechsel zu einem größeren Modell. Fehlende Übersetzungen kommen zuerst; freigegebene, bearbeitete und abgelehnte bleiben.",
+  "tasks.summary.redone": "{count} neu übersetzt"
 }

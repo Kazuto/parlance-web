@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Sending…",
   "webhooks.updated": "Saved {name}",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Each event is posted here as JSON. Addresses in your own network work too."
+  "webhooks.urlHelp": "Each event is posted here as JSON. Addresses in your own network work too.",
+  "entries.filterCheck": "Check warnings",
+  "tasks.ai.redo": "Also redo machine drafts by other models",
+  "tasks.ai.redoHelp": "Unedited machine drafts by a model the translation servers no longer serve are translated again, e.g. after switching to a bigger model. Missing translations come first; approved, edited and rejected ones stay.",
+  "tasks.summary.redone": "{count} redone"
 }

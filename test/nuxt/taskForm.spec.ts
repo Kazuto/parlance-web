@@ -70,6 +70,7 @@ describe("task form", () => {
         scopeIds: [],
         applyTerminology: false,
         maxPairs: 50,
+        redoMachineDrafts: false,
       },
     });
   });

@@ -1023,5 +1023,9 @@
   "webhooks.testing": "Envoi…",
   "webhooks.updated": "{name} enregistré",
   "webhooks.url": "URL",
-  "webhooks.urlHelp": "Chaque événement est envoyé ici en JSON. Les adresses de votre propre réseau fonctionnent aussi."
+  "webhooks.urlHelp": "Chaque événement est envoyé ici en JSON. Les adresses de votre propre réseau fonctionnent aussi.",
+  "entries.filterCheck": "Alertes de vérification",
+  "tasks.ai.redo": "Refaire aussi les brouillons automatiques d’autres modèles",
+  "tasks.ai.redoHelp": "Les brouillons automatiques non modifiés d’un modèle que les serveurs de traduction ne proposent plus sont retraduits, p. ex. après le passage à un modèle plus grand. Les traductions manquantes passent en premier ; celles validées, modifiées ou refusées sont conservées.",
+  "tasks.summary.redone": "{count} refaites"
 }
