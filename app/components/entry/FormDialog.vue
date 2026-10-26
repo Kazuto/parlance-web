@@ -133,7 +133,7 @@ function handleSubmit() {
         :options="scopeOptions"
         :disabled="isPending || scopesLoading"
         :placeholder="t('scopes.select')"
-        >{{ t("scopes.title") }}</Select
+        >{{ t("nav.scopes") }}</Select
       >
       <p v-if="scopeError" role="alert" class="text-sm text-red-600">
         {{ t("scopes.loadFailed") }}

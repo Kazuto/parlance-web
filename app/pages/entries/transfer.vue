@@ -43,7 +43,7 @@ const tabs = computed(() =>
 
 usePage(() => ({
   width: "extra-wide",
-  title: t("transfer.pageTitle"),
+  title: t("nav.transfer"),
   description: t("transfer.pageDescription"),
   showHeader: false,
 }));
@@ -61,7 +61,7 @@ usePage(() => ({
     <Tabs
       v-model="action"
       :items="tabs"
-      :aria-label="t('transfer.pageTitle')"
+      :aria-label="t('nav.transfer')"
       panel-class="pt-4"
     >
       <template #default="{ item }">

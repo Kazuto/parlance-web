@@ -121,7 +121,7 @@ function handleSubmit() {
     const url = form.value.url.trim();
 
     if (!name || !isHttpUrl(url)) {
-      error.value = t("webhooks.nameUrlRequired");
+      error.value = t("common.nameUrlRequired");
 
       return false;
     }
@@ -140,7 +140,7 @@ function handleSubmit() {
     const schedule = buildSchedule(form.value.schedule);
 
     if (form.value.schedule.preset === "custom" && !schedule) {
-      error.value = t("tasks.schedule.customRequired");
+      error.value = t("schedule.customRequired");
 
       return false;
     }
@@ -214,7 +214,7 @@ function handleSubmit() {
           :options="formatOptions"
           :disabled="isPending"
           @update:model-value="pickFormat($event as WebhookFormat)"
-          >{{ t("webhooks.formatLabel") }}</Select
+          >{{ t("common.format") }}</Select
         >
         <p class="text-xs text-neutral-500 dark:text-neutral-400">
           {{ t(`webhooks.formatHelp.${form.format}`) }}
@@ -277,7 +277,7 @@ function handleSubmit() {
             :disabled="isPending"
           >
             <template #description>
-              {{ t("webhooks.removeSecret") }}
+              {{ t("common.removeSavedSecret") }}
             </template>
           </Checkbox>
         </div>

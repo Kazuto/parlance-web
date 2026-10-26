@@ -31,7 +31,14 @@ export const useTranslationServerStore = defineStore(
       onSuccess: invalidate,
     });
     const test = useMutation(api.translationServers.test.use());
+    const updateSettings = useMutation({
+      ...api.translationServers.updateSettings.use(),
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: api.translationServers.settings.getQueryKey(),
+        }),
+    });
 
-    return { create, update, destroy, test };
+    return { create, update, destroy, test, updateSettings };
   },
 );

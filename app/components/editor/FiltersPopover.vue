@@ -87,7 +87,7 @@ watch(() => props.disabled, close);
       :disabled="disabled"
       @click="toggle"
     >
-      {{ t("entries.filters") }}
+      {{ t("common.filters") }}
       <Badge v-if="activeCount" dense pill class="ml-1">{{
         activeCount
       }}</Badge>
@@ -98,7 +98,7 @@ watch(() => props.disabled, close);
       v-if="open"
       ref="panel"
       role="dialog"
-      :aria-label="t('entries.filters')"
+      :aria-label="t('common.filters')"
       :style="{
         ...position,
         width: `min(${PANEL_WIDTH}px, calc(100vw - 16px))`,
@@ -108,7 +108,7 @@ watch(() => props.disabled, close);
     >
       <div class="flex items-center justify-between gap-2">
         <span class="text-sm font-medium dark:text-neutral-100">{{
-          t("entries.filters")
+          t("common.filters")
         }}</span>
         <Button
           type="button"
@@ -133,7 +133,7 @@ watch(() => props.disabled, close);
           :indeterminate="someLanguagesSelected"
           @update:model-value="toggleAllLanguages"
         >
-          <template #description>{{ t("entries.allLanguages") }}</template>
+          <template #description>{{ t("common.allLanguages") }}</template>
         </Checkbox>
         <div
           class="flex flex-col gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-700"

@@ -148,7 +148,7 @@ function onMore(value: string) {
       :disabled="progress.stop"
       @click="emit('stopTranslate')"
     >
-      {{ t("entries.bulkTranslateStop") }}
+      {{ t("common.stop") }}
     </Button>
     <Button
       v-else-if="canTranslate"

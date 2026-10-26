@@ -63,7 +63,7 @@ function handleSubmit() {
     const baseUrl = form.value.baseUrl.trim();
 
     if (!name || !isHttpUrl(baseUrl)) {
-      error.value = t("translationServers.nameUrlRequired");
+      error.value = t("common.nameUrlRequired");
 
       return false;
     }

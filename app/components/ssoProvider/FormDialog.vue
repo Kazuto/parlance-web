@@ -150,7 +150,7 @@ function handleSubmit() {
         :disabled="isPending"
       >
         <template #description>
-          {{ t("ssoProviders.removeClientSecret") }}
+          {{ t("common.removeSavedSecret") }}
         </template>
       </Checkbox>
       <div class="space-y-1">

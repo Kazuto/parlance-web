@@ -176,8 +176,8 @@ async function checkAccess() {
         multiple
         :options="localeOptions"
         :disabled
-        :placeholder="t('tasks.allLanguages')"
-        >{{ t("tasks.languages") }}</Select
+        :placeholder="t('common.allLanguages')"
+        >{{ t("common.languages") }}</Select
       >
       <Select
         v-model="form.scopeIds"
@@ -186,7 +186,7 @@ async function checkAccess() {
         :options="scopeOptions"
         :disabled
         :placeholder="t('scopes.all')"
-        >{{ t("scopes.title") }}</Select
+        >{{ t("nav.scopes") }}</Select
       >
     </div>
     <Checkbox

@@ -197,7 +197,7 @@ async function sendTest(hook: Webhook) {
               v-if="can('update_webhook')"
               dense
               :model-value="!!hook.enabled"
-              :aria-label="t('webhooks.enableFor', { name: hook.name ?? '' })"
+              :aria-label="t('common.turnOnFor', { name: hook.name ?? '' })"
               :disabled="store.update.isPending"
               @update:model-value="setEnabled(hook, $event)"
             />
@@ -209,12 +209,12 @@ async function sendTest(hook: Webhook) {
               @click="sendTest(hook)"
             >
               {{
-                testing === hook.id ? t("webhooks.testing") : t("webhooks.test")
+                testing === hook.id ? t("common.sending") : t("webhooks.test")
               }}
             </Button>
             <BaseActionButtons
-              :edit-label="t('webhooks.editFor', { name: hook.name ?? '' })"
-              :delete-label="t('webhooks.deleteFor', { name: hook.name ?? '' })"
+              :edit-label="t('common.editFor', { name: hook.name ?? '' })"
+              :delete-label="t('common.deleteFor', { name: hook.name ?? '' })"
               edit-permission="update_webhook"
               delete-permission="delete_webhook"
               @edit="openForm(hook)"
@@ -239,7 +239,7 @@ async function sendTest(hook: Webhook) {
                   status: testResults[hook.id]?.responseStatus ?? 0,
                   ms: testResults[hook.id]?.durationMs ?? 0,
                 })
-              : t("webhooks.testFailed", {
+              : t("common.testFailed", {
                   error: testResults[hook.id]?.error ?? "",
                 })
           }}

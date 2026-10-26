@@ -46,11 +46,7 @@ async function copyKey(key: string) {
           <Tooltip
             v-if="label"
             :content="
-              t(
-                copiedKey === label
-                  ? 'terminologyHints.copied'
-                  : 'entries.copyKey',
-              )
+              t(copiedKey === label ? 'common.copied' : 'entries.copyKey')
             "
           >
             <button

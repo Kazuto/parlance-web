@@ -128,7 +128,7 @@ const STATUS_COLORS = {
               :label="
                 t(
                   copied === match.targetTranslation
-                    ? 'terminologyHints.copied'
+                    ? 'common.copied'
                     : 'terminologyHints.copy',
                 )
               "

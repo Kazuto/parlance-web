@@ -125,7 +125,7 @@ const {
 const { options: scopeOptions, error: scopeError } = useScopeOptions();
 const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
-  { label: t("entries.filterMissing"), value: "missing" },
+  { label: t("entries.missingTranslations"), value: "missing" },
   { label: t("entries.filterComplete"), value: "complete" },
   { label: t("entries.filterReview"), value: "review" },
   { label: t("entries.filterOutdated"), value: "outdated" },
@@ -419,7 +419,7 @@ const {
   },
   describe: ({ itemId, localeId }, entry) =>
     `${entry?.key ?? itemId}: ${localeOption(localeId)?.label ?? localeId}`,
-  messages: { saved: "entries.saved", partial: "entries.partialSave" },
+  messages: { saved: "common.labelSaved", partial: "entries.partialSave" },
   afterSave: () =>
     Promise.all([
       refetch(),
@@ -634,7 +634,7 @@ const entryActions = computed<ActionMenuItem[]>(() => {
   if (can.value("delete_entry")) {
     items.push({
       value: "delete",
-      label: t("actions.deleteEntry"),
+      label: t("entries.delete"),
       icon: "trash",
       variant: "danger",
       divider: items.length > 0,
@@ -1208,7 +1208,7 @@ watch(
           </template>
           {{
             t(
-              "entries.selectedLanguages",
+              "common.selectedLanguages",
               { count: selectedLocaleIds.length },
               selectedLocaleIds.length,
             )

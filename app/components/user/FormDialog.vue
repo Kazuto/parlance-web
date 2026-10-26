@@ -91,7 +91,7 @@ function handleSubmit() {
     }
 
     if (form.value.password !== form.value.passwordConfirm) {
-      error.value = t("users.passwordMismatch");
+      error.value = t("common.passwordMismatch");
 
       return false;
     }
@@ -144,7 +144,7 @@ function handleSubmit() {
         :disabled="isPending"
         :placeholder="emailPlaceholder"
       >
-        {{ t("users.email") }}
+        {{ t("common.email") }}
       </Input>
       <Input
         v-model="form.password"
@@ -154,7 +154,7 @@ function handleSubmit() {
         :disabled="isPending"
         :helper="isEdit ? t('users.passwordKeep') : undefined"
       >
-        {{ t("users.password") }}
+        {{ t("common.password") }}
       </Input>
       <Input
         v-model="form.passwordConfirm"
@@ -162,9 +162,9 @@ function handleSubmit() {
         :required="!isEdit || !!form.password"
         autocomplete="new-password"
         :disabled="isPending"
-        :errors="passwordMismatch ? [t('users.passwordMismatch')] : undefined"
+        :errors="passwordMismatch ? [t('common.passwordMismatch')] : undefined"
       >
-        {{ t("users.passwordConfirm") }}
+        {{ t("common.confirmPassword") }}
       </Input>
       <Select
         v-model="form.roleIds"

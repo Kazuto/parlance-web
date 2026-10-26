@@ -70,12 +70,12 @@ export function useEditorLocales(
     if (!labels.length) return t("entries.selectLocales");
 
     if (labels.length > 1 && labels.length === localeOptions.value.length)
-      return t("entries.allLanguages");
+      return t("common.allLanguages");
 
     const listed = labels.slice(0, MAX_LISTED_LANGUAGES).join(", ");
     const hidden = labels.length - MAX_LISTED_LANGUAGES;
 
-    return `${t("entries.languagesShort")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
+    return `${t("common.languages")}: ${listed}${hidden > 0 ? ` +${hidden}` : ""}`;
   });
 
   const languagesFiltered = computed(

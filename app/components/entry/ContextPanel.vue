@@ -23,7 +23,7 @@ const emit = defineEmits<{ close: []; use: [text: string] }>();
 const { t } = useI18n();
 const tab = defineModel<string>("tab", { default: "terminology" });
 const tabs = computed(() => [
-  { value: "terminology", label: t("context.terminology") },
+  { value: "terminology", label: t("nav.glossary") },
   { value: "memory", label: t("context.memory") },
   { value: "history", label: t("context.history") },
 ]);

@@ -171,3 +171,45 @@ export const TestTranslationServerResponseSchema = z.object({
     return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });
+export type TranslationSettings = {
+  style?: string | null;
+  defaultStyle?: string | null;
+  updatedAt?: string | null;
+};
+export const TranslationSettingsSchema = z.object({
+  get style(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get defaultStyle(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get updatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type GetTranslationSettingsRequest = Record<string, never>;
+export const GetTranslationSettingsRequestSchema = z.object({});
+export type GetTranslationSettingsResponse = {
+  settings?: TranslationSettings | null;
+};
+export const GetTranslationSettingsResponseSchema = z.object({
+  get settings(): z.ZodOptional<z.ZodNullable<z.ZodType<TranslationSettings>>> {
+    return TranslationSettingsSchema.nullish();
+  },
+});
+export type UpdateTranslationSettingsRequest = {
+  style?: string | null;
+};
+export const UpdateTranslationSettingsRequestSchema = z.object({
+  get style(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type UpdateTranslationSettingsResponse = {
+  settings?: TranslationSettings | null;
+};
+export const UpdateTranslationSettingsResponseSchema = z.object({
+  get settings(): z.ZodOptional<z.ZodNullable<z.ZodType<TranslationSettings>>> {
+    return TranslationSettingsSchema.nullish();
+  },
+});

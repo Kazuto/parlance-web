@@ -104,7 +104,7 @@ async function handleLogin() {
               :placeholder="emailPlaceholder"
               autocomplete="email"
             >
-              {{ t("auth.email") }}
+              {{ t("common.email") }}
             </Input>
           </div>
 
@@ -116,7 +116,7 @@ async function handleLogin() {
               required
               autocomplete="current-password"
             >
-              {{ t("auth.password") }}
+              {{ t("common.password") }}
             </Input>
           </div>
 
@@ -142,7 +142,7 @@ async function handleLogin() {
           <div
             class="flex items-center gap-3 text-xs text-gray-500 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200"
           >
-            {{ t("auth.sso.or") }}
+            {{ t("common.or") }}
           </div>
           <Button
             v-for="provider in providers"

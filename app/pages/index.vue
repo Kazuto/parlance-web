@@ -49,7 +49,7 @@ const reviewUrl = computed(() =>
 
 usePage(() => ({
   width: "extra-wide",
-  title: t("dashboard.title"),
+  title: t("nav.dashboard"),
   description: t("dashboard.description"),
   showHeader: false,
 }));
@@ -66,7 +66,7 @@ const cards = computed(() => [
   },
   {
     title: t("nav.entries"),
-    description: t("dashboard.entriesDescription"),
+    description: t("entries.description"),
     icon: "translate",
     href: "/entries",
     permission: "read_entry",
@@ -75,7 +75,7 @@ const cards = computed(() => [
   },
   {
     title: t("nav.glossary"),
-    description: t("dashboard.terminologyDescription"),
+    description: t("terminologies.description"),
     icon: "book-open-text",
     href: "/glossary",
     permission: "read_terminology",
@@ -160,7 +160,7 @@ const visibleCards = computed(() =>
     </DashboardMetricCard>
 
     <DashboardMetricCard
-      :title="t('dashboard.missing')"
+      :title="t('entries.missingTranslations')"
       :description="missingCount.toString()"
       :to="missingUrl"
     >

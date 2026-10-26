@@ -38,9 +38,7 @@ function handleClose() {
 <template>
   <Dialog
     :open
-    :title="
-      t(action === 'import' ? 'transfer.importTitle' : 'transfer.exportTitle')
-    "
+    :title="t(action === 'import' ? 'entries.import' : 'entries.export')"
     :persistent="isPending"
     @close="handleClose"
   >

@@ -111,11 +111,7 @@ async function runTest(provider: SsoProvider) {
                       : 'bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400'
                   "
                 >
-                  {{
-                    provider.enabled
-                      ? t("ssoProviders.on")
-                      : t("ssoProviders.off")
-                  }}
+                  {{ provider.enabled ? t("common.on") : t("common.off") }}
                 </span>
               </div>
               <div
@@ -158,16 +154,14 @@ async function runTest(provider: SsoProvider) {
               >
                 {{
                   testing === provider.id
-                    ? t("ssoProviders.testing")
-                    : t("ssoProviders.test")
+                    ? t("common.testing")
+                    : t("common.test")
                 }}
               </Button>
               <BaseActionButtons
-                :edit-label="
-                  t('ssoProviders.editFor', { name: provider.name ?? '' })
-                "
+                :edit-label="t('common.editFor', { name: provider.name ?? '' })"
                 :delete-label="
-                  t('ssoProviders.deleteFor', { name: provider.name ?? '' })
+                  t('common.deleteFor', { name: provider.name ?? '' })
                 "
                 edit-permission="update_sso_provider"
                 delete-permission="delete_sso_provider"
@@ -189,7 +183,7 @@ async function runTest(provider: SsoProvider) {
             {{
               testResults[provider.id]?.ok
                 ? t("ssoProviders.testOk")
-                : t("ssoProviders.testFailed", {
+                : t("common.testFailed", {
                     error: testResults[provider.id]?.error ?? "",
                   })
             }}

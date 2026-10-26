@@ -10,10 +10,15 @@ import {
   DeleteTranslationServerResponseSchema,
   TestTranslationServerRequestSchema,
   TestTranslationServerResponseSchema,
+  GetTranslationSettingsRequestSchema,
+  GetTranslationSettingsResponseSchema,
+  UpdateTranslationSettingsRequestSchema,
+  UpdateTranslationSettingsResponseSchema,
   type CreateTranslationServerRequest,
   type UpdateTranslationServerRequest,
   type DeleteTranslationServerRequest,
   type TestTranslationServerRequest,
+  type UpdateTranslationSettingsRequest,
 } from "../schemas/parlance/v1/TranslationServerSchema";
 
 export const translationServers = {
@@ -70,6 +75,28 @@ export const translationServers = {
     {
       input: TestTranslationServerRequestSchema,
       output: TestTranslationServerResponseSchema,
+    },
+  ),
+  settings: authedEndpoint.query(
+    () => ({
+      method: "post",
+      url: "/parlance.v1.TranslationServerService/GetTranslationSettings",
+      json: {},
+    }),
+    {
+      input: GetTranslationSettingsRequestSchema,
+      output: GetTranslationSettingsResponseSchema,
+    },
+  ),
+  updateSettings: authedEndpoint.mutate(
+    (data: UpdateTranslationSettingsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.TranslationServerService/UpdateTranslationSettings",
+      json: data,
+    }),
+    {
+      input: UpdateTranslationSettingsRequestSchema,
+      output: UpdateTranslationSettingsResponseSchema,
     },
   ),
 };

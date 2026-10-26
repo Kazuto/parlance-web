@@ -30,7 +30,7 @@ function confirm() {
 <template>
   <Dialog
     :open
-    :title="title ?? t('review.rejectTitle', { language })"
+    :title="title ?? t('review.rejectFor', { language })"
     @close="emit('close')"
   >
     <form class="space-y-4" @submit.prevent="confirm">

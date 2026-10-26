@@ -42,7 +42,7 @@ async function handleSetup() {
   }
 
   if (adminPassword.value !== adminPasswordConfirm.value) {
-    error.value = t("setup.passwordsDoNotMatch");
+    error.value = t("common.passwordMismatch");
 
     return;
   }
@@ -65,7 +65,7 @@ async function handleSetup() {
     // Redirect to login after successful setup
     router.push("/login");
   } catch (err) {
-    error.value = err instanceof Error ? err.message : t("setup.setupFailed");
+    error.value = err instanceof Error ? err.message : t("errors.setup_failed");
   } finally {
     loading.value = false;
   }
@@ -101,7 +101,7 @@ async function handleSetup() {
             :placeholder="namePlaceholder"
             :disabled="loading"
           >
-            {{ t("setup.adminName") }}
+            {{ t("common.name") }}
           </Input>
 
           <Input
@@ -112,7 +112,7 @@ async function handleSetup() {
             :placeholder="emailPlaceholder"
             :disabled="loading"
           >
-            {{ t("setup.adminEmail") }}
+            {{ t("common.email") }}
           </Input>
 
           <Input
@@ -123,7 +123,7 @@ async function handleSetup() {
             :disabled="loading"
             :helper="t('setup.passwordRequirements')"
           >
-            {{ t("setup.adminPassword") }}
+            {{ t("common.password") }}
           </Input>
 
           <Input
@@ -133,7 +133,7 @@ async function handleSetup() {
             autocomplete="new-password"
             :disabled="loading"
           >
-            {{ t("setup.confirmPassword") }}
+            {{ t("common.confirmPassword") }}
           </Input>
 
           <Alert v-if="error" variant="danger" persistent>

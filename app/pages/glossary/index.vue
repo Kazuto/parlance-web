@@ -230,7 +230,7 @@ const {
   describe: ({ itemId, localeId }, terminology) =>
     `${terminology?.term ?? itemId}: ${localeOption(localeId)?.label ?? localeId}`,
   messages: {
-    saved: "terminologies.saved",
+    saved: "common.labelSaved",
     partial: "terminologies.partialSave",
   },
   afterSave: () => Promise.all([refetch(), refetchDetail()]),
@@ -740,7 +740,7 @@ async function handleSave() {
         </template>
         {{
           t(
-            "terminologies.selectedLanguages",
+            "common.selectedLanguages",
             { count: selectedLocaleIds.length },
             selectedLocaleIds.length,
           )

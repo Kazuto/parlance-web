@@ -35,7 +35,7 @@ const presetOptions = computed(() =>
         teleport-to="body"
         :options="weekdayOptions"
         :disabled
-        >{{ t("tasks.schedule.weekday") }}</Select
+        >{{ t("schedule.weekday") }}</Select
       >
       <Select
         v-if="schedule.preset === 'daily' || schedule.preset === 'weekly'"
@@ -43,7 +43,7 @@ const presetOptions = computed(() =>
         teleport-to="body"
         :options="hourOptions"
         :disabled
-        >{{ t("tasks.schedule.time") }}</Select
+        >{{ t("schedule.time") }}</Select
       >
       <Input
         v-if="schedule.preset === 'custom'"
@@ -51,8 +51,8 @@ const presetOptions = computed(() =>
         class="sm:col-span-2"
         :disabled
         placeholder="0 9,17 * * 1-5"
-        :helper="t('tasks.schedule.customHelp')"
-        >{{ t("tasks.schedule.cron") }}</Input
+        :helper="t('schedule.customHelp')"
+        >{{ t("schedule.cron") }}</Input
       >
     </div>
     <p class="text-xs text-neutral-500 dark:text-neutral-400">

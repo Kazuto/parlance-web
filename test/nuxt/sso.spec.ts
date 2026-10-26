@@ -240,10 +240,9 @@ describe("single sign-on settings", () => {
   it("keeps the saved secret and role unless changed", async () => {
     const { page, calls } = await openSettings(ALL_PERMISSIONS);
 
-    await button(
-      page,
-      t("ssoProviders.editFor", { name: "Keycloak" }),
-    )!.trigger("click");
+    await button(page, t("common.editFor", { name: "Keycloak" }))!.trigger(
+      "click",
+    );
     await settle();
     await page.wrapper.find("dialog[open] form").trigger("submit");
     await settle();
@@ -265,7 +264,7 @@ describe("single sign-on settings", () => {
     const { page } = await openSettings(ALL_PERMISSIONS);
     const tests = page.wrapper
       .findAll("button")
-      .filter((item) => item.text().trim() === t("ssoProviders.test"));
+      .filter((item) => item.text().trim() === t("common.test"));
 
     await tests[0]!.trigger("click");
     await settle();

@@ -64,7 +64,7 @@ function handleSubmit() {
     }
 
     if (form.value.schedule.preset === "custom" && !settings.schedule) {
-      error.value = t("tasks.schedule.customRequired");
+      error.value = t("schedule.customRequired");
 
       return false;
     }

@@ -100,14 +100,14 @@ describe("account settings", () => {
 
     await field(page, t("account.currentPassword")).setValue("old");
     await field(page, t("account.newPassword")).setValue("new-password");
-    await field(page, t("users.passwordConfirm")).setValue("typo");
+    await field(page, t("common.confirmPassword")).setValue("typo");
     await page.wrapper.findAll("form")[1]!.trigger("submit");
     await settle();
 
     expect(calls).toEqual([]);
-    expect(page.wrapper.text()).toContain(t("users.passwordMismatch"));
+    expect(page.wrapper.text()).toContain(t("common.passwordMismatch"));
 
-    await field(page, t("users.passwordConfirm")).setValue("new-password");
+    await field(page, t("common.confirmPassword")).setValue("new-password");
     await page.wrapper.findAll("form")[1]!.trigger("submit");
     await settle();
 

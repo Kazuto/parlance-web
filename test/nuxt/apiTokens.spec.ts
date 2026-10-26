@@ -139,7 +139,7 @@ describe("API tokens", () => {
     await click(dialog(page), t("apiTokens.copy"));
     expect(writeText).toHaveBeenCalledWith(SECRET);
 
-    await click(dialog(page), t("apiTokens.done"));
+    await click(dialog(page), t("common.done"));
 
     expect(dialog(page).exists()).toBe(false);
     expect(page.wrapper.html()).not.toContain(SECRET);

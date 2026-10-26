@@ -275,7 +275,7 @@ defineExpose({
           :disabled="isPending || scopesLoading"
           :invalid="!!scopeError"
           :placeholder="t(action === 'import' ? 'scopes.select' : 'scopes.all')"
-          >{{ t("scopes.title") }}</Select
+          >{{ t("nav.scopes") }}</Select
         >
         <p v-if="scopeError" role="alert" class="text-xs text-red-600">
           {{ t("scopes.loadFailed") }}

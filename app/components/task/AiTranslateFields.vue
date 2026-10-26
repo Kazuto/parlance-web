@@ -54,7 +54,7 @@ const targetOptions = computed(() =>
       :options="scopeOptions"
       :disabled
       :placeholder="t('scopes.all')"
-      >{{ t("scopes.title") }}</Select
+      >{{ t("nav.scopes") }}</Select
     >
     <NumberInput
       v-model="form.maxPairs"

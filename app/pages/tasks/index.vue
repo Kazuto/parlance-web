@@ -231,7 +231,7 @@ async function runNow(task: Task) {
               v-if="can('update_task')"
               dense
               :model-value="!!task.enabled"
-              :aria-label="t('tasks.enableFor', { name: task.name ?? '' })"
+              :aria-label="t('common.turnOnFor', { name: task.name ?? '' })"
               :disabled="store.update.isPending"
               @update:model-value="setEnabled(task, $event)"
             />
@@ -245,8 +245,8 @@ async function runNow(task: Task) {
               {{ t("tasks.runNow") }}
             </Button>
             <BaseActionButtons
-              :edit-label="t('tasks.editFor', { name: task.name ?? '' })"
-              :delete-label="t('tasks.deleteFor', { name: task.name ?? '' })"
+              :edit-label="t('common.editFor', { name: task.name ?? '' })"
+              :delete-label="t('common.deleteFor', { name: task.name ?? '' })"
               edit-permission="update_task"
               delete-permission="delete_task"
               @edit="openForm(task)"

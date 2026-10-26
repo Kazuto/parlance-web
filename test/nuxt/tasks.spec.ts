@@ -201,7 +201,7 @@ describe("tasks page", () => {
   it("keeps a saved token unless one is typed", async () => {
     const { page, calls } = await openTasks(ALL_PERMISSIONS);
     const edit = () =>
-      button(page, t("tasks.editFor", { name: "Ship translations" }))!;
+      button(page, t("common.editFor", { name: "Ship translations" }))!;
 
     await edit().trigger("click");
     await settle();

@@ -429,9 +429,7 @@ describe("machine translation of ticked entries", () => {
 
     const stop = page.wrapper
       .findAll("button")
-      .find(
-        (button) => button.text().trim() === t("entries.bulkTranslateStop"),
-      )!;
+      .find((button) => button.text().trim() === t("common.stop"))!;
 
     await stop.trigger("click");
     answer({ suggestions: [{ localeId: "l2", translation: "Hallo" }] });

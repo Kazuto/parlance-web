@@ -90,11 +90,7 @@ async function runTest(server: TranslationServer) {
                       : 'bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400'
                   "
                 >
-                  {{
-                    server.enabled
-                      ? t("translationServers.on")
-                      : t("translationServers.off")
-                  }}
+                  {{ server.enabled ? t("common.on") : t("common.off") }}
                 </span>
               </div>
               <div
@@ -133,17 +129,13 @@ async function runTest(server: TranslationServer) {
                 @click="runTest(server)"
               >
                 {{
-                  testing === server.id
-                    ? t("translationServers.testing")
-                    : t("translationServers.test")
+                  testing === server.id ? t("common.testing") : t("common.test")
                 }}
               </Button>
               <BaseActionButtons
-                :edit-label="
-                  t('translationServers.editFor', { name: server.name ?? '' })
-                "
+                :edit-label="t('common.editFor', { name: server.name ?? '' })"
                 :delete-label="
-                  t('translationServers.deleteFor', { name: server.name ?? '' })
+                  t('common.deleteFor', { name: server.name ?? '' })
                 "
                 edit-permission="update_translation_server"
                 delete-permission="delete_translation_server"
@@ -168,13 +160,17 @@ async function runTest(server: TranslationServer) {
                     translation: testResults[server.id]?.translation ?? "",
                     ms: testResults[server.id]?.durationMs ?? 0,
                   })
-                : t("translationServers.testFailed", {
+                : t("common.testFailed", {
                     error: testResults[server.id]?.error ?? "",
                   })
             }}
           </p>
         </li>
       </ul>
+
+      <TranslationServerStyleSettings
+        class="border-t border-neutral-200 pt-4 dark:border-neutral-800"
+      />
     </div>
 
     <TranslationServerFormDialog

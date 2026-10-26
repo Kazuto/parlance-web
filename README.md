@@ -125,6 +125,7 @@ Under Import / export:
   (`{"auth": {"login": "Log in"}}`) files. Exports are flat.
 - **PHP:** Laravel-style `return [...]` arrays.
 - **PO:** gettext files where `msgid` is the key and `msgstr` the translation.
+  `#.` comments are the entries' descriptions, on import and export.
 - **ZIP:** all languages at once, one file per language.
 
 An import goes into one language and can add the imported entries to scopes. The
@@ -194,6 +195,12 @@ language set to formal. This check covers German, French, Spanish, Italian, Dutc
 and Russian. Machine translation asks for the form in every language, but the
 model doesn't always follow it: in the editor such a suggestion is a draft marked
 "Check", and the machine translation task leaves it out.
+
+**Style and descriptions:** every request asks for "software user interface text".
+Change the **Translation style** under **Settings → Machine translation**, e.g. to
+"marketing website text"; **Test** then translates in it. An entry's description is
+sent along too, so a note such as "Status badge, not an action" helps the model as
+well as translators.
 
 ### Webhooks
 

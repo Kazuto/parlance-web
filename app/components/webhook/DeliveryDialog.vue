@@ -97,7 +97,7 @@ async function redeliver() {
         </template>
         <template v-if="delivery.error">
           <dt class="text-neutral-500 dark:text-neutral-400">
-            {{ t("webhooks.error") }}
+            {{ t("common.error") }}
           </dt>
           <dd class="text-red-600 dark:text-rose-300">{{ delivery.error }}</dd>
         </template>
@@ -131,7 +131,7 @@ async function redeliver() {
         >
           {{
             store.redeliver.isPending
-              ? t("webhooks.redelivering")
+              ? t("common.sending")
               : t("webhooks.redeliver")
           }}
         </Button>

@@ -19,7 +19,7 @@ const lifetimeOptions = computed(() => [
   { label: t("apiTokens.days", { count: 30 }, 30), value: "30" },
   { label: t("apiTokens.days", { count: 90 }, 90), value: "90" },
   { label: t("apiTokens.days", { count: 365 }, 365), value: "365" },
-  { label: t("apiTokens.never"), value: "0" },
+  { label: t("common.never"), value: "0" },
 ]);
 
 const { error, isPending, submit, cancel } = useFormDialog({
@@ -101,7 +101,7 @@ onBeforeUnmount(() => clearTimeout(copiedTimer));
         >
         <BaseIconButton
           :icon="copied ? 'check' : 'copy'"
-          :label="t(copied ? 'apiTokens.copied' : 'apiTokens.copy')"
+          :label="t(copied ? 'common.copied' : 'apiTokens.copy')"
           @click="copySecret"
         />
       </div>
@@ -133,7 +133,7 @@ onBeforeUnmount(() => clearTimeout(copiedTimer));
     <template #footer>
       <div class="flex items-center justify-end gap-3">
         <Button v-if="secret" primary @click="emit('close')">
-          {{ t("apiTokens.done") }}
+          {{ t("common.done") }}
         </Button>
         <template v-else>
           <Button type="button" ghost :disabled="isPending" @click="cancel">

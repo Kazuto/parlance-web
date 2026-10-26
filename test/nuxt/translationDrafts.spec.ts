@@ -24,7 +24,10 @@ async function setup(
           setRows: (item, rows) => (item.rows = rows),
           upsert,
           describe: (change) => `${change.itemId}/${change.localeId}`,
-          messages: { saved: "entries.saved", partial: "entries.partialSave" },
+          messages: {
+            saved: "common.labelSaved",
+            partial: "entries.partialSave",
+          },
           afterSave: async () => {
             afterSave.push("done");
           },

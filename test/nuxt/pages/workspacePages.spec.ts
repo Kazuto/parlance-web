@@ -146,7 +146,7 @@ describe("entries page", () => {
       t("entries.export"),
       t("entries.deletedEntries"),
     ]);
-    expect(await entryActions(page)).toEqual([t("actions.deleteEntry")]);
+    expect(await entryActions(page)).toEqual([t("entries.delete")]);
     expect(fields(page)).not.toContain("editable");
   });
 
@@ -163,7 +163,7 @@ describe("entries page", () => {
       t("entries.copyDefaultToEmpty"),
       t("entries.edit"),
       t("review.approveShown"),
-      t("actions.deleteEntry"),
+      t("entries.delete"),
     ]);
   });
 });

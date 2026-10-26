@@ -58,9 +58,38 @@ async function openSettings(permissions: readonly string[]) {
       : { ok: false, error: "connection refused" };
   });
 
+  mockRpc("TranslationServerService/GetTranslationSettings", {
+    settings: { style: "", defaultStyle: "software user interface text" },
+  });
+  mockRpc("TranslationServerService/UpdateTranslationSettings", (body) => {
+    calls.push({ method: "UpdateTranslationSettings", body });
+
+    return {
+      settings: {
+        style: body.style,
+        defaultStyle: "software user interface text",
+      },
+    };
+  });
+
   const page = await mountPage(SettingsPage);
 
   return { page, calls };
+}
+
+/** The translation style field, outside any dialog. */
+function styleField(page: MountedPage) {
+  const label = page.wrapper
+    .findAll("label")
+    .filter((item) => !item.element.closest("dialog"))
+    .find((item) =>
+      item.text().trim().startsWith(t("translationServers.style")),
+    );
+  const id = label?.attributes("for");
+
+  return page.wrapper.find<HTMLInputElement>(
+    id ? `#${CSS.escape(id)}` : "form input",
+  );
 }
 
 // Closed dialogs stay in the DOM, so their buttons don't count.
@@ -103,9 +132,9 @@ describe("translation server settings", () => {
     expect(page.wrapper.text()).toContain("https://api.example/v1");
     expect(page.wrapper.text()).toContain(t("translationServers.hasApiKey"));
     expect(button(page, t("translationServers.add"))).toBeUndefined();
-    expect(button(page, t("translationServers.test"))).toBeUndefined();
+    expect(button(page, t("common.test"))).toBeUndefined();
     expect(
-      button(page, t("translationServers.editFor", { name: "Homelab" })),
+      button(page, t("common.editFor", { name: "Homelab" })),
     ).toBeUndefined();
     expect(switches(page)).toEqual([]);
   });
@@ -141,8 +170,7 @@ describe("translation server settings", () => {
   it("keeps a saved API key unless it is replaced or removed", async () => {
     const { page, calls } = await openSettings(ALL_PERMISSIONS);
 
-    const edit = () =>
-      button(page, t("translationServers.editFor", { name: "Hosted" }))!;
+    const edit = () => button(page, t("common.editFor", { name: "Hosted" }))!;
 
     await edit().trigger("click");
     await settle();
@@ -187,7 +215,7 @@ describe("translation server settings", () => {
     const { page } = await openSettings(ALL_PERMISSIONS);
     const tests = page.wrapper
       .findAll("button")
-      .filter((item) => item.text().trim() === t("translationServers.test"));
+      .filter((item) => item.text().trim() === t("common.test"));
 
     await tests[0]!.trigger("click");
     await settle();
@@ -201,7 +229,49 @@ describe("translation server settings", () => {
     await tests[1]!.trigger("click");
     await settle();
     expect(page.wrapper.text()).toContain(
-      t("translationServers.testFailed", { error: "connection refused" }),
+      t("common.testFailed", { error: "connection refused" }),
+    );
+  });
+
+  it("shows the translation style for reading only", async () => {
+    const { page } = await openSettings([...VIEWER, "read_translation_server"]);
+    const field = styleField(page);
+
+    expect(field.attributes("placeholder")).toBe(
+      "software user interface text",
+    );
+    expect(field.element.disabled).toBe(true);
+    expect(button(page, t("common.save"))).toBeUndefined();
+  });
+
+  it("saves the translation style, and checks it first", async () => {
+    const { page, calls } = await openSettings(ALL_PERMISSIONS);
+    const save = () => button(page, t("common.save"))!;
+    const submit = () =>
+      page.wrapper
+        .findAll("form")
+        .find((form) => form.text().includes(t("translationServers.style")))!
+        .trigger("submit");
+
+    expect(save().attributes("disabled")).toBeDefined();
+
+    await styleField(page).setValue("[marketing] text");
+    await submit();
+    await settle();
+    expect(page.wrapper.text()).toContain(t("translationServers.styleInvalid"));
+    expect(calls).toEqual([]);
+
+    await styleField(page).setValue("  marketing website text ");
+    await submit();
+    await settle();
+    expect(calls).toEqual([
+      {
+        method: "UpdateTranslationSettings",
+        body: { style: "marketing website text" },
+      },
+    ]);
+    expect(page.wrapper.text()).not.toContain(
+      t("translationServers.styleInvalid"),
     );
   });
 });

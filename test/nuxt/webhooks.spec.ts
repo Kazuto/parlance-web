@@ -167,7 +167,7 @@ describe("webhooks page", () => {
     expect(page.headerActions()).toEqual([]);
     expect(button(page, t("webhooks.test"))).toBeUndefined();
     expect(
-      button(page, t("webhooks.editFor", { name: "CI build" })),
+      button(page, t("common.editFor", { name: "CI build" })),
     ).toBeUndefined();
     expect(
       page.wrapper
@@ -220,9 +220,7 @@ describe("webhooks page", () => {
     });
 
     // A saved webhook keeps its format, but says when its address takes another.
-    await button(page, t("webhooks.editFor", { name: "Chat" }))!.trigger(
-      "click",
-    );
+    await button(page, t("common.editFor", { name: "Chat" }))!.trigger("click");
     await settle();
     await dialogField(page, t("webhooks.url")).setValue(
       "https://hooks.slack.com/services/T0/B0/x",
@@ -268,8 +266,7 @@ describe("webhooks page", () => {
 
   it("keeps a saved secret unless it is replaced or removed", async () => {
     const { page, calls } = await openWebhooks(ALL_PERMISSIONS);
-    const edit = () =>
-      button(page, t("webhooks.editFor", { name: "CI build" }))!;
+    const edit = () => button(page, t("common.editFor", { name: "CI build" }))!;
 
     await edit().trigger("click");
     await settle();
@@ -299,7 +296,7 @@ describe("webhooks page", () => {
 
     await edit().trigger("click");
     await settle();
-    await dialogField(page, t("webhooks.removeSecret")).setValue(true);
+    await dialogField(page, t("common.removeSavedSecret")).setValue(true);
     await submitDialog(page);
 
     expect(calls.at(-1)?.body).toMatchObject({ id: "w1", secret: "" });
@@ -310,7 +307,7 @@ describe("webhooks page", () => {
 
     await page.wrapper
       .find(
-        `input[role="switch"][aria-label="${t("webhooks.enableFor", { name: "CI build" })}"]`,
+        `input[role="switch"][aria-label="${t("common.turnOnFor", { name: "CI build" })}"]`,
       )
       .setValue(false);
     await settle();
@@ -335,7 +332,7 @@ describe("webhooks page", () => {
     await tests[1]!.trigger("click");
     await settle();
     expect(page.wrapper.text()).toContain(
-      t("webhooks.testFailed", { error: "connection refused" }),
+      t("common.testFailed", { error: "connection refused" }),
     );
   });
 

@@ -105,7 +105,7 @@ async function changePassword() {
   }
 
   if (password.value.next !== password.value.confirm) {
-    passwordError.value = t("users.passwordMismatch");
+    passwordError.value = t("common.passwordMismatch");
 
     return;
   }
@@ -188,7 +188,7 @@ async function changePassword() {
             type="email"
             autocomplete="email"
             :disabled="store.update.isPending"
-            >{{ t("auth.email") }}</Input
+            >{{ t("common.email") }}</Input
           >
         </div>
         <Button
@@ -206,7 +206,7 @@ async function changePassword() {
         @submit.prevent="changePassword"
       >
         <div>
-          <div class="font-semibold">{{ t("account.password") }}</div>
+          <div class="font-semibold">{{ t("common.password") }}</div>
           <Text v-if="!user?.hasPassword" muted size="sm">
             {{ t("account.noPassword") }}
           </Text>
@@ -232,7 +232,7 @@ async function changePassword() {
             type="password"
             autocomplete="new-password"
             :disabled="store.changePassword.isPending"
-            >{{ t("users.passwordConfirm") }}</Input
+            >{{ t("common.confirmPassword") }}</Input
           >
         </div>
         <p v-if="passwordError" role="alert" class="text-sm text-red-600">

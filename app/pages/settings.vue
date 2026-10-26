@@ -16,7 +16,7 @@ const { can } = usePermission();
 
 usePage(() => ({
   width: "wide",
-  title: t("settings.title"),
+  title: t("nav.settings"),
   description: t("settings.description"),
   showHeader: false,
 }));

@@ -30,7 +30,7 @@ const { t } = useI18n();
     <label class="flex flex-col gap-1">
       <span
         class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
-        >{{ t("scopes.title") }}</span
+        >{{ t("nav.scopes") }}</span
       >
       <Select
         :model-value="scopeIds"
@@ -38,7 +38,7 @@ const { t } = useI18n();
         multiple
         :options="scopeOptions"
         :placeholder="t('scopes.all')"
-        :aria-label="t('scopes.title')"
+        :aria-label="t('nav.scopes')"
         @update:model-value="
           scopeIds = Array.isArray($event) ? $event.map(String) : []
         "
