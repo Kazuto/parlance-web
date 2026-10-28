@@ -1,0 +1,3852 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Parlance\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Parlance\n"
+
+#. Help text under the profile picture in account settings, stating allowed image formats and maximum size.
+msgid "account.avatarHelp"
+msgstr "PNG, JPEG, WebP or GIF, up to 2 MB."
+
+#. Error toast shown when the chosen profile picture has an unsupported type or is too large.
+msgid "account.avatarInvalid"
+msgstr "Choose a PNG, JPEG, WebP or GIF image of up to 2 MB."
+
+#. Success toast shown after the user's profile picture was removed.
+msgid "account.avatarRemoved"
+msgstr "Your avatar is removed"
+
+#. Success toast shown after a new profile picture was uploaded.
+msgid "account.avatarSaved"
+msgstr "Your avatar is saved"
+
+#. Button in account settings that submits the password change form; shown when the user already has a password. Action, keep short.
+msgid "account.changePassword"
+msgstr "Change password"
+
+#. Label of the input for the user's current password in the change-password form.
+msgid "account.currentPassword"
+msgstr "Current password"
+
+#. Subtitle under the 'Your account' heading in account settings, describing what can be edited there.
+msgid "account.description"
+msgstr "Your name, email address, avatar and password. You can change them without any permission."
+
+#. Label of the input for the new password in the change-password form.
+msgid "account.newPassword"
+msgstr "New password"
+
+#. Hint in account settings shown to users who sign in via single sign-on and have no password yet.
+msgid "account.noPassword"
+msgstr "You sign in with single sign-on. Set a password to also sign in with your email address."
+
+#. Page description (metadata subtitle) of the account page.
+msgid "account.pageDescription"
+msgstr "Your profile, password and interface language"
+
+#. Success toast shown after the user changed their password.
+msgid "account.passwordChanged"
+msgstr "Your password is changed"
+
+#. Validation error shown under the password form when the new password is empty.
+msgid "account.passwordRequired"
+msgstr "Enter a new password."
+
+#. Error toast when saving the profile with an empty name or invalid email address.
+msgid "account.profileRequired"
+msgstr "Enter your name and a valid email address."
+
+#. Button in account settings that removes the profile picture.
+msgid "account.removeAvatar"
+msgstr "Remove avatar"
+
+#. Success toast shown after the user's name and email were saved.
+msgid "account.saved"
+msgstr "Your account is saved"
+
+#. Button in account settings that sets a first password for users who sign in via single sign-on. Action, keep short.
+msgid "account.setPassword"
+msgstr "Set password"
+
+#. Section heading in account settings for the user's own profile.
+msgid "account.title"
+msgstr "Your account"
+
+#. Heading of the settings section where the user picks the interface language.
+msgid "account.uiLanguage"
+msgstr "User interface language"
+
+#. Subtitle under the interface language heading explaining what the language setting changes.
+msgid "account.uiLanguageDescription"
+msgstr "Choose the language for menus, buttons and interface text"
+
+#. Button in account settings that opens the file picker to upload a profile picture; also the screen-reader label of the hidden file input.
+msgid "account.uploadAvatar"
+msgstr "Upload avatar"
+
+#. Sentence in the dashboard's recent activity feed. {user} is who acted, {subject} a count such as '3 translations', {where} the language phrase (e.g. 'in German'). Verb is past tense.
+msgid "activity.added"
+msgstr "{user} added {subject} {where}"
+
+#. Sentence in the dashboard's recent activity feed. {user} is who acted, {subject} a count such as '3 translations', {where} the language phrase. Verb is past tense.
+msgid "activity.approved"
+msgstr "{user} approved {subject} {where}"
+
+#. Sentence in the recent activity feed used when several kinds of changes happened at once. {user} is who acted, {subject} a count, {where} the language phrase.
+msgid "activity.changed"
+msgstr "{user} changed {subject} {where}"
+
+#. Sentence in the dashboard's recent activity feed. {user} is who acted, {subject} a count such as '3 terms', {where} the language phrase. Verb is past tense.
+msgid "activity.deleted"
+msgstr "{user} deleted {subject} {where}"
+
+#. Phrase in the recent activity feed filling {where} when one language is affected. {language} is the language name.
+msgid "activity.inLanguage"
+msgstr "in {language}"
+
+#. Phrase in the recent activity feed filling {where} when several languages are affected. {count} is the number of languages.
+msgid "activity.inLanguages"
+msgstr "in {count} languages"
+
+#. Error message in the dashboard's recent activity panel when loading the feed failed.
+msgid "activity.loadFailed"
+msgstr "Could not load recent activity."
+
+#. Loading text in the dashboard's recent activity panel while the feed loads.
+msgid "activity.loading"
+msgstr "Loading activity…"
+
+#. Empty state in the recent activity panel when the 'Only mine' filter is on and the user has no recent changes.
+msgid "activity.noOwnActivity"
+msgstr "You haven't changed any translations recently."
+
+#. Label of a toggle in the recent activity panel that limits the feed to the current user's own activity.
+msgid "activity.onlyMine"
+msgstr "Only mine"
+
+#. Sentence in the dashboard's recent activity feed. {user} is who acted, {subject} a count such as '3 translations', {where} the language phrase. Verb is past tense.
+msgid "activity.rejected"
+msgstr "{user} rejected {subject} {where}"
+
+#. Fallback name shown in the recent activity feed when the acting user is unknown.
+msgid "activity.someone"
+msgstr "Someone"
+
+#. Count of glossary terms, used as {subject} in activity sentences. Plural forms separated by |: one | other. {count} is the number of terms.
+msgid "activity.terms"
+msgstr "{count} term | {count} terms"
+
+#. Count of translations, used as {subject} in activity sentences. Plural forms separated by |: one | other. {count} is the number of translations.
+msgid "activity.translations"
+msgstr "{count} translation | {count} translations"
+
+#. Sentence in the dashboard's recent activity feed. {user} is who acted, {subject} a count such as '3 translations', {where} the language phrase. Verb is past tense.
+msgid "activity.updated"
+msgstr "{user} updated {subject} {where}"
+
+#. Screen-reader label and tooltip for the icon button that copies the newly created API token to the clipboard.
+msgid "apiTokens.copy"
+msgstr "Copy token"
+
+#. Warning shown in the token-created dialog, telling the user to copy the token because it is displayed only once.
+msgid "apiTokens.copyNow"
+msgstr "Copy the token now. It won't be shown again."
+
+#. Button and dialog title for creating a new API token. Action.
+msgid "apiTokens.create"
+msgstr "Create token"
+
+#. Small line in the API token list showing when the token was created. {time} is a relative or formatted date/time.
+msgid "apiTokens.createdAt"
+msgstr "Created {time}"
+
+#. Dialog title shown after an API token was successfully created.
+msgid "apiTokens.createdTitle"
+msgstr "Token created"
+
+#. Option in the token expiry dropdown. Plural forms separated by |: zero | one | many. {count} is the number of days until the token expires.
+msgid "apiTokens.days"
+msgstr "After {count} days | After {count} day | After {count} days"
+
+#. Explanation under the 'API tokens' heading in account settings about what tokens are for and their limits.
+msgid "apiTokens.description"
+msgstr "Let scripts and CI use the API as you, with your permissions. A token can't manage tokens or change your password or email address."
+
+#. Empty state text in the API token list when the user has no tokens.
+msgid "apiTokens.empty"
+msgstr "No tokens yet."
+
+#. Small status badge in the API token list for a token that has expired. Status, not an action; keep short.
+msgid "apiTokens.expired"
+msgstr "Expired"
+
+#. Label of the dropdown in the create-token dialog for choosing when the token expires.
+msgid "apiTokens.expires"
+msgstr "Expires"
+
+#. Small line in the API token list showing when the token expires. {time} is a relative or formatted date/time.
+msgid "apiTokens.expiresAt"
+msgstr "Expires {time}"
+
+#. Small line in the API token list showing when the token was last used. {time} is a relative or formatted date/time.
+msgid "apiTokens.lastUsedAt"
+msgstr "Last used {time}"
+
+#. Helper text under the name input in the create-token dialog.
+msgid "apiTokens.nameHelp"
+msgstr "What uses the token, so you can tell it apart later"
+
+#. Example placeholder in the token name input, naming a typical use such as a CI export job.
+msgid "apiTokens.namePlaceholder"
+msgstr "CI export"
+
+#. Validation error in the create-token dialog when no name was entered.
+msgid "apiTokens.nameRequired"
+msgstr "Enter a name for the token"
+
+#. Small line in the API token list for a token without an expiry date.
+msgid "apiTokens.neverExpires"
+msgstr "Never expires"
+
+#. Small line in the API token list for a token that has not been used yet.
+msgid "apiTokens.neverUsed"
+msgstr "Never used"
+
+#. Body text of the confirmation dialog for revoking an API token, explaining the consequence.
+msgid "apiTokens.revokeConfirm"
+msgstr "Scripts using this token stop working right away."
+
+#. Screen-reader label for the trash icon button that revokes a token. {name} is the token's name.
+msgid "apiTokens.revokeFor"
+msgstr "Revoke {name}"
+
+#. Title of the confirmation dialog for revoking an API token. {name} is the token's name.
+msgid "apiTokens.revokeTitle"
+msgstr "Revoke {name}?"
+
+#. Success toast shown after an API token was revoked. {name} is the token's name.
+msgid "apiTokens.revoked"
+msgstr "Revoked {name}"
+
+#. Section heading in account settings for API tokens.
+msgid "apiTokens.title"
+msgstr "API tokens"
+
+#. Name of the application, shown as the heading on the login, setup and SSO callback pages. Usually kept untranslated.
+msgid "app.name"
+msgstr "Parlance"
+
+#. Placeholder page title shown when a page has not set its own title.
+msgid "app.pagePlaceholder"
+msgstr "Placeholder. Please set a title in the page options."
+
+#. Generic error message shown on the login page when signing in failed.
+msgid "auth.loginFailed"
+msgstr "Login failed"
+
+#. Submit button on the login page.
+msgid "auth.signIn"
+msgstr "Sign in"
+
+#. Subtitle on the login page above the form.
+msgid "auth.signInPrompt"
+msgstr "Sign in to your account"
+
+#. Text of the login button while the sign-in request is running.
+msgid "auth.signingIn"
+msgstr "Signing in…"
+
+#. Link or button on the single sign-on callback page that returns to the login page.
+msgid "auth.sso.backToSignIn"
+msgstr "Back to sign-in"
+
+#. Error message on the single sign-on callback page when the identity provider returned without completing sign-in.
+msgid "auth.sso.incomplete"
+msgstr "The provider sent you back without signing you in. Start again."
+
+#. Loading text on the login page while the user is being redirected to the single sign-on provider.
+msgid "auth.sso.redirecting"
+msgstr "Redirecting…"
+
+#. Error message on the single sign-on callback page when the identity provider declined to sign the user in.
+msgid "auth.sso.refused"
+msgstr "The provider didn't sign you in."
+
+#. Button on the login page that starts single sign-on. {name} is the provider's name.
+msgid "auth.sso.signInWith"
+msgstr "Sign in with {name}"
+
+#. Loading text on the single sign-on callback page while the login is completed.
+msgid "auth.sso.signingIn"
+msgstr "Signing you in…"
+
+#. Command palette entry that approves all draft translations of the open entry.
+msgid "commands.approveAll"
+msgstr "Approve all drafts"
+
+#. Command palette entry, shown when no language field is focused, that copies the default-language text into the focused field.
+msgid "commands.copySourceFocused"
+msgstr "Copy default text into the focused field"
+
+#. Command palette entry that copies the default-language text into the focused field. {language} is the name of that field's language.
+msgid "commands.copySourceTo"
+msgstr "Copy default text into {language}"
+
+#. Command palette entry that moves the cursor to the entry search box. Action, not a heading.
+msgid "commands.focusSearch"
+msgstr "Search entries"
+
+#. Group heading in the command palette above the list of entries to jump to.
+msgid "commands.groupEntries"
+msgstr "Go to entry"
+
+#. Group heading in the command palette above commands that act on the currently open entry.
+msgid "commands.groupEntry"
+msgstr "This entry"
+
+#. Group heading in the command palette above the commands that filter the entry list by status.
+msgid "commands.groupFilter"
+msgstr "Filter"
+
+#. Group heading in the command palette above the list of app pages to navigate to.
+msgid "commands.groupPages"
+msgstr "Pages"
+
+#. Command palette entry that opens the next entry in the list.
+msgid "commands.nextEntry"
+msgstr "Next entry"
+
+#. Label of the small button hinting at the command palette, shown next to its keyboard shortcut. Keep short.
+msgid "commands.open"
+msgstr "Commands"
+
+#. Command palette entry that opens the previous entry in the list.
+msgid "commands.previousEntry"
+msgstr "Previous entry"
+
+#. Command palette entry that saves the current translations and opens the next entry.
+msgid "commands.saveAndNext"
+msgstr "Save and go to the next entry"
+
+#. Command palette entry that filters the entry list by a translation status. {status} is the status name, e.g. Needs review.
+msgid "commands.showStatus"
+msgstr "Show: {status}"
+
+#. Command palette entry that toggles the side panel with glossary, memory and history.
+msgid "commands.toggleContext"
+msgstr "Show or hide the context panel"
+
+#. Generic label or placeholder meaning no language filter is applied, used in dropdowns and filter menus.
+msgid "common.allLanguages"
+msgstr "All languages"
+
+#. Generic button label in dialogs and forms that applies edited settings.
+msgid "common.applyChanges"
+msgstr "Apply changes"
+
+#. Generic button label that goes back to the previous step or page.
+msgid "common.back"
+msgstr "Back"
+
+#. Generic button label in dialogs that dismisses without saving.
+msgid "common.cancel"
+msgstr "Cancel"
+
+#. Generic button label that closes a dialog or panel.
+msgid "common.close"
+msgstr "Close"
+
+#. Generic column header or form field label for a short identifier code, e.g. a locale code like 'en-US'.
+msgid "common.code"
+msgstr "Code"
+
+#. Label of the password confirmation input in forms such as setup, account settings and user creation.
+msgid "common.confirmPassword"
+msgstr "Confirm password"
+
+#. Short feedback text or tooltip shown briefly after something was copied to the clipboard.
+msgid "common.copied"
+msgstr "Copied"
+
+#. Column header for the creation date in lists. Keep short.
+msgid "common.created"
+msgstr "Created"
+
+#. Generic text of a submit button while an item is being created.
+msgid "common.creating"
+msgstr "Creating…"
+
+#. Generic short badge, tooltip or column header marking the default item, e.g. the default language or default translation. Keep short.
+msgid "common.default"
+msgstr "Default"
+
+#. Generic button label that deletes an item. Verb.
+msgid "common.delete"
+msgstr "Delete"
+
+#. Phrase the user must type to confirm deleting an item in delete dialogs. {name} is the item's name.
+msgid "common.deleteConfirmPhrase"
+msgstr "Delete {name}"
+
+#. Screen-reader label for a delete icon button. {name} is the name of the item to delete.
+msgid "common.deleteFor"
+msgstr "Delete {name}"
+
+#. Generic column header or form field label for a free-text description.
+msgid "common.description"
+msgstr "Description"
+
+#. Button in the unsaved changes dialog that throws away the changes. Verb.
+msgid "common.discard"
+msgstr "Discard"
+
+#. Button that discards all unsaved edits in the editor. Verb.
+msgid "common.discardAll"
+msgstr "Discard all"
+
+#. Body text of the confirmation dialog for discarding all unsaved changes. Plural forms separated by |: zero | one | other. {count} is the number of unsaved changes.
+msgid "common.discardAllConfirm"
+msgstr "{count} unsaved changes will be discarded, including changes outside the current selection. This can't be undone. | {count} unsaved change will be discarded, including changes outside the current selection. This can't be undone. | {count} unsaved changes will be discarded, including changes outside the current selection. This can't be undone."
+
+#. Title of the confirmation dialog for discarding all unsaved changes.
+msgid "common.discardAllTitle"
+msgstr "Discard all changes?"
+
+#. Generic button label that closes a dialog after finishing, e.g. after copying a new API token.
+msgid "common.done"
+msgstr "Done"
+
+#. Generic button label or tooltip that opens an item for editing. Verb.
+msgid "common.edit"
+msgstr "Edit"
+
+#. Screen-reader label for an edit icon button. {name} is the name of the item to edit.
+msgid "common.editFor"
+msgstr "Edit {name}"
+
+#. Generic form field label and column header for an email address.
+msgid "common.email"
+msgstr "Email"
+
+#. Label for the error details section, e.g. in the webhook delivery dialog.
+msgid "common.error"
+msgstr "Error"
+
+#. Label, heading and screen-reader label of the filter popover button in the entry editor.
+msgid "common.filters"
+msgstr "Filters"
+
+#. Form field label for a file or payload format dropdown, e.g. in import/export and webhook forms.
+msgid "common.format"
+msgstr "Format"
+
+#. Suffix appended to the selected languages summary, noting that hidden languages are included. Starts with a space.
+msgid "common.hiddenLanguages"
+msgstr "(including hidden languages)"
+
+#. Generic column header or form field label for an entry key (the identifier of a translatable string).
+msgid "common.key"
+msgstr "Key"
+
+#. Toast shown after something was saved. {label} is the name of what was saved.
+msgid "common.labelSaved"
+msgstr "{label} saved"
+
+#. Generic label or column header for a single language.
+msgid "common.language"
+msgstr "Language"
+
+#. Count of languages shown in a locale detail view. {count} is the number of languages.
+msgid "common.languageCount"
+msgstr "{count} languages"
+
+#. Generic label or heading for languages (plural noun).
+msgid "common.languages"
+msgstr "Languages"
+
+#. Accessible name of the ⋯ menu button beside the save button under the editors on phones; the menu holds Discard all and Save all.
+msgid "common.moreActions"
+msgstr "More actions"
+
+#. Generic column header or form field label for an item's name.
+msgid "common.name"
+msgstr "Name"
+
+#. Validation error in webhook and translation server forms when the name or URL is missing or invalid.
+msgid "common.nameUrlRequired"
+msgstr "Enter a name and an http or https URL."
+
+#. Option in the API token expiry dropdown meaning the token does not expire.
+msgid "common.never"
+msgstr "Never"
+
+#. Short status label shown when a feature, provider or server is disabled. Keep short.
+msgid "common.off"
+msgstr "Off"
+
+#. Short status label shown when a feature, provider or server is enabled. Keep short.
+msgid "common.on"
+msgstr "On"
+
+#. Short link button on the dashboard cards that opens a section. Verb.
+msgid "common.open"
+msgstr "Open"
+
+#. Separator word between alternatives, shown between the password form and single sign-on buttons on the login page.
+msgid "common.or"
+msgstr "or"
+
+#. Generic form field label for a password.
+msgid "common.password"
+msgstr "Password"
+
+#. Validation error shown when the password and its confirmation differ.
+msgid "common.passwordMismatch"
+msgstr "Passwords do not match."
+
+#. Column header and form field label for the permissions of a role.
+msgid "common.permissions"
+msgstr "Permissions"
+
+#. Text shown while a background job such as an import or export is running.
+msgid "common.processing"
+msgstr "Processing…"
+
+#. Short status text in the editor shown when refreshing the data failed.
+msgid "common.refreshFailed"
+msgstr "Could not refresh."
+
+#. Short status text in the editor shown while data is being refreshed.
+msgid "common.refreshing"
+msgstr "Refreshing…"
+
+#. Checkbox or button label in webhook and SSO provider forms to delete the stored secret.
+msgid "common.removeSavedSecret"
+msgstr "Remove the saved secret"
+
+#. Generic button label that retries a failed action. Verb.
+msgid "common.retry"
+msgstr "Retry"
+
+#. Button label that undoes unsaved edits of a translation. Verb.
+msgid "common.revert"
+msgstr "Revert changes"
+
+#. Screen-reader label for the icon button that reverts a translation's edits. {language} is the language name.
+msgid "common.revertFor"
+msgstr "Revert changes for {language}"
+
+#. Generic button label that saves. Verb.
+msgid "common.save"
+msgstr "Save"
+
+#. Button label in the editor that saves all unsaved translations. Verb.
+msgid "common.saveAll"
+msgstr "Save all"
+
+#. Button label in the editor that saves all unsaved translations, with a count. {count} is the number of unsaved changes.
+msgid "common.saveAllCount"
+msgstr "Save all ({count})"
+
+#. Generic button label in forms that saves edits. Verb.
+msgid "common.saveChanges"
+msgstr "Save changes"
+
+#. Generic text of a save button while saving is in progress.
+msgid "common.saving"
+msgstr "Saving…"
+
+#. Summary of selected languages in a language filter. Plural forms separated by |: zero | one | other. {count} is the number of selected languages.
+msgid "common.selectedLanguages"
+msgstr "{count} language selected | {count} language selected | {count} languages selected"
+
+#. Text of a test or send button while a request is being sent, e.g. webhook test.
+msgid "common.sending"
+msgstr "Sending…"
+
+#. Column header or label for a status.
+msgid "common.status"
+msgstr "Status"
+
+#. Button in the bulk action bar that stops a running bulk operation. Verb.
+msgid "common.stop"
+msgstr "Stop"
+
+#. Button label that tests a connection, e.g. of a translation server or SSO provider. Verb.
+msgid "common.test"
+msgstr "Test"
+
+#. Message shown when a connection test failed. {error} is the error detail.
+msgid "common.testFailed"
+msgstr "Failed: {error}"
+
+#. Text of a test button while the test is running.
+msgid "common.testing"
+msgstr "Testing…"
+
+#. Generic button label that retries after an error. Verb.
+msgid "common.tryAgain"
+msgstr "Try again"
+
+#. Screen-reader label for a switch that enables an item. {name} is the item's name.
+msgid "common.turnOnFor"
+msgstr "Turn on {name}"
+
+#. Short badge in the editor and screen-reader hint marking a translation with unsaved edits. Keep short.
+msgid "common.unsaved"
+msgstr "Unsaved"
+
+#. Short indicator of how many translations have unsaved edits. {count} is the number of unsaved changes.
+msgid "common.unsavedCount"
+msgstr "{count} unsaved"
+
+#. Column header for the last-updated date in lists. Keep short.
+msgid "common.updated"
+msgstr "Updated"
+
+#. Label in the history list for a change where a translation was approved. Past-tense status, not an action.
+msgid "context.action.approved"
+msgstr "Approved"
+
+#. Label in the history list for a change where a translation was created. Past-tense status, not an action.
+msgid "context.action.created"
+msgstr "Created"
+
+#. Label in the history list for a change where a translation was deleted. Past-tense status, not an action.
+msgid "context.action.deleted"
+msgstr "Deleted"
+
+#. Label in the history list for a change where a translation draft was rejected by a reviewer. Past-tense status, not an action.
+msgid "context.action.rejected"
+msgstr "Rejected"
+
+#. Label in the history list for a change where a translation was edited. Past-tense status, not an action.
+msgid "context.action.updated"
+msgstr "Updated"
+
+#. Line in a history list item naming who made the change. {name} is the user's name or email.
+msgid "context.changedBy"
+msgstr "By {name}"
+
+#. Screen-reader label and tooltip for the icon button that closes the context side panel.
+msgid "context.close"
+msgstr "Close context panel"
+
+#. Hint in the glossary tab of the context panel, shown when no target language is selected.
+msgid "context.defaultHint"
+msgstr "Select a target language to see its preferred glossary wording."
+
+#. Placeholder shown in place of text in history items, import previews and the source-change box when a translation or default text is empty.
+msgid "context.emptyTranslation"
+msgstr "Empty translation"
+
+#. Tab title in the context panel for the change history. Keep short.
+msgid "context.history"
+msgstr "History"
+
+#. Error shown in the context panel's history tab when loading the history failed. A retry button follows.
+msgid "context.historyFailed"
+msgstr "Could not load history."
+
+#. Short explanation at the top of the history tab in the context panel.
+msgid "context.historyHint"
+msgstr "Entry history, filtered to this language on each page."
+
+#. Loading message in the history tab of the context panel.
+msgid "context.loadingHistory"
+msgstr "Loading history…"
+
+#. Tab title in the context panel for translation memory (similar texts translated before). Keep short.
+msgid "context.memory"
+msgstr "Memory"
+
+#. Small badge on a translation memory match, shown when this exact translation is already used in the current field.
+msgid "context.memoryAlreadyUsed"
+msgstr "Already used here"
+
+#. Hint in the memory tab of the context panel, shown when no target language is selected.
+msgid "context.memoryDefaultHint"
+msgstr "Select a target language to see how similar texts were translated."
+
+#. Error shown in the memory tab when the translation memory search failed. A retry button follows.
+msgid "context.memoryFailed"
+msgstr "Could not search the translation memory."
+
+#. Loading message in the memory tab while similar texts are searched.
+msgid "context.memoryLoading"
+msgstr "Looking for similar texts…"
+
+#. Tooltip on the similarity percentage badge of a memory match. {language} is the default language's name.
+msgid "context.memorySimilarity"
+msgstr "How much of its {language} text matches this entry's"
+
+#. Hint in the memory tab shown when the entry has no default-language text to search with.
+msgid "context.memorySourceRequired"
+msgstr "Add default-language text to find translations of similar texts."
+
+#. Empty-state message in the history tab when there are no changes for the selected language on the current page.
+msgid "context.noHistory"
+msgstr "No changes for this language on this history page."
+
+#. Empty-state message in the memory tab when no similar approved translations exist.
+msgid "context.noMemory"
+msgstr "No approved translations of similar texts yet."
+
+#. Empty-state message in the glossary tab when no glossary terms match the text and language.
+msgid "context.noTerms"
+msgstr "No glossary matches for this text and language."
+
+#. Screen-reader label and tooltip for the button in a translation row that opens the context panel. {language} is the row's language name.
+msgid "context.openFor"
+msgstr "Show context for {language}"
+
+#. Small heading above the default text in the context panel. {language} is the default language's name.
+msgid "context.source"
+msgstr "Source · {language}"
+
+#. Small label above the previous version of the default text in the source-change box. Keep short.
+msgid "context.sourceBefore"
+msgstr "Before"
+
+#. Error in the source-change box when the earlier default text could not be loaded. A retry button follows.
+msgid "context.sourceBeforeFailed"
+msgstr "Could not load the earlier text."
+
+#. Italic note in the source-change box when the default text was empty before the change.
+msgid "context.sourceBeforeNone"
+msgstr "There was no text before."
+
+#. Heading and screen-reader label of the box showing the default text changed. {language} is the default language's name.
+msgid "context.sourceChanged"
+msgstr "The {language} text changed"
+
+#. Hint in the source-change box telling the translator to review the translation after the default text changed.
+msgid "context.sourceChangedHint"
+msgstr "Check the translation still fits, then confirm or edit it."
+
+#. Small label above the current version of the default text in the source-change box. Keep short.
+msgid "context.sourceNow"
+msgstr "Now"
+
+#. Hint in the glossary tab shown when the entry has no default-language text to match terms against.
+msgid "context.sourceRequired"
+msgstr "Add default-language text to find matching glossary terms."
+
+#. Name shown in a history item for changes made automatically, not by a person (e.g. a task or import).
+msgid "context.systemUser"
+msgstr "System"
+
+#. Heading and screen-reader label of the context side panel next to the translation editor.
+msgid "context.title"
+msgstr "Translation context"
+
+#. Name shown in a history item when the user who made the change no longer exists or can't be identified.
+msgid "context.unknownUser"
+msgstr "Unknown user"
+
+#. Screen-reader label and tooltip for the icon button that inserts a translation memory match into the field.
+msgid "context.useMatch"
+msgstr "Use this translation"
+
+#. Screen-reader label and tooltip for the icon button that restores an earlier translation from history into the field.
+msgid "context.useVersion"
+msgstr "Use this text"
+
+#. Title of a dashboard stat card showing translations that await review.
+msgid "dashboard.awaitingReview"
+msgstr "Awaiting review"
+
+#. Title of a dashboard stat card showing completed translations.
+msgid "dashboard.completed"
+msgstr "Completed"
+
+#. Page description shown under the dashboard title.
+msgid "dashboard.description"
+msgstr "An overview of your translations, with quick access to every area"
+
+#. Subtitle under the welcome greeting on the dashboard.
+msgid "dashboard.greeting.description"
+msgstr "Here's what you can do in Parlance today."
+
+#. Welcome heading on the dashboard. {name} is the user's name.
+msgid "dashboard.greeting.title"
+msgstr "Welcome back, {name}!"
+
+#. Heading of the dashboard panel showing translation progress for each language.
+msgid "dashboard.languageProgress"
+msgstr "Progress by language"
+
+#. Description of the Locales quick access card on the dashboard.
+msgid "dashboard.localesDescription"
+msgstr "Manage languages and regional variants"
+
+#. Message on the dashboard shown when the user has no permissions for any section.
+msgid "dashboard.noAccess"
+msgstr "You don't have permission to access any sections yet. Please contact your administrator."
+
+#. Empty state of the recent activity panel when there is no activity.
+msgid "dashboard.noActivity"
+msgstr "No recent activity to display"
+
+#. Legend label in the language progress panel. {count} is the number of approved translations.
+msgid "dashboard.progressApproved"
+msgstr "{count} approved"
+
+#. Legend label in the language progress panel. {count} is the number of translations awaiting review.
+msgid "dashboard.progressDrafts"
+msgstr "{count} to review"
+
+#. Legend label in the language progress panel. {count} is the number of missing translations.
+msgid "dashboard.progressMissing"
+msgstr "{count} missing"
+
+#. Legend label in the language progress panel. {count} is the number of outdated translations whose source text changed.
+msgid "dashboard.progressOutdated"
+msgstr "{count} outdated"
+
+#. Heading of the section on the dashboard with shortcut cards to areas of the app.
+msgid "dashboard.quickAccess"
+msgstr "Quick access"
+
+#. Heading of the recent activity panel on the dashboard.
+msgid "dashboard.recentActivity"
+msgstr "Recent activity"
+
+#. Title of a dashboard stat card showing the total number of entries.
+msgid "dashboard.totalEntries"
+msgstr "Total entries"
+
+#. Title of a dashboard stat card showing the total number of locales (languages).
+msgid "dashboard.totalLocales"
+msgstr "Total locales"
+
+#. Description of the Users quick access card on the dashboard.
+msgid "dashboard.usersDescription"
+msgstr "Manage users and permissions"
+
+#. Screen-reader label for the icon menu button with actions on the open entry (edit, delete, etc.) in the entry header.
+msgid "entries.actions"
+msgstr "Entry actions"
+
+#. Menu item in the entries toolbar that machine-translates all empty language fields of the entry. Action.
+msgid "entries.aiTranslateEmpty"
+msgstr "AI-translate empty languages"
+
+#. Screen-reader label for the toolbar shown when several entries are selected.
+msgid "entries.bulkActions"
+msgstr "Bulk actions"
+
+#. Label of the dropdown for scopes to add in the bulk scopes dialog.
+msgid "entries.bulkAddScopes"
+msgstr "Add scopes"
+
+#. Button in the bulk selection toolbar that deselects all entries. Keep short.
+msgid "entries.bulkClear"
+msgstr "Clear selection"
+
+#. Toast after copying the default text into empty languages of several entries. {languages}, {entries}, {skipped} and {failed} are numbers.
+msgid "entries.bulkCopyDone"
+msgstr "Copied the default text into {languages} languages in {entries} entries. Skipped {skipped}, failed {failed}. Check and save."
+
+#. Validation message shown when too many entries are selected for bulk copy. {max} is the maximum number of entries.
+msgid "entries.bulkCopyLimit"
+msgstr "Copying takes up to {max} entries at once"
+
+#. Validation message shown when bulk copy is started without selecting any languages.
+msgid "entries.bulkCopyNoLanguages"
+msgstr "Select the languages to copy into"
+
+#. Progress text in the bulk toolbar while copying default text. {done} and {total} are numbers of entries.
+msgid "entries.bulkCopyProgress"
+msgstr "Copying {done} of {total}…"
+
+#. Menu item in the bulk toolbar that deletes the selected entries. Action.
+msgid "entries.bulkDelete"
+msgstr "Delete entries"
+
+#. Body text of the confirmation dialog for deleting several entries.
+msgid "entries.bulkDeleteConfirm"
+msgstr "The entries and their translations are removed from the list. You can restore them from the deleted entries."
+
+#. Title of the bulk delete confirmation dialog. {count} is the number of entries. Plural forms separated by |: one | other.
+msgid "entries.bulkDeleteTitle"
+msgstr "Delete {count} entry | Delete {count} entries"
+
+#. Toast after several entries were deleted. {count} is the number of entries. Plural forms separated by |: one | other.
+msgid "entries.bulkDeleted"
+msgstr "Deleted {count} entry | Deleted {count} entries"
+
+#. Button in the bulk toolbar that opens the dialog to add or remove scopes on the selected entries. Keep short.
+msgid "entries.bulkEditScopes"
+msgstr "Edit scopes"
+
+#. Warning in the bulk toolbar when the selection limit is reached. {max} is the maximum number of entries.
+msgid "entries.bulkLimit"
+msgstr "You can edit up to {max} entries at once."
+
+#. Screen-reader label for the "more actions" menu button in the bulk toolbar.
+msgid "entries.bulkMore"
+msgstr "More actions"
+
+#. Label of the dropdown for scopes to remove in the bulk scopes dialog.
+msgid "entries.bulkRemoveScopes"
+msgstr "Remove scopes"
+
+#. Hint under the dropdowns in the bulk scopes dialog explaining other scopes stay untouched.
+msgid "entries.bulkScopesHint"
+msgstr "Scopes you don't list stay as they are on each entry."
+
+#. Validation error in the bulk scopes dialog when no scope was chosen to add or remove.
+msgid "entries.bulkScopesRequired"
+msgstr "Choose at least one scope to add or remove."
+
+#. Title of the bulk scopes dialog. {count} is the number of entries. Plural forms separated by |: zero | one | other.
+msgid "entries.bulkScopesTitle"
+msgstr "Edit scopes of {count} entry | Edit scopes of {count} entry | Edit scopes of {count} entries"
+
+#. Toast after scopes of several entries were updated. {count} is the number of entries. Plural forms separated by |: zero | one | other.
+msgid "entries.bulkScopesUpdated"
+msgstr "Scopes updated for {count} entry | Scopes updated for {count} entry | Scopes updated for {count} entries"
+
+#. Button in the bulk toolbar that selects all entries currently loaded in the list. {count} is the number of loaded entries.
+msgid "entries.bulkSelectLoaded"
+msgstr "Select all {count} loaded"
+
+#. Selection counter in the bulk toolbar. {count} is the number of selected entries. Plural forms separated by |: zero | one | other.
+msgid "entries.bulkSelected"
+msgstr "{count} entry selected | {count} entry selected | {count} entries selected"
+
+#. Button in the bulk toolbar that machine-translates the selected entries. Action; keep short.
+msgid "entries.bulkTranslate"
+msgstr "AI translate"
+
+#. Toast after AI-translating several entries. {languages}, {entries}, {skipped} and {failed} are numbers.
+msgid "entries.bulkTranslateDone"
+msgstr "Translated {languages} languages in {entries} entries. Skipped {skipped}, failed {failed}. Check and save."
+
+#. Validation message shown when too many entries are selected for AI translation. {max} is the maximum number of entries.
+msgid "entries.bulkTranslateLimit"
+msgstr "AI translation takes up to {max} entries at once"
+
+#. Validation message shown when bulk AI translation is started without selecting any languages.
+msgid "entries.bulkTranslateNoLanguages"
+msgstr "Select the languages to translate into"
+
+#. Progress text in the bulk toolbar during AI translation. {done} and {total} are numbers of entries.
+msgid "entries.bulkTranslateProgress"
+msgstr "Translating {done} of {total}…"
+
+#. Short sentence at the start of the result toast, shown when the user stopped the bulk operation.
+msgid "entries.bulkTranslateStopped"
+msgstr "Stopped."
+
+#. Button in the entry filters popover that resets all filters. Keep short.
+msgid "entries.clearFilters"
+msgstr "Clear all"
+
+#. Placeholder in the optional description field of the entry dialog; explains the text is context for translators.
+msgid "entries.contextPlaceholder"
+msgstr "Add context for translators"
+
+#. Menu item in the bulk toolbar that copies the default text into all empty languages of the selected entries. Action.
+msgid "entries.copyDefaultToEmpty"
+msgstr "Copy default text to empty languages"
+
+#. Tooltip of the small chip in the editor that copies the default text into empty language fields.
+msgid "entries.copyEmpty"
+msgstr "Copy to empty languages"
+
+#. Text of the small chip in the editor that copies the default text into empty fields. Action; keep very short.
+msgid "entries.copyEmptyShort"
+msgstr "Copy to empty"
+
+#. Tooltip on the entry key in the entry header; clicking copies the key to the clipboard.
+msgid "entries.copyKey"
+msgstr "Copy key"
+
+#. Entry count shown above the entry list. {count} is the number of entries. Plural forms separated by |: zero | one | other.
+msgid "entries.count"
+msgstr "{count} entry | {count} entry | {count} entries"
+
+#. Title of the new-entry dialog and its submit button. Action.
+msgid "entries.create"
+msgstr "Create entry"
+
+#. Toast after an entry was created. {key} is the entry's key.
+msgid "entries.created"
+msgstr "Entry {key} created"
+
+#. Menu item that deletes the open entry. Action.
+msgid "entries.delete"
+msgstr "Delete entry"
+
+#. Body text of the confirmation dialog for deleting one entry.
+msgid "entries.deleteConfirm"
+msgstr "Are you sure you want to delete this entry? It will be removed from the active entry list."
+
+#. Title of the delete entry confirmation dialog. {key} is the entry's key.
+msgid "entries.deleteTitle"
+msgstr "Delete entry: {key}"
+
+#. Toast after an entry was deleted. {key} is the entry's key.
+msgid "entries.deleted"
+msgstr "Entry {key} deleted"
+
+#. Column header in the deleted entries table for the date when the entry was deleted.
+msgid "entries.deletedColumn"
+msgstr "Deleted"
+
+#. Subtitle of the deleted entries page explaining its purpose.
+msgid "entries.deletedDescription"
+msgstr "Entries removed from the list, ready to restore with their translations"
+
+#. Empty-state heading on the deleted entries page when nothing was deleted.
+msgid "entries.deletedEmpty"
+msgstr "No deleted entries"
+
+#. Empty-state explanation under the heading on the deleted entries page.
+msgid "entries.deletedEmptyHint"
+msgstr "Entries you delete show up here, so you can restore them."
+
+#. Page title of the deleted entries list and its navigation item.
+msgid "entries.deletedEntries"
+msgstr "Deleted entries"
+
+#. Error alert on the deleted entries page. {error} is the error message.
+msgid "entries.deletedListFailed"
+msgstr "Failed to load deleted entries: {error}"
+
+#. Empty-state message on the deleted entries page when the search finds nothing.
+msgid "entries.deletedNoMatches"
+msgstr "No deleted entries match your search."
+
+#. Subtitle of the entries page.
+msgid "entries.description"
+msgstr "Manage translation entries and content"
+
+#. Title of the edit-entry dialog. Action.
+msgid "entries.edit"
+msgstr "Edit entry"
+
+#. Error shown in the editor area when the selected entry could not be loaded. A retry button follows.
+msgid "entries.entryLoadFailed"
+msgstr "Could not load this entry."
+
+#. Title of the dialog for exporting entries. Action.
+msgid "entries.export"
+msgstr "Export entries"
+
+#. Option in the translation status filter that shows all entries regardless of status.
+msgid "entries.filterAll"
+msgstr "All translations"
+
+#. Help text in the entry filters popover explaining how the status filter works when no languages are selected.
+msgid "entries.filterAllHelp"
+msgstr "Status checks saved translations in all active languages."
+
+#. Tooltip on a scope badge in the entry header; clicking filters the list by it. {scope} is the scope's name.
+msgid "entries.filterByScope"
+msgstr "Filter by {scope}"
+
+#. Option in the translation status filter for entries with quality check warnings. Keep short.
+msgid "entries.filterCheck"
+msgstr "Check warnings"
+
+#. Option in the translation status filter for fully translated entries; also a tooltip on a language's translated indicator. Adjective, not an action.
+msgid "entries.filterComplete"
+msgstr "Complete translations"
+
+#. Option in the translation status filter for translations whose default text changed since. Adjective.
+msgid "entries.filterOutdated"
+msgstr "Outdated translations"
+
+#. Option in the translation status filter for translations awaiting review. Status, not an action.
+msgid "entries.filterReview"
+msgstr "Needs review"
+
+#. Help text in the entry filters popover explaining how the status filter works when languages are selected.
+msgid "entries.filterSelectedHelp"
+msgstr "Status checks the saved translations in the selected languages, without the default language unless it is the only one."
+
+#. Title of the dialog for importing entries. Action.
+msgid "entries.import"
+msgstr "Import entries"
+
+#. Validation error in the entry dialog when the key is empty.
+msgid "entries.keyRequired"
+msgstr "Entry key is required."
+
+#. Group label above the language checkboxes in the entry filters popover.
+msgid "entries.languages"
+msgstr "Languages to translate"
+
+#. Error alert shown when the entry list failed to load. {error} is the error message.
+msgid "entries.loadFailed"
+msgstr "Failed to load entries: {error}"
+
+#. Loading message on the deleted entries page.
+msgid "entries.loading"
+msgstr "Loading entries…"
+
+#. Loading message in the editor area while the selected entry loads.
+msgid "entries.loadingEntry"
+msgstr "Loading entry…"
+
+#. Message at the bottom of the entry list while more entries load.
+msgid "entries.loadingMore"
+msgstr "Loading more entries…"
+
+#. Badge on an entry list item with the number of missing translations. {count} is the number of languages. Plural forms separated by |: zero | one | other. Keep short.
+msgid "entries.missingCount"
+msgstr "{count} languages missing | {count} language missing | {count} languages missing"
+
+#. Option in the translation status filter for untranslated entries; also a tooltip on a language's untranslated indicator.
+msgid "entries.missingTranslations"
+msgstr "Missing translations"
+
+#. Italic placeholder in an entry list item when the default language has no text. {language} is the language name.
+msgid "entries.noDefaultTranslation"
+msgstr "No {language} text yet"
+
+#. Tooltip explaining why the AI-translate or copy action is disabled: no selected language is empty.
+msgid "entries.noEmptyLanguages"
+msgstr "Every selected language has text"
+
+#. Empty-state message in the entry list when no entries match the filters.
+msgid "entries.noMatches"
+msgstr "No entries match the filters."
+
+#. Button text in the entry header shown when the entry has no scopes; clicking opens the edit dialog.
+msgid "entries.noScopes"
+msgstr "No scopes"
+
+#. Tooltip explaining why the AI-translate or copy action is disabled: the default language text is empty.
+msgid "entries.noSourceText"
+msgstr "The default text is empty"
+
+#. Label of the optional description field in the entry dialog.
+msgid "entries.optionalDescription"
+msgstr "Description (optional)"
+
+#. Toast when only some translations could be saved. {saved} and {total} are numbers; {failures} lists the failed items.
+msgid "entries.partialSave"
+msgstr "Saved {saved} of {total} translations. Failed: {failures}"
+
+#. Small error text next to the entry list when refreshing entries failed.
+msgid "entries.refreshFailed"
+msgstr "Could not refresh entries."
+
+#. Small status text next to the entry list while entries refresh.
+msgid "entries.refreshing"
+msgstr "Refreshing entries…"
+
+#. Screen-reader label and tooltip for the icon button that restores a deleted entry. Action.
+msgid "entries.restore"
+msgstr "Restore entry"
+
+#. Body text of the confirmation dialog for restoring a deleted entry.
+msgid "entries.restoreConfirm"
+msgstr "The entry returns to the list with its translations and scopes."
+
+#. Title of the restore entry confirmation dialog. {key} is the entry's key.
+msgid "entries.restoreTitle"
+msgstr "Restore entry: {key}"
+
+#. Toast after a deleted entry was restored. {key} is the entry's key.
+msgid "entries.restored"
+msgstr "Entry {key} restored"
+
+#. Body of the confirmation dialog for saving all unsaved translations. {count} is the number of translations, {entries} the number of entries.
+msgid "entries.saveAllConfirm"
+msgstr "Save {count} unsaved translations across {entries} entries, including languages and entries not currently visible?"
+
+#. Title of the confirmation dialog for saving all unsaved translations.
+msgid "entries.saveAllTitle"
+msgstr "Save all translations?"
+
+#. Submit button of the edit-entry dialog. Action.
+msgid "entries.saveEntry"
+msgstr "Save entry"
+
+#. Placeholder and screen-reader label of the entry search input.
+msgid "entries.search"
+msgstr "Search keys and translations…"
+
+#. Tooltip of the entry search input explaining the keyboard shortcuts. Keep the keys / and Esc.
+msgid "entries.searchShortcut"
+msgstr "Press / to search, Esc to clear"
+
+#. Heading in the entry header when no entry is selected.
+msgid "entries.selectEntry"
+msgstr "Select an entry"
+
+#. Empty-state hint in the editor area when no entry is selected.
+msgid "entries.selectEntryHint"
+msgstr "Select an entry to start translating."
+
+#. Empty-state hint in the editor area when an entry is open but no languages are selected.
+msgid "entries.selectLanguagesHint"
+msgstr "Select one or more languages above to start translating."
+
+#. Placeholder text on the language picker button when no language is selected.
+msgid "entries.selectLocales"
+msgstr "Select locales to translate"
+
+#. Small warning badge on a translation field indicating quality check problems; the details follow for screen readers. Keep short.
+msgid "entries.suggestionCheck"
+msgstr "Check"
+
+#. Error shown for an AI translation suggestion when the model's answer was too long or not a translation.
+msgid "entries.suggestionError.ANSWER_TOO_LONG"
+msgstr "The answer didn't look like a translation"
+
+#. Error shown for an AI translation suggestion when the translation model returned nothing.
+msgid "entries.suggestionError.EMPTY_ANSWER"
+msgstr "The translation model returned no text"
+
+#. Error shown for an AI translation suggestion when translating failed for an unspecified reason.
+msgid "entries.suggestionError.FAILED"
+msgstr "The translation failed"
+
+#. Error shown for an AI translation suggestion when the translation server timed out.
+msgid "entries.suggestionError.TIMEOUT"
+msgstr "The translation server took too long"
+
+#. Error shown for an AI translation suggestion when the model does not support the target language.
+msgid "entries.suggestionError.UNSUPPORTED_LANGUAGE"
+msgstr "The translation model doesn't support this language"
+
+#. Small badge on a translation field when AI translation did not produce a text. Status, not an action; keep short.
+msgid "entries.suggestionFailed"
+msgstr "Not translated"
+
+#. Quality warning on a translation field. {placeholder} is the word used that conflicts with the language's formal/informal form of address.
+msgid "entries.suggestionWarning.FORMALITY"
+msgstr "Uses “{placeholder}”, not the form of address set for this language"
+
+#. Quality warning on a translation field: it contains line breaks the default text doesn't.
+msgid "entries.suggestionWarning.LINE_BREAKS"
+msgstr "Has line breaks the source text doesn't have"
+
+#. Quality warning on a translation field. {placeholder} is a variable such as {name} that is in the default text but missing here.
+msgid "entries.suggestionWarning.PLACEHOLDER_MISSING"
+msgstr "Placeholder {placeholder} is missing"
+
+#. Quality warning on a translation field. {placeholder} is a variable that is not in the default text.
+msgid "entries.suggestionWarning.PLACEHOLDER_UNEXPECTED"
+msgstr "Placeholder {placeholder} isn't in the source text"
+
+#. Quality warning on a translation field: its plural forms don't match the default text's.
+msgid "entries.suggestionWarning.PLURAL_FORMS"
+msgstr "Plural forms don't match the source text"
+
+#. Quality warning on a translation field: it ends with different punctuation than the default text.
+msgid "entries.suggestionWarning.PUNCTUATION_END"
+msgstr "Ends with different punctuation than the source text"
+
+#. Quality warning on a translation field. {placeholder} is a markup tag in the default text that is missing here.
+msgid "entries.suggestionWarning.TAG_MISSING"
+msgstr "Tag {placeholder} is missing"
+
+#. Quality warning on a translation field. {placeholder} is a markup tag that is not in the default text.
+msgid "entries.suggestionWarning.TAG_UNEXPECTED"
+msgstr "Tag {placeholder} isn't in the source text"
+
+#. Quality warning on a translation field: its trailing whitespace differs from the default text.
+msgid "entries.suggestionWarning.WHITESPACE_END"
+msgstr "Ends with different spacing than the source text"
+
+#. Quality warning on a translation field: its leading whitespace differs from the default text.
+msgid "entries.suggestionWarning.WHITESPACE_START"
+msgstr "Starts with different spacing than the source text"
+
+#. Tooltip explaining why the AI-translate action is disabled: the default text has unsaved changes.
+msgid "entries.translateSaveSourceFirst"
+msgstr "Save the default text first"
+
+#. Progress counter in the entry header. {done} is the number of translated languages, {total} the number of languages. Keep short.
+msgid "entries.translatedCount"
+msgstr "{done} / {total} translated"
+
+#. Status shown inside a translation field while AI translation runs.
+msgid "entries.translating"
+msgstr "Translating…"
+
+#. Name of the group of translation fields, used in save messages. {key} is the entry's key.
+msgid "entries.translationLabel"
+msgstr "Translations for {key}"
+
+#. Placeholder inside an empty translation text field.
+msgid "entries.translationPlaceholder"
+msgstr "Enter translation"
+
+#. Group label above the status options in the entry filters popover.
+msgid "entries.translationStatus"
+msgstr "Translation status"
+
+#. Generic name for translations, used in save confirmation messages (e.g. saved all translations). Plural noun.
+msgid "entries.translations"
+msgstr "Translations"
+
+#. Tooltip on an active scope badge in the entry header; clicking removes the filter. {scope} is the scope's name.
+msgid "entries.unfilterByScope"
+msgstr "Remove {scope} filter"
+
+#. Tooltip on the Unsaved marker in an entry list item.
+msgid "entries.unsavedTranslations"
+msgstr "Unsaved translations"
+
+#. Toast after an entry was updated. {key} is the entry's key.
+msgid "entries.updated"
+msgstr "Entry {key} updated"
+
+#. Screen-reader label for the translation editor region of the entries page.
+msgid "entries.workspace"
+msgstr "Translation workspace"
+
+#. Error message shown when a resource to be created already exists.
+msgid "errors.already_exists"
+msgstr "This resource already exists"
+
+#. Error message shown when the user tries to create more API tokens than allowed.
+msgid "errors.api_token_limit"
+msgstr "You have too many API tokens. Revoke one before creating another."
+
+#. Error message shown when an action is attempted with an API token that requires a signed-in session.
+msgid "errors.api_token_not_allowed"
+msgstr "This isn't possible with an API token. Sign in to do it."
+
+#. Error message shown when an API token does not exist.
+msgid "errors.api_token_not_found"
+msgstr "API token not found"
+
+#. Error message shown when a glossary definition already exists for the term and language.
+msgid "errors.definition_already_exists"
+msgstr "A definition already exists for this combination"
+
+#. Error message shown when a glossary definition does not exist.
+msgid "errors.definition_not_found"
+msgstr "Definition not found"
+
+#. Error message shown when the server has no encryption key configured and a secret is being saved.
+msgid "errors.encryption_key_missing"
+msgstr "API keys, access tokens and other secrets can't be saved: the server has no ENCRYPTION_KEY set"
+
+#. Error message shown when an entry with the same key already exists.
+msgid "errors.entry_already_exists"
+msgstr "An entry with this key already exists"
+
+#. Error message shown when an entry does not exist.
+msgid "errors.entry_not_found"
+msgstr "Entry not found"
+
+#. Error message shown when the action cannot be performed in the current state.
+msgid "errors.failed_precondition"
+msgstr "This action cannot be completed at this time"
+
+#. Error message shown when the server hit an unexpected internal error.
+msgid "errors.internal_error"
+msgstr "An internal error occurred. Please try again later."
+
+#. Error message shown when login email or password is wrong.
+msgid "errors.invalid_credentials"
+msgstr "Invalid email or password"
+
+#. Error message shown when the server rejects the submitted data as invalid.
+msgid "errors.invalid_input"
+msgstr "Invalid input provided"
+
+#. Error message shown when a locale with the same code already exists.
+msgid "errors.locale_already_exists"
+msgstr "A locale with this code already exists"
+
+#. Error message shown when someone tries to delete the default locale.
+msgid "errors.locale_default_delete"
+msgstr "Cannot delete the default locale"
+
+#. Error message shown when someone tries to permanently delete the default locale.
+msgid "errors.locale_default_destroy"
+msgstr "Cannot permanently delete the default locale"
+
+#. Error message shown when the user lacks permission to view deleted locales.
+msgid "errors.locale_insufficient_access"
+msgstr "You don't have permission to view deleted locales"
+
+#. Error message shown when a locale is permanently removed before being deleted first.
+msgid "errors.locale_must_be_soft_deleted"
+msgstr "Locale must be deleted before it can be permanently removed"
+
+#. Error message shown when a locale does not exist.
+msgid "errors.locale_not_found"
+msgstr "Locale not found"
+
+#. Error message shown when a localization (a translation of an entry) does not exist.
+msgid "errors.localization_not_found"
+msgstr "Localization not found"
+
+#. Error message shown when a requested resource does not exist.
+msgid "errors.not_found"
+msgstr "The requested resource was not found"
+
+#. Error message shown when the user lacks permission for the action.
+msgid "errors.permission_denied"
+msgstr "You don't have permission to perform this action"
+
+#. Error message shown when a permission does not exist.
+msgid "errors.permission_not_found"
+msgstr "Permission not found"
+
+#. Error message shown when someone tries to register while self-registration is closed.
+msgid "errors.registration_closed"
+msgstr "Registration is closed. Ask an admin for an account."
+
+#. Error message shown when a role with the same name already exists.
+msgid "errors.role_already_exists"
+msgstr "A role with this name already exists"
+
+#. Error message shown when a role does not exist.
+msgid "errors.role_not_found"
+msgstr "Role not found"
+
+#. Error message shown when a scope with the same name already exists.
+msgid "errors.scope_already_exists"
+msgstr "A scope with this name already exists"
+
+#. Error message shown when a scope does not exist.
+msgid "errors.scope_not_found"
+msgstr "Scope not found"
+
+#. Error message shown when first-time setup is run again after it was completed.
+msgid "errors.setup_already_completed"
+msgstr "Setup has already been completed"
+
+#. Error message shown when first-time setup fails.
+msgid "errors.setup_failed"
+msgstr "Setup failed. Please try again."
+
+#. Error message shown when a single sign-on user's Parlance account was deleted.
+msgid "errors.sso_account_deleted"
+msgstr "Your Parlance account was deleted"
+
+#. Error message shown when the single sign-on provider reports the user's email as unverified.
+msgid "errors.sso_email_unverified"
+msgstr "The provider hasn't verified your email address"
+
+#. Error message shown when single sign-on with the provider fails.
+msgid "errors.sso_failed"
+msgstr "Signing in with the provider failed"
+
+#. Error message shown when the single sign-on attempt expired or was already used.
+msgid "errors.sso_login_expired"
+msgstr "The sign-in took too long or was used already. Start again."
+
+#. Error message shown when no Parlance account exists for the email from the single sign-on provider.
+msgid "errors.sso_no_account"
+msgstr "There is no Parlance account for your email address. Ask an admin to add you."
+
+#. Error message shown when the single sign-on provider did not share an email address.
+msgid "errors.sso_no_email"
+msgstr "The provider didn't share your email address"
+
+#. Error message shown when a single sign-on provider does not exist or is disabled.
+msgid "errors.sso_provider_not_found"
+msgstr "This sign-in provider doesn't exist or is turned off"
+
+#. Error message shown when an automation task does not exist.
+msgid "errors.task_not_found"
+msgstr "Task not found"
+
+#. Error message shown when an automation task run does not exist.
+msgid "errors.task_run_not_found"
+msgstr "Run not found"
+
+#. Error message shown when a glossary term already exists.
+msgid "errors.terminology_already_exists"
+msgstr "This term already exists"
+
+#. Error message shown when a glossary term does not exist.
+msgid "errors.terminology_not_found"
+msgstr "Term not found"
+
+#. Error message shown when a machine translation server does not exist.
+msgid "errors.translation_server_not_found"
+msgstr "Translation server not found"
+
+#. Error message shown when the user is not signed in.
+msgid "errors.unauthenticated"
+msgstr "You must be logged in to perform this action"
+
+#. Error message shown when an unrecognised error occurs.
+msgid "errors.unknown"
+msgstr "An unknown error occurred. Please try again."
+
+#. Error message shown when a user with the same email already exists.
+msgid "errors.user_already_exists"
+msgstr "A user with this email already exists"
+
+#. Error message shown when a user does not exist.
+msgid "errors.user_not_found"
+msgstr "User not found"
+
+#. Error message shown when a webhook delivery record does not exist.
+msgid "errors.webhook_delivery_not_found"
+msgstr "Delivery not found"
+
+#. Error message shown when a webhook does not exist.
+msgid "errors.webhook_not_found"
+msgstr "Webhook not found"
+
+#. Error message shown when the current password entered when changing password is wrong.
+msgid "errors.wrong_password"
+msgstr "The current password is wrong"
+
+#. Explanatory text in the dialog for exporting all languages at once.
+msgid "export.zip.description"
+msgstr "Downloads a ZIP with one JSON file per language."
+
+#. Export button label (dialog confirm button and entry in the locales page actions menu) for downloading all languages as a ZIP.
+msgid "export.zip.export"
+msgstr "Export all (ZIP)"
+
+#. Label of the export button in the ZIP export dialog while the export is running.
+msgid "export.zip.exporting"
+msgstr "Exporting…"
+
+#. Toast shown after all translations were exported as a ZIP.
+msgid "export.zip.success"
+msgstr "Translations exported successfully"
+
+#. Title of the dialog for exporting all languages as a ZIP.
+msgid "export.zip.title"
+msgstr "Export all languages"
+
+#. Error toast shown when the user tries to import a ZIP without selecting a file.
+msgid "import.fileRequired"
+msgstr "Please select a file to import"
+
+#. Label of the submit button in the ZIP import dialog while the import is running.
+msgid "import.importing"
+msgstr "Importing…"
+
+#. Label of the dropdown in the ZIP import dialog that selects how existing translations are handled.
+msgid "import.mode"
+msgstr "Import mode"
+
+#. Option in the ZIP import mode dropdown: only new entries are created, existing ones are left untouched.
+msgid "import.modes.createOnly"
+msgstr "Create only (skip existing)"
+
+#. Option in the ZIP import mode dropdown: new entries are created and existing ones updated.
+msgid "import.modes.createOrUpdate"
+msgstr "Create or update"
+
+#. Option in the ZIP import mode dropdown: existing translations are replaced by the imported ones.
+msgid "import.modes.replaceAll"
+msgstr "Replace all"
+
+#. Option in the ZIP import mode dropdown: only existing entries are updated, new ones are skipped.
+msgid "import.modes.updateOnly"
+msgstr "Update only (skip new)"
+
+#. Toast shown after a ZIP import finished with some errors. {locales}, {failed}, {created} and {updated} are numbers of locales, errors, created and updated translations.
+msgid "import.zip.completedWithErrors"
+msgstr "Imported across {locales} locales with {failed} errors: {created} created, {updated} updated"
+
+#. Helper text in the ZIP import dialog explaining what kind of ZIP file to upload.
+msgid "import.zip.description"
+msgstr "Upload a ZIP archive containing locale JSON files (e.g., en.json, de.json)"
+
+#. Label of the file upload field in the ZIP import dialog.
+msgid "import.zip.file"
+msgstr "ZIP file"
+
+#. Button label to start importing a ZIP (dialog confirm button and locales page action).
+msgid "import.zip.import"
+msgstr "Import ZIP"
+
+#. Toast shown after a successful ZIP import. {created}, {updated} and {locales} are numbers of new translations, updated translations and locales.
+msgid "import.zip.success"
+msgstr "Imported {created} new and updated {updated} existing translations across {locales} locales"
+
+#. Title of the dialog for importing translations from a ZIP file.
+msgid "import.zip.title"
+msgstr "Import translations from ZIP"
+
+#. Label of a count badge in the import preview for new translations. Keep short.
+msgid "importPreview.added"
+msgstr "New"
+
+#. Label of a count badge in the import preview for translations that will be changed. Keep short.
+msgid "importPreview.changed"
+msgstr "Changed"
+
+#. Screen-reader label for the list of changes in the import preview.
+msgid "importPreview.changes"
+msgstr "Changes"
+
+#. Label of a count badge in the import preview for entries that failed. Keep short.
+msgid "importPreview.failed"
+msgstr "Failed"
+
+#. Hint shown below the import preview explaining that nothing has been imported yet and the user should review the changes.
+msgid "importPreview.hint"
+msgstr "Nothing has been imported yet. Check the changes, then import."
+
+#. Note below the change list in the import preview. {count} is the number of changes not shown. Plural forms separated by |: zero | one | other.
+msgid "importPreview.more"
+msgstr "{count} more changes are not listed. | {count} more change is not listed. | {count} more changes are not listed."
+
+#. Message in the import preview when the import would not change anything.
+msgid "importPreview.nothing"
+msgstr "This import changes no translations."
+
+#. Warning in the import preview. {count} is the number of translations in other languages that will be marked outdated. Plural forms separated by |: zero | one | other.
+msgid "importPreview.outdated"
+msgstr "{count} translations in other languages will be marked outdated, because their default text changes. | {count} translation in another language will be marked outdated, because its default text changes. | {count} translations in other languages will be marked outdated, because their default text changes."
+
+#. Label of a count badge in the import preview for removed translations. Keep short.
+msgid "importPreview.removed"
+msgstr "Removed"
+
+#. Label of a count badge in the import preview for skipped entries. Keep short.
+msgid "importPreview.skipped"
+msgstr "Skipped"
+
+#. Screen-reader label for the import preview section.
+msgid "importPreview.title"
+msgstr "Import preview"
+
+#. Label of a count badge in the import preview for translations that stay unchanged. Keep short.
+msgid "importPreview.unchanged"
+msgstr "Unchanged"
+
+#. Addition to the outdated-translations warning in the ZIP import preview: other languages' files in the ZIP may update some of those translations.
+msgid "importPreview.zipOutdated"
+msgstr "This ZIP's files for those languages may update some of them."
+
+#. Screen-reader label for the actions menu button on the locale detail page.
+msgid "locales.actions"
+msgstr "Locale actions"
+
+#. Helper text under the locale code field in the create-locale dialog.
+msgid "locales.codeHelp"
+msgstr "ISO language code (e.g., en, de) or language-region code (e.g., en-US, de-DE)"
+
+#. Create locale: title of the create dialog, its submit button and the page's primary action button.
+msgid "locales.create"
+msgstr "Create locale"
+
+#. Validation error in the create-locale dialog when code or name is missing.
+msgid "locales.createRequired"
+msgstr "Code and name are required"
+
+#. Toast shown after a locale was created. {name} is the locale name.
+msgid "locales.created"
+msgstr "Locale {name} created"
+
+#. Helper text of the checkbox for making a locale the default locale.
+msgid "locales.defaultHelp"
+msgstr "This will be the fallback locale for translations"
+
+#. Delete locale: action in the locale detail menu and tooltip/label of the row delete button in the locales list.
+msgid "locales.delete"
+msgstr "Delete locale"
+
+#. Confirmation question in the delete-locale dialog.
+msgid "locales.deleteConfirm"
+msgstr "Are you sure you want to delete this locale?"
+
+#. Title of the delete-locale dialog. {name} is the locale name.
+msgid "locales.deleteTitle"
+msgstr "Delete locale: {name}"
+
+#. Toast shown after a locale was deleted. {name} is the locale name.
+msgid "locales.deleted"
+msgstr "Locale {name} deleted"
+
+#. Page description under the title of the locales list page.
+msgid "locales.description"
+msgstr "Manage languages and regional variants for your translations"
+
+#. Hint in the edit-locale dialog saying changes only apply to the draft until the user saves. Refers to a button labelled Save changes.
+msgid "locales.draftHint"
+msgstr "These changes are applied to your draft. Use Save changes to persist them."
+
+#. Edit locale: action in the locale detail menu and title of the edit dialog.
+msgid "locales.edit"
+msgstr "Edit locale"
+
+#. Page description under the title of the locale detail page.
+msgid "locales.editorDescription"
+msgstr "Manage language names and locale settings"
+
+#. Title of the empty state on the locales list when there are no locales.
+msgid "locales.empty"
+msgstr "No locales"
+
+#. Hint in the empty state of the locales list, encouraging creating a locale.
+msgid "locales.emptyHint"
+msgstr "Get started by creating a new locale."
+
+#. Label of the field for the locale's English name in the create-locale dialog.
+msgid "locales.englishName"
+msgstr "Name (English)"
+
+#. Menu action on the locale detail page that fills missing language names in all locales.
+msgid "locales.fillAllNames"
+msgstr "Fill missing names in all locales"
+
+#. Menu action on the locale detail page that fills missing language names in this locale.
+msgid "locales.fillNames"
+msgstr "Fill missing names"
+
+#. Label of the dropdown for a locale's form of address (formal or informal).
+msgid "locales.formality"
+msgstr "Form of address"
+
+#. Option in the form-of-address dropdown: formal address (e.g. Sie, vous).
+msgid "locales.formalityFormal"
+msgstr "Formal"
+
+#. Helper text for the form-of-address setting, explaining formal vs informal; examples may be adapted to your language.
+msgid "locales.formalityHelp"
+msgstr "Formal like “Sie” or “vous”, informal like “du” or “tu”. Machine translation uses it, and the editor flags texts in the other form."
+
+#. Option in the form-of-address dropdown: informal address (e.g. du, tu).
+msgid "locales.formalityInformal"
+msgstr "Informal"
+
+#. Option in the form-of-address dropdown meaning no form has been chosen.
+msgid "locales.formalityUnset"
+msgstr "Not set"
+
+#. Error shown when the locales list could not be loaded. {error} is the error message.
+msgid "locales.loadFailed"
+msgstr "Locales could not be loaded: {error}"
+
+#. Loading text shown while the list of locales loads.
+msgid "locales.loading"
+msgstr "Loading locales…"
+
+#. Loading text shown while a single locale loads on the locale detail page.
+msgid "locales.loadingOne"
+msgstr "Loading locale…"
+
+#. Fallback label of the locale selector on the locale detail page when no locale is selected.
+msgid "locales.locale"
+msgstr "Locale"
+
+#. Tooltip or label for the badge showing how many names are missing for a locale.
+msgid "locales.missingNames"
+msgstr "Missing names"
+
+#. Helper text under the locale name field in the create-locale dialog.
+msgid "locales.nameHelp"
+msgstr "Display name for this locale"
+
+#. Placeholder of the input for a language's name on the locale detail page.
+msgid "locales.namePlaceholder"
+msgstr "Enter language name"
+
+#. Toast after missing names were filled automatically. {count} is the number of names. Plural forms separated by |: one | other.
+msgid "locales.namesFilled"
+msgstr "{count} name filled. Check and save. | {count} names filled. Check and save."
+
+#. Hint text above the list of names of a language in different locales.
+msgid "locales.namesHint"
+msgstr "How this language is named in each locale."
+
+#. Tooltip on the disabled fill-names menu actions when nothing can be filled.
+msgid "locales.noKnownMissingNames"
+msgstr "No missing names that are known"
+
+#. Tooltip/label of the row button in the locales list that opens the entries of this locale.
+msgid "locales.openEntries"
+msgstr "Open entries"
+
+#. Note on the locale detail page. {count} is the number of unsaved changes in other locales.
+msgid "locales.otherUnsaved"
+msgstr "{count} unsaved in other locales"
+
+#. Message when only some locales could be saved. {saved} and {total} are numbers of locales; {failures} lists the failed ones.
+msgid "locales.partialSave"
+msgstr "Saved {saved} of {total} locales. Failed: {failures}"
+
+#. Tooltip/label of the row button in the locales list that permanently deletes a locale.
+msgid "locales.permanentDelete"
+msgstr "Permanently delete"
+
+#. Confirmation text in the permanent-delete-locale dialog.
+msgid "locales.permanentDeleteConfirm"
+msgstr "Are you sure you want to permanently delete this locale? This action cannot be undone."
+
+#. Title of the permanent-delete-locale dialog. {name} is the locale name.
+msgid "locales.permanentDeleteTitle"
+msgstr "Permanently delete locale: {name}"
+
+#. Warning text in the permanent-delete-locale dialog about losing all translations.
+msgid "locales.permanentDeleteWarning"
+msgstr "This will permanently delete all translations for this locale!"
+
+#. Toast shown after a locale was permanently deleted. {name} is the locale name.
+msgid "locales.permanentlyDeleted"
+msgstr "Locale {name} permanently deleted"
+
+#. Tooltip/label of the row button in the locales list that restores a deleted locale.
+msgid "locales.restore"
+msgstr "Restore locale"
+
+#. Confirmation question in the restore-locale dialog.
+msgid "locales.restoreConfirm"
+msgstr "Are you sure you want to restore this locale?"
+
+#. Title of the restore-locale dialog. {name} is the locale name.
+msgid "locales.restoreTitle"
+msgstr "Restore locale: {name}"
+
+#. Toast shown after a locale was restored. {name} is the locale name.
+msgid "locales.restored"
+msgstr "Locale {name} restored"
+
+#. Question in the save-all dialog. {count} is the number of unsaved changes, {locales} the number of locales.
+msgid "locales.saveAllConfirm"
+msgstr "Save {count} unsaved changes across {locales} locales, including locales not currently selected?"
+
+#. Title of the dialog that confirms saving changes in all locales.
+msgid "locales.saveAllTitle"
+msgstr "Save all locales?"
+
+#. Toast shown after a locale was saved. {code} is the locale code.
+msgid "locales.saved"
+msgstr "Locale {code} saved"
+
+#. Toast shown after several locales were saved. {count} is the number of locales.
+msgid "locales.savedMany"
+msgstr "{count} locales saved"
+
+#. Label of the checkbox that makes this locale the default locale.
+msgid "locales.setDefault"
+msgstr "Set as default locale"
+
+#. Tooltip of the translation count badge when complete: opens the entries of the locale.
+msgid "locales.showEntries"
+msgstr "Show entries"
+
+#. Tooltip of the translation count badge when incomplete: opens the missing translations.
+msgid "locales.showMissing"
+msgstr "Show missing translations"
+
+#. Error when several locales are marked as default while saving all.
+msgid "locales.singleDefault"
+msgstr "Choose only one locale to set as default before saving all."
+
+#. Tooltip/label of the row button in the locales list that opens a locale.
+msgid "locales.view"
+msgstr "View locale"
+
+#. Screen-reader label for the locale detail workspace area.
+msgid "locales.workspace"
+msgstr "Locale workspace"
+
+#. Navigation menu item that opens the user's own account settings.
+msgid "nav.account"
+msgstr "My account"
+
+#. Navigation item or breadcrumb for the list of all entries.
+msgid "nav.allEntries"
+msgstr "All entries"
+
+#. Navigation item and page title for the dashboard. Keep short.
+msgid "nav.dashboard"
+msgstr "Dashboard"
+
+#. Navigation item and page title for the entries editor. Keep short.
+msgid "nav.entries"
+msgstr "Entries"
+
+#. Navigation item, page title and tab label for the glossary of terminology. Keep short.
+msgid "nav.glossary"
+msgstr "Glossary"
+
+#. Navigation item and page title for the locales (languages) section. Keep short.
+msgid "nav.locales"
+msgstr "Locales"
+
+#. Navigation item and page title for roles. Keep short.
+msgid "nav.roles"
+msgstr "Roles"
+
+#. Navigation item and page title for scopes. Keep short.
+msgid "nav.scopes"
+msgstr "Scopes"
+
+#. Navigation item and page title for instance settings. Keep short.
+msgid "nav.settings"
+msgstr "Settings"
+
+#. Menu item that signs the user out. Verb.
+msgid "nav.signOut"
+msgstr "Sign out"
+
+#. Navigation item and page title for automation tasks (e.g. scheduled exports). Keep short.
+msgid "nav.tasks"
+msgstr "Automation"
+
+#. Navigation item, page title and screen-reader label for import and export of entries. Keep short.
+msgid "nav.transfer"
+msgstr "Transfer"
+
+#. Navigation item and page title for users. Keep short.
+msgid "nav.users"
+msgstr "Users"
+
+#. Navigation item and page title for webhooks. Keep short.
+msgid "nav.webhooks"
+msgstr "Webhooks"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows creating. Short verb, like a button.
+msgid "permissions.action.create"
+msgstr "Create"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows deleting. Short verb, like a button.
+msgid "permissions.action.delete"
+msgstr "Delete"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows exporting. Short verb, like a button.
+msgid "permissions.action.export"
+msgstr "Export"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows importing. Short verb, like a button.
+msgid "permissions.action.import"
+msgstr "Import"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows deleting permanently, without restoring. Short verb, like a button.
+msgid "permissions.action.permanent_delete"
+msgstr "Delete permanently"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows viewing. Short verb, like a button.
+msgid "permissions.action.read"
+msgstr "View"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows reviewing (approving or rejecting). Short verb, like a button.
+msgid "permissions.action.review"
+msgstr "Review"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows running (starting by hand). Short verb, like a button.
+msgid "permissions.action.run"
+msgstr "Run"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows editing. Short verb, like a button.
+msgid "permissions.action.update"
+msgstr "Edit"
+
+#. Checkbox label and badge for one permission in the role dialogs and role list, under its group heading: allows using. Short verb, like a button.
+msgid "permissions.action.use"
+msgstr "Use"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on glossary translations, i.e. a term's translation into one language. Short plural noun phrase.
+msgid "permissions.resource.definition"
+msgstr "Glossary translations"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on entries (translatable texts). Short plural noun phrase.
+msgid "permissions.resource.entry"
+msgstr "Entries"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on locales (languages). Short plural noun phrase.
+msgid "permissions.resource.locale"
+msgstr "Locales"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on machine translation (using the translation servers). Short plural noun phrase.
+msgid "permissions.resource.machine_translation"
+msgstr "Machine translation"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on permissions (viewing the list of permissions). Short plural noun phrase.
+msgid "permissions.resource.permission"
+msgstr "Permissions"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on roles. Short plural noun phrase.
+msgid "permissions.resource.role"
+msgstr "Roles"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on scopes (groups of entries). Short plural noun phrase.
+msgid "permissions.resource.scope"
+msgstr "Scopes"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on single sign-on providers. Short plural noun phrase.
+msgid "permissions.resource.sso_provider"
+msgstr "Single sign-on providers"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on automation tasks. Short plural noun phrase.
+msgid "permissions.resource.task"
+msgstr "Tasks"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on glossary terms. Short plural noun phrase.
+msgid "permissions.resource.terminology"
+msgstr "Glossary terms"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on translation servers. Short plural noun phrase.
+msgid "permissions.resource.translation_server"
+msgstr "Translation servers"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on users. Short plural noun phrase.
+msgid "permissions.resource.user"
+msgstr "Users"
+
+#. Heading of a permission group in the role dialogs and role list: the permissions on webhooks. Short plural noun phrase.
+msgid "permissions.resource.webhook"
+msgstr "Webhooks"
+
+#. Hint under the registration switch in settings, shown when registration is closed.
+msgid "registration.closedHint"
+msgstr "Closed. Only those who may add users create accounts."
+
+#. Toast shown after self-registration was turned off.
+msgid "registration.closedToast"
+msgstr "Registration closed"
+
+#. Hint under the registration switch in settings, shown when registration is open.
+msgid "registration.openHint"
+msgstr "Anyone can create a viewer account through the API."
+
+#. Toast shown after self-registration was turned on.
+msgid "registration.openedToast"
+msgstr "Registration opened"
+
+#. Title of the settings card with the switch for open self-registration.
+msgid "registration.title"
+msgstr "Registration"
+
+#. Screen-reader label and tooltip for the icon button that approves a draft translation. {language} is the language name.
+msgid "review.approveFor"
+msgstr "Approve {language}"
+
+#. Menu item in the entries toolbar that approves drafts in all currently shown languages. Action.
+msgid "review.approveShown"
+msgstr "Approve drafts in shown languages"
+
+#. Button in the bulk toolbar that approves drafts of the selected entries. Action; keep short.
+msgid "review.approveTicked"
+msgstr "Approve drafts"
+
+#. Tooltip of the bulk approve button.
+msgid "review.approveTickedHint"
+msgstr "Approves the ticked entries' drafts in the shown languages"
+
+#. Status tooltip and screen-reader label on a translation marked approved. Status, not an action.
+msgid "review.approved"
+msgstr "Approved"
+
+#. Toast after drafts were approved. {count} is the number of drafts. Plural forms separated by |: one | other.
+msgid "review.approvedCount"
+msgstr "Approved {count} draft | Approved {count} drafts"
+
+#. Toast after outdated translations were confirmed and approved. {count} is the number of translations. Plural forms separated by |: one | other.
+msgid "review.approvedTranslations"
+msgstr "Approved {count} translation | Approved {count} translations"
+
+#. Label of the required comment field in the reject dialog.
+msgid "review.comment"
+msgstr "What should change?"
+
+#. Line in a history item showing a reviewer's rejection comment. {comment} is the comment text.
+msgid "review.commentLabel"
+msgstr "Reviewer: {comment}"
+
+#. Example placeholder in the reject dialog's comment field, showing the kind of feedback to give.
+msgid "review.commentPlaceholder"
+msgstr "e.g. Use the formal form"
+
+#. Screen-reader label and tooltip for the icon button that confirms an outdated translation still fits. {language} is the language name.
+msgid "review.confirmFor"
+msgstr "Confirm {language} still fits"
+
+#. Small status badge for a translation not yet approved. Status, not an action; keep short.
+msgid "review.draft"
+msgstr "Draft"
+
+#. Badge on an entry list item with the number of drafts awaiting review. {count} is the number. Plural forms separated by |: one | other. Keep short.
+msgid "review.draftCount"
+msgstr "{count} draft to review | {count} drafts to review"
+
+#. Tooltip on a Draft badge on a glossary term in the context panel.
+msgid "review.draftDefinitionHint"
+msgstr "This glossary translation isn't approved yet"
+
+#. Tooltip on the Draft badge of a translation field.
+msgid "review.draftHint"
+msgstr "Waiting for a reviewer to approve it"
+
+#. Tooltip explaining why the approve-drafts menu item is disabled.
+msgid "review.nothingToApprove"
+msgstr "No drafts to approve in the shown languages"
+
+#. Small button/badge on a translation field showing its default text changed; clicking shows the change. Status, not an action; keep short.
+msgid "review.outdated"
+msgstr "Outdated"
+
+#. Badge on an entry list item with the number of outdated translations. {count} is the number. Plural forms separated by |: one | other. Keep short.
+msgid "review.outdatedCount"
+msgstr "{count} outdated translation | {count} outdated translations"
+
+#. Tooltip on the Outdated badge of a translation field.
+msgid "review.outdatedHint"
+msgstr "The default text changed after this was written or approved"
+
+#. Submit button of the reject dialog. Action.
+msgid "review.reject"
+msgstr "Reject"
+
+#. Title of the reject dialog for one language. {language} is the language name.
+msgid "review.rejectFor"
+msgstr "Reject {language}"
+
+#. Menu item in the bulk toolbar that rejects drafts of selected entries. Action.
+msgid "review.rejectTicked"
+msgstr "Reject drafts"
+
+#. Tooltip of the bulk reject menu item.
+msgid "review.rejectTickedHint"
+msgstr "Sends back the ticked entries' drafts in the shown languages; approved translations stay as they are"
+
+#. Title of the reject dialog for several entries. {count} is the number of entries. Plural forms separated by |: one | other.
+msgid "review.rejectTickedTitle"
+msgstr "Reject drafts of {count} entry | Reject drafts of {count} entries"
+
+#. Screen-reader label and tooltip on a translation marked rejected. Status, not an action.
+msgid "review.rejected"
+msgstr "Rejected"
+
+#. Toast after several drafts were rejected. {count} is the number of drafts. Plural forms separated by |: one | other.
+msgid "review.rejectedCount"
+msgstr "Rejected {count} draft | Rejected {count} drafts"
+
+#. Tooltip on the rejected marker of a translation field. {comment} is the reviewer's comment.
+msgid "review.rejectedHint"
+msgstr "Rejected: {comment}"
+
+#. Toast after a draft was rejected. {language} is the language name.
+msgid "review.rejectedToast"
+msgstr "{language} rejected"
+
+#. Screen-reader label for the Outdated button that shows how the default text changed. {language} is the default language's name.
+msgid "review.showChangeFor"
+msgstr "Show how the default text changed for {language}"
+
+#. Title of the dialog listing all permissions of a role. {name} is the role's name.
+msgid "roles.allPermissions"
+msgstr "All permissions for {name}"
+
+#. Button on the roles page and title/submit button of the create-role dialog. Action.
+msgid "roles.create"
+msgstr "Create role"
+
+#. Success toast shown after a role was created. {name} is the role's name.
+msgid "roles.created"
+msgstr "Role {name} created"
+
+#. Tooltip/label of the delete button in a row of the roles table.
+msgid "roles.delete"
+msgstr "Delete role"
+
+#. Body text of the confirmation dialog for deleting a role.
+msgid "roles.deleteConfirm"
+msgstr "Are you sure you want to delete this role?"
+
+#. Title of the confirmation dialog for deleting a role. {name} is the role's name.
+msgid "roles.deleteTitle"
+msgstr "Delete role: {name}"
+
+#. Success toast shown after a role was deleted. {name} is the role's name.
+msgid "roles.deleted"
+msgstr "Role {name} deleted"
+
+#. Page description of the roles page, also shown under the heading of the empty state.
+msgid "roles.description"
+msgstr "Manage roles and permissions"
+
+#. Placeholder of the description input in the create/edit role dialog.
+msgid "roles.descriptionPlaceholder"
+msgstr "Add context about this role"
+
+#. Tooltip/label of the edit button in the roles table and title of the edit-role dialog. Action.
+msgid "roles.edit"
+msgstr "Edit role"
+
+#. Heading of the empty state on the roles page when there are no roles.
+msgid "roles.empty"
+msgstr "No roles"
+
+#. Error alert on the roles page when loading roles failed. {error} is the technical error message.
+msgid "roles.loadFailed"
+msgstr "Failed to load roles: {error}"
+
+#. Loading indicator text on the roles page while roles are being fetched.
+msgid "roles.loading"
+msgstr "Loading roles…"
+
+#. Small badge in the roles table indicating additional permissions not listed. {count} is the number of hidden permissions. Keep short.
+msgid "roles.morePermissions"
+msgstr "+{count} more"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Admin”.
+msgid "roles.nameExample.admin"
+msgstr "Admin"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Developer”.
+msgid "roles.nameExample.developer"
+msgstr "Developer"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Editor”.
+msgid "roles.nameExample.editor"
+msgstr "Editor"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Manager”.
+msgid "roles.nameExample.manager"
+msgstr "Manager"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Reviewer”.
+msgid "roles.nameExample.reviewer"
+msgstr "Reviewer"
+
+#. Example role name cycling as placeholder in the role name field of the create role dialog: a job title, “Translator”.
+msgid "roles.nameExample.translator"
+msgstr "Translator"
+
+#. Validation error in the role dialog when the role name is empty.
+msgid "roles.nameRequired"
+msgstr "Role name is required"
+
+#. Empty-state text shown where a role's permissions are listed (roles table, role dialog, permissions dialog) when it has none.
+msgid "roles.noPermissions"
+msgstr "No permissions assigned"
+
+#. Small text in the roles table showing how many permissions a role has. Plural forms separated by |: zero | one | many. {count} is the number of permissions.
+msgid "roles.permissionsCount"
+msgstr "{count} permission | {count} permission | {count} permissions"
+
+#. Error alert in the role dialog when the list of available permissions could not be loaded.
+msgid "roles.permissionsLoadFailed"
+msgstr "Failed to load permissions"
+
+#. Loading text in the role dialog while the list of permissions is fetched.
+msgid "roles.permissionsLoading"
+msgstr "Loading permissions…"
+
+#. Placeholder and screen-reader label of the search field on the roles page.
+msgid "roles.searchRoles"
+msgstr "Search roles…"
+
+#. Success toast shown after a role was updated. {name} is the role's name.
+msgid "roles.updated"
+msgstr "Role {name} updated"
+
+#. Label of the text field for a custom cron expression in the task and webhook schedule forms.
+msgid "schedule.cron"
+msgstr "Cron expression"
+
+#. Helper text under the cron expression field, explaining the five cron fields; times are in UTC.
+msgid "schedule.customHelp"
+msgstr "Five fields in UTC: minute, hour, day of month, month, weekday."
+
+#. Validation error shown in the task or webhook form when the custom schedule is chosen but the cron field is empty.
+msgid "schedule.customRequired"
+msgstr "Enter a cron expression, or pick another schedule."
+
+#. Label of the time-of-day dropdown in the schedule form (daily and weekly schedules). Keep short.
+msgid "schedule.time"
+msgstr "Time"
+
+#. Label of the weekday dropdown in the weekly schedule form. Keep short.
+msgid "schedule.weekday"
+msgstr "Day"
+
+#. Placeholder of scope filter dropdowns meaning no scope restriction (all scopes).
+msgid "scopes.all"
+msgstr "All scopes"
+
+#. Label of the color field in the scope form dialog.
+msgid "scopes.color"
+msgstr "Color"
+
+#. Validation error in the scope form when the color is not a valid hex code.
+msgid "scopes.colorInvalid"
+msgstr "Use a hex color like #6366f1."
+
+#. Create scope: title of the scope form dialog, its submit button and the page's primary action.
+msgid "scopes.create"
+msgstr "Create scope"
+
+#. Toast shown after a scope was created. {name} is the scope name.
+msgid "scopes.created"
+msgstr "Scope {name} created"
+
+#. Label of the row delete action in the scopes list.
+msgid "scopes.delete"
+msgstr "Delete scope"
+
+#. Explanation in the delete-scope dialog about what happens to entries.
+msgid "scopes.deleteConfirm"
+msgstr "Entries keep their translations, but the scope is hidden from filters, imports and exports until it is restored."
+
+#. Title of the delete-scope dialog. {name} is the scope name.
+msgid "scopes.deleteTitle"
+msgstr "Delete scope: {name}"
+
+#. Toast shown after a scope was deleted. {name} is the scope name.
+msgid "scopes.deleted"
+msgstr "Scope {name} deleted"
+
+#. Page description under the title of the scopes list page.
+msgid "scopes.description"
+msgstr "Group entries, e.g. by app or area, to filter, import and export them together"
+
+#. Placeholder of the description field in the scope form dialog.
+msgid "scopes.descriptionPlaceholder"
+msgstr "What belongs in this scope?"
+
+#. Edit scope: title of the scope form dialog in edit mode and label of the row edit action.
+msgid "scopes.edit"
+msgstr "Edit scope"
+
+#. Title of the empty state on the scopes list.
+msgid "scopes.empty"
+msgstr "No scopes yet"
+
+#. Hint in the empty state of the scopes list; example scope names may be adapted.
+msgid "scopes.emptyHint"
+msgstr "Create a scope to group entries, e.g. \"backend\" or \"marketing\"."
+
+#. Error shown when the scopes list could not be loaded. {error} is the error message.
+msgid "scopes.listFailed"
+msgstr "Failed to load scopes: {error}"
+
+#. Short error shown in entry dialogs when scopes could not be loaded.
+msgid "scopes.loadFailed"
+msgstr "Could not load scopes."
+
+#. Loading text shown while the scopes list loads.
+msgid "scopes.loading"
+msgstr "Loading scopes…"
+
+#. Validation error in the scope form when name or slug is missing.
+msgid "scopes.nameSlugRequired"
+msgstr "Name and slug are required."
+
+#. Empty state text on the scopes list when the search has no results.
+msgid "scopes.noMatches"
+msgstr "No scopes match your search."
+
+#. Screen-reader label for the color picker input in the scope form.
+msgid "scopes.pickColor"
+msgstr "Pick a color"
+
+#. Label of the row restore action in the scopes list.
+msgid "scopes.restore"
+msgstr "Restore scope"
+
+#. Explanation in the restore-scope dialog.
+msgid "scopes.restoreConfirm"
+msgstr "The scope becomes available in filters, imports and exports again."
+
+#. Title of the restore-scope dialog. {name} is the scope name.
+msgid "scopes.restoreTitle"
+msgstr "Restore scope: {name}"
+
+#. Toast shown after a scope was restored. {name} is the scope name.
+msgid "scopes.restored"
+msgstr "Scope {name} restored"
+
+#. Placeholder and screen-reader label of the search field on the scopes list.
+msgid "scopes.search"
+msgstr "Search for scopes…"
+
+#. Placeholder of the multi-select for choosing scopes; they are optional.
+msgid "scopes.select"
+msgstr "Select scopes (optional)"
+
+#. Label of the slug field in the scope form and column header in the scopes list.
+msgid "scopes.slug"
+msgstr "Slug"
+
+#. Helper text under the slug field in the scope form.
+msgid "scopes.slugHelp"
+msgstr "Used in URLs and file names. Lowercase letters, numbers and dashes."
+
+#. Toast shown after a scope was updated. {name} is the scope name.
+msgid "scopes.updated"
+msgstr "Scope {name} updated"
+
+#. Page description under the settings page title.
+msgid "settings.description"
+msgstr "Settings for everyone on this instance, such as translation services and single sign-on"
+
+#. Validation error on the first-time setup form when a field is empty.
+msgid "setup.allFieldsRequired"
+msgstr "All fields are required"
+
+#. Submit button on the first-time setup page.
+msgid "setup.completeSetup"
+msgstr "Complete Setup"
+
+#. Heading of the first-time setup form.
+msgid "setup.createAdmin"
+msgstr "Create Admin Account"
+
+#. Description under the heading of the first-time setup form.
+msgid "setup.createAdminDescription"
+msgstr "Create the first administrator account to manage your translation platform."
+
+#. Hint under the password field on the setup form.
+msgid "setup.passwordRequirements"
+msgstr "At least 8 characters required"
+
+#. Validation error on the setup form when the password is too short.
+msgid "setup.passwordTooShort"
+msgstr "Password must be at least 8 characters"
+
+#. Text of the setup submit button while setup is running.
+msgid "setup.settingUp"
+msgstr "Setting up…"
+
+#. Welcome text at the top of the first-time setup page.
+msgid "setup.welcomeMessage"
+msgstr "Welcome! Let's set up your Parlance instance."
+
+#. Button on the single sign-on settings and title/submit button of the add-provider dialog. Action.
+msgid "ssoProviders.add"
+msgstr "Add provider"
+
+#. Label of the OpenID Connect client ID input in the provider dialog.
+msgid "ssoProviders.clientId"
+msgstr "Client ID"
+
+#. Label of the OpenID Connect client secret input in the provider dialog.
+msgid "ssoProviders.clientSecret"
+msgstr "Client secret"
+
+#. Helper text under the client secret input in the provider dialog.
+msgid "ssoProviders.clientSecretHelp"
+msgstr "Empty for public clients. Stored encrypted and never shown again."
+
+#. Placeholder in the client secret input when a secret is already stored, hinting that typing replaces it.
+msgid "ssoProviders.clientSecretKept"
+msgstr "Saved. Type a new value to replace it."
+
+#. Success toast shown after a single sign-on provider was added. {name} is the provider's name.
+msgid "ssoProviders.created"
+msgstr "Added {name}"
+
+#. Detail line for an SSO provider in the list: new users signing in get an account with this role. {role} is a role name.
+msgid "ssoProviders.createsAccounts"
+msgstr "New users get an account with the role {role}"
+
+#. Body text of the confirmation dialog for deleting an SSO provider, explaining the consequences.
+msgid "ssoProviders.deleteConfirm"
+msgstr "Nobody can sign in with this provider any more. Accounts it created stay, but without a password they can't sign in until you set one."
+
+#. Title of the confirmation dialog for deleting an SSO provider. {name} is the provider's name.
+msgid "ssoProviders.deleteTitle"
+msgstr "Delete {name}?"
+
+#. Success toast shown after an SSO provider was deleted. {name} is the provider's name.
+msgid "ssoProviders.deleted"
+msgstr "Provider {name} deleted"
+
+#. Explanation under the 'Single sign-on' heading in settings, naming supported OpenID Connect providers.
+msgid "ssoProviders.description"
+msgstr "OpenID Connect providers such as Keycloak, Authentik or Microsoft Entra ID. Signing in with a password stays possible."
+
+#. Title of the edit-provider dialog for single sign-on.
+msgid "ssoProviders.edit"
+msgstr "Edit provider"
+
+#. Empty state text in the SSO provider list when none is configured.
+msgid "ssoProviders.empty"
+msgstr "No providers yet. Everyone signs in with a password."
+
+#. Screen-reader label for the toggle that enables an SSO provider on the sign-in page. {name} is the provider's name.
+msgid "ssoProviders.enableFor"
+msgstr "Offer {name} for sign-in"
+
+#. Label of the switch in the provider dialog that makes the SSO provider available on the sign-in page.
+msgid "ssoProviders.enabled"
+msgstr "Enabled"
+
+#. Detail line for an SSO provider in the list: no new accounts are created, only existing ones can sign in.
+msgid "ssoProviders.existingUsersOnly"
+msgstr "Only existing accounts can sign in"
+
+#. Validation error in the SSO provider dialog when name, issuer URL or client ID is missing or invalid.
+msgid "ssoProviders.fieldsRequired"
+msgstr "Enter a name, an http or https issuer URL and the client ID."
+
+#. Short note in the SSO provider list meaning a client secret is stored. Keep short.
+msgid "ssoProviders.hasClientSecret"
+msgstr "Client secret saved"
+
+#. Label of the OpenID Connect issuer URL input in the provider dialog.
+msgid "ssoProviders.issuerUrl"
+msgstr "Issuer URL"
+
+#. Helper text under the issuer URL input, with example URLs for Keycloak and Authentik. Keep the URLs unchanged.
+msgid "ssoProviders.issuerUrlHelp"
+msgstr "Exactly as the provider names it, trailing slash included, e.g. Keycloak: …/realms/main, Authentik: …/application/o/parlance/"
+
+#. Helper text under the provider name input explaining it appears on the sign-in page as 'Sign in with ...'.
+msgid "ssoProviders.nameHelp"
+msgstr "The sign-in page offers “Sign in with” this name."
+
+#. Example placeholder in the SSO provider name input.
+msgid "ssoProviders.namePlaceholder"
+msgstr "e.g. Company login"
+
+#. Label of the dropdown in the SSO provider dialog for choosing the role given to newly created accounts.
+msgid "ssoProviders.newAccounts"
+msgstr "New accounts"
+
+#. Helper text under the new accounts role dropdown in the SSO provider dialog.
+msgid "ssoProviders.newAccountsHelp"
+msgstr "People without an account get one with this role at their first sign-in. Existing accounts are matched by email address."
+
+#. Dropdown option in the new accounts role selector meaning no accounts are created automatically.
+msgid "ssoProviders.noNewAccounts"
+msgstr "None – only existing accounts"
+
+#. Label above the redirect URI shown on the SSO settings; the URI to register at the identity provider follows it.
+msgid "ssoProviders.redirectUri"
+msgstr "Register this redirect URI with the provider:"
+
+#. Fallback shown in place of a role name when the role is unknown. Used as {role} in the 'new accounts' detail line.
+msgid "ssoProviders.someRole"
+msgstr "(unknown)"
+
+#. Result message after a successful connection test of an SSO provider.
+msgid "ssoProviders.testOk"
+msgstr "Works: the issuer answered with its OpenID configuration."
+
+#. Section heading in settings for single sign-on providers.
+msgid "ssoProviders.title"
+msgstr "Single sign-on"
+
+#. Success toast shown after an SSO provider was saved. {name} is the provider's name.
+msgid "ssoProviders.updated"
+msgstr "Saved {name}"
+
+#. Button on the tasks page that opens the dialog to create a new task.
+msgid "tasks.add"
+msgstr "Add task"
+
+#. Checkbox label in the machine translation task form: whether glossary terms are sent along with the text.
+msgid "tasks.ai.applyTerminology"
+msgstr "Use the glossary"
+
+#. Helper text under the glossary checkbox in the machine translation task form.
+msgid "tasks.ai.applyTerminologyHelp"
+msgstr "Approved glossary translations of terms in the text are sent along."
+
+#. Option in the "Translate from" dropdown meaning the project's default language is used as the source.
+msgid "tasks.ai.defaultSource"
+msgstr "Default language"
+
+#. Informational note in the machine translation task form explaining that only missing translations are filled, as drafts, and that results flagged by checks are skipped.
+msgid "tasks.ai.draftsNote"
+msgstr "Only missing translations are filled, as drafts for review. Results the checks flag, e.g. with a lost placeholder, are left out."
+
+#. Label of the numeric field limiting how many translations a single task run produces.
+msgid "tasks.ai.maxPairs"
+msgstr "Translations per run"
+
+#. Helper text under the translations-per-run field: remaining work is left for the next run.
+msgid "tasks.ai.maxPairsHelp"
+msgstr "The rest waits for the next run."
+
+#. Checkbox label in the machine translation task form: also retranslate unedited machine drafts made by other models.
+msgid "tasks.ai.redo"
+msgstr "Also redo machine drafts by other models"
+
+#. Helper text under the redo checkbox, explaining which machine drafts are translated again and that missing translations come first.
+msgid "tasks.ai.redoHelp"
+msgstr "Unedited machine drafts by a model the translation servers no longer serve are translated again, e.g. after switching to a bigger model. Missing translations come first; approved, edited and rejected ones stay."
+
+#. Label of the dropdown choosing the source language for machine translation.
+msgid "tasks.ai.source"
+msgstr "Translate from"
+
+#. Label above the target language selection in the machine translation task form; says the task fills missing translations as drafts.
+msgid "tasks.ai.target"
+msgstr "Fills missing translations as drafts"
+
+#. Label of the target-language selection in the machine translation task form ("Into" the selected languages). Keep short.
+msgid "tasks.ai.targets"
+msgstr "Into"
+
+#. Section heading in the task form for the machine translation settings.
+msgid "tasks.ai.title"
+msgstr "Machine translation"
+
+#. Summary text shown when a machine translation task targets all languages except the source.
+msgid "tasks.allOtherLanguages"
+msgstr "All other languages"
+
+#. Button that cancels a task run that is queued or in progress.
+msgid "tasks.cancelRun"
+msgstr "Cancel run"
+
+#. Button label shown while a run is being canceled. Ends with an ellipsis.
+msgid "tasks.canceling"
+msgstr "Canceling…"
+
+#. Label in the task run summary for the list of files changed by a git export.
+msgid "tasks.changedFiles"
+msgstr "Changed files"
+
+#. Toast shown after a task was created. {name} is the task's name.
+msgid "tasks.created"
+msgstr "Added {name}"
+
+#. Label of the numeric field for the delay in minutes before a task runs after an approval.
+msgid "tasks.delay"
+msgstr "Delay in minutes"
+
+#. Helper text under the delay field, explaining when the run starts after the first approval.
+msgid "tasks.delayHelp"
+msgstr "The run starts this long after the first approval; later approvals join it."
+
+#. Body text of the confirmation dialog for deleting a task.
+msgid "tasks.deleteConfirm"
+msgstr "The task and its run history are removed. A run in progress finishes but isn't recorded."
+
+#. Title of the confirmation dialog for deleting a task, phrased as a question. {name} is the task's name.
+msgid "tasks.deleteTitle"
+msgstr "Delete {name}?"
+
+#. Toast shown after a task was deleted. {name} is the task's name.
+msgid "tasks.deleted"
+msgstr "Task {name} deleted"
+
+#. Short description of a task's custom schedule in the task list. {cron} is the cron expression.
+msgid "tasks.describe.custom"
+msgstr "Cron {cron} (UTC)"
+
+#. Short description of a daily task schedule in the task list. {time} is the time of day.
+msgid "tasks.describe.daily"
+msgstr "Daily at {time} UTC"
+
+#. Short description of an hourly task schedule in the task list.
+msgid "tasks.describe.hourly"
+msgstr "Every hour"
+
+#. Description in the task list for a task that has no schedule and runs only when started manually.
+msgid "tasks.describe.manual"
+msgstr "Only when started by hand"
+
+#. Description in the task list of the delay after approvals before a task runs, in the form "Runs ...". Plural forms separated by |: zero | one | other. {count} is the number of minutes.
+msgid "tasks.describe.onApproval"
+msgstr "right after approvals | {count} minute after approvals | {count} minutes after approvals"
+
+#. Short description of a weekly task schedule in the task list. {day}s is the plural weekday name (e.g. Mondays); {time} is the time of day.
+msgid "tasks.describe.weekly"
+msgstr "Every {day} at {time} UTC"
+
+#. Subtitle of the tasks page describing what tasks are.
+msgid "tasks.description"
+msgstr "Tasks that run on their own: on a schedule, after approvals, or when you start them."
+
+#. Title of the dialog for editing an existing task.
+msgid "tasks.edit"
+msgstr "Edit task"
+
+#. Empty-state heading on the tasks page when no tasks exist.
+msgid "tasks.empty"
+msgstr "No tasks yet"
+
+#. Empty-state explanation on the tasks page suggesting what tasks can be used for.
+msgid "tasks.emptyHint"
+msgstr "Add one to fill missing translations by machine, or to send approved translations to your repository as a pull request."
+
+#. Label of the switch that activates a task in the task form. Status, not an action.
+msgid "tasks.enabled"
+msgstr "Enabled"
+
+#. Helper text under the active switch in the task form, explaining what inactive tasks do.
+msgid "tasks.enabledHelp"
+msgstr "Inactive tasks don't run on their schedule or after approvals, but can still be started by hand."
+
+#. Label in the task run dialog for when the run finished; value is a relative time.
+msgid "tasks.finished"
+msgstr "Finished"
+
+#. Button in the git export task form that adds another export format/file entry.
+msgid "tasks.git.addFile"
+msgstr "Add format"
+
+#. Label of the field for a custom GitHub API address (GitHub Enterprise).
+msgid "tasks.git.apiUrl"
+msgstr "API address"
+
+#. Helper text under the API address field.
+msgid "tasks.git.apiUrlHelp"
+msgstr "Only for GitHub Enterprise; leave empty for github.com."
+
+#. Label of the field for the branch the pull request is based on.
+msgid "tasks.git.baseBranch"
+msgstr "Base branch"
+
+#. Label of the field for the branch name used for the pull request.
+msgid "tasks.git.branch"
+msgstr "Pull request branch"
+
+#. Helper text under the pull request branch field.
+msgid "tasks.git.branchHelp"
+msgstr "Rebuilt from the base branch on every run."
+
+#. Button in the git export task form that tests whether the token can access the repository.
+msgid "tasks.git.check"
+msgstr "Check access"
+
+#. Error message shown after the repository access check failed. {error} is the error message.
+msgid "tasks.git.checkFailed"
+msgstr "Check failed: {error}"
+
+#. Success message shown after the repository access check succeeded.
+msgid "tasks.git.checkOk"
+msgstr "The token can read and push to the repository."
+
+#. Button label shown while the repository access check is running. Ends with an ellipsis.
+msgid "tasks.git.checking"
+msgstr "Checking…"
+
+#. Section label in the git export task form for the list of exported files/formats.
+msgid "tasks.git.files"
+msgstr "Files"
+
+#. Option in the export format dropdown of the git export task form. File format name.
+msgid "tasks.git.format.EXPORT_FORMAT_JSON"
+msgstr "JSON"
+
+#. Option in the export format dropdown of the git export task form. File format name (PHP array files for Laravel).
+msgid "tasks.git.format.EXPORT_FORMAT_PHP"
+msgstr "PHP (Laravel)"
+
+#. Option in the export format dropdown of the git export task form. File format name (gettext PO files).
+msgid "tasks.git.format.EXPORT_FORMAT_PO"
+msgstr "PO (gettext)"
+
+#. Label of the field for the file path pattern of an exported file in the git export task form.
+msgid "tasks.git.path"
+msgstr "Path"
+
+#. Helper text under the path field. The literal placeholder {locale} (shown as {'{locale}'}) must be kept; it is replaced by the language code. Keep the example paths as they are.
+msgid "tasks.git.pathHelp"
+msgstr "One file per language: {'{locale}'} becomes its code, e.g. lang/{'{locale}'}.json → lang/de.json."
+
+#. Screen-reader label or tooltip for the button that removes an export format entry.
+msgid "tasks.git.removeFile"
+msgstr "Remove format"
+
+#. Button that removes the saved access token in the git export task form.
+msgid "tasks.git.removeToken"
+msgstr "Remove the saved token"
+
+#. Label of the field for the GitHub repository in the git export task form.
+msgid "tasks.git.repository"
+msgstr "GitHub repository"
+
+#. Helper text under the repository field, describing the owner/name format.
+msgid "tasks.git.repositoryHelp"
+msgstr "As owner/name."
+
+#. Section heading in the git export task form for repository settings.
+msgid "tasks.git.title"
+msgstr "Repository"
+
+#. Label of the field for the GitHub access token.
+msgid "tasks.git.token"
+msgstr "Access token"
+
+#. Helper text under the access token field: required permissions and that it is stored encrypted.
+msgid "tasks.git.tokenHelp"
+msgstr "Needs read and write access to contents and pull requests. It is stored encrypted and never shown again."
+
+#. Placeholder of the token field when a token is already saved; typing replaces it.
+msgid "tasks.git.tokenKept"
+msgstr "Saved token is kept"
+
+#. Button on a task in the list that collapses its run history.
+msgid "tasks.hideRuns"
+msgstr "Hide runs"
+
+#. Status badge on a task in the list for a task that is turned off. Keep short; not an action.
+msgid "tasks.inactive"
+msgstr "Inactive"
+
+#. Label on a task in the list for when it last ran; followed by a relative time.
+msgid "tasks.lastRun"
+msgstr "Last run"
+
+#. Error message shown when the task list could not be loaded. {error} is the error message.
+msgid "tasks.listFailed"
+msgstr "Tasks could not be loaded: {error}"
+
+#. Loading message shown while the task list loads. Ends with an ellipsis.
+msgid "tasks.loading"
+msgstr "Loading tasks…"
+
+#. Heading in the task run dialog above the run's log output.
+msgid "tasks.log"
+msgstr "Log"
+
+#. Placeholder example in the task name field.
+msgid "tasks.namePlaceholder"
+msgstr "e.g. Nightly translations"
+
+#. Validation error shown in the task form when the name is empty.
+msgid "tasks.nameRequired"
+msgstr "Enter a name."
+
+#. Text on a task in the list when it has never run.
+msgid "tasks.neverRun"
+msgstr "Hasn't run yet"
+
+#. Short label in a task's trigger line, followed by a relative time of its next scheduled run. Keep short.
+msgid "tasks.nextRun"
+msgstr "next"
+
+#. Empty-state text in the task run dialog when the run has no log output.
+msgid "tasks.noLog"
+msgstr "Nothing logged yet."
+
+#. Empty-state text in a task's run history when it has no runs.
+msgid "tasks.noRuns"
+msgstr "No runs yet."
+
+#. Checkbox label in the task form: also run the task after translations are approved.
+msgid "tasks.onApproval"
+msgstr "Also run after translations are approved"
+
+#. Helper text under the run-after-approval checkbox, explaining which approvals count.
+msgid "tasks.onApprovalHelp"
+msgstr "Approvals in the editor and approving imports count."
+
+#. Run result text for a git export run where the repository already contained the translations.
+msgid "tasks.outcome.no_changes"
+msgstr "The repository already has these translations"
+
+#. Run result text for a machine translation run that found no target languages.
+msgid "tasks.outcome.nothing_to_translate"
+msgstr "No languages to translate into"
+
+#. Run result text for a git export run where the existing pull request already matched.
+msgid "tasks.outcome.up_to_date"
+msgstr "The pull request is up to date"
+
+#. Run result text for a git export run. {count} is the number of changed files.
+msgid "tasks.outcome.updated"
+msgstr "Files changed: {count}"
+
+#. Notice on the tasks page shown while all tasks are paused.
+msgid "tasks.pausedHint"
+msgstr "All tasks are paused. Runs started or triggered in the meantime wait until tasks are turned back on."
+
+#. Toast shown after all tasks were paused.
+msgid "tasks.pausedToast"
+msgstr "Tasks paused"
+
+#. Toast shown after a task run was queued. {name} is the task's name.
+msgid "tasks.queued"
+msgstr "{name} will start in a moment"
+
+#. Label in the task run dialog for the run's result summary.
+msgid "tasks.result"
+msgstr "Result"
+
+#. Toast shown after tasks were turned back on.
+msgid "tasks.resumedToast"
+msgstr "Tasks running again"
+
+#. Button on a task that starts a run immediately.
+msgid "tasks.runNow"
+msgstr "Run now"
+
+#. Label of the switch on the tasks page that turns task execution on or off globally.
+msgid "tasks.runTasks"
+msgstr "Run tasks"
+
+#. Helper text under the global tasks switch.
+msgid "tasks.runTasksHint"
+msgstr "Tasks run on their schedules, after approvals and when started. Turn this off to pause all of them."
+
+#. Title of the dialog showing details of a task run. Noun.
+msgid "tasks.runTitle"
+msgstr "Run"
+
+#. Option in the task schedule dropdown for a custom cron expression.
+msgid "tasks.schedule.custom"
+msgstr "Custom (cron)"
+
+#. Option in the task schedule dropdown: runs once a day.
+msgid "tasks.schedule.daily"
+msgstr "Daily"
+
+#. Option in the task schedule dropdown: runs every hour.
+msgid "tasks.schedule.hourly"
+msgstr "Every hour"
+
+#. Label of the schedule dropdown in the task form.
+msgid "tasks.schedule.label"
+msgstr "Schedule"
+
+#. Option in the task schedule dropdown: no automatic schedule.
+msgid "tasks.schedule.none"
+msgstr "No schedule"
+
+#. Option in the task schedule dropdown: runs once a week.
+msgid "tasks.schedule.weekly"
+msgstr "Weekly"
+
+#. Button on a task in the list that expands its run history.
+msgid "tasks.showRuns"
+msgstr "Show runs"
+
+#. Label in the task run dialog for when the run started; value is a relative time.
+msgid "tasks.started"
+msgstr "Started"
+
+#. Label in the task run dialog for when a queued run is scheduled to start; value is a relative time.
+msgid "tasks.startsAt"
+msgstr "Starts"
+
+#. Status badge for a task run that was canceled. Not an action.
+msgid "tasks.status.TASK_RUN_STATUS_CANCELED"
+msgstr "Canceled"
+
+#. Status badge for a task run that failed. Not an action.
+msgid "tasks.status.TASK_RUN_STATUS_FAILED"
+msgstr "Failed"
+
+#. Status badge for a task run waiting to start. Not an action.
+msgid "tasks.status.TASK_RUN_STATUS_QUEUED"
+msgstr "Queued"
+
+#. Status badge for a task run in progress. Not an action.
+msgid "tasks.status.TASK_RUN_STATUS_RUNNING"
+msgstr "Running"
+
+#. Status badge for a task run that finished successfully. Keep short.
+msgid "tasks.status.TASK_RUN_STATUS_SUCCEEDED"
+msgstr "Done"
+
+#. Status badge for a task run with an unknown status.
+msgid "tasks.status.TASK_RUN_STATUS_UNSPECIFIED"
+msgstr "Unknown"
+
+#. Link text in a task run summary that opens the pull request on GitHub.
+msgid "tasks.summary.pullRequest"
+msgstr "Pull request"
+
+#. Part of a run summary: number of machine drafts translated again. {count} is that number.
+msgid "tasks.summary.redone"
+msgstr "{count} redone"
+
+#. Part of a run summary: number of translations left for later runs. {count} is that number.
+msgid "tasks.summary.remaining"
+msgstr "{count} left for later runs"
+
+#. Run summary of a machine translation run. {translated} and {failed} are numbers of translations.
+msgid "tasks.summary.translated"
+msgstr "{translated} translated, {failed} failed"
+
+#. Label in the task run dialog for what started the run (schedule, approvals or manual).
+msgid "tasks.trigger"
+msgstr "Started by"
+
+#. Shown as the trigger of a run started by translation approvals. Noun.
+msgid "tasks.triggerType.TASK_TRIGGER_EVENT"
+msgstr "Approvals"
+
+#. Shown as the trigger of a run started by hand. Adjective.
+msgid "tasks.triggerType.TASK_TRIGGER_MANUAL"
+msgstr "Manual"
+
+#. Shown as the trigger of a run started by its schedule. Noun.
+msgid "tasks.triggerType.TASK_TRIGGER_SCHEDULE"
+msgstr "Schedule"
+
+#. Shown as the trigger of a run when the cause is unknown.
+msgid "tasks.triggerType.TASK_TRIGGER_UNSPECIFIED"
+msgstr "Unknown"
+
+#. Section heading in the task form for settings about when the task runs.
+msgid "tasks.triggers"
+msgstr "When it runs"
+
+#. Task type name for machine translation tasks, shown in the type dropdown and task list.
+msgid "tasks.type.TASK_TYPE_AI_TRANSLATE"
+msgstr "Machine translation"
+
+#. Task type name for tasks that export translations to a git repository as a pull request.
+msgid "tasks.type.TASK_TYPE_GIT_EXPORT"
+msgstr "Git export"
+
+#. Label of the task type dropdown in the task form.
+msgid "tasks.typeLabel"
+msgstr "Type"
+
+#. Toast shown after a task was saved. {name} is the task's name.
+msgid "tasks.updated"
+msgstr "Saved {name}"
+
+#. Count of glossary terms. {count} is the number. Plural forms separated by |: zero | one | other.
+msgid "terminologies.count"
+msgstr "{count} term | {count} term | {count} terms"
+
+#. Create terminology: title of the glossary term form dialog, its submit button and the page's primary action.
+msgid "terminologies.create"
+msgstr "Create term"
+
+#. Toast shown after a glossary term was created. {term} is the term.
+msgid "terminologies.created"
+msgstr "Term {term} created"
+
+#. Progress text in the glossary. {done} is the number of languages with a definition, {total} the number of selected languages.
+msgid "terminologies.definedCount"
+msgstr "{done} / {total} defined"
+
+#. Screen-reader label for the definition inputs of a term. {term} is the term.
+msgid "terminologies.definitionLabel"
+msgstr "Definitions for {term}"
+
+#. Placeholder of the definition input for a term in a language.
+msgid "terminologies.definitionPlaceholder"
+msgstr "Enter definition"
+
+#. Tooltip/label of the button that deletes a glossary term.
+msgid "terminologies.delete"
+msgstr "Delete term"
+
+#. Label of the confirm button in the delete-term dialog. {term} is the term.
+msgid "terminologies.deleteConfirm"
+msgstr "Delete {term}"
+
+#. Title of the delete-term dialog. {term} is the term.
+msgid "terminologies.deleteTitle"
+msgstr "Delete term: {term}"
+
+#. Confirmation text in the delete-term dialog.
+msgid "terminologies.deleteWarning"
+msgstr "Are you sure you want to delete this term? It will be removed from the glossary."
+
+#. Toast shown after a glossary term was deleted. {term} is the term.
+msgid "terminologies.deleted"
+msgstr "Term {term} deleted"
+
+#. Page description for the glossary page, also shown on the dashboard.
+msgid "terminologies.description"
+msgstr "Manage glossary and terminology"
+
+#. Placeholder of the description field in the term form dialog.
+msgid "terminologies.descriptionPlaceholder"
+msgstr "Add context about this term"
+
+#. Edit terminology: title of the term form dialog in edit mode and tooltip of the edit button.
+msgid "terminologies.edit"
+msgstr "Edit term"
+
+#. Error shown when glossary terms could not be loaded. {error} is the error message.
+msgid "terminologies.loadFailed"
+msgstr "Failed to load terms: {error}"
+
+#. Loading text shown while glossary terms load.
+msgid "terminologies.loading"
+msgstr "Loading terms…"
+
+#. Loading text shown while a single term loads.
+msgid "terminologies.loadingTerminology"
+msgstr "Loading term…"
+
+#. Tooltip and accessible name of the › button above the open glossary term on phones, opening the next term in the list.
+msgid "terminologies.next"
+msgstr "Next term"
+
+#. Empty state text in the glossary when no term matches the filters.
+msgid "terminologies.noMatches"
+msgstr "No term matches the filters."
+
+#. Message when only some definitions could be saved. {saved} and {total} are numbers of definitions; {failures} lists the failed ones.
+msgid "terminologies.partialSave"
+msgstr "Saved {saved} of {total} definitions. Failed: {failures}"
+
+#. Tooltip and accessible name of the ‹ button above the open glossary term on phones, opening the previous term in the list.
+msgid "terminologies.previous"
+msgstr "Previous term"
+
+#. Placeholder of the glossary search field; searches terms and their translations.
+msgid "terminologies.search"
+msgstr "Search terms and translations…"
+
+#. Empty state hint in the glossary asking to select languages first.
+msgid "terminologies.selectLanguagesHint"
+msgstr "Select one or more languages above to start defining terms."
+
+#. Fallback label of the term selector when no term is selected.
+msgid "terminologies.selectTerminology"
+msgstr "Select a term"
+
+#. Empty state hint in the glossary asking to select a term.
+msgid "terminologies.selectTerminologyHint"
+msgstr "Select a term to start defining it."
+
+#. Label of the term field in the term form dialog.
+msgid "terminologies.term"
+msgstr "Term"
+
+#. Validation error in the term form when the term is empty.
+msgid "terminologies.termRequired"
+msgstr "Term is required."
+
+#. Error shown when a single glossary term could not be loaded.
+msgid "terminologies.terminologyLoadFailed"
+msgstr "Could not load this term."
+
+#. Toast shown after a glossary term was updated. {term} is the term.
+msgid "terminologies.updated"
+msgstr "Term {term} updated"
+
+#. Screen-reader label for the glossary workspace area.
+msgid "terminologies.workspace"
+msgstr "Glossary workspace"
+
+#. Tooltip on the icon button that copies a glossary term to the clipboard. Action.
+msgid "terminologyHints.copy"
+msgstr "Copy term"
+
+#. Error shown in the glossary tab when copying a term to the clipboard failed.
+msgid "terminologyHints.copyFailed"
+msgstr "Could not copy the term. You can select and copy it manually."
+
+#. Link in the glossary tab that opens the glossary page. An arrow follows the text.
+msgid "terminologyHints.glossary"
+msgstr "Open glossary"
+
+#. Loading message in the glossary tab while terms are searched.
+msgid "terminologyHints.loading"
+msgstr "Checking glossary…"
+
+#. Count of glossary matches in the glossary tab heading. {count} is the number. Plural forms separated by |: zero | one | other.
+msgid "terminologyHints.matches"
+msgstr "{count} match | {count} match | {count} matches"
+
+#. Tooltip on a glossary term chip when the term has no translation in the target language. Status.
+msgid "terminologyHints.status.untranslated"
+msgstr "Not translated yet"
+
+#. Tooltip on a glossary term chip when the preferred wording is not used in the translation. Status.
+msgid "terminologyHints.status.unused"
+msgstr "Preferred wording not used"
+
+#. Tooltip on a glossary term chip when the preferred wording is used in the translation. Status.
+msgid "terminologyHints.status.used"
+msgstr "Used in this translation"
+
+#. Chip label with the number of glossary terms in the text. {count} is the number. Plural forms separated by |: zero | one | other. Keep short.
+msgid "terminologyHints.termCount"
+msgstr "{count} terms | {count} term | {count} terms"
+
+#. Heading of the glossary section in the context panel. A match count follows.
+msgid "terminologyHints.title"
+msgstr "Terminology"
+
+#. Message in the glossary tab when glossary suggestions couldn't be loaded. A retry button follows.
+msgid "terminologyHints.unavailable"
+msgstr "Glossary suggestions unavailable."
+
+#. Label of the checkbox in import forms to mark imported translations as approved.
+msgid "transfer.approve"
+msgstr "Mark as approved"
+
+#. Helper text under the approve checkbox in import forms: otherwise translations stay drafts for review.
+msgid "transfer.approveHelp"
+msgstr "Otherwise new and changed translations wait for review as drafts."
+
+#. Label of the dropdown in the import form that selects how existing entries are handled.
+msgid "transfer.behavior"
+msgstr "Import behavior"
+
+#. Option in the import behavior dropdown: only new entries are created.
+msgid "transfer.createOnly"
+msgstr "Create new entries only"
+
+#. Submit button of the export form that downloads the file.
+msgid "transfer.download"
+msgstr "Download export"
+
+#. Helper text in the export form explaining what is exported.
+msgid "transfer.exportHelp"
+msgstr "Download all available translations for this language, across all entries and scopes."
+
+#. Helper text in the export form when scopes are selected. {scopes} is the list of scope names.
+msgid "transfer.exportScopeHelp"
+msgstr "Download the translations for this language from entries in these scopes only: {scopes}."
+
+#. Tab label for the export section of the transfer page. Keep short.
+msgid "transfer.exportTab"
+msgstr "Export"
+
+#. Toast shown after a successful export.
+msgid "transfer.exported"
+msgstr "Translations exported"
+
+#. Label of the file drop area in the import form.
+msgid "transfer.file"
+msgstr "Translation file"
+
+#. Validation error when importing without a file.
+msgid "transfer.fileRequired"
+msgstr "Select a file to import."
+
+#. Button shown after an import finished to start another import.
+msgid "transfer.importAnother"
+msgstr "Import another file"
+
+#. Helper text in the import form describing accepted JSON and PHP file formats.
+msgid "transfer.importHelp"
+msgstr "JSON accepts flat dotted keys or nested objects with string values. Nested paths become dotted keys. PHP must contain a translation array."
+
+#. Helper text under the scope selection in the import form.
+msgid "transfer.importScopeHelp"
+msgstr "Selected scopes are added to every created or updated entry. Scopes an entry already has are kept."
+
+#. Tab label for the import section of the transfer page. Keep short.
+msgid "transfer.importTab"
+msgstr "Import"
+
+#. Label of the checkbox in export forms to include draft translations.
+msgid "transfer.includeDrafts"
+msgstr "Include drafts"
+
+#. Helper text under the include-drafts checkbox in export forms.
+msgid "transfer.includeDraftsHelp"
+msgstr "Otherwise only approved translations are exported; drafts count as missing."
+
+#. Option in the file format dropdown for JSON files, flat or nested.
+msgid "transfer.json"
+msgstr "JSON (flat or nested)"
+
+#. Validation error when no language is selected in the transfer form.
+msgid "transfer.languageRequired"
+msgstr "Select a language."
+
+#. Error message when the server returned no export content.
+msgid "transfer.missingExportContent"
+msgstr "The server did not return export content."
+
+#. Error message when the server returned no import result.
+msgid "transfer.missingImportResult"
+msgstr "The server did not return an import result."
+
+#. Page description under the title of the import/export page.
+msgid "transfer.pageDescription"
+msgstr "Import translation files into a language, or download a language's translations as a file."
+
+#. Option in the file format dropdown for PHP array files.
+msgid "transfer.php"
+msgstr "PHP array"
+
+#. Option in the file format dropdown for Gettext PO files.
+msgid "transfer.po"
+msgstr "Gettext PO (.po)"
+
+#. Helper text in the export form for PO format. msgid and msgstr are technical PO terms; keep them.
+msgid "transfer.poExportHelp"
+msgstr "PO exports use entry keys as msgid and include language metadata, description comments, and untranslated entries with empty msgstr."
+
+#. Helper text in the import form for PO format. msgid and msgstr are technical PO terms; keep them.
+msgid "transfer.poImportHelp"
+msgstr "PO files must use UTF-8, with entry keys in msgid and translations in msgstr. Empty translations and obsolete entries are skipped. Contextual, plural, fuzzy, and duplicate entries are reported as failures."
+
+#. Button label that previews the import changes before importing.
+msgid "transfer.preview"
+msgstr "Preview import"
+
+#. Error message when the selected file could not be read.
+msgid "transfer.readFailed"
+msgstr "Could not read the selected file."
+
+#. Placeholder of the language dropdown in the transfer form.
+msgid "transfer.selectLanguage"
+msgstr "Select a language"
+
+#. Label of the first step in the import stepper. Keep short.
+msgid "transfer.stepFile"
+msgstr "Choose file"
+
+#. Label of the second step in the import stepper. Keep short.
+msgid "transfer.stepReview"
+msgstr "Review changes"
+
+#. Import result summary line. {created}, {updated}, {skipped} and {failed} are counts.
+msgid "transfer.summary"
+msgstr "Created: {created} · Updated: {updated} · Skipped: {skipped} · Failed: {failed}"
+
+#. Option in the import behavior dropdown: only existing entries are updated.
+msgid "transfer.updateOnly"
+msgstr "Update existing entries only"
+
+#. Option in the import behavior dropdown: new entries are created and existing ones updated.
+msgid "transfer.upsert"
+msgstr "Create or update entries"
+
+#. Button on the machine translation settings and title/submit button of the add-server dialog. Action.
+msgid "translationServers.add"
+msgstr "Add server"
+
+#. Label of the API key input in the translation server dialog.
+msgid "translationServers.apiKey"
+msgstr "API key"
+
+#. Helper text under the API key input in the translation server dialog.
+msgid "translationServers.apiKeyHelp"
+msgstr "Only for hosted providers. Stored encrypted and never shown again."
+
+#. Placeholder in the API key input when a key is already stored, hinting that typing replaces it.
+msgid "translationServers.apiKeyKept"
+msgstr "Saved. Type a new value to replace it."
+
+#. Label of the API URL input in the translation server dialog.
+msgid "translationServers.baseUrl"
+msgstr "API URL"
+
+#. Helper text under the API URL input; the server must speak the OpenAI-compatible API.
+msgid "translationServers.baseUrlHelp"
+msgstr "An OpenAI-compatible API, usually ending in /v1"
+
+#. Small detail line for a translation server in the list. Plural forms separated by |: one | other. {count} is the number of parallel requests.
+msgid "translationServers.concurrency"
+msgstr "{count} request at a time | {count} requests at a time"
+
+#. Success toast shown after a translation server was added. {name} is the server's name.
+msgid "translationServers.created"
+msgstr "Added {name}"
+
+#. Body text of the confirmation dialog for deleting a translation server.
+msgid "translationServers.deleteConfirm"
+msgstr "Machine translation stops using this server."
+
+#. Title of the confirmation dialog for deleting a translation server. {name} is the server's name.
+msgid "translationServers.deleteTitle"
+msgstr "Delete {name}?"
+
+#. Success toast shown after a translation server was deleted. {name} is the server's name.
+msgid "translationServers.deleted"
+msgstr "Translation server {name} deleted"
+
+#. Explanation under the 'Machine translation' heading in settings about translation model servers.
+msgid "translationServers.description"
+msgstr "Servers running a translation model, such as Hy-MT2 on llama.cpp. Requests are spread over all enabled servers."
+
+#. Title of the edit-server dialog for machine translation servers.
+msgid "translationServers.edit"
+msgstr "Edit server"
+
+#. Empty state text in the translation server list when none is configured.
+msgid "translationServers.empty"
+msgstr "No servers yet. Without one, the editor offers no machine translation."
+
+#. Screen-reader label for the toggle that enables a translation server. {name} is the server's name.
+msgid "translationServers.enableFor"
+msgstr "Use {name}"
+
+#. Label of the switch in the server dialog that allows the server to be used for machine translations.
+msgid "translationServers.enabled"
+msgstr "Use for translations"
+
+#. Short note in the translation server list meaning an API key is stored. Keep short.
+msgid "translationServers.hasApiKey"
+msgstr "API key saved"
+
+#. Label of the number input in the server dialog for the maximum parallel requests.
+msgid "translationServers.maxConcurrency"
+msgstr "Requests at a time"
+
+#. Helper text under the parallel requests input.
+msgid "translationServers.maxConcurrencyHelp"
+msgstr "How many texts the server translates at once"
+
+#. Label of the model name input in the translation server dialog.
+msgid "translationServers.model"
+msgstr "Model"
+
+#. Helper text under the model input, naming server software that needs or ignores it. Keep product names unchanged.
+msgid "translationServers.modelHelp"
+msgstr "Needed by vLLM and hosted providers; llama.cpp ignores it"
+
+#. Example placeholder in the translation server name input, e.g. a home server name.
+msgid "translationServers.namePlaceholder"
+msgstr "Homelab"
+
+#. Description of a checkbox in the server dialog that deletes the stored API key.
+msgid "translationServers.removeApiKey"
+msgstr "Remove the saved key"
+
+#. Label of the text field in the machine translation settings where admins set the style every machine translation is asked for.
+msgid "translationServers.style"
+msgstr "Translation style"
+
+#. Help text under the translation style field in the machine translation settings. Keep the example in quotes as a sample style.
+msgid "translationServers.styleHelp"
+msgstr "What machine translations should read like, e.g. “marketing website text”. Each language's form of address is added to it. Leave it empty for the default."
+
+#. Validation error under the translation style field when the style has line breaks, square brackets or more than 200 characters.
+msgid "translationServers.styleInvalid"
+msgstr "Use one line of at most 200 characters, without square brackets."
+
+#. Toast shown after an admin saved the translation style.
+msgid "translationServers.styleSaved"
+msgstr "Translation style saved"
+
+#. Result message after a successful translation server test. {translation} is the test translation of the sample text 'Save changes'; {ms} is the duration in milliseconds. The quoted sample text is English UI text.
+msgid "translationServers.testOk"
+msgstr "Works: “Save changes” → “{translation}” in {ms} ms"
+
+#. Section heading in settings for machine translation servers.
+msgid "translationServers.title"
+msgstr "Machine translation"
+
+#. Success toast shown after a translation server was saved. {name} is the server's name.
+msgid "translationServers.updated"
+msgstr "Saved {name}"
+
+#. Browser confirmation shown when leaving the page with unsaved edits. Plural forms separated by |: zero | one | other. {count} is the number of unsaved changes.
+msgid "unsaved.leaveConfirm"
+msgstr "You have {count} unsaved change. Leave this page and discard it? | You have {count} unsaved change. Leave this page and discard it? | You have {count} unsaved changes. Leave this page and discard them?"
+
+#. Button on the users page and title/submit button of the create-user dialog. Action.
+msgid "users.create"
+msgstr "Create user"
+
+#. Success toast shown after a user was created. {name} is the user's name.
+msgid "users.created"
+msgstr "User {name} was created"
+
+#. Tooltip/label of the delete button in a row of the users table.
+msgid "users.delete"
+msgstr "Delete user"
+
+#. Body text of the confirmation dialog for deleting a user.
+msgid "users.deleteConfirm"
+msgstr "Are you sure you want to delete this user?"
+
+#. Title of the confirmation dialog for deleting a user. {name} is the user's name.
+msgid "users.deleteTitle"
+msgstr "Delete user: {name}"
+
+#. Success toast shown after a user was deleted. {name} is the user's name.
+msgid "users.deleted"
+msgstr "User {name} was deleted"
+
+#. Page description of the users page.
+msgid "users.description"
+msgstr "Manage users and their roles"
+
+#. Tooltip/label of the edit button in the users table and title of the edit-user dialog. Action.
+msgid "users.edit"
+msgstr "Edit user"
+
+#. Heading of the empty state on the users page when there are no users.
+msgid "users.empty"
+msgstr "No users"
+
+#. Error alert on the users page when loading users failed. {error} is the technical error message.
+msgid "users.loadFailed"
+msgstr "Failed to load users: {error}"
+
+#. Loading indicator text on the users page while users are being fetched.
+msgid "users.loading"
+msgstr "Loading users…"
+
+#. Validation error in the user dialog when name or email is empty.
+msgid "users.nameEmailRequired"
+msgstr "Name and email are required."
+
+#. Helper text under the password input when editing a user: leaving it empty keeps the password.
+msgid "users.passwordKeep"
+msgstr "Leave empty to keep the current password."
+
+#. Validation error in the create-user dialog when no password was entered.
+msgid "users.passwordRequired"
+msgstr "A password is required for new users."
+
+#. Tooltip/screen-reader label of the icon button that restores a deleted user in the users table. Action.
+msgid "users.restore"
+msgstr "Restore user"
+
+#. Body text of the confirmation dialog for restoring a deleted user.
+msgid "users.restoreConfirm"
+msgstr "The user can sign in again with their roles."
+
+#. Title of the confirmation dialog for restoring a user. {name} is the user's name.
+msgid "users.restoreTitle"
+msgstr "Restore user: {name}"
+
+#. Success toast shown after a user was restored. {name} is the user's name.
+msgid "users.restored"
+msgstr "User {name} was restored"
+
+#. Placeholder of the role multi-select in the user dialog.
+msgid "users.selectRoles"
+msgstr "Select roles"
+
+#. Success toast shown after a user was updated. {name} is the user's name.
+msgid "users.updated"
+msgstr "User {name} was updated"
+
+#. Button on the webhooks page that opens the dialog to create a webhook.
+msgid "webhooks.add"
+msgstr "Add webhook"
+
+#. Result line of a webhook delivery. {status} is the HTTP status code and {ms} the response time in milliseconds.
+msgid "webhooks.answered"
+msgstr "{status} in {ms} ms"
+
+#. Label in the delivery dialog for how many delivery attempts were made.
+msgid "webhooks.attempts"
+msgstr "Attempts"
+
+#. Count of events collected for the next digest. Plural forms separated by |: one | other. {count} is the number of events.
+msgid "webhooks.collected"
+msgstr "{count} event waiting | {count} events waiting"
+
+#. Toast shown after a webhook was created. {name} is the webhook's name.
+msgid "webhooks.created"
+msgstr "Added {name}"
+
+#. Body text of the confirmation dialog for deleting a webhook.
+msgid "webhooks.deleteConfirm"
+msgstr "The webhook and its deliveries are removed. No more events are sent to its URL."
+
+#. Title of the confirmation dialog for deleting a webhook, phrased as a question. {name} is the webhook's name.
+msgid "webhooks.deleteTitle"
+msgstr "Delete {name}?"
+
+#. Toast shown after a webhook was deleted. {name} is the webhook's name.
+msgid "webhooks.deleted"
+msgstr "Webhook {name} deleted"
+
+#. Title of the dialog showing details of a webhook delivery. Noun.
+msgid "webhooks.deliveryTitle"
+msgstr "Delivery"
+
+#. Short description of a webhook's custom digest schedule in the webhook list. {cron} is the cron expression.
+msgid "webhooks.describe.custom"
+msgstr "Digest on cron {cron} (UTC)"
+
+#. Short description of a daily digest webhook in the list. {time} is the time of day.
+msgid "webhooks.describe.daily"
+msgstr "Daily digest at {time} UTC"
+
+#. Short description of an hourly digest webhook in the list.
+msgid "webhooks.describe.hourly"
+msgstr "Hourly digest"
+
+#. Description in the webhook list for a webhook that sends each event immediately.
+msgid "webhooks.describe.immediate"
+msgstr "Each event right away"
+
+#. Short description of a weekly digest webhook in the list. {day}s is the plural weekday name; {time} is the time of day.
+msgid "webhooks.describe.weekly"
+msgstr "Weekly digest, every {day} at {time} UTC"
+
+#. Subtitle of the webhooks page describing what webhooks do.
+msgid "webhooks.description"
+msgstr "Send events, such as approved translations, to other services as HTTP requests."
+
+#. Title of the dialog for editing an existing webhook.
+msgid "webhooks.edit"
+msgstr "Edit webhook"
+
+#. Empty-state heading on the webhooks page when no webhooks exist.
+msgid "webhooks.empty"
+msgstr "No webhooks yet"
+
+#. Empty-state explanation on the webhooks page suggesting what webhooks can be used for.
+msgid "webhooks.emptyHint"
+msgstr "Add one to let your CI, chat or other services know when translations are approved, entries are added or tasks end."
+
+#. Label of the switch that activates a webhook in the webhook form. Status, not an action.
+msgid "webhooks.enabled"
+msgstr "Active"
+
+#. Helper text under the active switch in the webhook form, explaining what inactive webhooks do.
+msgid "webhooks.enabledHelp"
+msgstr "Inactive webhooks get no events, and deliveries still waiting are dropped. Tests are sent anyway."
+
+#. Name of the digest event type (several events bundled into one message), shown in the delivery list.
+msgid "webhooks.event.WEBHOOK_EVENT_DIGEST"
+msgstr "Digest"
+
+#. Webhook event name (checkbox label and delivery list): new entries were added.
+msgid "webhooks.event.WEBHOOK_EVENT_ENTRIES_CREATED"
+msgstr "Entries added"
+
+#. Event name for a test delivery sent to check the webhook. Noun.
+msgid "webhooks.event.WEBHOOK_EVENT_PING"
+msgstr "Test"
+
+#. Webhook event name (checkbox label and delivery list): a task run failed.
+msgid "webhooks.event.WEBHOOK_EVENT_TASK_RUN_FAILED"
+msgstr "Task run failed"
+
+#. Webhook event name (checkbox label and delivery list): a task run succeeded.
+msgid "webhooks.event.WEBHOOK_EVENT_TASK_RUN_SUCCEEDED"
+msgstr "Task run succeeded"
+
+#. Webhook event name (checkbox label and delivery list): translations were approved.
+msgid "webhooks.event.WEBHOOK_EVENT_TRANSLATIONS_APPROVED"
+msgstr "Translations approved"
+
+#. Webhook event name (checkbox label and delivery list): translations are waiting for approval.
+msgid "webhooks.event.WEBHOOK_EVENT_TRANSLATIONS_AWAITING_APPROVAL"
+msgstr "Translations awaiting approval"
+
+#. Webhook event name (checkbox label and delivery list): translations were rejected.
+msgid "webhooks.event.WEBHOOK_EVENT_TRANSLATIONS_REJECTED"
+msgstr "Translations rejected"
+
+#. Event name shown when a delivery's event type is unknown.
+msgid "webhooks.event.WEBHOOK_EVENT_UNSPECIFIED"
+msgstr "Unknown"
+
+#. Helper text under the 'Entries added' event checkbox, saying how entries can be created.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_ENTRIES_CREATED"
+msgstr "In the app or by an import."
+
+#. Helper text under the 'Task run failed' event checkbox, describing the data sent.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_TASK_RUN_FAILED"
+msgstr "With the error, also when a run stopped responding."
+
+#. Helper text under the 'Task run succeeded' event checkbox, describing the data sent.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_TASK_RUN_SUCCEEDED"
+msgstr "With what the run did, e.g. the pull request of a git export."
+
+#. Helper text under the 'Translations approved' event checkbox, describing when it fires and the data sent.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_TRANSLATIONS_APPROVED"
+msgstr "In the editor or by an approving import, with the approved texts."
+
+#. Helper text under the 'Translations awaiting approval' event checkbox, describing when it fires.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_TRANSLATIONS_AWAITING_APPROVAL"
+msgstr "New or changed in the editor, by machine translation, or by an import that doesn't approve."
+
+#. Helper text under the 'Translations rejected' event checkbox, describing the data sent.
+msgid "webhooks.eventHelp.WEBHOOK_EVENT_TRANSLATIONS_REJECTED"
+msgstr "With the texts and the reviewer's comment."
+
+#. Label in the delivery dialog for the delivery's event type. Keep short.
+msgid "webhooks.eventLabel"
+msgstr "Event"
+
+#. Label of the event checkbox group in the webhook form.
+msgid "webhooks.events"
+msgstr "Events"
+
+#. Validation error shown in the webhook form when no event is selected.
+msgid "webhooks.eventsRequired"
+msgstr "Choose at least one event."
+
+#. Option in the webhook payload format dropdown. Product name Discord.
+msgid "webhooks.format.WEBHOOK_FORMAT_DISCORD"
+msgstr "Discord"
+
+#. Option in the webhook payload format dropdown. Data format name.
+msgid "webhooks.format.WEBHOOK_FORMAT_JSON"
+msgstr "JSON"
+
+#. Option in the webhook payload format dropdown. Product name Slack.
+msgid "webhooks.format.WEBHOOK_FORMAT_SLACK"
+msgstr "Slack"
+
+#. Fallback payload format name when none is set; shown as the default JSON.
+msgid "webhooks.format.WEBHOOK_FORMAT_UNSPECIFIED"
+msgstr "JSON"
+
+#. Helper text under the Discord format option.
+msgid "webhooks.formatHelp.WEBHOOK_FORMAT_DISCORD"
+msgstr "A short message, for a Discord channel's webhook."
+
+#. Helper text under the JSON format option.
+msgid "webhooks.formatHelp.WEBHOOK_FORMAT_JSON"
+msgstr "The event with all its details, for your own services."
+
+#. Helper text under the Slack format option; mentions compatible chat services such as Mattermost.
+msgid "webhooks.formatHelp.WEBHOOK_FORMAT_SLACK"
+msgstr "A short message, for Slack and chat services that take Slack's webhooks, such as Mattermost."
+
+#. Warning in the webhook form when the URL belongs to a service that accepts only one format. {format} is the format name (e.g. Slack).
+msgid "webhooks.formatMismatch"
+msgstr "This address only takes the {format} format and turns others down."
+
+#. Button in the webhook form that generates a random signing secret.
+msgid "webhooks.generateSecret"
+msgstr "Generate secret"
+
+#. Button on a webhook in the list that collapses its deliveries.
+msgid "webhooks.hideDeliveries"
+msgstr "Hide deliveries"
+
+#. Status badge on a webhook in the list for a webhook that is turned off. Keep short; not an action.
+msgid "webhooks.inactive"
+msgstr "Inactive"
+
+#. Short label in the delivery dialog, followed by a relative time of the last attempt. Keep short.
+msgid "webhooks.lastAttempt"
+msgstr "last"
+
+#. Label on a webhook in the list for its last delivery; followed by a relative time.
+msgid "webhooks.lastDelivery"
+msgstr "Last delivery"
+
+#. Error message shown when the webhook list could not be loaded. {error} is the error message.
+msgid "webhooks.listFailed"
+msgstr "Webhooks could not be loaded: {error}"
+
+#. Loading message shown while the webhook list loads. Ends with an ellipsis.
+msgid "webhooks.loading"
+msgstr "Loading webhooks…"
+
+#. Placeholder example in the webhook name field.
+msgid "webhooks.namePlaceholder"
+msgstr "e.g. CI build"
+
+#. Text on a webhook in the list when nothing has been sent yet.
+msgid "webhooks.neverDelivered"
+msgstr "Nothing sent yet"
+
+#. Label in the delivery dialog for when the next retry will happen; followed by a relative time.
+msgid "webhooks.nextAttempt"
+msgstr "Next attempt"
+
+#. Short label in a webhook's schedule line, followed by a relative time of the next digest. Keep short.
+msgid "webhooks.nextDigest"
+msgstr "next"
+
+#. Empty-state text in a webhook's delivery list.
+msgid "webhooks.noDeliveries"
+msgstr "No deliveries yet."
+
+#. Label in the delivery dialog for the request body that was sent.
+msgid "webhooks.payload"
+msgstr "Request body"
+
+#. Button in the delivery dialog that sends the delivery again.
+msgid "webhooks.redeliver"
+msgstr "Send again"
+
+#. Toast shown after a delivery was sent again.
+msgid "webhooks.redelivered"
+msgstr "Sent again"
+
+#. Label in the delivery dialog for the server's response status.
+msgid "webhooks.response"
+msgstr "Response"
+
+#. Label in the delivery dialog for the body of the server's response.
+msgid "webhooks.responseBody"
+msgstr "Response body"
+
+#. Short note next to a failed delivery, followed by a relative time of the next try (e.g. "tried again in 5 minutes"). Keep short.
+msgid "webhooks.retrying"
+msgstr "tried again"
+
+#. Option in the webhook send-timing dropdown: digest on a custom cron schedule.
+msgid "webhooks.schedule.custom"
+msgstr "Digest on a custom schedule"
+
+#. Option in the webhook send-timing dropdown: one digest per day.
+msgid "webhooks.schedule.daily"
+msgstr "Daily digest"
+
+#. Helper text in the webhook form for digest schedules; times are in UTC.
+msgid "webhooks.schedule.digestHelp"
+msgstr "Events are collected and sent as one message at these times (UTC). Nothing is sent when nothing happened."
+
+#. Option in the webhook send-timing dropdown: one digest per hour.
+msgid "webhooks.schedule.hourly"
+msgstr "Hourly digest"
+
+#. Label of the send-timing dropdown in the webhook form.
+msgid "webhooks.schedule.label"
+msgstr "When to send"
+
+#. Option in the webhook send-timing dropdown: each event is sent immediately.
+msgid "webhooks.schedule.none"
+msgstr "Right away"
+
+#. Helper text shown when immediate sending is selected in the webhook form.
+msgid "webhooks.schedule.noneHelp"
+msgstr "Each event goes out as it happens. In the editor, every saved translation is an event of its own."
+
+#. Option in the webhook send-timing dropdown: one digest per week.
+msgid "webhooks.schedule.weekly"
+msgstr "Weekly digest"
+
+#. Label of the field for the webhook signing secret.
+msgid "webhooks.secret"
+msgstr "Signing secret"
+
+#. Helper text under the signing secret field. Keep the header name X-Parlance-Signature and the sha256= prefix unchanged.
+msgid "webhooks.secretHelp"
+msgstr "Optional. Each delivery then carries the header X-Parlance-Signature: sha256= followed by the HMAC-SHA256 of the body. Stored encrypted and never shown again, so copy it before saving."
+
+#. Placeholder of the secret field when a secret is already saved; typing replaces it.
+msgid "webhooks.secretKept"
+msgstr "Saved. Type a new value to replace it."
+
+#. Button on a webhook in the list that expands its deliveries.
+msgid "webhooks.showDeliveries"
+msgstr "Show deliveries"
+
+#. Small badge on a webhook in the list shown when it has a signing secret. Keep short; adjective.
+msgid "webhooks.signed"
+msgstr "Signed"
+
+#. Status badge for a delivery collected for a later digest. Keep short.
+msgid "webhooks.status.WEBHOOK_DELIVERY_STATUS_COLLECTED"
+msgstr "For digest"
+
+#. Status badge for a delivery that failed. Not an action.
+msgid "webhooks.status.WEBHOOK_DELIVERY_STATUS_FAILED"
+msgstr "Failed"
+
+#. Status badge for a delivery waiting to be sent. Not an action.
+msgid "webhooks.status.WEBHOOK_DELIVERY_STATUS_PENDING"
+msgstr "Pending"
+
+#. Status badge for a delivery that was sent successfully. Not an action.
+msgid "webhooks.status.WEBHOOK_DELIVERY_STATUS_SUCCEEDED"
+msgstr "Delivered"
+
+#. Status badge for a delivery with an unknown status.
+msgid "webhooks.status.WEBHOOK_DELIVERY_STATUS_UNSPECIFIED"
+msgstr "Unknown"
+
+#. Button that sends a test delivery to the webhook's URL.
+msgid "webhooks.test"
+msgstr "Send test"
+
+#. Toast shown after a test delivery succeeded. {status} is the HTTP status code and {ms} the response time in milliseconds.
+msgid "webhooks.testOk"
+msgstr "Delivered: {status} in {ms} ms"
+
+#. Toast shown after a webhook was saved. {name} is the webhook's name.
+msgid "webhooks.updated"
+msgstr "Webhook {name} saved"
+
+#. Label of the URL field in the webhook form.
+msgid "webhooks.url"
+msgstr "URL"
+
+#. Helper text under the webhook URL field.
+msgid "webhooks.urlHelp"
+msgstr "Each event is posted here as JSON. Addresses in your own network work too."

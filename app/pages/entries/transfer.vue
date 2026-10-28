@@ -1,0 +1,77 @@
+<script setup lang="ts">
+import { api } from "~/lib/api";
+import { Alert, Button, Card, Tabs } from "@thkzt/eunoia";
+
+type Action = "import" | "export";
+
+const route = useRoute();
+const router = useRouter();
+const { t } = useI18n();
+const { getErrorMessage } = useErrorHelper();
+const { can } = usePermission();
+const canImport = computed(() => can.value("import_entry"));
+const canExport = computed(() => can.value("export_entry"));
+const {
+  items: locales,
+  data,
+  isLoading,
+  error,
+  refetch,
+} = useAllPages(api.locales.list, (response) => response.locales);
+const isPending = ref(false);
+
+// Kept in the query so links and reloads land on the same tab.
+const action = computed<Action>({
+  get: () =>
+    (route.query.tab === "export" && canExport.value) || !canImport.value
+      ? "export"
+      : "import",
+  set: (tab) => router.replace({ query: { ...route.query, tab } }),
+});
+// Only lock the other tab while a request runs; the active one must stay mounted.
+const tabs = computed(() =>
+  (["import", "export"] as const)
+    .filter((value) => (value === "import" ? canImport.value : canExport.value))
+    .map((value) => ({
+      value,
+      label: t(
+        value === "import" ? "transfer.importTab" : "transfer.exportTab",
+      ),
+      disabled: isPending.value && action.value !== value,
+    })),
+);
+
+usePage(() => ({
+  width: "extra-wide",
+  title: t("nav.transfer"),
+  description: t("transfer.pageDescription"),
+  showHeader: false,
+}));
+</script>
+
+<template>
+  <div v-if="isLoading && !data" class="py-12 text-center text-neutral-600">
+    {{ t("locales.loading") }}
+  </div>
+  <Alert v-else-if="error && !data" variant="danger" persistent>
+    <p>{{ t("locales.loadFailed", { error: getErrorMessage(error) }) }}</p>
+    <Button ghost @click="() => refetch()">{{ t("common.tryAgain") }}</Button>
+  </Alert>
+  <Card v-else class="max-w-2xl">
+    <Tabs
+      v-model="action"
+      :items="tabs"
+      :aria-label="t('nav.transfer')"
+      panel-class="pt-4"
+    >
+      <template #default="{ item }">
+        <EntryTransferForm
+          :key="item.value"
+          v-model:pending="isPending"
+          :action="item.value as Action"
+          :locales="locales"
+        />
+      </template>
+    </Tabs>
+  </Card>
+</template>
