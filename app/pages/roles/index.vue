@@ -10,16 +10,14 @@ import {
   Pagination,
   type DataTableColumn,
 } from "@thkzt/eunoia";
-import {
-  groupPermissionsByResource,
-  humanizePermission,
-} from "~/lib/permissions";
+import { groupPermissionsByResource } from "~/lib/permissions";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 import type { Permission } from "~/lib/api/schemas/parlance/v1/PermissionSchema";
 import DeleteDialog from "~/components/role/DeleteDialog.vue";
 import ViewPermissionsDialog from "~/components/role/ViewPermissionsDialog.vue";
 
 const { t } = useI18n();
+const { resourceLabel, actionLabel } = usePermissionLabels();
 const { can } = usePermission();
 
 usePage(() => ({
@@ -155,10 +153,8 @@ const tableItems = computed(() =>
         <template #permissions="{ item }">
           <div v-if="item.permissions?.length" class="space-y-1">
             <div v-if="item.summary" class="flex flex-wrap gap-1 items-center">
-              <span
-                class="text-xs text-neutral-500 dark:text-neutral-400 capitalize"
-              >
-                {{ humanizePermission(item.summary.firstResource) }}:
+              <span class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{ resourceLabel(item.summary.firstResource) }}:
               </span>
               <Badge
                 v-for="permission in item.summary.firstGroup"
@@ -166,7 +162,7 @@ const tableItems = computed(() =>
                 variant="secondary"
                 size="sm"
               >
-                {{ humanizePermission(permission.action ?? "") }}
+                {{ actionLabel(permission.action ?? "") }}
               </Badge>
               <button
                 v-if="

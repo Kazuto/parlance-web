@@ -9,10 +9,7 @@ import {
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
 import { api } from "~/lib/api";
-import {
-  groupPermissionsByResource,
-  humanizePermission,
-} from "~/lib/permissions";
+import { groupPermissionsByResource } from "~/lib/permissions";
 import type { Role } from "~/lib/api/schemas/parlance/v1/RoleSchema";
 
 // Without a role the dialog creates one; with a role it edits that role.
@@ -25,14 +22,12 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const { showSuccess } = useErrorHelper();
-const { placeholder: namePlaceholder } = useTypingPlaceholder([
-  "Translator",
-  "Reviewer",
-  "Admin",
-  "Developer",
-  "Editor",
-  "Manager",
-]);
+const { resourceLabel, actionLabel } = usePermissionLabels();
+const { placeholder: namePlaceholder } = useTypingPlaceholder(() =>
+  ["translator", "reviewer", "admin", "developer", "editor", "manager"].map(
+    (example) => t(`roles.nameExample.${example}`),
+  ),
+);
 
 const name = ref("");
 const description = ref("");
@@ -226,9 +221,7 @@ function handleSubmit() {
                 @update:model-value="toggleResourceGroup(resource)"
               >
                 <template #description>
-                  <span class="font-medium capitalize">{{
-                    humanizePermission(resource)
-                  }}</span>
+                  <span class="font-medium">{{ resourceLabel(resource) }}</span>
                 </template>
               </Checkbox>
             </div>
@@ -243,11 +236,7 @@ function handleSubmit() {
                 @update:model-value="togglePermission(permission.id)"
               >
                 <template #description>
-                  {{
-                    humanizePermission(
-                      permission.action || permission.name || "",
-                    )
-                  }}
+                  {{ actionLabel(permission.action || permission.name || "") }}
                 </template>
               </Checkbox>
             </div>

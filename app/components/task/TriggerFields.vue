@@ -26,14 +26,17 @@ const presetOptions = computed(() =>
     <legend class="mb-2 text-sm font-semibold">
       {{ t("tasks.triggers") }}
     </legend>
-    <div class="grid gap-3 sm:grid-cols-3">
-      <Select
-        v-model="schedule.preset"
-        teleport-to="body"
-        :options="presetOptions"
-        :disabled
-        >{{ t("tasks.schedule.label") }}</Select
-      >
+    <Select
+      v-model="schedule.preset"
+      teleport-to="body"
+      :options="presetOptions"
+      :disabled
+      >{{ t("tasks.schedule.label") }}</Select
+    >
+    <div
+      v-if="schedule.preset === 'daily' || schedule.preset === 'weekly'"
+      class="grid gap-3 sm:grid-cols-2"
+    >
       <Select
         v-if="schedule.preset === 'weekly'"
         v-model="schedule.weekday"
@@ -43,23 +46,21 @@ const presetOptions = computed(() =>
         >{{ t("schedule.weekday") }}</Select
       >
       <Select
-        v-if="schedule.preset === 'daily' || schedule.preset === 'weekly'"
         v-model="schedule.hour"
         teleport-to="body"
         :options="hourOptions"
         :disabled
         >{{ t("schedule.time") }}</Select
       >
-      <Input
-        v-if="schedule.preset === 'custom'"
-        v-model="schedule.custom"
-        class="sm:col-span-2"
-        :disabled
-        placeholder="30 2 * * 1-5"
-        :helper="t('schedule.customHelp')"
-        >{{ t("schedule.cron") }}</Input
-      >
     </div>
+    <Input
+      v-if="schedule.preset === 'custom'"
+      v-model="schedule.custom"
+      :disabled
+      placeholder="30 2 * * 1-5"
+      :helper="t('schedule.customHelp')"
+      >{{ t("schedule.cron") }}</Input
+    >
     <Checkbox
       v-model="onApproval"
       :disabled

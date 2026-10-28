@@ -52,10 +52,11 @@ watch([file, mode, approve], () => {
 });
 
 // The settings and file, then the preview to confirm; going back drops the preview.
-const steps = [
+// Labels are computed so they follow the language, which may load after mounting.
+const steps = computed(() => [
   { label: t("transfer.stepFile") },
   { label: t("transfer.stepReview") },
-];
+]);
 const step = computed({
   get: () => (preview.value ? 1 : 0),
   set: (value) => {
@@ -69,7 +70,7 @@ const fileName = (code: string) => {
   return name ? `${name} (${code})` : code;
 };
 
-const modeOptions = [
+const modeOptions = computed(() => [
   {
     label: t("import.modes.createOrUpdate"),
     value: "IMPORT_MODE_CREATE_OR_UPDATE" as ImportMode,
@@ -86,7 +87,7 @@ const modeOptions = [
     label: t("import.modes.replaceAll"),
     value: "IMPORT_MODE_REPLACE_ALL" as ImportMode,
   },
-];
+]);
 
 async function handleSubmit() {
   if (!file.value) {

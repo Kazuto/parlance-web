@@ -69,11 +69,11 @@ const selectedScopeNames = computed(() =>
     .map((option) => option.label)
     .join(", "),
 );
-const formatOptions = [
+const formatOptions = computed(() => [
   { label: t("transfer.json"), value: "json" },
   { label: t("transfer.php"), value: "php" },
   { label: t("transfer.po"), value: "po" },
-];
+]);
 const fileAccept = computed(() =>
   format.value === "json"
     ? ".json,application/json"
@@ -81,15 +81,15 @@ const fileAccept = computed(() =>
       ? ".po,text/x-gettext-translation"
       : ".php",
 );
-const steps = [
+const steps = computed(() => [
   { label: t("transfer.stepFile") },
   { label: t("transfer.stepReview") },
-];
-const modeOptions = [
+]);
+const modeOptions = computed(() => [
   { label: t("transfer.upsert"), value: "IMPORT_MODE_CREATE_OR_UPDATE" },
   { label: t("transfer.createOnly"), value: "IMPORT_MODE_CREATE_ONLY" },
   { label: t("transfer.updateOnly"), value: "IMPORT_MODE_UPDATE_ONLY" },
-];
+]);
 
 // Locales may still be loading when the form mounts, so pick the default once they arrive.
 watch(

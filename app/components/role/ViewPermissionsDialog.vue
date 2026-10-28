@@ -13,6 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { resourceLabel, actionLabel } = usePermissionLabels();
 
 const permissionsByResource = computed(() => {
   if (!props.role?.permissions) return {};
@@ -44,9 +45,9 @@ const resourceKeys = computed(() =>
         class="border-b border-neutral-200 dark:border-neutral-700 last:border-0 pb-3"
       >
         <h3
-          class="font-medium text-sm text-neutral-700 dark:text-neutral-300 mb-2 capitalize"
+          class="font-medium text-sm text-neutral-700 dark:text-neutral-300 mb-2"
         >
-          {{ resource }}
+          {{ resourceLabel(resource) }}
         </h3>
         <div class="flex flex-wrap gap-1.5">
           <Badge
@@ -54,7 +55,7 @@ const resourceKeys = computed(() =>
             :key="permission.id ?? undefined"
             variant="secondary"
           >
-            {{ permission.action }}
+            {{ actionLabel(permission.action ?? "") }}
           </Badge>
         </div>
       </div>
