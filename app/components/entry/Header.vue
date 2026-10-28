@@ -39,8 +39,11 @@ async function copyKey(key: string) {
 </script>
 
 <template>
-  <div class="flex items-center justify-between gap-4">
-    <div class="min-w-0">
+  <!-- On phones the key gets the whole width; progress and actions go below. -->
+  <div
+    class="flex items-center justify-between gap-4 max-md:flex-wrap max-md:gap-2"
+  >
+    <div class="min-w-0 max-md:w-full">
       <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 class="min-w-0 font-mono font-semibold break-all">
           <Tooltip

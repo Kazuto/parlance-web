@@ -10,6 +10,8 @@ import {
 } from "@thkzt/eunoia";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
+import { useCompactEditor } from "~/composables/editor/useCompactEditor";
+import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
 import {
@@ -170,12 +172,14 @@ async function handleCreated(terminology: Terminology) {
     key: terminology.id,
     label: terminology.term ?? "",
   };
+  compactEditor.show(terminology.id);
 }
 
 function selectTerminology(item: SplitViewItem) {
   if (isSaving.value) return;
   pinnedTerminologyId.value = undefined;
   selectedTerminology.value = item;
+  compactEditor.show(String(item.key));
 }
 
 async function handleDeleted(id: string) {
@@ -304,12 +308,45 @@ watch(
   { immediate: true },
 );
 
+// On phones the list and the open term take turns; see useCompactEditor.
+const compactEditor = useCompactEditor({
+  items: splitViewItems,
+  selected: selectedTerminology,
+});
+const selectedIndex = computed(() =>
+  splitViewItems.value.findIndex(
+    (item) => item.key === selectedTerminology.value?.key,
+  ),
+);
+// The list and the editor side by side, or on phones the one that is open.
+const splitViewLayout = computed(() => {
+  if (!compactEditor.compact.value)
+    return "grid-cols-[minmax(200px,250px)_minmax(0,1fr)]";
+
+  return compactEditor.editorOpen.value
+    ? "grid-cols-[minmax(0,1fr)] [&>*:first-child]:hidden"
+    : "grid-cols-[minmax(0,1fr)] [&>*:last-child]:hidden [&>*:first-child]:border-r-0";
+});
+
 const {
   data: detailData,
   isLoading: isDetailLoading,
   error: detailError,
   refetch: refetchDetail,
 } = useTerminologyDetail(selectedTerminologyId);
+
+// Previous and next term, from the buttons above the open term on phones.
+const navigation = useEntryNavigation({
+  items: splitViewItems,
+  selected: selectedTerminology,
+  select: selectTerminology,
+  hasMore: () => !!hasNextPage.value,
+  loadMore: () => fetchNextPage(),
+  ready: () => !isDetailLoading.value,
+  fieldId: (terminologyId, localeId) =>
+    `terminology-${terminologyId}-${localeId}`,
+  focusedLocaleId: () => undefined,
+});
 
 function handleTerminologyUpdated(terminology: Terminology) {
   if (terminology.id) {
@@ -496,7 +533,10 @@ async function handleSave() {
     <div
       class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
-      <div class="w-full sm:w-56" @keydown="onSearchKeydown">
+      <div
+        class="min-w-0 flex-1 md:w-56 md:flex-none"
+        @keydown="onSearchKeydown"
+      >
         <Input
           v-model="search"
           dense
@@ -513,13 +553,16 @@ async function handleSave() {
         :disabled="isSaving"
         @clear="clearFilters"
       />
-      <Chip
-        dense
-        variant="secondary"
-        :title="selectedLanguageLabels.join(', ')"
-      >
-        {{ languageSummary }}
-      </Chip>
+      <!-- On phones the chip gets a row of its own, leaving the search room. -->
+      <div class="flex min-w-0 items-center max-md:basis-full">
+        <Chip
+          dense
+          variant="secondary"
+          :title="selectedLanguageLabels.join(', ')"
+        >
+          {{ languageSummary }}
+        </Chip>
+      </div>
       <EditorRefreshStatus
         :refreshing="isFetching && !isFetchingNextPage && !isSaving"
         :failed="!!error"
@@ -534,7 +577,8 @@ async function handleSave() {
         :has-more="hasNextPage"
         :loading="isFetchingNextPage"
         :total="terminologyTotal"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
+        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent"
+        :class="splitViewLayout"
         @select="selectTerminology"
         @end-reached="fetchNextPage()"
       >
@@ -566,8 +610,25 @@ async function handleSave() {
           />
         </template>
         <template #header="{ item }">
-          <div class="flex items-center justify-between gap-4">
-            <div class="min-w-0">
+          <EditorCompactNav
+            v-if="compactEditor.editorOpen.value"
+            :back-label="t('nav.glossary')"
+            :previous-label="t('terminologies.previous')"
+            :next-label="t('terminologies.next')"
+            :has-previous="selectedIndex > 0"
+            :has-next="
+              selectedIndex < splitViewItems.length - 1 || !!hasNextPage
+            "
+            :disabled="isSaving"
+            @back="compactEditor.close()"
+            @previous="navigation.previous()"
+            @next="navigation.next()"
+          />
+          <!-- On phones the term gets the whole width; the actions go below. -->
+          <div
+            class="flex items-center justify-between gap-4 max-md:flex-wrap max-md:gap-2"
+          >
+            <div class="min-w-0 max-md:w-full">
               <h2 class="min-w-0 font-semibold break-all">
                 {{ item?.label ?? t("terminologies.selectTerminology") }}
               </h2>
@@ -715,39 +776,54 @@ async function handleSave() {
           </div>
         </template>
       </SplitView>
-      <TerminologyContextPanel
-        v-if="contextOpen && activeLocaleId && selectedTerminology"
-        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
-        :terminology-id="String(selectedTerminology.key)"
-        :locale-id="activeLocaleId"
-        :locale-name="activeLocaleName"
+      <EditorContextFrame
+        v-if="activeLocaleId && selectedTerminology"
+        :compact="compactEditor.compact.value"
+        :open="contextOpen"
+        :title="`${t('context.title')} · ${activeLocaleName}`"
         @close="contextOpen = false"
-      />
+      >
+        <TerminologyContextPanel
+          :sheet="compactEditor.compact.value"
+          :class="
+            compactEditor.compact.value
+              ? ''
+              : 'flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]'
+          "
+          :terminology-id="String(selectedTerminology.key)"
+          :locale-id="activeLocaleId"
+          :locale-name="activeLocaleName"
+          @close="contextOpen = false"
+        />
+      </EditorContextFrame>
     </div>
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
       <span class="text-xs text-neutral-500 dark:text-neutral-400">
-        <template v-if="terminologyTotal !== undefined"
-          >{{
+        <!-- On phones only what is unsaved, to leave room for the buttons. -->
+        <span class="max-md:hidden">
+          <template v-if="terminologyTotal !== undefined"
+            >{{
+              t(
+                "terminologies.count",
+                { count: terminologyTotal },
+                terminologyTotal,
+              )
+            }}
+            ·
+          </template>
+          {{
             t(
-              "terminologies.count",
-              { count: terminologyTotal },
-              terminologyTotal,
+              "common.selectedLanguages",
+              { count: selectedLocaleIds.length },
+              selectedLocaleIds.length,
             )
           }}
-          ·
-        </template>
-        {{
-          t(
-            "common.selectedLanguages",
-            { count: selectedLocaleIds.length },
-            selectedLocaleIds.length,
-          )
-        }}
+        </span>
         <span
           v-if="unsavedLocaleIds.length"
-          class="ml-2 text-yellow-700 dark:text-amber-300"
+          class="md:ml-2 text-yellow-700 dark:text-amber-300"
           >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
           }}{{
             unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
@@ -758,6 +834,8 @@ async function handleSave() {
       </span>
       <EditorWorkspaceActions
         v-can="{ any: ['create_definition', 'update_definition'] }"
+        :compact="compactEditor.compact.value"
+        :editor-open="compactEditor.editorOpen.value"
         :unsaved-count="allUnsavedCount"
         :can-save="
           !!selectedTerminologyData && !!selectedUnsavedLocaleIds.length

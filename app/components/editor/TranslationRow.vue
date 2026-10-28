@@ -119,16 +119,18 @@ const contextButtonClass = computed(() => {
     class="grid items-start gap-3 rounded-[18px] py-2.5 pr-2.5 pl-3.5 squircle"
     :class="[
       withoutContext
-        ? 'grid-cols-[150px_minmax(0,1fr)] max-sm:grid-cols-1'
-        : 'grid-cols-[150px_minmax(0,1fr)_auto] max-sm:grid-cols-[minmax(0,1fr)_auto]',
+        ? 'grid-cols-[150px_minmax(0,1fr)] max-md:grid-cols-1'
+        : 'grid-cols-[150px_minmax(0,1fr)_auto] max-md:grid-cols-[minmax(0,1fr)_auto]',
       isDefault
         ? 'bg-white shadow-sm dark:bg-neutral-800/60 dark:shadow-none'
         : '',
     ]"
   >
+    <!-- On phones the language and the buttons share the first line, so the field
+         below gets the whole width. -->
     <div
       class="flex min-w-0 flex-col gap-1"
-      :class="{ 'max-sm:col-span-2': !withoutContext }"
+      :class="{ 'max-md:col-start-1 max-md:row-start-1': !withoutContext }"
     >
       <label
         :for="inputId"
@@ -185,7 +187,10 @@ const contextButtonClass = computed(() => {
     <!-- Unsaved changes mark the field itself: a yellow border and, like an input
          append, a revert button aligned with the first line. The field's 20px lines
          and 10px padding let a 20px marker at top-2.5 sit centered on that line. -->
-    <div class="relative min-w-0">
+    <div
+      class="relative min-w-0"
+      :class="{ 'max-md:col-span-2 max-md:row-start-2': !withoutContext }"
+    >
       <textarea
         :id="inputId"
         v-model="value"
@@ -265,7 +270,10 @@ const contextButtonClass = computed(() => {
         />
       </Tooltip>
     </div>
-    <div v-if="!withoutContext" class="flex items-center gap-1">
+    <div
+      v-if="!withoutContext"
+      class="flex items-center gap-1 max-md:col-start-2 max-md:row-start-1"
+    >
       <template v-if="reviewable">
         <BaseIconButton
           icon="check"

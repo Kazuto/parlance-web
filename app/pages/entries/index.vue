@@ -11,6 +11,7 @@ import {
 import { useEditorCommands } from "~/composables/editor/useEditorCommands";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
+import { useCompactEditor } from "~/composables/editor/useCompactEditor";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
@@ -250,12 +251,14 @@ async function handleCreated(entry: Entry) {
   knownEntries.value[entry.id] = entry;
   pinnedEntryId.value = entry.id;
   selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
+  compactEditor.show(entry.id);
 }
 
 function selectEntry(item: SplitViewItem) {
   if (isSaving.value) return;
   pinnedEntryId.value = undefined;
   selectedEntry.value = item;
+  compactEditor.show(String(item.key));
 }
 
 // Entries ticked in the list for bulk scope edits. Kept across filter changes so
@@ -357,6 +360,26 @@ watch(
   },
   { immediate: true },
 );
+
+// On phones the list and the open entry take turns; see useCompactEditor.
+const compactEditor = useCompactEditor({
+  items: splitViewItems,
+  selected: selectedEntry,
+});
+const selectedIndex = computed(() =>
+  splitViewItems.value.findIndex(
+    (item) => item.key === selectedEntry.value?.key,
+  ),
+);
+// The list and the editor side by side, or on phones the one that is open.
+const splitViewLayout = computed(() => {
+  if (!compactEditor.compact.value)
+    return "grid-cols-[minmax(200px,250px)_minmax(0,1fr)]";
+
+  return compactEditor.editorOpen.value
+    ? "grid-cols-[minmax(0,1fr)] [&>*:first-child]:hidden"
+    : "grid-cols-[minmax(0,1fr)] [&>*:last-child]:hidden [&>*:first-child]:border-r-0";
+});
 
 const selectedEntryId = computed(() =>
   selectedEntry.value ? String(selectedEntry.value.key) : undefined,
@@ -744,6 +767,8 @@ function applyContextText(text: string) {
   if (!entryId || !localeId || isSaving.value || !canUpdate.value) return;
 
   setLocalizationForm(entryId, localeId, text);
+  // On phones the sheet covered the field; close it to show the text.
+  if (compactEditor.compact.value) contextOpen.value = false;
   nextTick(() => document.getElementById(fieldId(entryId, localeId))?.focus());
 }
 
@@ -896,7 +921,11 @@ watch(
     <div
       class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
-      <div ref="searchBox" class="w-full sm:w-56" @keydown="onSearchKeydown">
+      <div
+        ref="searchBox"
+        class="min-w-0 flex-1 md:w-56 md:flex-none"
+        @keydown="onSearchKeydown"
+      >
         <Input
           v-model="search"
           dense
@@ -918,32 +947,40 @@ watch(
         :disabled="isSaving"
         @clear="clearFilters"
       />
-      <Chip
-        dense
-        variant="secondary"
-        :title="selectedLanguageLabels.join(', ')"
+      <!-- On phones the chips get a row of their own that scrolls sideways. -->
+      <div
+        class="flex min-w-0 flex-wrap items-center gap-2 max-md:basis-full max-md:flex-nowrap max-md:overflow-x-auto"
       >
-        {{ languageSummary }}
-      </Chip>
-      <ScopeChip
-        v-for="scope in selectedScopes"
-        :key="scope.id"
-        dense
-        removable
-        :color="scope.color"
-        @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
-      >
-        {{ scope.label }}
-      </ScopeChip>
-      <Chip
-        v-if="translationStatus"
-        dense
-        variant="secondary"
-        removable
-        @remove="translationStatus = ''"
-      >
-        {{ selectedStatusLabel }}
-      </Chip>
+        <Chip
+          dense
+          variant="secondary"
+          class="shrink-0"
+          :title="selectedLanguageLabels.join(', ')"
+        >
+          {{ languageSummary }}
+        </Chip>
+        <ScopeChip
+          v-for="scope in selectedScopes"
+          :key="scope.id"
+          dense
+          removable
+          class="shrink-0"
+          :color="scope.color"
+          @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
+        >
+          {{ scope.label }}
+        </ScopeChip>
+        <Chip
+          v-if="translationStatus"
+          dense
+          variant="secondary"
+          removable
+          class="shrink-0"
+          @remove="translationStatus = ''"
+        >
+          {{ selectedStatusLabel }}
+        </Chip>
+      </div>
       <span v-if="scopeError" class="text-xs text-red-600">{{
         t("scopes.loadFailed")
       }}</span>
@@ -992,7 +1029,8 @@ watch(
         :total="entryTotal"
         :selectable="canUpdate"
         :selection="checkedEntryIds"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent grid-cols-[minmax(200px,250px)_minmax(0,1fr)] max-sm:grid-cols-1 max-sm:grid-rows-[150px_minmax(0,1fr)]"
+        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent"
+        :class="splitViewLayout"
         @select="selectEntry"
         @end-reached="fetchNextPage()"
         @update:selection="checkedEntryIds = $event.map(String)"
@@ -1050,6 +1088,20 @@ watch(
           </EditorListItem>
         </template>
         <template #header="{ item }">
+          <EditorCompactNav
+            v-if="compactEditor.editorOpen.value"
+            :back-label="t('nav.allEntries')"
+            :previous-label="t('commands.previousEntry')"
+            :next-label="t('commands.nextEntry')"
+            :has-previous="selectedIndex > 0"
+            :has-next="
+              selectedIndex < splitViewItems.length - 1 || !!hasNextPage
+            "
+            :disabled="isSaving"
+            @back="compactEditor.close()"
+            @previous="navigation.previous()"
+            @next="navigation.next()"
+          />
           <EntryHeader
             :label="item?.label"
             :entry="selectedEntryData"
@@ -1173,49 +1225,64 @@ watch(
           </div>
         </template>
       </SplitView>
-      <EntryContextPanel
-        v-if="contextOpen && activeLocaleId && selectedEntry"
-        v-model:tab="contextTab"
-        class="flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]"
-        :entry-id="String(selectedEntry.key)"
-        :locale-id="activeLocaleId"
-        :locale-name="activeLocaleName"
-        :locale-code="localeOption(activeLocaleId)?.code"
-        :source-locale-id="defaultLocale?.id ?? undefined"
-        :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
-        :source-locale-code="localeOption(defaultLocale?.id)?.code"
-        :source-text="
-          defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
-        "
-        :translation="currentEntryForms[activeLocaleId] ?? ''"
-        :is-default="activeLocaleId === defaultLocale?.id"
-        :outdated-at="
-          savedLocalization(String(selectedEntry.key), activeLocaleId)
-            ?.outdatedAt
-        "
-        :can-use="canUpdate && !isSaving"
+      <EditorContextFrame
+        v-if="activeLocaleId && selectedEntry"
+        :compact="compactEditor.compact.value"
+        :open="contextOpen"
+        :title="`${t('context.title')} · ${activeLocaleName}`"
         @close="contextOpen = false"
-        @use="applyContextText"
-      />
+      >
+        <EntryContextPanel
+          v-model:tab="contextTab"
+          :sheet="compactEditor.compact.value"
+          :class="
+            compactEditor.compact.value
+              ? ''
+              : 'flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]'
+          "
+          :entry-id="String(selectedEntry.key)"
+          :locale-id="activeLocaleId"
+          :locale-name="activeLocaleName"
+          :locale-code="localeOption(activeLocaleId)?.code"
+          :source-locale-id="defaultLocale?.id ?? undefined"
+          :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
+          :source-locale-code="localeOption(defaultLocale?.id)?.code"
+          :source-text="
+            defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
+          "
+          :translation="currentEntryForms[activeLocaleId] ?? ''"
+          :is-default="activeLocaleId === defaultLocale?.id"
+          :outdated-at="
+            savedLocalization(String(selectedEntry.key), activeLocaleId)
+              ?.outdatedAt
+          "
+          :can-use="canUpdate && !isSaving"
+          @close="contextOpen = false"
+          @use="applyContextText"
+        />
+      </EditorContextFrame>
     </div>
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
       <div class="flex flex-wrap items-center gap-3">
         <span class="text-xs text-neutral-500 dark:text-neutral-400">
-          <template v-if="entryTotal !== undefined"
-            >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
-          </template>
-          {{
-            t(
-              "common.selectedLanguages",
-              { count: selectedLocaleIds.length },
-              selectedLocaleIds.length,
-            )
-          }}
+          <!-- On phones only what is unsaved, to leave room for the buttons. -->
+          <span class="max-md:hidden">
+            <template v-if="entryTotal !== undefined"
+              >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+            </template>
+            {{
+              t(
+                "common.selectedLanguages",
+                { count: selectedLocaleIds.length },
+                selectedLocaleIds.length,
+              )
+            }}
+          </span>
           <span
             v-if="unsavedLocaleIds.length"
-            class="ml-2 text-yellow-700 dark:text-amber-300"
+            class="md:ml-2 text-yellow-700 dark:text-amber-300"
             >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
             }}{{
               unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
@@ -1229,6 +1296,8 @@ watch(
       <EditorWorkspaceActions
         v-can="'update_entry'"
         show-save-all
+        :compact="compactEditor.compact.value"
+        :editor-open="compactEditor.editorOpen.value"
         :unsaved-count="allUnsavedCount"
         :can-save="!!selectedEntryData && !!selectedUnsavedLocaleIds.length"
         :is-saving="isSaving"

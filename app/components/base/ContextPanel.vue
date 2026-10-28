@@ -4,6 +4,8 @@ import { Tabs } from "@thkzt/eunoia";
 defineProps<{
   localeName: string;
   tabs?: { value: string; label: string }[];
+  /** Inside a bottom sheet, which brings its own title and close button. */
+  sheet?: boolean;
 }>();
 
 const emit = defineEmits<{ close: [] }>();
@@ -19,10 +21,15 @@ const tab = defineModel<string | undefined>("tab");
 
 <template>
   <aside
-    class="flex h-full min-h-0 flex-col border-l border-neutral-200 bg-white dark:border-white/5 dark:bg-neutral-900"
+    class="flex min-h-0 flex-col"
+    :class="
+      sheet
+        ? 'min-h-[50dvh]'
+        : 'h-full border-l border-neutral-200 bg-white dark:border-white/5 dark:bg-neutral-900'
+    "
     :aria-label="t('context.title')"
   >
-    <header class="shrink-0 px-[18px] pt-[18px]">
+    <header v-if="!sheet" class="shrink-0 px-[18px] pt-[18px]">
       <div class="flex items-start justify-between gap-2">
         <div class="flex min-w-0 flex-col gap-0.5">
           <p
@@ -50,14 +57,19 @@ const tab = defineModel<string | undefined>("tab");
       dense
       :aria-label="t('context.title')"
       class="flex min-h-0 flex-1 flex-col"
-      list-class="mx-[18px] mt-4 shrink-0"
-      panel-class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-4"
+      :list-class="sheet ? 'shrink-0' : 'mx-[18px] mt-4 shrink-0'"
+      :panel-class="
+        sheet
+          ? 'min-h-0 flex-1 py-4'
+          : 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-4'
+      "
     >
       <slot :tab="tab" />
     </Tabs>
     <div
       v-else
-      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-4"
+      class="min-h-0 flex-1 overscroll-contain py-4"
+      :class="sheet ? '' : 'overflow-y-auto px-[18px]'"
     >
       <slot :tab="tab" />
     </div>
