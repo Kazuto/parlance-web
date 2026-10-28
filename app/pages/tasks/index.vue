@@ -226,7 +226,9 @@ async function runNow(task: Task) {
               </template>
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <!-- On phones the actions take a row of their own, lined up with the
+               details, so those keep the card's width. -->
+          <div class="flex items-center gap-2 max-sm:basis-full max-sm:pl-12">
             <Switch
               v-if="can('update_task')"
               dense
@@ -270,7 +272,12 @@ async function runNow(task: Task) {
                 task.lastRun.startedAt || task.lastRun.createdAt || ''
               "
             />
-            <TaskRunSummary :run="task.lastRun" class="flex-1" />
+            <!-- On phones the summary goes on a line of its own below, rather
+                 than into a narrow column beside the button. -->
+            <TaskRunSummary
+              :run="task.lastRun"
+              class="max-sm:order-last max-sm:basis-full sm:flex-1"
+            />
           </template>
           <span
             v-else
@@ -280,6 +287,7 @@ async function runNow(task: Task) {
           </span>
           <Button
             v-if="task.id"
+            class="ml-auto"
             dense
             ghost
             :aria-expanded="!!expanded[task.id]"

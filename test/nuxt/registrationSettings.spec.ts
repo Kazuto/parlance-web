@@ -2,16 +2,24 @@ import { describe, expect, it } from "vitest";
 import SettingsPage from "~/pages/settings.vue";
 import { loginAs, mockRpc, mountPage, settle, t } from "./helpers";
 
+/** The settings as the server sends them: JSON leaves out a false bool. */
+function serverSettings(open: boolean) {
+  return {
+    ...(open ? { open } : {}),
+    updatedAt: "2026-10-28T11:14:33Z",
+  };
+}
+
 /** Opens the settings with registration open or closed on the server. */
 async function openSettings(permissions: readonly string[], open = true) {
   const calls: Record<string, unknown>[] = [];
-  let settings = { open };
+  let settings = serverSettings(open);
 
   loginAs(permissions);
   mockRpc("UserService/GetRegistrationSettings", () => ({ settings }));
   mockRpc("UserService/UpdateRegistrationSettings", (body) => {
     calls.push(body);
-    settings = { open: !!body.open };
+    settings = serverSettings(!!body.open);
 
     return { settings };
   });

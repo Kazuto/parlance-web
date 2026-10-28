@@ -152,7 +152,12 @@ const tableItems = computed(() =>
       <DataTable :columns="tableColumns" :items="tableItems">
         <template #permissions="{ item }">
           <div v-if="item.permissions?.length" class="space-y-1">
-            <div v-if="item.summary" class="flex flex-wrap gap-1 items-center">
+            <!-- On phones the badges would wrap against the right-aligned values,
+                 so only the count shows there, opening the full list. -->
+            <div
+              v-if="item.summary"
+              class="flex flex-wrap gap-1 items-center max-sm:hidden"
+            >
               <span class="text-xs text-neutral-500 dark:text-neutral-400">
                 {{ resourceLabel(item.summary.firstResource) }}:
               </span>
@@ -181,13 +186,17 @@ const tableItems = computed(() =>
                 }}
               </button>
             </div>
-            <div class="text-xs text-neutral-400 dark:text-neutral-400">
+            <button
+              type="button"
+              class="text-xs text-neutral-400 dark:text-neutral-400 hover:underline cursor-pointer max-sm:text-sm max-sm:font-medium max-sm:text-blue-600 max-sm:dark:text-blue-400"
+              @click="openViewPermissions(item)"
+            >
               {{
                 t("roles.permissionsCount", {
                   count: item.permissions.length,
                 })
               }}
-            </div>
+            </button>
           </div>
           <span v-else class="text-sm text-neutral-400 dark:text-neutral-400">
             {{ t("roles.noPermissions") }}

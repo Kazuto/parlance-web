@@ -11,7 +11,8 @@ const { showError, showSuccess } = useErrorHelper();
 const store = useUserStore();
 
 const { data, isLoading } = useQuery(api.users.registrationSettings.use({}));
-const open = computed(() => data.value?.settings?.open ?? true);
+// JSON leaves out a false bool, so settings without "open" are closed ones.
+const open = computed(() => !!data.value?.settings?.open);
 
 async function setOpen(value: boolean) {
   try {
