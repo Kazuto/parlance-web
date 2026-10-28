@@ -19,6 +19,13 @@ function placeholders(message: string) {
     .join(", ");
 }
 
+/** The literals a message escapes, e.g. {'{locale}'}, and its plural forms. */
+function syntax(message: string) {
+  const literals = [...message.matchAll(/\{'[^']*'\}/g)].map((m) => m[0]);
+
+  return { literals, forms: message.split("|").length };
+}
+
 describe("interface languages", () => {
   it("offers a language per catalog, named in itself", () => {
     expect(locales.map((locale) => [locale.code, locale.name])).toEqual(
@@ -55,6 +62,23 @@ describe("interface languages", () => {
         .map(([key]) => key);
 
       expect(lost).toEqual([]);
+    },
+  );
+
+  it.each(locales.map((locale) => [locale.code, locale.files[0]!]))(
+    "%s keeps the literals and plural forms of the English messages",
+    (_code, file) => {
+      const messages = catalog(file);
+      const broken = Object.entries(english)
+        .filter(
+          ([key, message]) =>
+            key in messages &&
+            JSON.stringify(syntax(messages[key]!)) !==
+              JSON.stringify(syntax(message)),
+        )
+        .map(([key]) => key);
+
+      expect(broken).toEqual([]);
     },
   );
 });

@@ -751,7 +751,7 @@ async function handleSave() {
           >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
           }}{{
             unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-              ? t("common.hiddenLanguages")
+              ? ` ${t("common.hiddenLanguages")}`
               : ""
           }}</span
         >
