@@ -74,7 +74,7 @@ default; for any other address, add it to `CORS_ALLOWED_ORIGINS` on the server
 Both repositories publish Docker images on version tags:
 
 - `ghcr.io/kazuto/parlance-web` serves the web app on port 3000.
-- `ghcr.io/kazuto/parlance-api` serves the API on port 8080.
+- `ghcr.io/kazuto/parlance-server` serves the API on port 8080.
 
 The web app has one setting:
 
