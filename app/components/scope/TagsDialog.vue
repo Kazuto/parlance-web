@@ -122,9 +122,10 @@ function close() {
         {{ t("tags.description") }}
       </p>
 
+      <!-- The buttons line up with the fields, above their counters and errors. -->
       <form
         v-can="'create_tag'"
-        class="flex items-end gap-2"
+        class="flex items-start gap-2"
         @submit.prevent="addTag"
       >
         <div class="min-w-0 flex-1">
@@ -132,12 +133,11 @@ function close() {
             v-model="newName"
             :disabled="isPending"
             :placeholder="t('tags.namePlaceholder')"
+            :aria-label="t('tags.newTag')"
             :invalid="!!addError"
             :errors="addError ? [addError] : undefined"
             maxlength="100"
-          >
-            {{ t("tags.newTag") }}
-          </Input>
+          />
         </div>
         <Button type="submit" icon="plus" :disabled="isPending">
           {{ t("tags.add") }}
@@ -156,7 +156,7 @@ function close() {
         >
           <form
             v-if="editingId === tag.id"
-            class="flex min-w-0 flex-1 items-center gap-2"
+            class="flex min-w-0 flex-1 items-start gap-2"
             @submit.prevent="rename(tag)"
           >
             <div class="min-w-0 flex-1">
