@@ -20,6 +20,7 @@ export function useScopeOptions() {
       .map((scope) => ({
         label: scope.name ?? scope.slug ?? scope.id!,
         value: scope.id!,
+        slug: scope.slug ?? "",
         color: scope.color ?? undefined,
         // The format the scope is exported in by default, if any
         exportFormat:
@@ -77,7 +78,7 @@ export function useScopeOptions() {
  * tag goes when its scope is deselected.
  */
 export function useScopedTags(
-  scopeIds: Ref<string[]>,
+  scopeIds: Readonly<Ref<readonly string[]>>,
   tagIds: Ref<string[]>,
   scopeOptions: Pick<
     ReturnType<typeof useScopeOptions>,

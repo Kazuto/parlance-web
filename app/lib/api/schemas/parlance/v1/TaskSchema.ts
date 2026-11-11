@@ -105,6 +105,7 @@ export type GitExportConfig = {
   localeIds?: Array<string> | null;
   scopeIds?: Array<string> | null;
   includeDrafts?: boolean | null;
+  tagIds?: Array<string> | null;
 };
 export const GitExportConfigSchema = z.object({
   get apiUrl(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -130,6 +131,9 @@ export const GitExportConfigSchema = z.object({
   },
   get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type TaskRunSummary = {

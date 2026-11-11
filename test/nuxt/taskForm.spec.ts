@@ -48,6 +48,21 @@ describe("task form", () => {
     expect(settings).not.toHaveProperty("aiTranslate");
   });
 
+  it("keeps a git export's scopes and tags", () => {
+    const task = {
+      id: "t2",
+      name: "Billing mails",
+      type: "TASK_TYPE_GIT_EXPORT" as const,
+      gitExport: { repository: "acme/mail", scopeIds: ["s1"], tagIds: ["t1"] },
+    };
+
+    expect(formToSettings(taskToForm(task)).gitExport).toMatchObject({
+      scopeIds: ["s1"],
+      tagIds: ["t1"],
+    });
+    expect(taskToForm().git.tagIds).toEqual([]);
+  });
+
   it("keeps a saved task's settings when saved unchanged", () => {
     const task = {
       id: "t1",

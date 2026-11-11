@@ -32,6 +32,8 @@ export type GitExportForm = {
   files: ExportFileForm[];
   localeIds: string[];
   scopeIds: string[];
+  /** Narrows each scope to the entries with any of its chosen tags */
+  tagIds: string[];
   includeDrafts: boolean;
 };
 
@@ -101,6 +103,7 @@ export function taskToForm(
           ],
       localeIds: [...(git?.localeIds ?? [])],
       scopeIds: [...(git?.scopeIds ?? [])],
+      tagIds: [...(git?.tagIds ?? [])],
       includeDrafts: !!git?.includeDrafts,
     },
   };

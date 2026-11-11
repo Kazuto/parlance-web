@@ -28,6 +28,7 @@ const exportPhp = useMutation(api.exports.php.use());
 const exportPo = useMutation(api.exports.po.use());
 const localeId = ref("");
 const scopeIds = ref<string[]>([]);
+const tagIds = ref<string[]>([]);
 const format = ref("json");
 // Set once the format is picked by hand; until then it follows the scopes.
 const formatPicked = ref(false);
@@ -61,11 +62,14 @@ const localeOptions = computed(() =>
       value: locale.id ?? "",
     })),
 );
+const scopeChoices = useScopeOptions();
 const {
   options: scopeOptions,
   error: scopeError,
   isFetching: scopesLoading,
-} = useScopeOptions();
+} = scopeChoices;
+// Exports can narrow the scopes to their tags; removing a scope removes its tags.
+const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
 const selectedScopeNames = computed(() =>
   scopeOptions.value
     .filter((option) => scopeIds.value.includes(option.value))
@@ -231,6 +235,7 @@ async function handleSubmit() {
       const input = {
         localeCode: locale.code,
         scopeIds: scopeIds.value,
+        tagIds: tagIds.value,
         includeDrafts: includeDrafts.value,
       };
       const response = await (format.value === "po"
@@ -325,6 +330,23 @@ defineExpose({
           class="text-xs text-neutral-500 dark:text-neutral-400"
         >
           {{ t("transfer.importScopeHelp") }}
+        </p>
+      </div>
+      <div
+        v-if="action === 'export' && scopeIds.length && tagOptions.length"
+        class="space-y-1"
+      >
+        <Select
+          v-model="tagIds"
+          teleport-to="body"
+          multiple
+          :options="tagOptions"
+          :disabled="isPending"
+          :placeholder="t('tags.select')"
+          >{{ t("tags.title") }}</Select
+        >
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("tags.exportHelp") }}
         </p>
       </div>
       <template v-if="action === 'import'">

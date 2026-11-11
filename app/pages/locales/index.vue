@@ -13,7 +13,10 @@ import {
   Icon,
   Pagination,
 } from "@thkzt/eunoia";
-import { useZipExport } from "~/composables/export/useZipExport";
+import {
+  useZipExport,
+  type ZipExportOptions,
+} from "~/composables/export/useZipExport";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const { can } = usePermission();
@@ -46,9 +49,9 @@ function entriesUrl(locale: Locale, status?: "missing") {
 
 const showExportDialog = ref(false);
 
-async function handleExportZip(includeDrafts: boolean) {
+async function handleExportZip(options: ZipExportOptions) {
   try {
-    await exportZip([], includeDrafts);
+    await exportZip(options);
     showExportDialog.value = false;
     showSuccess(t("export.zip.success"));
   } catch (error) {
