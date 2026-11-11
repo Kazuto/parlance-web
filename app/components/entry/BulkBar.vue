@@ -34,6 +34,7 @@ const emit = defineEmits<{
   translate: [];
   stopTranslate: [];
   editScopes: [];
+  editTags: [];
   approve: [];
   reject: [];
   copy: [];
@@ -186,6 +187,15 @@ function onMore(value: string) {
       @click="emit('editScopes')"
     >
       {{ t("entries.bulkEditScopes") }}
+    </Button>
+    <Button
+      type="button"
+      dense
+      icon="tag"
+      :disabled="isSaving || limitReached"
+      @click="emit('editTags')"
+    >
+      {{ t("entries.bulkEditTags") }}
     </Button>
     <ActionMenu
       v-if="moreItems.length"

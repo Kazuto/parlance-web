@@ -19,6 +19,7 @@ const emit = defineEmits<{
 const key = ref("");
 const description = ref("");
 const scopeIds = ref<string[]>([]);
+const tagIds = ref<string[]>([]);
 const { placeholder: keyPlaceholder } = useTypingPlaceholder([
   "button.save",
   "login.title",
@@ -29,11 +30,14 @@ const { placeholder: keyPlaceholder } = useTypingPlaceholder([
   "user.profile",
   "nav.home",
 ]);
+const scopeChoices = useScopeOptions();
 const {
   options: availableScopes,
   error: scopeError,
   isFetching: scopesLoading,
-} = useScopeOptions();
+} = scopeChoices;
+// Only tags of the chosen scopes; removing a scope removes its tags.
+const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
 // Keep the entry's own scopes selectable even if the scope list doesn't include them,
 // so saving doesn't silently drop them.
 const scopeOptions = computed(() => [
@@ -63,6 +67,9 @@ const { error, isPending, submit, cancel } = useFormDialog({
     scopeIds.value = (props.item?.scopes ?? []).flatMap((scope) =>
       scope.id ? [scope.id] : [],
     );
+    tagIds.value = (props.item?.tags ?? []).flatMap((tag) =>
+      tag.id ? [tag.id] : [],
+    );
   },
   close: () => emit("close"),
 });
@@ -85,6 +92,7 @@ function handleSubmit() {
         key: trimmedKey,
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
+        tags: { ids: tagIds.value },
       });
 
       showSuccess(t("entries.updated", { key: trimmedKey }));
@@ -94,6 +102,7 @@ function handleSubmit() {
         key: trimmedKey,
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
+        tags: { ids: tagIds.value },
       });
 
       showSuccess(t("entries.created", { key: trimmedKey }));
@@ -134,6 +143,16 @@ function handleSubmit() {
         :disabled="isPending || scopesLoading"
         :placeholder="t('scopes.select')"
         >{{ t("nav.scopes") }}</Select
+      >
+      <Select
+        v-if="scopeIds.length && tagOptions.length"
+        v-model="tagIds"
+        teleport-to="body"
+        multiple
+        :options="tagOptions"
+        :disabled="isPending"
+        :placeholder="t('tags.select')"
+        >{{ t("tags.title") }}</Select
       >
       <p v-if="scopeError" role="alert" class="text-sm text-red-600">
         {{ t("scopes.loadFailed") }}

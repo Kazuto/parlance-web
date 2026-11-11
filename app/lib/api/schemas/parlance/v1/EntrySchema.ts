@@ -14,7 +14,7 @@ import {
   type ReviewStatus,
 } from "./CommonSchema";
 import { LocalizationSchema, type Localization } from "./LocalizationSchema";
-import { ScopeSchema, type Scope } from "./ScopeSchema";
+import { ScopeSchema, type Scope, TagSchema, type Tag } from "./ScopeSchema";
 import { UserSchema, type User } from "./UserSchema";
 export type Entry = {
   id?: string | null;
@@ -31,6 +31,7 @@ export type Entry = {
   defaultTranslation?: string | null;
   draftLocaleIds?: Array<string> | null;
   outdatedLocaleIds?: Array<string> | null;
+  tags?: Array<Tag> | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -81,6 +82,9 @@ export const EntrySchema = z.object({
   > {
     return z.array(z.string()).nullish();
   },
+  get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Tag>>>> {
+    return z.array(TagSchema).nullish();
+  },
 });
 export type ListEntriesRequest = {
   scopeId?: string | null;
@@ -94,6 +98,7 @@ export type ListEntriesRequest = {
   summary?: boolean | null;
   deletedOnly?: boolean | null;
   statusLocaleIds?: Array<string> | null;
+  tagIds?: Array<string> | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -131,6 +136,9 @@ export const ListEntriesRequestSchema = z.object({
   get statusLocaleIds(): z.ZodOptional<
     z.ZodNullable<z.ZodType<Array<string>>>
   > {
+    return z.array(z.string()).nullish();
+  },
+  get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
   },
 });
@@ -172,6 +180,7 @@ export type CreateEntryRequest = {
   key?: string | null;
   description?: string | null;
   scopes?: IdSelection | null;
+  tags?: IdSelection | null;
 };
 export const CreateEntryRequestSchema = z.object({
   get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -181,6 +190,9 @@ export const CreateEntryRequestSchema = z.object({
     return z.string().nullish();
   },
   get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
+  },
+  get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
     return IdSelectionSchema.nullish();
   },
 });
@@ -197,6 +209,7 @@ export type UpdateEntryRequest = {
   description?: string | null;
   key?: string | null;
   scopes?: IdSelection | null;
+  tags?: IdSelection | null;
 };
 export const UpdateEntryRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -209,6 +222,9 @@ export const UpdateEntryRequestSchema = z.object({
     return z.string().nullish();
   },
   get scopes(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
+  },
+  get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
     return IdSelectionSchema.nullish();
   },
 });
@@ -238,6 +254,24 @@ export const UpdateEntriesScopesRequestSchema = z.object({
 });
 export type UpdateEntriesScopesResponse = Record<string, never>;
 export const UpdateEntriesScopesResponseSchema = z.object({});
+export type UpdateEntriesTagsRequest = {
+  entryIds?: Array<string> | null;
+  addTagIds?: Array<string> | null;
+  removeTagIds?: Array<string> | null;
+};
+export const UpdateEntriesTagsRequestSchema = z.object({
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get addTagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get removeTagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type UpdateEntriesTagsResponse = Record<string, never>;
+export const UpdateEntriesTagsResponseSchema = z.object({});
 export type DeleteEntryRequest = {
   id?: string | null;
 };

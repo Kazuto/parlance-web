@@ -5,6 +5,7 @@ type EntryFilterRefs = {
   locales: Ref<Locale[] | null | undefined>;
   localeIds: Ref<string[]>;
   scopeIds: Ref<string[]>;
+  tagIds: Ref<string[]>;
   status: Ref<string>;
   search: Ref<string>;
 };
@@ -16,7 +17,7 @@ function first(value: LocationQuery[string] | undefined) {
 }
 
 /**
- * Mirrors the entry filters into the URL (`?locales=en,de&scopes=…&status=…&q=…`)
+ * Mirrors the entry filters into the URL (`?locales=en,de&scopes=…&tags=…&status=…&q=…`)
  * so a filtered view can be bookmarked or shared. Locales are stored by code,
  * which stays readable and survives locale re-creation; everything else by value.
  *
@@ -27,6 +28,7 @@ export function useEntryFilterQuery({
   locales,
   localeIds,
   scopeIds,
+  tagIds,
   status,
   search,
 }: EntryFilterRefs) {
@@ -36,15 +38,22 @@ export function useEntryFilterQuery({
   const stored = useStoredFilters();
   // A link with its own filters (e.g. from recent activity) shows exactly that view;
   // stored scopes or status could otherwise hide the entry it points to.
-  const fromLink = ["locales", "scopes", "status", "q"].some(
+  const fromLink = ["locales", "scopes", "tags", "status", "q"].some(
     (key) => !!first(initialQuery[key]),
   );
 
+  const ids = (values: unknown) =>
+    Array.isArray(values)
+      ? values.filter((id): id is string => typeof id === "string" && !!id)
+      : [];
+
   scopeIds.value = fromLink
     ? first(initialQuery.scopes).split(",").filter(Boolean)
-    : (stored.entries.value.scopes ?? []).filter(
-        (id) => typeof id === "string" && !!id,
-      );
+    : ids(stored.entries.value.scopes);
+  // Tags whose scope isn't selected are dropped once the scopes have loaded.
+  tagIds.value = fromLink
+    ? first(initialQuery.tags).split(",").filter(Boolean)
+    : ids(stored.entries.value.tags);
 
   const initialStatus = fromLink
     ? first(initialQuery.status)
@@ -84,13 +93,17 @@ export function useEntryFilterQuery({
       // watcher on unmount.
       scope?.run(() =>
         watch(
-          [localeIds, scopeIds, status],
-          ([, scopes, nextStatus]) => {
+          [localeIds, scopeIds, tagIds, status],
+          ([, scopes, tags, nextStatus]) => {
             if (locales.value?.length) {
               stored.languages.value = [...localeCodes.value];
             }
 
-            stored.entries.value = { scopes: [...scopes], status: nextStatus };
+            stored.entries.value = {
+              scopes: [...scopes],
+              tags: [...tags],
+              status: nextStatus,
+            };
           },
           { deep: true },
         ),
@@ -100,7 +113,7 @@ export function useEntryFilterQuery({
   );
 
   watch(
-    [localesReady, localeCodes, scopeIds, status, search],
+    [localesReady, localeCodes, scopeIds, tagIds, status, search],
     () => {
       // While the locale list reloads its codes are unknown; keeping the URL as
       // it is avoids dropping the selected locales from it.
@@ -110,6 +123,7 @@ export function useEntryFilterQuery({
       const next: Record<string, string> = {
         locales: localeCodes.value.join(","),
         scopes: scopeIds.value.join(","),
+        tags: tagIds.value.join(","),
         status: status.value,
         q: search.value.trim(),
       };
@@ -134,6 +148,8 @@ export function useEntryFilterQuery({
 export function entriesLink(filters: {
   locales?: string[];
   scopes?: string[];
+  /** Tags of the scopes, which narrow them */
+  tags?: string[];
   status?: "missing" | "complete" | "review" | "outdated" | "check";
   q?: string;
 }) {
@@ -142,6 +158,7 @@ export function entriesLink(filters: {
   const params = [
     filters.locales?.length && `locales=${list(filters.locales)}`,
     filters.scopes?.length && `scopes=${list(filters.scopes)}`,
+    filters.tags?.length && `tags=${list(filters.tags)}`,
     filters.status && `status=${filters.status}`,
     filters.q && `q=${encodeURIComponent(filters.q)}`,
   ].filter(Boolean);

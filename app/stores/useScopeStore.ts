@@ -3,7 +3,7 @@ import { api } from "~/lib/api";
 
 export const useScopeStore = defineStore("scopeStore", () => {
   const queryClient = useQueryClient();
-  // Entries show scope names and colors, so refresh them along with the scope list.
+  // Entries show scope names, colors and tags, so refresh them along with the scope list.
   const queryKeys = [
     api.scopes.list.getQueryKey(),
     api.entries.feed.getQueryKey(),
@@ -31,10 +31,26 @@ export const useScopeStore = defineStore("scopeStore", () => {
     onSuccess: invalidate,
   });
 
+  const createTag = useMutation({
+    ...api.scopes.createTag.use(),
+    onSuccess: invalidate,
+  });
+  const updateTag = useMutation({
+    ...api.scopes.updateTag.use(),
+    onSuccess: invalidate,
+  });
+  const destroyTag = useMutation({
+    ...api.scopes.deleteTag.use(),
+    onSuccess: invalidate,
+  });
+
   return {
     create,
     update,
     destroy,
     restore,
+    createTag,
+    updateTag,
+    destroyTag,
   };
 });
