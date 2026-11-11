@@ -9,6 +9,7 @@ import type {
   ImportMode,
   ImportResult,
 } from "~/lib/api/schemas/parlance/v1/ImportSchema";
+import type { ExportFormat } from "~/lib/api/schemas/parlance/v1/TaskSchema";
 
 const props = defineProps<{
   action: "import" | "export";
@@ -28,6 +29,8 @@ const exportPo = useMutation(api.exports.po.use());
 const localeId = ref("");
 const scopeIds = ref<string[]>([]);
 const format = ref("json");
+// Set once the format is picked by hand; until then it follows the scopes.
+const formatPicked = ref(false);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 // Imports land as drafts unless a reviewer vouches for them; exports leave drafts out.
 const approve = ref(false);
@@ -69,6 +72,25 @@ const selectedScopeNames = computed(() =>
     .map((option) => option.label)
     .join(", "),
 );
+// The default format the selected scopes share, as a file extension
+const EXTENSIONS: Partial<Record<ExportFormat, string>> = {
+  EXPORT_FORMAT_JSON: "json",
+  EXPORT_FORMAT_PHP: "php",
+  EXPORT_FORMAT_PO: "po",
+};
+const scopesFormat = computed(() => {
+  const formats = new Set(
+    scopeOptions.value
+      .filter((option) => scopeIds.value.includes(option.value))
+      .map((option) => option.exportFormat),
+  );
+  const [shared] = formats;
+
+  return formats.size === 1 && shared ? EXTENSIONS[shared] : undefined;
+});
+const formatFromScopes = computed(
+  () => !formatPicked.value && !!scopesFormat.value,
+);
 const formatOptions = computed(() => [
   { label: t("transfer.json"), value: "json" },
   { label: t("transfer.php"), value: "php" },
@@ -104,10 +126,19 @@ watch(
   },
   { immediate: true },
 );
+watch(scopesFormat, (value) => {
+  if (value && !formatPicked.value) format.value = value;
+});
 watch(format, () => {
   file.value = undefined;
   error.value = undefined;
 });
+
+function pickFormat(value: unknown) {
+  format.value = String(value);
+  formatPicked.value = true;
+}
+
 // A preview is only good for the inputs it was made with.
 watch(
   [localeId, format, scopeIds, mode, approve, file],
@@ -259,13 +290,22 @@ defineExpose({
         :placeholder="t('transfer.selectLanguage')"
         >{{ t("common.language") }}</Select
       >
-      <Select
-        v-model="format"
-        teleport-to="body"
-        :options="formatOptions"
-        :disabled="isPending"
-        >{{ t("common.format") }}</Select
-      >
+      <div class="space-y-1">
+        <Select
+          :model-value="format"
+          teleport-to="body"
+          :options="formatOptions"
+          :disabled="isPending"
+          @update:model-value="pickFormat"
+          >{{ t("common.format") }}</Select
+        >
+        <p
+          v-if="formatFromScopes"
+          class="text-xs text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("transfer.formatFromScopes") }}
+        </p>
+      </div>
       <div class="space-y-1">
         <Select
           v-model="scopeIds"

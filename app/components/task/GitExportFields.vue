@@ -16,7 +16,7 @@ const props = defineProps<{
   taskId?: string;
   hasToken?: boolean;
   localeOptions: Option[];
-  scopeOptions: Option[];
+  scopeOptions: (Option & { exportFormat?: ExportFormat })[];
   disabled?: boolean;
 }>();
 
@@ -34,11 +34,17 @@ const formatOptions = computed(() =>
   ).map((value) => ({ value, label: t(`tasks.git.format.${value}`) })),
 );
 
+// A new file takes a format not used yet, the selected scopes' defaults first.
 function addFile() {
   const used = new Set(form.value.files.map((file) => file.format));
+  const scopeFormats = props.scopeOptions
+    .filter((scope) => form.value.scopeIds.includes(scope.value))
+    .flatMap((scope) => (scope.exportFormat ? [scope.exportFormat] : []));
   const format =
-    formatOptions.value.find((option) => !used.has(option.value))?.value ??
-    "EXPORT_FORMAT_JSON";
+    [
+      ...scopeFormats,
+      ...formatOptions.value.map((option) => option.value),
+    ].find((value) => !used.has(value)) ?? "EXPORT_FORMAT_JSON";
 
   form.value.files.push({ format, path: DEFAULT_PATHS[format] ?? "" });
 }
