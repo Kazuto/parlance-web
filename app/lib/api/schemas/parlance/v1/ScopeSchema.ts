@@ -9,6 +9,7 @@ import {
   PaginationResponseSchema,
   type PaginationResponse,
 } from "./CommonSchema";
+import { ExportFormatSchema, type ExportFormat } from "./TaskSchema";
 export type Scope = {
   id?: string | null;
   name?: string | null;
@@ -19,6 +20,7 @@ export type Scope = {
   updatedAt?: string | null;
   deletedAt?: string | null;
   tags?: Array<Tag> | null;
+  exportFormat?: ExportFormat | null;
 };
 export const ScopeSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -47,6 +49,9 @@ export const ScopeSchema = z.object({
   },
   get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Tag>>>> {
     return z.array(TagSchema).nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
   },
 });
 export type Tag = {
@@ -124,6 +129,7 @@ export type CreateScopeRequest = {
   slug?: string | null;
   description?: string | null;
   color?: string | null;
+  exportFormat?: ExportFormat | null;
 };
 export const CreateScopeRequestSchema = z.object({
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -137,6 +143,9 @@ export const CreateScopeRequestSchema = z.object({
   },
   get color(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
   },
 });
 export type CreateScopeResponse = {
@@ -153,6 +162,7 @@ export type UpdateScopeRequest = {
   slug?: string | null;
   description?: string | null;
   color?: string | null;
+  exportFormat?: ExportFormat | null;
 };
 export const UpdateScopeRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -169,6 +179,9 @@ export const UpdateScopeRequestSchema = z.object({
   },
   get color(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
   },
 });
 export type UpdateScopeResponse = {

@@ -21,6 +21,12 @@ export function useScopeOptions() {
         label: scope.name ?? scope.slug ?? scope.id!,
         value: scope.id!,
         color: scope.color ?? undefined,
+        // The format the scope is exported in by default, if any
+        exportFormat:
+          scope.exportFormat &&
+          scope.exportFormat !== "EXPORT_FORMAT_UNSPECIFIED"
+            ? scope.exportFormat
+            : undefined,
         // In name order, as the server lists them.
         tags: (scope.tags ?? []).flatMap((tag) =>
           tag.id ? [{ id: tag.id, name: tag.name ?? tag.id }] : [],
