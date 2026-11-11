@@ -17,6 +17,8 @@ const props = defineProps<{
   hasToken?: boolean;
   localeOptions: Option[];
   scopeOptions: (Option & { exportFormat?: ExportFormat })[];
+  /** The chosen scopes' tags */
+  tagOptions?: Option[];
   disabled?: boolean;
 }>();
 
@@ -194,6 +196,20 @@ async function checkAccess() {
         :placeholder="t('scopes.all')"
         >{{ t("nav.scopes") }}</Select
       >
+    </div>
+    <div v-if="form.scopeIds.length && tagOptions?.length" class="space-y-1">
+      <Select
+        v-model="form.tagIds"
+        teleport-to="body"
+        multiple
+        :options="tagOptions"
+        :disabled
+        :placeholder="t('tags.select')"
+        >{{ t("tags.title") }}</Select
+      >
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+        {{ t("tags.exportHelp") }}
+      </p>
     </div>
     <Checkbox
       v-model="form.includeDrafts"

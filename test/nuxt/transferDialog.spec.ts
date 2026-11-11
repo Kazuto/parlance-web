@@ -1,11 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
+import { Select } from "@thkzt/eunoia";
 import TransferDialog from "~/components/entry/TransferDialog.vue";
-import { ALL_PERMISSIONS, loginAs, mockRpc, settle, t } from "./helpers";
+import {
+  ALL_PERMISSIONS,
+  loginAs,
+  mockRpc,
+  pagination,
+  settle,
+  t,
+} from "./helpers";
 
 const locales = [
   { id: "en", code: "en", isDefault: true, names: {} },
   { id: "de", code: "de", names: {} },
+];
+
+const scopes = [
+  {
+    id: "s1",
+    name: "Mail",
+    tags: [{ id: "t1", scopeId: "s1", name: "Billing" }],
+  },
+  { id: "s2", name: "Web", tags: [] },
 ];
 
 // What importing the file into English would change, as its dry run tells.
@@ -34,6 +51,10 @@ async function openDialog(action: "import" | "export") {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
 
   loginAs(ALL_PERMISSIONS);
+  mockRpc("ScopeService/ListScopes", {
+    scopes,
+    pagination: pagination(scopes.length),
+  });
   mockRpc("ExportService/ExportJson", (body) => {
     calls.push({ method: "ExportJson", body });
 
@@ -116,9 +137,55 @@ describe("transfer dialog", () => {
     expect(calls).toEqual([
       {
         method: "ExportJson",
-        body: { localeCode: "en", scopeIds: [], includeDrafts: false },
+        body: {
+          localeCode: "en",
+          scopeIds: [],
+          tagIds: [],
+          includeDrafts: false,
+        },
       },
     ]);
+  });
+
+  it("exports the chosen scopes' tags", async () => {
+    const { wrapper, calls } = await openDialog("export");
+    const select = (label: string) =>
+      wrapper
+        .findAllComponents(Select)
+        .find((item) => item.find("label").text().trim() === label);
+
+    URL.createObjectURL = () => "blob:export";
+
+    URL.revokeObjectURL = () => {};
+
+    // Tags are picked within scopes, so they show once a scope is.
+    expect(select(t("tags.title"))).toBeUndefined();
+
+    select(t("nav.scopes"))!.vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+    select(t("tags.title"))!.vm.$emit("update:modelValue", ["t1"]);
+    await settle();
+
+    expect(wrapper.text()).toContain(t("tags.exportHelp"));
+
+    await click(wrapper, t("transfer.download"));
+
+    expect(calls.at(-1)?.body).toMatchObject({
+      scopeIds: ["s1"],
+      tagIds: ["t1"],
+    });
+  });
+
+  it("offers no tags when importing", async () => {
+    const { wrapper } = await openDialog("import");
+
+    wrapper
+      .findAllComponents(Select)
+      .find((item) => item.find("label").text().trim() === t("nav.scopes"))!
+      .vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+
+    expect(wrapper.text()).not.toContain(t("tags.title"));
   });
 
   it("previews an import, then imports from the footer and offers to close", async () => {
