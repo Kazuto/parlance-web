@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import { Select } from "@thkzt/eunoia";
+import { Checkbox, Select } from "@thkzt/eunoia";
 import type { VueWrapper } from "@vue/test-utils";
 import LocaleExportZipDialog from "~/components/locale/ExportZipDialog.vue";
 import LocalesPage from "~/pages/locales/index.vue";
@@ -104,6 +104,7 @@ describe("ZIP export dialog", () => {
       tagIds: [],
       format: "EXPORT_FORMAT_JSON",
       includeDrafts: false,
+      includeUnreleased: false,
     });
   });
 
@@ -138,6 +139,7 @@ describe("ZIP export dialog", () => {
       tagIds: ["t1"],
       format: "EXPORT_FORMAT_PO",
       includeDrafts: false,
+      includeUnreleased: false,
     });
   });
 
@@ -157,6 +159,20 @@ describe("ZIP export dialog", () => {
 
     expect(selectLabelled(wrapper, t("tags.title"))).toBeUndefined();
     expect((await exportZip(wrapper))?.tagIds).toEqual([]);
+  });
+
+  it("includes entries pending releases hold back when ticked", async () => {
+    const wrapper = await openDialog();
+
+    expect(wrapper.text()).toContain(t("transfer.includeUnreleasedHelp"));
+
+    wrapper
+      .findAllComponents(Checkbox)
+      .find((box) => box.text().includes(t("transfer.includeUnreleased")))!
+      .vm.$emit("update:modelValue", true);
+    await settle();
+
+    expect((await exportZip(wrapper))?.includeUnreleased).toBe(true);
   });
 
   it("sends the chosen options from the languages page", async () => {
@@ -182,6 +198,7 @@ describe("ZIP export dialog", () => {
       tagIds: ["t1"],
       format: "EXPORT_FORMAT_PHP",
       includeDrafts: true,
+      includeUnreleased: true,
     };
 
     page.wrapper

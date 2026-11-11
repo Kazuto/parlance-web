@@ -1,6 +1,11 @@
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-type StoredEntryFilters = { scopes: string[]; tags: string[]; status: string };
+type StoredEntryFilters = {
+  scopes: string[];
+  tags: string[];
+  releases: string[];
+  status: string;
+};
 
 /**
  * Filters remembered in this browser so they survive page changes. Languages are
@@ -11,7 +16,7 @@ export function useStoredFilters() {
 
   const entries = useLocalStorage<StoredEntryFilters>(
     "filters.entries",
-    { scopes: [], tags: [], status: "" },
+    { scopes: [], tags: [], releases: [], status: "" },
     { mergeDefaults: true },
   );
 

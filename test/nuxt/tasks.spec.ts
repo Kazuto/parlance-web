@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Select } from "@thkzt/eunoia";
+import { Checkbox, Select } from "@thkzt/eunoia";
 import TasksPage from "~/pages/tasks/index.vue";
 import {
   ALL_PERMISSIONS,
@@ -52,11 +52,14 @@ const tasks = [
   },
 ];
 
-async function openTasks(permissions: readonly string[]) {
+async function openTasks(
+  permissions: readonly string[],
+  list: object[] = tasks,
+) {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
 
   loginAs(permissions);
-  mockRpc("TaskService/ListTasks", { tasks });
+  mockRpc("TaskService/ListTasks", { tasks: list });
   mockRpc("ScopeService/ListScopes", {
     scopes: [
       {
@@ -141,9 +144,7 @@ describe("tasks page", () => {
 
     expect(text).toContain("Ship translations");
     expect(text).toContain("acme/app · main ← parlance/translations");
-    expect(text).toContain(
-      t("tasks.describe.onApproval", { count: 10 }).split(" | ")[2] ?? "",
-    );
+    expect(text).toContain(t("tasks.describe.onApproval", { count: 10 }, 10));
     expect(text).toContain(t("tasks.describe.daily", { time: "03:00" }));
     expect(text).toContain(t("tasks.outcome.updated", { count: 1 }));
     expect(text).toContain(t("tasks.neverRun"));
@@ -285,6 +286,48 @@ describe("tasks page", () => {
 
     expect(select(t("tags.title"))).toBeUndefined();
     expect(await save()).toMatchObject({ scopeIds: [], tagIds: [] });
+  });
+
+  it("runs a task when a release goes out", async () => {
+    const { page, calls } = await openTasks(ALL_PERMISSIONS, [
+      {
+        ...tasks[0]!,
+        events: ["TASK_EVENT_TRANSLATIONS_RELEASED"],
+        eventDelayMinutes: 5,
+      },
+    ]);
+
+    expect(page.wrapper.text()).toContain(
+      t("tasks.describe.onRelease", { count: 5 }, 5),
+    );
+
+    await button(
+      page,
+      t("common.editFor", { name: "Ship translations" }),
+    )!.trigger("click");
+    await settle();
+
+    // The delay applies to releases as well as approvals.
+    const dialog = page.wrapper.find("dialog[open]");
+
+    expect(dialog.text()).toContain(t("tasks.delayHelp"));
+
+    page.wrapper
+      .findAllComponents(Checkbox)
+      .filter((box) => box.element.closest("dialog[open]"))
+      .find((box) => box.text().includes(t("tasks.onApproval")))!
+      .vm.$emit("update:modelValue", true);
+    await settle();
+    await dialog.find("form").trigger("submit");
+    await settle();
+
+    expect(calls.at(-1)?.body).toMatchObject({
+      events: [
+        "TASK_EVENT_TRANSLATIONS_APPROVED",
+        "TASK_EVENT_TRANSLATIONS_RELEASED",
+      ],
+      eventDelayMinutes: 5,
+    });
   });
 
   it("adds a machine translation task", async () => {

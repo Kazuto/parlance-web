@@ -18,6 +18,8 @@ export function useEntryFeed(perPage = 100) {
   const scopeIds = ref<string[]>([]);
   // Narrows the scopes to these of their tags.
   const tagIds = ref<string[]>([]);
+  // Entries in any of these releases.
+  const releaseIds = ref<string[]>([]);
   const translationStatus = ref("");
   const targetLocaleIds = ref<string[]>([]);
   // The languages the status filter checks; the target languages when empty.
@@ -29,6 +31,7 @@ export function useEntryFeed(perPage = 100) {
     filter: { search: search.value || undefined },
     scopeIds: [...scopeIds.value],
     tagIds: [...tagIds.value],
+    releaseIds: [...releaseIds.value],
     translationStatus: translationStatus.value,
     targetLocaleIds: [...targetLocaleIds.value],
     statusLocaleIds: [...statusLocaleIds.value],
@@ -55,6 +58,7 @@ export function useEntryFeed(perPage = 100) {
     search,
     scopeIds,
     tagIds,
+    releaseIds,
     translationStatus,
     targetLocaleIds,
     statusLocaleIds,

@@ -2,12 +2,13 @@
 import { Checkbox, Input, NumberInput, Select } from "@thkzt/eunoia";
 import type { ScheduleChoice } from "~/lib/taskSchedule";
 
-// When a task runs on its own: on a schedule and after approvals. Runs can
-// always be started by hand too.
+// When a task runs on its own: on a schedule, after approvals and when a release
+// goes out. Runs can always be started by hand too.
 defineProps<{ disabled?: boolean }>();
 
 const schedule = defineModel<ScheduleChoice>("schedule", { required: true });
 const onApproval = defineModel<boolean>("onApproval", { required: true });
+const onRelease = defineModel<boolean>("onRelease", { required: true });
 const delay = defineModel<number>("delay", { required: true });
 
 const { t } = useI18n();
@@ -68,8 +69,11 @@ const presetOptions = computed(() =>
     >
       <template #description>{{ t("tasks.onApproval") }}</template>
     </Checkbox>
+    <Checkbox v-model="onRelease" :disabled :helper="t('tasks.onReleaseHelp')">
+      <template #description>{{ t("tasks.onRelease") }}</template>
+    </Checkbox>
     <NumberInput
-      v-if="onApproval"
+      v-if="onApproval || onRelease"
       v-model="delay"
       :min="0"
       :max="1440"

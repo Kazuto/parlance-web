@@ -20,6 +20,7 @@ const scopeIds = ref<string[]>([]);
 const tagIds = ref<string[]>([]);
 const format = ref<ExportFormat>("EXPORT_FORMAT_JSON");
 const includeDrafts = ref(false);
+const includeUnreleased = ref(false);
 
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -81,6 +82,7 @@ function submit() {
     tagIds: [...tagIds.value],
     format: format.value,
     includeDrafts: includeDrafts.value,
+    includeUnreleased: includeUnreleased.value,
   });
 }
 </script>
@@ -146,6 +148,13 @@ function submit() {
         :helper="t('transfer.includeDraftsHelp')"
       >
         <template #description>{{ t("transfer.includeDrafts") }}</template>
+      </Checkbox>
+      <Checkbox
+        v-model="includeUnreleased"
+        :disabled="pending"
+        :helper="t('transfer.includeUnreleasedHelp')"
+      >
+        <template #description>{{ t("transfer.includeUnreleased") }}</template>
       </Checkbox>
       <div class="text-sm text-neutral-500 dark:text-neutral-400">
         <p v-if="!folders.length">

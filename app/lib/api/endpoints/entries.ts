@@ -31,6 +31,12 @@ import {
   UpdateEntriesTagsRequestSchema,
   UpdateEntriesTagsResponseSchema,
   type UpdateEntriesTagsRequest,
+  UpdateEntriesReleasesRequestSchema,
+  UpdateEntriesReleasesResponseSchema,
+  type UpdateEntriesReleasesRequest,
+  CountLiveEntriesRequestSchema,
+  CountLiveEntriesResponseSchema,
+  type CountLiveEntriesRequest,
 } from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
@@ -134,6 +140,29 @@ export const entries = {
     {
       input: UpdateEntriesTagsRequestSchema,
       output: UpdateEntriesTagsResponseSchema,
+    },
+  ),
+  updateReleases: authedEndpoint.mutate(
+    (data: UpdateEntriesReleasesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/UpdateEntriesReleases",
+      json: data,
+    }),
+    {
+      input: UpdateEntriesReleasesRequestSchema,
+      output: UpdateEntriesReleasesResponseSchema,
+    },
+  ),
+  // The entries exports carry with approved texts, which a release would hold back.
+  countLive: authedEndpoint.query(
+    (data: CountLiveEntriesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/CountLiveEntries",
+      json: data,
+    }),
+    {
+      input: CountLiveEntriesRequestSchema,
+      output: CountLiveEntriesResponseSchema,
     },
   ),
 

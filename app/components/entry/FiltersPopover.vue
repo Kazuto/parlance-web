@@ -8,6 +8,8 @@ defineProps<{
   scopeOptions: Option[];
   /** The tags of the selected scopes */
   tagOptions: Option[];
+  /** Releases to filter by; none hides the filter */
+  releaseOptions: Option[];
   statusOptions: Option[];
   disabled?: boolean;
   activeCount: number;
@@ -16,6 +18,7 @@ defineProps<{
 const localeIds = defineModel<string[]>("localeIds", { required: true });
 const scopeIds = defineModel<string[]>("scopeIds", { required: true });
 const tagIds = defineModel<string[]>("tagIds", { required: true });
+const releaseIds = defineModel<string[]>("releaseIds", { required: true });
 const status = defineModel<string>("status", { required: true });
 const emit = defineEmits<{ clear: [] }>();
 
@@ -71,6 +74,24 @@ const { t } = useI18n();
         class="text-xs text-neutral-500 dark:text-neutral-400"
         >{{ t("tags.filterHelp") }}</span
       >
+    </label>
+
+    <label v-if="releaseOptions.length" class="flex flex-col gap-1">
+      <span
+        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >{{ t("nav.releases") }}</span
+      >
+      <Select
+        :model-value="releaseIds"
+        dense
+        multiple
+        :options="releaseOptions"
+        :placeholder="t('releases.all')"
+        :aria-label="t('nav.releases')"
+        @update:model-value="
+          releaseIds = Array.isArray($event) ? $event.map(String) : []
+        "
+      />
     </label>
 
     <label class="flex flex-col gap-1">

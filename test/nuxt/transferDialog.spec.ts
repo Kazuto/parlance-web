@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import { Select } from "@thkzt/eunoia";
+import { Checkbox, Select } from "@thkzt/eunoia";
 import TransferDialog from "~/components/entry/TransferDialog.vue";
 import {
   ALL_PERMISSIONS,
@@ -142,6 +142,7 @@ describe("transfer dialog", () => {
           scopeIds: [],
           tagIds: [],
           includeDrafts: false,
+          includeUnreleased: false,
         },
       },
     ]);
@@ -174,6 +175,23 @@ describe("transfer dialog", () => {
       scopeIds: ["s1"],
       tagIds: ["t1"],
     });
+  });
+
+  it("exports entries pending releases hold back when ticked", async () => {
+    const { wrapper, calls } = await openDialog("export");
+
+    URL.createObjectURL = () => "blob:export";
+
+    URL.revokeObjectURL = () => {};
+
+    wrapper
+      .findAllComponents(Checkbox)
+      .find((box) => box.text().includes(t("transfer.includeUnreleased")))!
+      .vm.$emit("update:modelValue", true);
+    await settle();
+    await click(wrapper, t("transfer.download"));
+
+    expect(calls.at(-1)?.body).toMatchObject({ includeUnreleased: true });
   });
 
   it("offers no tags when importing", async () => {

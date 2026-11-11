@@ -18,6 +18,7 @@ export const WebhookEventSchema = z.union([
     "WEBHOOK_EVENT_PING",
     "WEBHOOK_EVENT_TRANSLATIONS_AWAITING_APPROVAL",
     "WEBHOOK_EVENT_DIGEST",
+    "WEBHOOK_EVENT_TRANSLATIONS_RELEASED",
   ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);

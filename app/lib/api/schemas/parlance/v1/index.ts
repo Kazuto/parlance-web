@@ -10,6 +10,7 @@ export * from "./ImportSchema";
 export * from "./LocaleSchema";
 export * from "./LocalizationSchema";
 export * from "./PermissionSchema";
+export * from "./ReleaseSchema";
 export * from "./RoleSchema";
 export * from "./ScopeSchema";
 export * from "./SetupSchema";

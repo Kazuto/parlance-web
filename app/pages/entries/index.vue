@@ -120,6 +120,7 @@ const {
   search: feedSearch,
   scopeIds,
   tagIds,
+  releaseIds,
   translationStatus,
   targetLocaleIds,
   statusLocaleIds,
@@ -128,6 +129,7 @@ const scopeChoices = useScopeOptions();
 const { options: scopeOptions, error: scopeError } = scopeChoices;
 // Tags narrow the selected scopes; one whose scope is deselected goes too.
 const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
+const { options: releaseOptions } = useReleaseOptions();
 const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
   { label: t("entries.missingTranslations"), value: "missing" },
@@ -180,6 +182,7 @@ useEntryFilterQuery({
   localeIds: selectedLocaleIds,
   scopeIds,
   tagIds,
+  releaseIds,
   status: translationStatus,
   search,
 });
@@ -214,6 +217,7 @@ const activeFilterCount = computed(
     Number(languagesFiltered.value) +
     Number(scopeIds.value.length > 0) +
     Number(tagIds.value.length > 0) +
+    Number(releaseIds.value.length > 0) +
     Number(!!translationStatus.value),
 );
 
@@ -239,6 +243,13 @@ function toggleTagFilter(id: string, scopeId: string) {
   tagIds.value = [...tagIds.value, id];
 }
 
+function toggleReleaseFilter(id: string) {
+  if (isSaving.value) return;
+  releaseIds.value = releaseIds.value.includes(id)
+    ? releaseIds.value.filter((releaseId) => releaseId !== id)
+    : [...releaseIds.value, id];
+}
+
 // The scope chips, each followed by the chips of its selected tags.
 const selectedScopes = computed(() =>
   scopeIds.value.map((id) => {
@@ -252,6 +263,13 @@ const selectedScopes = computed(() =>
     };
   }),
 );
+const selectedReleases = computed(() =>
+  releaseIds.value.map((id) => ({
+    id,
+    label:
+      releaseOptions.value.find((release) => release.value === id)?.label ?? id,
+  })),
+);
 const selectedStatusLabel = computed(
   () =>
     statusOptions.value.find(
@@ -263,6 +281,7 @@ function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
   scopeIds.value = [];
   tagIds.value = [];
+  releaseIds.value = [];
   translationStatus.value = "";
 }
 
@@ -273,6 +292,7 @@ const pinnedEntryId = ref<string>();
 async function handleCreated(entry: Entry) {
   scopeIds.value = [];
   tagIds.value = [];
+  releaseIds.value = [];
   translationStatus.value = "";
   search.value = "";
   feedSearch.value = undefined;
@@ -296,6 +316,7 @@ const MAX_BULK_ENTRIES = 1000;
 const checkedEntryIds = ref<string[]>([]);
 const showScopesDialog = ref(false);
 const showTagsDialog = ref(false);
+const showReleasesDialog = ref(false);
 const bulkLimitReached = computed(
   () => checkedEntryIds.value.length > MAX_BULK_ENTRIES,
 );
@@ -970,10 +991,12 @@ watch(
         v-model:locale-ids="selectedLocaleIds"
         v-model:scope-ids="scopeIds"
         v-model:tag-ids="tagIds"
+        v-model:release-ids="releaseIds"
         v-model:status="translationStatus"
         :locale-options="localeOptions"
         :scope-options="scopeOptions"
         :tag-options="tagOptions"
+        :release-options="releaseOptions"
         :status-options="statusOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
@@ -1012,6 +1035,16 @@ watch(
             {{ tag.name }}
           </ScopeTagChip>
         </template>
+        <ReleaseChip
+          v-for="release in selectedReleases"
+          :key="release.id"
+          dense
+          removable
+          class="shrink-0"
+          @remove="releaseIds = releaseIds.filter((id) => id !== release.id)"
+        >
+          {{ release.label }}
+        </ReleaseChip>
         <Chip
           v-if="translationStatus"
           dense
@@ -1051,12 +1084,14 @@ watch(
       :can-copy="canUpdate"
       :copy-blocker="bulkCopyBlocker"
       :can-delete="can('delete_entry')"
+      :can-edit-releases="can('read_release')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
       @translate="runBulkTranslation()"
       @stop-translate="stopBulkTranslation"
       @edit-scopes="showScopesDialog = true"
       @edit-tags="showTagsDialog = true"
+      @edit-releases="showReleasesDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
       @copy="runBulkTranslation('copy')"
@@ -1150,6 +1185,7 @@ watch(
             :entry="selectedEntryData"
             :active-scope-ids="scopeIds"
             :active-tag-ids="tagIds"
+            :active-release-ids="releaseIds"
             :translated-count="translatedCount"
             :locale-count="selectedLocaleIds.length"
             :is-saving="isSaving"
@@ -1159,6 +1195,7 @@ watch(
             :actions="entryActions"
             @toggle-scope="toggleScopeFilter"
             @toggle-tag="toggleTagFilter"
+            @toggle-release="toggleReleaseFilter"
             @edit="editDialogItem = selectedEntryData"
             @action="onEntryAction"
           />
@@ -1403,6 +1440,12 @@ watch(
     :open="showTagsDialog"
     :entry-ids="checkedEntryIds"
     @close="showTagsDialog = false"
+    @updated="handleBulkEdited"
+  />
+  <EntryReleasesDialog
+    :open="showReleasesDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showReleasesDialog = false"
     @updated="handleBulkEdited"
   />
   <EntryTransferDialog

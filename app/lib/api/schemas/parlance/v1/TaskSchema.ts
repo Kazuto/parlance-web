@@ -18,7 +18,11 @@ export const TaskTypeSchema = z.union([
 ]);
 export type TaskType = z.infer<typeof TaskTypeSchema>;
 export const TaskEventSchema = z.union([
-  z.enum(["TASK_EVENT_UNSPECIFIED", "TASK_EVENT_TRANSLATIONS_APPROVED"]),
+  z.enum([
+    "TASK_EVENT_UNSPECIFIED",
+    "TASK_EVENT_TRANSLATIONS_APPROVED",
+    "TASK_EVENT_TRANSLATIONS_RELEASED",
+  ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);
 export type TaskEvent = z.infer<typeof TaskEventSchema>;

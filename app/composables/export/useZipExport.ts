@@ -11,6 +11,8 @@ export type ZipExportOptions = {
   /** The flat files' format, and that of scopes without a default */
   format: ExportFormat;
   includeDrafts: boolean;
+  /** Also export entries pending releases hold back */
+  includeUnreleased: boolean;
 };
 
 /**

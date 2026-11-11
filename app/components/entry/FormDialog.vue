@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Alert,
   Button,
   Dialog,
   Input,
@@ -20,6 +21,7 @@ const key = ref("");
 const description = ref("");
 const scopeIds = ref<string[]>([]);
 const tagIds = ref<string[]>([]);
+const releaseIds = ref<string[]>([]);
 const { placeholder: keyPlaceholder } = useTypingPlaceholder([
   "button.save",
   "login.title",
@@ -53,6 +55,32 @@ const scopeOptions = computed(() => [
       value: scope.id ?? "",
     })),
 ]);
+const { can } = usePermission();
+const { pendingOptions } = useReleaseOptions();
+// The entry's pending releases stay selectable while the list loads.
+const releaseOptions = computed(() => [
+  ...pendingOptions.value,
+  ...(props.item?.releases ?? [])
+    .filter(
+      (release) =>
+        release.id &&
+        !pendingOptions.value.some((option) => option.value === release.id),
+    )
+    .map((release) => ({
+      label: release.name ?? release.id ?? "",
+      value: release.id ?? "",
+    })),
+]);
+// Adding an entry with approved texts to a release takes them out of exports.
+const addsReleases = computed(() =>
+  releaseIds.value.some(
+    (id) => !props.item?.releases?.some((release) => release.id === id),
+  ),
+);
+const liveCount = useLiveEntryCount(
+  () => (props.item?.id ? [props.item.id] : []),
+  () => props.open && addsReleases.value,
+);
 const entryStore = useEntryStore();
 const isEdit = computed(() => !!props.item);
 const { t } = useI18n();
@@ -70,9 +98,16 @@ const { error, isPending, submit, cancel } = useFormDialog({
     tagIds.value = (props.item?.tags ?? []).flatMap((tag) =>
       tag.id ? [tag.id] : [],
     );
+    releaseIds.value = (props.item?.releases ?? []).flatMap((release) =>
+      release.id ? [release.id] : [],
+    );
   },
   close: () => emit("close"),
 });
+
+// Releases only change for those who see them, so others keep the entry's.
+const releasesInput = () =>
+  can.value("read_release") ? { releases: { ids: releaseIds.value } } : {};
 
 function handleSubmit() {
   submit(async () => {
@@ -93,6 +128,7 @@ function handleSubmit() {
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
         tags: { ids: tagIds.value },
+        ...releasesInput(),
       });
 
       showSuccess(t("entries.updated", { key: trimmedKey }));
@@ -103,6 +139,7 @@ function handleSubmit() {
         description: description.value.trim(),
         scopes: { ids: scopeIds.value },
         tags: { ids: tagIds.value },
+        ...releasesInput(),
       });
 
       showSuccess(t("entries.created", { key: trimmedKey }));
@@ -154,6 +191,26 @@ function handleSubmit() {
         :placeholder="t('tags.select')"
         >{{ t("tags.title") }}</Select
       >
+      <div
+        v-if="can('read_release') && releaseOptions.length"
+        class="space-y-1"
+      >
+        <Select
+          v-model="releaseIds"
+          teleport-to="body"
+          multiple
+          :options="releaseOptions"
+          :disabled="isPending"
+          :placeholder="t('releases.select')"
+          >{{ t("nav.releases") }}</Select
+        >
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("releases.entryHelp") }}
+        </p>
+      </div>
+      <Alert v-if="liveCount" variant="warning" dense persistent>
+        {{ t("releases.liveWarningEntry") }}
+      </Alert>
       <p v-if="scopeError" role="alert" class="text-sm text-red-600">
         {{ t("scopes.loadFailed") }}
       </p>
