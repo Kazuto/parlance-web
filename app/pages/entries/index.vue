@@ -119,11 +119,15 @@ const {
   refetch,
   search: feedSearch,
   scopeIds,
+  tagIds,
   translationStatus,
   targetLocaleIds,
   statusLocaleIds,
 } = useEntryFeed(100);
-const { options: scopeOptions, error: scopeError } = useScopeOptions();
+const scopeChoices = useScopeOptions();
+const { options: scopeOptions, error: scopeError } = scopeChoices;
+// Tags narrow the selected scopes; one whose scope is deselected goes too.
+const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
 const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
   { label: t("entries.missingTranslations"), value: "missing" },
@@ -175,6 +179,7 @@ useEntryFilterQuery({
   locales: computed(() => locales.value),
   localeIds: selectedLocaleIds,
   scopeIds,
+  tagIds,
   status: translationStatus,
   search,
 });
@@ -208,6 +213,7 @@ const activeFilterCount = computed(
   () =>
     Number(languagesFiltered.value) +
     Number(scopeIds.value.length > 0) +
+    Number(tagIds.value.length > 0) +
     Number(!!translationStatus.value),
 );
 
@@ -218,11 +224,32 @@ function toggleScopeFilter(id: string) {
     : [...scopeIds.value, id];
 }
 
+// Filtering by a tag filters by its scope too, as tags only narrow scopes.
+function toggleTagFilter(id: string, scopeId: string) {
+  if (isSaving.value) return;
+
+  if (tagIds.value.includes(id)) {
+    tagIds.value = tagIds.value.filter((tagId) => tagId !== id);
+
+    return;
+  }
+
+  if (!scopeIds.value.includes(scopeId))
+    scopeIds.value = [...scopeIds.value, scopeId];
+  tagIds.value = [...tagIds.value, id];
+}
+
+// The scope chips, each followed by the chips of its selected tags.
 const selectedScopes = computed(() =>
   scopeIds.value.map((id) => {
     const option = scopeOptions.value.find((scope) => scope.value === id);
 
-    return { id, label: option?.label ?? id, color: option?.color };
+    return {
+      id,
+      label: option?.label ?? id,
+      color: option?.color,
+      tags: (option?.tags ?? []).filter((tag) => tagIds.value.includes(tag.id)),
+    };
   }),
 );
 const selectedStatusLabel = computed(
@@ -235,6 +262,7 @@ const selectedStatusLabel = computed(
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
   scopeIds.value = [];
+  tagIds.value = [];
   translationStatus.value = "";
 }
 
@@ -244,6 +272,7 @@ const pinnedEntryId = ref<string>();
 
 async function handleCreated(entry: Entry) {
   scopeIds.value = [];
+  tagIds.value = [];
   translationStatus.value = "";
   search.value = "";
   feedSearch.value = undefined;
@@ -261,11 +290,12 @@ function selectEntry(item: SplitViewItem) {
   compactEditor.show(String(item.key));
 }
 
-// Entries ticked in the list for bulk scope edits. Kept across filter changes so
+// Entries ticked in the list for bulk actions. Kept across filter changes so
 // entries can be gathered from several searches.
 const MAX_BULK_ENTRIES = 1000;
 const checkedEntryIds = ref<string[]>([]);
 const showScopesDialog = ref(false);
+const showTagsDialog = ref(false);
 const bulkLimitReached = computed(
   () => checkedEntryIds.value.length > MAX_BULK_ENTRIES,
 );
@@ -286,7 +316,7 @@ function checkAllLoaded() {
   ];
 }
 
-function handleScopesUpdated(entryIds: string[]) {
+function handleBulkEdited(entryIds: string[]) {
   checkedEntryIds.value = [];
   if (selectedEntryId.value && entryIds.includes(selectedEntryId.value))
     refetchDetail();
@@ -939,9 +969,11 @@ watch(
       <EntryFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
         v-model:scope-ids="scopeIds"
+        v-model:tag-ids="tagIds"
         v-model:status="translationStatus"
         :locale-options="localeOptions"
         :scope-options="scopeOptions"
+        :tag-options="tagOptions"
         :status-options="statusOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
@@ -959,17 +991,27 @@ watch(
         >
           {{ languageSummary }}
         </Chip>
-        <ScopeChip
-          v-for="scope in selectedScopes"
-          :key="scope.id"
-          dense
-          removable
-          class="shrink-0"
-          :color="scope.color"
-          @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
-        >
-          {{ scope.label }}
-        </ScopeChip>
+        <template v-for="scope in selectedScopes" :key="scope.id">
+          <ScopeChip
+            dense
+            removable
+            class="shrink-0"
+            :color="scope.color"
+            @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
+          >
+            {{ scope.label }}
+          </ScopeChip>
+          <ScopeTagChip
+            v-for="tag in scope.tags"
+            :key="tag.id"
+            dense
+            removable
+            class="shrink-0"
+            @remove="tagIds = tagIds.filter((id) => id !== tag.id)"
+          >
+            {{ tag.name }}
+          </ScopeTagChip>
+        </template>
         <Chip
           v-if="translationStatus"
           dense
@@ -1014,6 +1056,7 @@ watch(
       @translate="runBulkTranslation()"
       @stop-translate="stopBulkTranslation"
       @edit-scopes="showScopesDialog = true"
+      @edit-tags="showTagsDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
       @copy="runBulkTranslation('copy')"
@@ -1106,6 +1149,7 @@ watch(
             :label="item?.label"
             :entry="selectedEntryData"
             :active-scope-ids="scopeIds"
+            :active-tag-ids="tagIds"
             :translated-count="translatedCount"
             :locale-count="selectedLocaleIds.length"
             :is-saving="isSaving"
@@ -1114,6 +1158,7 @@ watch(
             "
             :actions="entryActions"
             @toggle-scope="toggleScopeFilter"
+            @toggle-tag="toggleTagFilter"
             @edit="editDialogItem = selectedEntryData"
             @action="onEntryAction"
           />
@@ -1352,7 +1397,13 @@ watch(
     :open="showScopesDialog"
     :entry-ids="checkedEntryIds"
     @close="showScopesDialog = false"
-    @updated="handleScopesUpdated"
+    @updated="handleBulkEdited"
+  />
+  <EntryTagsDialog
+    :open="showTagsDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showTagsDialog = false"
+    @updated="handleBulkEdited"
   />
   <EntryTransferDialog
     :open="showTransferDialog"

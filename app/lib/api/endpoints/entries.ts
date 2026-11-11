@@ -28,6 +28,9 @@ import {
   UpdateEntriesScopesRequestSchema,
   UpdateEntriesScopesResponseSchema,
   type UpdateEntriesScopesRequest,
+  UpdateEntriesTagsRequestSchema,
+  UpdateEntriesTagsResponseSchema,
+  type UpdateEntriesTagsRequest,
 } from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
@@ -119,6 +122,18 @@ export const entries = {
     {
       input: UpdateEntriesScopesRequestSchema,
       output: UpdateEntriesScopesResponseSchema,
+    },
+  ),
+
+  updateTags: authedEndpoint.mutate(
+    (data: UpdateEntriesTagsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/UpdateEntriesTags",
+      json: data,
+    }),
+    {
+      input: UpdateEntriesTagsRequestSchema,
+      output: UpdateEntriesTagsResponseSchema,
     },
   ),
 

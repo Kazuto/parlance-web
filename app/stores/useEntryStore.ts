@@ -7,11 +7,14 @@ export const useEntryStore = defineStore("entryStore", () => {
   const detailQueryKey = api.entries.get.getQueryKey();
   // Deleting and restoring also change the list of deleted entries.
   const listQueryKey = api.entries.list.getQueryKey();
+  // The scopes page counts each tag's entries.
+  const scopesQueryKey = api.scopes.list.getQueryKey();
 
   const create = useMutation({
     ...api.entries.create.use(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: scopesQueryKey });
     },
   });
 
@@ -19,6 +22,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     ...api.entries.update.use(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: scopesQueryKey });
     },
   });
 
@@ -27,6 +31,16 @@ export const useEntryStore = defineStore("entryStore", () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
       queryClient.invalidateQueries({ queryKey: detailQueryKey });
+    },
+  });
+
+  // Adding a tag can add its scope to the entries too.
+  const updateTags = useMutation({
+    ...api.entries.updateTags.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: detailQueryKey });
+      queryClient.invalidateQueries({ queryKey: scopesQueryKey });
     },
   });
 
@@ -58,6 +72,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     create,
     update,
     updateScopes,
+    updateTags,
     destroy,
     destroyMany,
     restore,

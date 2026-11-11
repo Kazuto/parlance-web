@@ -6,6 +6,8 @@ type Option = { label: string; value: string };
 defineProps<{
   localeOptions: Option[];
   scopeOptions: Option[];
+  /** The tags of the selected scopes */
+  tagOptions: Option[];
   statusOptions: Option[];
   disabled?: boolean;
   activeCount: number;
@@ -13,6 +15,7 @@ defineProps<{
 
 const localeIds = defineModel<string[]>("localeIds", { required: true });
 const scopeIds = defineModel<string[]>("scopeIds", { required: true });
+const tagIds = defineModel<string[]>("tagIds", { required: true });
 const status = defineModel<string>("status", { required: true });
 const emit = defineEmits<{ clear: [] }>();
 
@@ -43,6 +46,31 @@ const { t } = useI18n();
           scopeIds = Array.isArray($event) ? $event.map(String) : []
         "
       />
+    </label>
+
+    <!-- Tags narrow scopes, so they are offered once scopes are picked. -->
+    <label v-if="scopeIds.length" class="flex flex-col gap-1">
+      <span
+        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >{{ t("tags.title") }}</span
+      >
+      <Select
+        :model-value="tagIds"
+        dense
+        multiple
+        :options="tagOptions"
+        :disabled="!tagOptions.length"
+        :placeholder="t(tagOptions.length ? 'tags.all' : 'tags.noneInScopes')"
+        :aria-label="t('tags.title')"
+        @update:model-value="
+          tagIds = Array.isArray($event) ? $event.map(String) : []
+        "
+      />
+      <span
+        v-if="tagOptions.length"
+        class="text-xs text-neutral-500 dark:text-neutral-400"
+        >{{ t("tags.filterHelp") }}</span
+      >
     </label>
 
     <label class="flex flex-col gap-1">
