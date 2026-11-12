@@ -57,6 +57,7 @@ describe("command palette", () => {
       t("nav.transfer"),
       t("nav.glossary"),
       t("nav.scopes"),
+      t("nav.releases"),
       t("nav.account"),
     ]);
   });

@@ -107,6 +107,16 @@ function describeTriggers(task: Task) {
     );
   }
 
+  if (task.events?.includes("TASK_EVENT_TRANSLATIONS_RELEASED")) {
+    parts.push(
+      t(
+        "tasks.describe.onRelease",
+        { count: task.eventDelayMinutes ?? 0 },
+        task.eventDelayMinutes ?? 0,
+      ),
+    );
+  }
+
   return parts.length ? parts.join(" · ") : t("tasks.describe.manual");
 }
 

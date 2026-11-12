@@ -152,6 +152,7 @@ function handleSubmit() {
       <TaskTriggerFields
         v-model:schedule="form.schedule"
         v-model:on-approval="form.onApproval"
+        v-model:on-release="form.onRelease"
         v-model:delay="form.delay"
         :disabled="isPending"
       />

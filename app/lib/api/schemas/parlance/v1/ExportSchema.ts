@@ -7,6 +7,7 @@ export type ExportPhpRequest = {
   scopeIds?: Array<string> | null;
   includeDrafts?: boolean | null;
   tagIds?: Array<string> | null;
+  includeUnreleased?: boolean | null;
 };
 export const ExportPhpRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -20,6 +21,9 @@ export const ExportPhpRequestSchema = z.object({
   },
   get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeUnreleased(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportPhpResponse = {
@@ -43,6 +47,7 @@ export type ExportJsonRequest = {
   scopeIds?: Array<string> | null;
   includeDrafts?: boolean | null;
   tagIds?: Array<string> | null;
+  includeUnreleased?: boolean | null;
 };
 export const ExportJsonRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -56,6 +61,9 @@ export const ExportJsonRequestSchema = z.object({
   },
   get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeUnreleased(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportJsonResponse = {
@@ -79,6 +87,7 @@ export type ExportPoRequest = {
   scopeIds?: Array<string> | null;
   includeDrafts?: boolean | null;
   tagIds?: Array<string> | null;
+  includeUnreleased?: boolean | null;
 };
 export const ExportPoRequestSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -92,6 +101,9 @@ export const ExportPoRequestSchema = z.object({
   },
   get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get includeUnreleased(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportPoResponse = {
@@ -116,6 +128,7 @@ export type ExportZipRequest = {
   tagIds?: Array<string> | null;
   localeIds?: Array<string> | null;
   format?: ExportFormat | null;
+  includeUnreleased?: boolean | null;
 };
 export const ExportZipRequestSchema = z.object({
   get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
@@ -132,6 +145,9 @@ export const ExportZipRequestSchema = z.object({
   },
   get format(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
     return ExportFormatSchema.nullish();
+  },
+  get includeUnreleased(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ExportZipResponse = {

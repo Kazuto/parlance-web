@@ -36,6 +36,8 @@ const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 // Imports land as drafts unless a reviewer vouches for them; exports leave drafts out.
 const approve = ref(false);
 const includeDrafts = ref(false);
+// Exports leave out entries pending releases hold back, unless included.
+const includeUnreleased = ref(false);
 const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
 const file = ref<File>();
@@ -237,6 +239,7 @@ async function handleSubmit() {
         scopeIds: scopeIds.value,
         tagIds: tagIds.value,
         includeDrafts: includeDrafts.value,
+        includeUnreleased: includeUnreleased.value,
       };
       const response = await (format.value === "po"
         ? exportPo.mutateAsync(input)
@@ -382,6 +385,14 @@ defineExpose({
         :helper="t('transfer.includeDraftsHelp')"
       >
         <template #description>{{ t("transfer.includeDrafts") }}</template>
+      </Checkbox>
+      <Checkbox
+        v-if="action === 'export'"
+        v-model="includeUnreleased"
+        :disabled="isPending"
+        :helper="t('transfer.includeUnreleasedHelp')"
+      >
+        <template #description>{{ t("transfer.includeUnreleased") }}</template>
       </Checkbox>
       <p
         v-if="action === 'export'"

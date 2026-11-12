@@ -14,6 +14,7 @@ import {
   type ReviewStatus,
 } from "./CommonSchema";
 import { LocalizationSchema, type Localization } from "./LocalizationSchema";
+import { ReleaseSchema, type Release } from "./ReleaseSchema";
 import { ScopeSchema, type Scope, TagSchema, type Tag } from "./ScopeSchema";
 import { UserSchema, type User } from "./UserSchema";
 export type Entry = {
@@ -32,6 +33,7 @@ export type Entry = {
   draftLocaleIds?: Array<string> | null;
   outdatedLocaleIds?: Array<string> | null;
   tags?: Array<Tag> | null;
+  releases?: Array<Release> | null;
 };
 export const EntrySchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -85,6 +87,9 @@ export const EntrySchema = z.object({
   get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Tag>>>> {
     return z.array(TagSchema).nullish();
   },
+  get releases(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Release>>>> {
+    return z.array(ReleaseSchema).nullish();
+  },
 });
 export type ListEntriesRequest = {
   scopeId?: string | null;
@@ -99,6 +104,7 @@ export type ListEntriesRequest = {
   deletedOnly?: boolean | null;
   statusLocaleIds?: Array<string> | null;
   tagIds?: Array<string> | null;
+  releaseIds?: Array<string> | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -141,6 +147,9 @@ export const ListEntriesRequestSchema = z.object({
   get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
   },
+  get releaseIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
 });
 export type ListEntriesResponse = {
   entries?: Array<Entry> | null;
@@ -181,6 +190,7 @@ export type CreateEntryRequest = {
   description?: string | null;
   scopes?: IdSelection | null;
   tags?: IdSelection | null;
+  releases?: IdSelection | null;
 };
 export const CreateEntryRequestSchema = z.object({
   get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -193,6 +203,9 @@ export const CreateEntryRequestSchema = z.object({
     return IdSelectionSchema.nullish();
   },
   get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
+  },
+  get releases(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
     return IdSelectionSchema.nullish();
   },
 });
@@ -210,6 +223,7 @@ export type UpdateEntryRequest = {
   key?: string | null;
   scopes?: IdSelection | null;
   tags?: IdSelection | null;
+  releases?: IdSelection | null;
 };
 export const UpdateEntryRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -225,6 +239,9 @@ export const UpdateEntryRequestSchema = z.object({
     return IdSelectionSchema.nullish();
   },
   get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
+    return IdSelectionSchema.nullish();
+  },
+  get releases(): z.ZodOptional<z.ZodNullable<z.ZodType<IdSelection>>> {
     return IdSelectionSchema.nullish();
   },
 });
@@ -272,6 +289,42 @@ export const UpdateEntriesTagsRequestSchema = z.object({
 });
 export type UpdateEntriesTagsResponse = Record<string, never>;
 export const UpdateEntriesTagsResponseSchema = z.object({});
+export type UpdateEntriesReleasesRequest = {
+  entryIds?: Array<string> | null;
+  addReleaseIds?: Array<string> | null;
+  removeReleaseIds?: Array<string> | null;
+};
+export const UpdateEntriesReleasesRequestSchema = z.object({
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get addReleaseIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get removeReleaseIds(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
+  },
+});
+export type UpdateEntriesReleasesResponse = Record<string, never>;
+export const UpdateEntriesReleasesResponseSchema = z.object({});
+export type CountLiveEntriesRequest = {
+  entryIds?: Array<string> | null;
+};
+export const CountLiveEntriesRequestSchema = z.object({
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type CountLiveEntriesResponse = {
+  count?: number | null;
+};
+export const CountLiveEntriesResponseSchema = z.object({
+  get count(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
 export type DeleteEntryRequest = {
   id?: string | null;
 };

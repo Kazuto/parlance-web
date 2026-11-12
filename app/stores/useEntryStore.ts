@@ -7,14 +7,16 @@ export const useEntryStore = defineStore("entryStore", () => {
   const detailQueryKey = api.entries.get.getQueryKey();
   // Deleting and restoring also change the list of deleted entries.
   const listQueryKey = api.entries.list.getQueryKey();
-  // The scopes page counts each tag's entries.
+  // The scopes page counts each tag's entries, and the releases page each release's.
   const scopesQueryKey = api.scopes.list.getQueryKey();
+  const releasesQueryKey = api.releases.list.getQueryKey();
 
   const create = useMutation({
     ...api.entries.create.use(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
       queryClient.invalidateQueries({ queryKey: scopesQueryKey });
+      queryClient.invalidateQueries({ queryKey: releasesQueryKey });
     },
   });
 
@@ -23,6 +25,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
       queryClient.invalidateQueries({ queryKey: scopesQueryKey });
+      queryClient.invalidateQueries({ queryKey: releasesQueryKey });
     },
   });
 
@@ -41,6 +44,15 @@ export const useEntryStore = defineStore("entryStore", () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey });
       queryClient.invalidateQueries({ queryKey: detailQueryKey });
       queryClient.invalidateQueries({ queryKey: scopesQueryKey });
+    },
+  });
+
+  const updateReleases = useMutation({
+    ...api.entries.updateReleases.use(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: feedQueryKey });
+      queryClient.invalidateQueries({ queryKey: detailQueryKey });
+      queryClient.invalidateQueries({ queryKey: releasesQueryKey });
     },
   });
 
@@ -73,6 +85,7 @@ export const useEntryStore = defineStore("entryStore", () => {
     update,
     updateScopes,
     updateTags,
+    updateReleases,
     destroy,
     destroyMany,
     restore,

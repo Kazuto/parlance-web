@@ -35,6 +35,10 @@ export const ALL_PERMISSIONS = [
   "create_tag",
   "update_tag",
   "delete_tag",
+  "create_release",
+  "read_release",
+  "update_release",
+  "delete_release",
   "create_definition",
   "read_definition",
   "update_definition",
@@ -69,5 +73,6 @@ export const VIEWER: PermissionName[] = [
   "read_terminology",
   "read_definition",
   "read_scope",
+  "read_release",
   "export_entry",
 ];

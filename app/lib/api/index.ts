@@ -11,6 +11,7 @@ import { users } from "./endpoints/users";
 import { imports } from "./endpoints/imports";
 import { exports } from "./endpoints/exports";
 import { scopes } from "./endpoints/scopes";
+import { releases } from "./endpoints/releases";
 import { activity } from "./endpoints/activity";
 import { stats } from "./endpoints/stats";
 import { setup } from "./endpoints/setup";
@@ -33,6 +34,7 @@ export const api = defineApi({
   imports,
   exports,
   scopes,
+  releases,
   activity,
   stats,
   setup,
