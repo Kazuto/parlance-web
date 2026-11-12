@@ -20,20 +20,26 @@ export const WEBHOOK_FORMATS = [
   "WEBHOOK_FORMAT_JSON",
   "WEBHOOK_FORMAT_SLACK",
   "WEBHOOK_FORMAT_DISCORD",
+  "WEBHOOK_FORMAT_APPRISE",
 ] as const satisfies readonly WebhookFormat[];
+
+function parseUrl(value: string) {
+  try {
+    return new URL(value);
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * The format a chat service's webhook address takes, for the services Parlance
  * knows: Discord, also through its Slack-compatible "/slack" endpoint, and Slack.
+ * They turn other formats down.
  */
-export function formatForUrl(value: string): WebhookFormat | undefined {
-  let url: URL;
+export function requiredFormatForUrl(value: string): WebhookFormat | undefined {
+  const url = parseUrl(value);
 
-  try {
-    url = new URL(value);
-  } catch {
-    return undefined;
-  }
+  if (!url) return undefined;
 
   if (/(^|\.)discord(app)?\.com$/.test(url.hostname)) {
     return url.pathname.replace(/\/$/, "").endsWith("/slack")
@@ -44,6 +50,22 @@ export function formatForUrl(value: string): WebhookFormat | undefined {
   return url.hostname === "hooks.slack.com"
     ? "WEBHOOK_FORMAT_SLACK"
     : undefined;
+}
+
+/**
+ * The format to start a webhook with: the one its service requires, or Apprise
+ * for an address like an Apprise API's, ending in "/notify" or "/notify/<key>".
+ * Other services may have such paths too, so Apprise is only a guess.
+ */
+export function formatForUrl(value: string): WebhookFormat | undefined {
+  const path = parseUrl(value)?.pathname.replace(/\/$/, "");
+
+  return (
+    requiredFormatForUrl(value) ??
+    (path && /\/notify(\/[\w-]+)?$/.test(path)
+      ? "WEBHOOK_FORMAT_APPRISE"
+      : undefined)
+  );
 }
 
 /**

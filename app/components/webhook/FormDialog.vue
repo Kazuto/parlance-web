@@ -14,6 +14,7 @@ import {
   WEBHOOK_EVENTS,
   WEBHOOK_FORMATS,
   formatForUrl,
+  requiredFormatForUrl,
   generateSecret,
 } from "~/lib/webhooks";
 
@@ -94,7 +95,7 @@ function pickFormat(format: WebhookFormat) {
 
 // An address whose service only takes another format, e.g. Discord's for JSON.
 const expectedFormat = computed(() => {
-  const format = formatForUrl(form.value.url.trim());
+  const format = requiredFormatForUrl(form.value.url.trim());
 
   return format && format !== form.value.format ? format : undefined;
 });
