@@ -29,6 +29,7 @@ export const WebhookFormatSchema = z.union([
     "WEBHOOK_FORMAT_JSON",
     "WEBHOOK_FORMAT_SLACK",
     "WEBHOOK_FORMAT_DISCORD",
+    "WEBHOOK_FORMAT_APPRISE",
   ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);
