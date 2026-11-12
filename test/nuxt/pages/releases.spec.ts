@@ -144,16 +144,22 @@ describe("releases page", () => {
       t("releases.nameRequired"),
     );
 
+    // The time shows next to the date, but only once a day is picked can it change.
+    const timeField = () =>
+      inDialog(page.wrapper.findAllComponents(TimePicker))!;
+
+    expect(timeField().props("disabled")).toBe(true);
+
     await page.wrapper.find("dialog[open] input").setValue("Autumn");
     inDialog(page.wrapper.findAllComponents(DatePicker))!.vm.$emit(
       "update:modelValue",
       new Date(2030, 8, 15),
     );
     await settle();
-    inDialog(page.wrapper.findAllComponents(TimePicker))!.vm.$emit(
-      "update:modelValue",
-      "14:30",
-    );
+
+    expect(timeField().props("disabled")).toBe(false);
+
+    timeField().vm.$emit("update:modelValue", "14:30");
     await settle();
     await submit(page);
 

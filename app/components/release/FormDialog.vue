@@ -152,23 +152,27 @@ function handleSubmit() {
         }}
       </p>
       <div v-else class="space-y-1">
+        <!-- The time shows from the start, but only counts once a day is picked. -->
         <div class="flex flex-wrap items-end gap-3">
-          <DatePicker
-            v-model="day"
-            class="min-w-48 flex-1"
-            teleport-to="body"
-            :disabled="isPending"
-            :placeholder="t('releases.notScheduled')"
-            >{{ t("releases.date") }}</DatePicker
-          >
-          <TimePicker
-            v-if="day"
-            v-model="time"
-            class="w-32"
-            teleport-to="body"
-            :disabled="isPending"
-            >{{ t("releases.time") }}</TimePicker
-          >
+          <div class="min-w-48 flex-1">
+            <DatePicker
+              v-model="day"
+              class="w-full"
+              teleport-to="body"
+              :disabled="isPending"
+              :placeholder="t('releases.notScheduled')"
+              >{{ t("releases.date") }}</DatePicker
+            >
+          </div>
+          <div class="w-32">
+            <TimePicker
+              v-model="time"
+              class="w-full"
+              teleport-to="body"
+              :disabled="isPending || !day"
+              >{{ t("releases.time") }}</TimePicker
+            >
+          </div>
           <Button
             v-if="day"
             type="button"
