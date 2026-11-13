@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import DashboardPage from "~/pages/index.vue";
 import LocalesPage from "~/pages/locales/index.vue";
-import LocalePage from "~/pages/locales/[id].vue";
 import ScopesPage from "~/pages/scopes/index.vue";
 import ReleasesPage from "~/pages/releases/index.vue";
 import TasksPage from "~/pages/tasks/index.vue";
@@ -46,14 +45,13 @@ describe("header actions in the palette", () => {
   it("lists the header's actions, the ones the user may take", async () => {
     const reader = await openLocales(["read_locale"]);
 
-    expect(await pageCommands(reader)).toEqual([
-      t("commands.openLanguage", { language: "English" }),
-    ]);
+    expect(await pageCommands(reader)).toEqual([]);
     reader.wrapper.unmount();
 
     const admin = await openLocales([
       "read_locale",
       "create_locale",
+      "update_locale",
       "import_entry",
       "export_entry",
     ]);
@@ -62,60 +60,21 @@ describe("header actions in the palette", () => {
       t("locales.create"),
       t("import.zip.import"),
       t("export.zip.export"),
-      t("commands.openLanguage", { language: "English" }),
+      t("commands.editLanguage", { language: "English" }),
     ]);
   });
 
-  it("opens a language", async () => {
-    const page = await openLocales(["read_locale"]);
+  it("edits a language", async () => {
+    const page = await openLocales(["read_locale", "update_locale"]);
 
-    await runCommand(page, t("commands.openLanguage", { language: "English" }));
+    await runCommand(page, t("commands.editLanguage", { language: "English" }));
 
-    await expectPath("/locales/l1");
-  });
-});
+    const dialog = page.wrapper.find("dialog[open]");
 
-describe("language page commands", () => {
-  async function openLocale(permissions: readonly string[]) {
-    loginAs(permissions);
-    mockRpc("LocaleService/ListLocales", {
-      locales,
-      pagination: pagination(locales.length),
-    });
-    mockRpc("LocaleService/GetLocale", { locale: locales[0] });
-
-    return mountPage(LocalePage, { route: "/locales/l1", attach: true });
-  }
-
-  it("offers a viewer the search only", async () => {
-    const page = await openLocale(VIEWER);
-
-    expect(await pageCommands(page)).toEqual([t("commands.search")]);
-  });
-
-  it("offers an editor the footer's and the menu's actions", async () => {
-    const page = await openLocale([
-      ...VIEWER,
-      "update_locale",
-      "delete_locale",
-    ]);
-
-    expect(await pageCommands(page)).toEqual([
-      t("common.saveChanges"),
-      t("common.saveAll"),
-      t("common.discardAll"),
-      t("locales.fillNames"),
-      t("locales.fillAllNames"),
-      t("locales.edit"),
-      t("locales.delete"),
-      t("commands.search"),
-    ]);
-    // Nothing is unsaved yet.
+    expect(dialog.text()).toContain(t("locales.edit"));
     expect(
-      (await paletteOptions(page)).find(
-        ({ label }) => label === t("common.saveChanges"),
-      )?.disabled,
-    ).toBe(true);
+      (dialog.find("input[type='text']").element as HTMLInputElement).value,
+    ).toBe("en");
   });
 });
 

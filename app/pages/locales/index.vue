@@ -136,21 +136,35 @@ const tableItems = computed(() =>
   })),
 );
 
-// Each language's page, from the command palette.
+// Editing each language, from the command palette.
 useCommands(() =>
-  tableItems.value
-    .filter((locale) => locale.id && !locale.deletedAt)
-    .map((locale) => ({
-      label: t("commands.openLanguage", { language: locale.name }),
-      value: `locale:${locale.id}`,
-      group: t("nav.locales"),
-      icon: "globe-simple",
-      keywords: [locale.code ?? ""],
-      run: () => navigateTo(`/locales/${locale.id}`),
-    })),
+  can.value("update_locale")
+    ? tableItems.value
+        .filter((locale) => locale.id && !locale.deletedAt)
+        .map((locale) => ({
+          label: t("commands.editLanguage", { language: locale.name }),
+          value: `locale:${locale.id}`,
+          group: t("nav.locales"),
+          icon: "pencil-simple",
+          keywords: [locale.code ?? ""],
+          run: () => (editDialogItem.value = locale),
+        }))
+    : [],
 );
 
+const formalityOptions = useFormalityOptions();
+
+// Shown next to the name once set.
+function formalityLabel(locale: Locale) {
+  const formality = formalityOf(locale);
+
+  return formality !== "FORMALITY_UNSPECIFIED"
+    ? formalityOptions.value.find((option) => option.value === formality)?.label
+    : undefined;
+}
+
 const showDialog = ref(false);
+const editDialogItem = ref<Locale | undefined>(undefined);
 const deleteDialogItem = ref<Locale | undefined>(undefined);
 const restoreDialogItem = ref<Locale | undefined>(undefined);
 const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
@@ -199,6 +213,9 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
                 <Icon name="check" class="w-3 h-3" />
               </Badge>
             </Tooltip>
+            <Badge v-if="formalityLabel(item)">{{
+              formalityLabel(item)
+            }}</Badge>
           </div>
         </template>
         <template #translations="{ item }">
@@ -225,9 +242,10 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
             class="flex items-center justify-end gap-2"
           >
             <BaseIconButton
-              icon="eye"
-              :label="t('locales.view')"
-              :to="`/locales/${item.id}`"
+              v-can="'update_locale'"
+              icon="pencil-simple"
+              :label="t('locales.edit')"
+              @click="editDialogItem = item"
             />
             <BaseIconButton
               v-can="'read_entry'"
@@ -307,6 +325,11 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
   </div>
 
   <LocaleCreateDialog :open="showDialog" @close="showDialog = false" />
+  <LocaleEditDialog
+    :item="editDialogItem"
+    :open="editDialogItem !== undefined"
+    @close="editDialogItem = undefined"
+  />
   <LocaleDeleteDialog
     :item="deleteDialogItem"
     :open="deleteDialogItem !== undefined"

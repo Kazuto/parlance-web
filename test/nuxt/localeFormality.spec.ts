@@ -3,30 +3,28 @@ import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { Select } from "@thkzt/eunoia";
 import type { VueWrapper } from "@vue/test-utils";
 import LocaleCreateDialog from "~/components/locale/CreateDialog.vue";
-import LocalePage from "~/pages/locales/[id].vue";
+import LocalesPage from "~/pages/locales/index.vue";
 import {
   ALL_PERMISSIONS,
   loginAs,
   mockRpc,
   mountPage,
-  openActionMenu,
   pagination,
   settle,
   t,
 } from "./helpers";
 
-const german = {
-  id: "l2",
-  code: "de",
-  name: "German",
-  names: { en: "German" },
-};
+const german = { id: "l2", code: "de", name: "German" };
 
 /** Picks an option of the form-of-address field in the open dialog. */
 async function chooseFormality(wrapper: VueWrapper, label: string) {
   const select = wrapper
     .findAllComponents(Select)
-    .find((item) => item.text().includes(t("locales.formality")))!;
+    .find(
+      (item) =>
+        !!item.element.closest?.("dialog[open]") &&
+        item.text().includes(t("locales.formality")),
+    )!;
   const option = select
     .props("options")
     .find((item: { label: string }) => item.label === label)!;
@@ -61,62 +59,56 @@ describe("form of address", () => {
 
     const inputs = wrapper.findAll("dialog[open] input[type='text']");
 
+    // Only the code: the language is named by it.
+    expect(inputs).toHaveLength(1);
     await inputs[0]!.setValue("de");
-    await inputs[1]!.setValue("German");
+    expect(wrapper.text()).toContain(t("locales.namedAs", { name: "German" }));
     await chooseFormality(wrapper, t("locales.formalityInformal"));
     await button(wrapper, t("locales.create")).trigger("click");
     await settle();
 
     expect(calls).toEqual([
-      expect.objectContaining({
-        code: "de",
-        formality: "FORMALITY_INFORMAL",
-      }),
+      { code: "de", formality: "FORMALITY_INFORMAL", isDefault: false },
     ]);
   });
 
-  it("is changed on the language's page, as a draft until saved", async () => {
+  it("is changed in the language's edit dialog", async () => {
     const updates: Record<string, unknown>[] = [];
+    let stored: Record<string, unknown> = german;
 
     loginAs(ALL_PERMISSIONS);
-    mockRpc("LocaleService/ListLocales", {
-      locales: [german],
+    mockRpc("LocaleService/ListLocales", () => ({
+      locales: [stored],
       pagination: pagination(1),
-    });
-    mockRpc("LocaleService/GetLocale", { locale: german });
+    }));
     mockRpc("LocaleService/UpdateLocale", (body) => {
       updates.push(body);
+      stored = { ...german, formality: body.formality };
 
-      return { locale: { ...german, formality: body.formality } };
+      return { locale: stored };
     });
 
-    const page = await mountPage(LocalePage, { route: "/locales/l2" });
-    const header = () => page.wrapper.find("h2").text();
+    const page = await mountPage(LocalesPage);
+    const row = () => page.wrapper.find("tbody tr").text();
 
-    expect(header()).not.toContain(t("locales.formalityFormal"));
+    expect(row()).not.toContain(t("locales.formalityFormal"));
 
-    const items = await openActionMenu(page, t("locales.actions"));
-
-    await items
-      .find((item) => item.label === t("locales.edit"))!
-      .item.trigger("click");
+    await page.wrapper
+      .find(`button[aria-label="${t("locales.edit")}"]`)
+      .trigger("click");
     await settle();
     await chooseFormality(page.wrapper, t("locales.formalityFormal"));
-    await page.wrapper.find("dialog[open] form").trigger("submit");
-    await settle();
-
-    expect(updates).toEqual([]);
-    expect(header()).toContain(t("locales.formalityFormal"));
-    expect(page.wrapper.text()).toContain(
-      t("common.unsavedCount", { count: 1 }),
-    );
-
-    await button(page.wrapper, t("common.saveChanges")).trigger("click");
+    await button(page.wrapper, t("common.save")).trigger("click");
     await settle();
 
     expect(updates).toEqual([
-      expect.objectContaining({ id: "l2", formality: "FORMALITY_FORMAL" }),
+      expect.objectContaining({
+        id: "l2",
+        code: "de",
+        formality: "FORMALITY_FORMAL",
+      }),
     ]);
-    expect(header()).toContain(t("locales.formalityFormal"));
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
+    expect(row()).toContain(t("locales.formalityFormal"));
   });
 });

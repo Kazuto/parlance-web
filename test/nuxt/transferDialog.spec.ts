@@ -12,8 +12,8 @@ import {
 } from "./helpers";
 
 const locales = [
-  { id: "en", code: "en", isDefault: true, names: {} },
-  { id: "de", code: "de", names: {} },
+  { id: "en", code: "en", isDefault: true },
+  { id: "de", code: "de" },
 ];
 
 const scopes = [

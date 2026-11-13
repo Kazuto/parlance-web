@@ -8,8 +8,6 @@ import {
   type PaginationRequest,
   PaginationResponseSchema,
   type PaginationResponse,
-  StringMapSchema,
-  type StringMap,
 } from "./CommonSchema";
 export const FormalitySchema = z.union([
   z.enum(["FORMALITY_UNSPECIFIED", "FORMALITY_FORMAL", "FORMALITY_INFORMAL"]),
@@ -20,7 +18,6 @@ export type Locale = {
   id?: string | null;
   code?: string | null;
   name?: string | null;
-  names?: Record<string, string> | null;
   isDefault?: boolean | null;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -36,9 +33,6 @@ export const LocaleSchema = z.object({
   },
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
-  },
-  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<Record<string, string>>>> {
-    return z.record(z.string(), z.string()).nullish();
   },
   get isDefault(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
@@ -101,7 +95,6 @@ export const GetLocaleResponseSchema = z.object({
 export type CreateLocaleRequest = {
   code?: string | null;
   isDefault?: boolean | null;
-  names?: StringMap | null;
   formality?: Formality | null;
 };
 export const CreateLocaleRequestSchema = z.object({
@@ -110,9 +103,6 @@ export const CreateLocaleRequestSchema = z.object({
   },
   get isDefault(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
-  },
-  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
-    return StringMapSchema.nullish();
   },
   get formality(): z.ZodOptional<z.ZodNullable<z.ZodType<Formality>>> {
     return FormalitySchema.nullish();
@@ -130,7 +120,6 @@ export type UpdateLocaleRequest = {
   id?: string | null;
   code?: string | null;
   isDefault?: boolean | null;
-  names?: StringMap | null;
   formality?: Formality | null;
 };
 export const UpdateLocaleRequestSchema = z.object({
@@ -142,9 +131,6 @@ export const UpdateLocaleRequestSchema = z.object({
   },
   get isDefault(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
-  },
-  get names(): z.ZodOptional<z.ZodNullable<z.ZodType<StringMap>>> {
-    return StringMapSchema.nullish();
   },
   get formality(): z.ZodOptional<z.ZodNullable<z.ZodType<Formality>>> {
     return FormalitySchema.nullish();

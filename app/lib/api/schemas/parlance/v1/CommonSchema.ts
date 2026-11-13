@@ -81,13 +81,3 @@ export const IdSelectionSchema = z.object({
     return z.array(z.string()).nullish();
   },
 });
-export type StringMap = {
-  values?: Record<string, string> | null;
-};
-export const StringMapSchema = z.object({
-  get values(): z.ZodOptional<
-    z.ZodNullable<z.ZodType<Record<string, string>>>
-  > {
-    return z.record(z.string(), z.string()).nullish();
-  },
-});

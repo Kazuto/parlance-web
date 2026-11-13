@@ -94,8 +94,8 @@ const missingPreview = {
 // English is the default language, whose file decides which entries an import that
 // deletes missing ones keeps.
 const locales = [
-  { id: "en", code: "en", isDefault: true, names: {} },
-  { id: "de", code: "de", names: {} },
+  { id: "en", code: "en", isDefault: true },
+  { id: "de", code: "de" },
 ];
 
 async function openDialog({
