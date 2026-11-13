@@ -17,6 +17,15 @@ import { LocalizationSchema, type Localization } from "./LocalizationSchema";
 import { ReleaseSchema, type Release } from "./ReleaseSchema";
 import { ScopeSchema, type Scope, TagSchema, type Tag } from "./ScopeSchema";
 import { UserSchema, type User } from "./UserSchema";
+export const DuplicateFilterSchema = z.union([
+  z.enum([
+    "DUPLICATE_FILTER_UNSPECIFIED",
+    "DUPLICATE_FILTER_SAME_TEXT",
+    "DUPLICATE_FILTER_TRANSLATED_DIFFERENTLY",
+  ]),
+  z.number().int().min(-2147483648).max(2147483647),
+]);
+export type DuplicateFilter = z.infer<typeof DuplicateFilterSchema>;
 export type Entry = {
   id?: string | null;
   key?: string | null;
@@ -105,6 +114,7 @@ export type ListEntriesRequest = {
   statusLocaleIds?: Array<string> | null;
   tagIds?: Array<string> | null;
   releaseIds?: Array<string> | null;
+  duplicates?: DuplicateFilter | null;
 };
 export const ListEntriesRequestSchema = z.object({
   get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -149,6 +159,9 @@ export const ListEntriesRequestSchema = z.object({
   },
   get releaseIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
     return z.array(z.string()).nullish();
+  },
+  get duplicates(): z.ZodOptional<z.ZodNullable<z.ZodType<DuplicateFilter>>> {
+    return DuplicateFilterSchema.nullish();
   },
 });
 export type ListEntriesResponse = {
@@ -395,6 +408,58 @@ export const SearchEntriesResponseSchema = z.object({
     z.ZodNullable<z.ZodType<PaginationResponse>>
   > {
     return PaginationResponseSchema.nullish();
+  },
+});
+export type SearchSimilarEntriesRequest = {
+  text?: string | null;
+  excludeEntryId?: string | null;
+  limit?: number | null;
+};
+export const SearchSimilarEntriesRequestSchema = z.object({
+  get text(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get excludeEntryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get limit(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+});
+export type SimilarEntry = {
+  entryId?: string | null;
+  key?: string | null;
+  text?: string | null;
+  similarity?: number | "NaN" | "Infinity" | "-Infinity" | null;
+};
+export const SimilarEntrySchema = z.object({
+  get entryId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get text(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get similarity(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<number | "NaN" | "Infinity" | "-Infinity">>
+  > {
+    return z
+      .union([z.number(), z.enum(["NaN", "Infinity", "-Infinity"])])
+      .nullish();
+  },
+});
+export type SearchSimilarEntriesResponse = {
+  entries?: Array<SimilarEntry> | null;
+  sameTextCount?: number | null;
+};
+export const SearchSimilarEntriesResponseSchema = z.object({
+  get entries(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<SimilarEntry>>>> {
+    return z.array(SimilarEntrySchema).nullish();
+  },
+  get sameTextCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });
 export type GetEntryHistoryRequest = {

@@ -19,7 +19,11 @@ const props = defineProps<{
   /** Whether an older text or a match from the memory may replace the field's text. */
   canUse?: boolean;
 }>();
-const emit = defineEmits<{ close: []; use: [text: string] }>();
+const emit = defineEmits<{
+  close: [];
+  use: [text: string];
+  "open-entry": [entry: { id: string; key: string }];
+}>();
 const { t } = useI18n();
 const tab = defineModel<string>("tab", { default: "terminology" });
 const tabs = computed(() => [
@@ -102,12 +106,14 @@ const history = computed(() => data.value?.history ?? []);
         </template>
       </div>
       <template v-else-if="currentTab === 'memory'">
-        <p
+        <!-- The default text has no translations to learn from, but may have twins. -->
+        <EntrySimilarEntries
           v-if="isDefault"
-          class="text-[12.5px] leading-relaxed text-neutral-500 dark:text-neutral-400"
-        >
-          {{ t("context.memoryDefaultHint") }}
-        </p>
+          :entry-id="entryId"
+          :text="translation"
+          :locale-code="localeCode"
+          @open="emit('open-entry', $event)"
+        />
         <EntryMemoryMatches
           v-else
           :entry-id="entryId"

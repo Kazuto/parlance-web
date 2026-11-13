@@ -37,6 +37,9 @@ import {
   CountLiveEntriesRequestSchema,
   CountLiveEntriesResponseSchema,
   type CountLiveEntriesRequest,
+  SearchSimilarEntriesRequestSchema,
+  SearchSimilarEntriesResponseSchema,
+  type SearchSimilarEntriesRequest,
 } from "../schemas/parlance/v1/EntrySchema";
 
 export const entries = {
@@ -151,6 +154,18 @@ export const entries = {
     {
       input: UpdateEntriesReleasesRequestSchema,
       output: UpdateEntriesReleasesResponseSchema,
+    },
+  ),
+  // The entries with the same or a similar default text, e.g. one being typed.
+  similar: authedEndpoint.query(
+    (data: SearchSimilarEntriesRequest) => ({
+      method: "post",
+      url: "/parlance.v1.EntryService/SearchSimilarEntries",
+      json: data,
+    }),
+    {
+      input: SearchSimilarEntriesRequestSchema,
+      output: SearchSimilarEntriesResponseSchema,
     },
   ),
   // The entries exports carry with approved texts, which a release would hold back.

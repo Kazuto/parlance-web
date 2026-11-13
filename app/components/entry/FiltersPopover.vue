@@ -11,6 +11,7 @@ defineProps<{
   /** Releases to filter by; none hides the filter */
   releaseOptions: Option[];
   statusOptions: Option[];
+  duplicateOptions: Option[];
   disabled?: boolean;
   activeCount: number;
 }>();
@@ -20,6 +21,7 @@ const scopeIds = defineModel<string[]>("scopeIds", { required: true });
 const tagIds = defineModel<string[]>("tagIds", { required: true });
 const releaseIds = defineModel<string[]>("releaseIds", { required: true });
 const status = defineModel<string>("status", { required: true });
+const duplicates = defineModel<string>("duplicates", { required: true });
 const emit = defineEmits<{ clear: [] }>();
 
 const { t } = useI18n();
@@ -111,6 +113,22 @@ const { t } = useI18n();
             ? "entries.filterSelectedHelp"
             : "entries.filterAllHelp",
         )
+      }}</span>
+    </label>
+
+    <label class="flex flex-col gap-1">
+      <span
+        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >{{ t("entries.duplicates") }}</span
+      >
+      <Select
+        v-model="duplicates"
+        dense
+        :options="duplicateOptions"
+        :aria-label="t('entries.duplicates')"
+      />
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
+        t("entries.duplicatesHelp")
       }}</span>
     </label>
   </EditorFiltersPopover>
