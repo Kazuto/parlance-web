@@ -90,14 +90,14 @@ function handleSubmit() {
         ...settings,
         token: isGit ? replacement : undefined,
       });
-      showSuccess(t("tasks.updated", { name: settings.name }));
+      showSuccess(t("common.labelSaved", { label: settings.name }));
     } else {
       await store.create.mutateAsync({
         ...settings,
         type: form.value.type,
         token: isGit ? token.value : undefined,
       });
-      showSuccess(t("tasks.created", { name: settings.name }));
+      showSuccess(t("common.labelAdded", { label: settings.name }));
     }
   });
 }

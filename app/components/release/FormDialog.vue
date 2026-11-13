@@ -170,7 +170,7 @@ function handleSubmit() {
               class="w-full"
               teleport-to="body"
               :disabled="isPending || !day"
-              >{{ t("releases.time") }}</TimePicker
+              >{{ t("common.time") }}</TimePicker
             >
           </div>
           <Button

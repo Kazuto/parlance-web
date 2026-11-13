@@ -166,14 +166,14 @@ function handleSubmit() {
         events: { events },
         secret,
       });
-      showSuccess(t("webhooks.updated", { name }));
+      showSuccess(t("common.labelSaved", { label: name }));
     } else {
       await store.create.mutateAsync({
         ...input,
         events,
         secret: form.value.secret.trim(),
       });
-      showSuccess(t("webhooks.created", { name }));
+      showSuccess(t("common.labelAdded", { label: name }));
     }
   });
 }
@@ -257,7 +257,7 @@ function handleSubmit() {
           autocomplete="off"
           class="font-mono"
           :disabled="isPending || form.removeSecret"
-          :placeholder="item?.hasSecret ? t('webhooks.secretKept') : undefined"
+          :placeholder="item?.hasSecret ? t('common.secretKept') : undefined"
           :helper="t('webhooks.secretHelp')"
         >
           {{ t("webhooks.secret") }}

@@ -157,7 +157,7 @@ const VISIBLE_TAGS = 3;
             v-if="item.tags.length > VISIBLE_TAGS"
             class="text-xs text-neutral-500 dark:text-neutral-400"
             >{{
-              t("tags.more", { count: item.tags.length - VISIBLE_TAGS })
+              t("common.moreCount", { count: item.tags.length - VISIBLE_TAGS })
             }}</span
           >
         </div>

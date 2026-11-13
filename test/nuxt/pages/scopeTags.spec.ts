@@ -110,7 +110,7 @@ describe("tags on the scopes page", () => {
     expect(frontend).toContain("Checkout");
     expect(frontend).toContain("Onboarding");
     expect(frontend).not.toContain("Signup");
-    expect(frontend).toContain(t("tags.more", { count: 2 }));
+    expect(frontend).toContain(t("common.moreCount", { count: 2 }));
   });
 
   it.each([
@@ -141,7 +141,7 @@ describe("tags on the scopes page", () => {
           .includes(t("tags.renameLabel", { name: "Checkout" })),
         delete: page
           .iconButtons()
-          .includes(t("tags.deleteLabel", { name: "Checkout" })),
+          .includes(t("common.deleteFor", { name: "Checkout" })),
       };
 
       page.wrapper.unmount();
@@ -227,7 +227,7 @@ describe("tags on the scopes page", () => {
     await manageTags(page, "Frontend");
     await dialogButton(
       page,
-      t("tags.deleteLabel", { name: "Checkout" }),
+      t("common.deleteFor", { name: "Checkout" }),
     ).trigger("click");
     await settle();
 

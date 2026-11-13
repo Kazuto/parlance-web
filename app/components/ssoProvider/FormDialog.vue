@@ -89,14 +89,14 @@ function handleSubmit() {
         // An empty id stops creating accounts.
         defaultRoleId: form.value.defaultRoleId,
       });
-      showSuccess(t("ssoProviders.updated", { name }));
+      showSuccess(t("common.labelSaved", { label: name }));
     } else {
       await store.create.mutateAsync({
         ...input,
         clientSecret: form.value.clientSecret.trim(),
         defaultRoleId: form.value.defaultRoleId || undefined,
       });
-      showSuccess(t("ssoProviders.created", { name }));
+      showSuccess(t("common.labelAdded", { label: name }));
     }
   });
 }
@@ -138,7 +138,7 @@ function handleSubmit() {
         autocomplete="off"
         :disabled="isPending || form.removeClientSecret"
         :placeholder="
-          item?.hasClientSecret ? t('ssoProviders.clientSecretKept') : undefined
+          item?.hasClientSecret ? t('common.secretKept') : undefined
         "
         :helper="t('ssoProviders.clientSecretHelp')"
       >

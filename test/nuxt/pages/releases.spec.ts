@@ -104,7 +104,7 @@ describe("releases page", () => {
     expect(row(page, "Winter").text()).toContain(t("releases.released"));
     expect(
       row(page, "Spring")
-        .find(`a[aria-label="${t("releases.showEntries")}"]`)
+        .find(`a[aria-label="${t("common.showEntries")}"]`)
         .attributes("href"),
     ).toBe("/entries?releases=r1");
   });

@@ -167,7 +167,7 @@ useCommands(() =>
               <span
                 v-if="!hook.enabled"
                 class="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] font-bold text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
-                >{{ t("webhooks.inactive") }}</span
+                >{{ t("common.inactive") }}</span
               >
               <span
                 v-if="hook.format && hook.format !== 'WEBHOOK_FORMAT_JSON'"

@@ -46,7 +46,7 @@ const presetOptions = computed(() =>
           teleport-to="body"
           :options="hourOptions"
           :disabled
-          >{{ t("schedule.time") }}</Select
+          >{{ t("common.time") }}</Select
         >
       </div>
       <Input

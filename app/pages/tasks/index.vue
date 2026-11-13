@@ -254,7 +254,7 @@ useCommands(() => {
               <span
                 v-if="!task.enabled"
                 class="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] font-bold text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
-                >{{ t("tasks.inactive") }}</span
+                >{{ t("common.inactive") }}</span
               >
             </div>
             <div
