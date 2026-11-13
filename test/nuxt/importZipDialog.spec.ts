@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import ImportZipDialog from "~/components/locale/ImportZipDialog.vue";
-import { ALL_PERMISSIONS, loginAs, mockRpc, settle, t } from "./helpers";
+import {
+  ALL_PERMISSIONS,
+  loginAs,
+  mockRpc,
+  pagination,
+  settle,
+  t,
+} from "./helpers";
 
 // The dry run of a ZIP with an English and a German file, and one for a language
 // that doesn't exist.
@@ -84,6 +91,13 @@ const missingPreview = {
   ],
 };
 
+// English is the default language, whose file decides which entries an import that
+// deletes missing ones keeps.
+const locales = [
+  { id: "en", code: "en", isDefault: true, names: {} },
+  { id: "de", code: "de", names: {} },
+];
+
 async function openDialog({
   dryRun = preview as unknown,
   imported = preview as unknown,
@@ -93,6 +107,10 @@ async function openDialog({
   const toasts = { add: vi.fn(), dismiss: vi.fn(), dismissAll: vi.fn() };
 
   loginAs(permissions);
+  mockRpc("LocaleService/ListLocales", {
+    locales,
+    pagination: pagination(locales.length),
+  });
   mockRpc("ImportService/ImportZip", (body) => {
     calls.push(body as Record<string, unknown>);
 
@@ -292,6 +310,69 @@ describe("ZIP import dialog", () => {
         ),
       }),
     );
+  });
+
+  it("deletes the entries the default language's file doesn't hold", async () => {
+    const deletion = {
+      entriesDeleted: 1,
+      entries: [{ key: "old.title", sourceTranslation: "Old title" }],
+    };
+    const { wrapper, calls, toasts } = await openDialog({
+      dryRun: { ...preview, deletion },
+      imported: {
+        results: preview.results.slice(0, 2),
+        totalUpdated: 2,
+        deletion: { entriesDeleted: 1 },
+      },
+    });
+
+    expect(wrapper.text()).toContain(t("import.zip.deleteMissingHelp"));
+
+    await wrapper
+      .findAll("dialog[open] label")
+      .find((label) =>
+        label
+          .text()
+          .includes(t("import.zip.deleteMissing", { locale: "English (en)" })),
+      )!
+      .find("input[type='checkbox']")
+      .setValue(true);
+    await settle();
+    await click(wrapper, t("transfer.preview"));
+
+    expect(calls[0]).toMatchObject({ dryRun: true, deleteMissing: true });
+
+    const section = wrapper.find(
+      `section[aria-label="${t("importPreview.deletion")}"]`,
+    );
+
+    expect(section.text()).toContain("old.title");
+    expect(section.text()).toContain("Old title");
+
+    await click(wrapper, t("import.zip.import"));
+
+    expect(calls.at(-1)).toMatchObject({ dryRun: false, deleteMissing: true });
+    expect(toasts.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining(
+          t("import.zip.entriesDeleted", { count: 1 }),
+        ),
+      }),
+    );
+  });
+
+  it("offers deleting missing entries only with the permission", async () => {
+    const { wrapper, calls } = await openDialog({
+      permissions: ALL_PERMISSIONS.filter(
+        (permission) => permission !== "delete_entry",
+      ),
+    });
+
+    expect(wrapper.text()).not.toContain(t("import.zip.deleteMissingHelp"));
+
+    await click(wrapper, t("transfer.preview"));
+
+    expect(calls[0]).toMatchObject({ deleteMissing: false });
   });
 
   it("offers to create languages only with the permission", async () => {

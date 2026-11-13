@@ -40,6 +40,7 @@ export type ImportPhpRequest = {
   mode?: ImportMode | null;
   approve?: boolean | null;
   dryRun?: boolean | null;
+  deleteMissing?: boolean | null;
 };
 export const ImportPhpRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -63,6 +64,9 @@ export const ImportPhpRequestSchema = z.object({
   get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get deleteMissing(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportPhpResponse = {
   result?: ImportResult | null;
@@ -80,6 +84,7 @@ export type ImportJsonRequest = {
   mode?: ImportMode | null;
   approve?: boolean | null;
   dryRun?: boolean | null;
+  deleteMissing?: boolean | null;
 };
 export const ImportJsonRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -103,6 +108,9 @@ export const ImportJsonRequestSchema = z.object({
   get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get deleteMissing(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportJsonResponse = {
   result?: ImportResult | null;
@@ -120,6 +128,7 @@ export type ImportPoRequest = {
   mode?: ImportMode | null;
   approve?: boolean | null;
   dryRun?: boolean | null;
+  deleteMissing?: boolean | null;
 };
 export const ImportPoRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -143,6 +152,9 @@ export const ImportPoRequestSchema = z.object({
   get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
+  get deleteMissing(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportPoResponse = {
   result?: ImportResult | null;
@@ -163,6 +175,7 @@ export type ImportResult = {
   translationsChanged?: number | null;
   translationsRemoved?: number | null;
   translationsOutdated?: number | null;
+  deletion?: ImportDeletion | null;
 };
 export const ImportResultSchema = z.object({
   get entriesCreated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
@@ -194,6 +207,43 @@ export const ImportResultSchema = z.object({
   },
   get translationsOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get deletion(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportDeletion>>> {
+    return ImportDeletionSchema.nullish();
+  },
+});
+export type ImportDeletion = {
+  entriesDeleted?: number | null;
+  entriesUnscoped?: number | null;
+  entries?: Array<ImportDeletedEntry> | null;
+};
+export const ImportDeletionSchema = z.object({
+  get entriesDeleted(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get entriesUnscoped(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get entries(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<ImportDeletedEntry>>>
+  > {
+    return z.array(ImportDeletedEntrySchema).nullish();
+  },
+});
+export type ImportDeletedEntry = {
+  key?: string | null;
+  sourceTranslation?: string | null;
+  unscoped?: boolean | null;
+};
+export const ImportDeletedEntrySchema = z.object({
+  get key(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get sourceTranslation(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get unscoped(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ImportChange = {
@@ -239,6 +289,7 @@ export type ImportZipRequest = {
   approve?: boolean | null;
   dryRun?: boolean | null;
   createLocaleCodes?: Array<string> | null;
+  deleteMissing?: boolean | null;
 };
 export const ImportZipRequestSchema = z.object({
   get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -261,6 +312,9 @@ export const ImportZipRequestSchema = z.object({
   > {
     return z.array(z.string()).nullish();
   },
+  get deleteMissing(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
 });
 export type ImportZipResponse = {
   results?: Array<LocaleImportResult> | null;
@@ -268,6 +322,7 @@ export type ImportZipResponse = {
   totalUpdated?: number | null;
   totalSkipped?: number | null;
   totalFailed?: number | null;
+  deletion?: ImportDeletion | null;
 };
 export const ImportZipResponseSchema = z.object({
   get results(): z.ZodOptional<
@@ -286,6 +341,9 @@ export const ImportZipResponseSchema = z.object({
   },
   get totalFailed(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get deletion(): z.ZodOptional<z.ZodNullable<z.ZodType<ImportDeletion>>> {
+    return ImportDeletionSchema.nullish();
   },
 });
 export type LocaleImportResult = {

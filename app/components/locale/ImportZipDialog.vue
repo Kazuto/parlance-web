@@ -35,21 +35,30 @@ const { items: locales } = useAllPages(
 );
 const localeFormality = (code?: string | null) =>
   formalityOf(locales.value.find((locale) => locale.code === code));
+// Its files decide which entries an import that deletes missing ones keeps.
+const defaultLocale = computed(() =>
+  locales.value.find((locale) => locale.isDefault && !locale.deletedAt),
+);
 
 const file = ref<File | undefined>(undefined);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 // Imported text lands as drafts unless a reviewer vouches for it.
 const approve = ref(false);
+// Deletes the entries the default language's file doesn't hold.
+const deleteMissing = ref(false);
 const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
 const canCreateLocales = computed(() => can.value("create_locale"));
+const canDeleteMissing = computed(
+  () => can.value("delete_entry") && !!defaultLocale.value,
+);
 
 const hasFile = computed(() => !!file.value);
 // The import is tried first, and its preview confirmed. A preview is only good for
 // the inputs it was made with.
 const preview = ref<ImportZipResponse>();
 
-watch([file, mode, approve], () => {
+watch([file, mode, approve, deleteMissing], () => {
   preview.value = undefined;
 });
 
@@ -148,6 +157,7 @@ async function handleSubmit() {
       canApprove.value && approve.value,
       dryRun,
       dryRun ? [] : createLocaleCodes.value,
+      canDeleteMissing.value && deleteMissing.value,
     );
 
     if (dryRun) {
@@ -183,11 +193,15 @@ async function handleSubmit() {
           locales: new Intl.ListFormat(uiLocale.value).format(created),
         })}`
       : "";
+    const deleted = result.deletion?.entriesDeleted ?? 0;
+    const notes =
+      createdNote +
+      (deleted ? ` ${t("import.zip.entriesDeleted", { count: deleted })}` : "");
 
     if (counts.failed + counts.skipped > 0) {
-      showError(t("import.zip.completedWithSkipped", counts) + createdNote);
+      showError(t("import.zip.completedWithSkipped", counts) + notes);
     } else {
-      showSuccess(t("import.zip.success", counts) + createdNote);
+      showSuccess(t("import.zip.success", counts) + notes);
     }
 
     reset();
@@ -201,6 +215,7 @@ function reset() {
   file.value = undefined;
   preview.value = undefined;
   createLocaleCodes.value = [];
+  deleteMissing.value = false;
 }
 
 function handleClose() {
@@ -249,6 +264,21 @@ function handleClose() {
           :helper="t('transfer.approveHelp')"
         >
           <template #description>{{ t("transfer.approve") }}</template>
+        </Checkbox>
+
+        <Checkbox
+          v-if="canDeleteMissing"
+          v-model="deleteMissing"
+          :disabled="isPending"
+          :helper="t('import.zip.deleteMissingHelp')"
+        >
+          <template #description>
+            {{
+              t("import.zip.deleteMissing", {
+                locale: fileName(defaultLocale?.code ?? ""),
+              })
+            }}
+          </template>
         </Checkbox>
       </template>
 
@@ -318,6 +348,11 @@ function handleClose() {
             />
           </div>
         </section>
+        <EntryImportDeletion
+          v-if="preview.deletion"
+          :deletion="preview.deletion"
+          :locale-code="defaultLocale?.code ?? undefined"
+        />
       </section>
     </form>
 

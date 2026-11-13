@@ -38,8 +38,11 @@ const approve = ref(false);
 const includeDrafts = ref(false);
 // Exports leave out entries pending releases hold back, unless included.
 const includeUnreleased = ref(false);
+// Imports into the default language may delete the entries their file doesn't hold.
+const deleteMissing = ref(false);
 const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
+const canDeleteMissing = computed(() => can.value("delete_entry"));
 const file = ref<File>();
 const error = ref<string>();
 // An import is tried first, and its preview confirmed; then its result shows.
@@ -147,7 +150,7 @@ function pickFormat(value: unknown) {
 
 // A preview is only good for the inputs it was made with.
 watch(
-  [localeId, format, scopeIds, mode, approve, file],
+  [localeId, format, scopeIds, mode, approve, deleteMissing, file],
   () => {
     preview.value = undefined;
     result.value = undefined;
@@ -175,6 +178,13 @@ function encodeFile(value: File): Promise<string> {
 const selectedLocale = computed(() =>
   props.locales.find((item) => item.id === localeId.value),
 );
+// Other languages' files may leave out the entries they don't translate.
+const isDefaultLocale = computed(() => !!selectedLocale.value?.isDefault);
+
+watch(isDefaultLocale, (isDefault) => {
+  if (!isDefault) deleteMissing.value = false;
+});
+
 // A finished import is done until something changes.
 const canSubmit = computed(
   () => !isPending.value && localeOptions.value.length > 0 && !result.value,
@@ -217,6 +227,7 @@ async function handleSubmit() {
         scopeIds: scopeIds.value,
         approve: canApprove.value && approve.value,
         dryRun: !preview.value,
+        deleteMissing: canDeleteMissing.value && deleteMissing.value,
       };
       const response = await (format.value === "po"
         ? importPo.mutateAsync(input)
@@ -368,6 +379,20 @@ defineExpose({
         >
           <template #description>{{ t("transfer.approve") }}</template>
         </Checkbox>
+        <Checkbox
+          v-if="canDeleteMissing"
+          v-model="deleteMissing"
+          :disabled="isPending || !isDefaultLocale"
+          :helper="
+            t(
+              isDefaultLocale
+                ? 'transfer.deleteMissingHelp'
+                : 'transfer.deleteMissingDefaultOnly',
+            )
+          "
+        >
+          <template #description>{{ t("transfer.deleteMissing") }}</template>
+        </Checkbox>
         <Dropzone
           v-model="file"
           :accept="fileAccept"
@@ -434,6 +459,14 @@ defineExpose({
             updated: result.entriesUpdated ?? 0,
             skipped: result.entriesSkipped ?? 0,
             failed: result.entriesFailed ?? 0,
+          })
+        }}
+      </p>
+      <p v-if="result.deletion">
+        {{
+          t("transfer.deletedSummary", {
+            deleted: result.deletion.entriesDeleted ?? 0,
+            unscoped: result.deletion.entriesUnscoped ?? 0,
           })
         }}
       </p>

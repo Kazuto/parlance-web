@@ -21,6 +21,7 @@ export function useZipImport() {
     approve = false,
     dryRun = false,
     createLocaleCodes: string[] = [],
+    deleteMissing = false,
   ) {
     return await mutateAsync({
       fileContent: await fileToBase64(file),
@@ -29,6 +30,7 @@ export function useZipImport() {
       approve,
       dryRun,
       createLocaleCodes,
+      deleteMissing,
     });
   }
 
