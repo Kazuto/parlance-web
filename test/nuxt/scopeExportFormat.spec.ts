@@ -148,7 +148,7 @@ describe("format of an export from the transfer dialog", () => {
       props: {
         open: false,
         action: "export",
-        locales: [{ id: "en", code: "en", isDefault: true, names: {} }],
+        locales: [{ id: "en", code: "en", isDefault: true }],
       },
       global: { provide },
     });

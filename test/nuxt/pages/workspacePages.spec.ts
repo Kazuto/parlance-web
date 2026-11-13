@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { SplitView } from "@thkzt/eunoia";
 import EntriesPage from "~/pages/entries/index.vue";
 import GlossaryPage from "~/pages/glossary/index.vue";
-import LocalePage from "~/pages/locales/[id].vue";
 import TransferPage from "~/pages/entries/transfer.vue";
 import {
   ALL_PERMISSIONS,
@@ -11,7 +10,6 @@ import {
   loginAs,
   mockRpc,
   mountPage,
-  openActionMenu,
   pagination,
   settle,
   t,
@@ -23,10 +21,9 @@ const locales = [
     id: "l1",
     code: "en",
     name: "English",
-    names: { en: "English" },
     isDefault: true,
   },
-  { id: "l2", code: "de", name: "German", names: { en: "German" } },
+  { id: "l2", code: "de", name: "German" },
 ];
 
 function mockLocales() {
@@ -298,95 +295,6 @@ describe("glossary page", () => {
     } finally {
       terminology.definitions[0]!.status = "REVIEW_STATUS_APPROVED";
     }
-  });
-});
-
-describe("locale page", () => {
-  async function open(permissions: readonly string[]) {
-    loginAs(permissions);
-    mockLocales();
-    mockRpc("LocaleService/GetLocale", { locale: locales[0] });
-
-    return mountPage(LocalePage, { route: "/locales/l1" });
-  }
-
-  const actions = (page: MountedPage) =>
-    actionMenuLabels(page, t("locales.actions"));
-
-  it("lets a viewer read the names but change nothing", async () => {
-    const page = await open(VIEWER);
-
-    expect(page.wrapper.text()).toContain("English");
-    expect(await actions(page)).toEqual([]);
-    expect(page.buttons()).not.toContain(t("common.saveChanges"));
-    expect(fields(page).length).toBeGreaterThan(0);
-    expect(fields(page)).not.toContain("editable");
-  });
-
-  it("lets update_locale edit the locale", async () => {
-    const page = await open([...VIEWER, "update_locale"]);
-
-    expect(await actions(page)).toEqual([
-      t("locales.fillNames"),
-      t("locales.fillAllNames"),
-      t("locales.edit"),
-    ]);
-    expect(page.buttons()).toContain(t("common.saveChanges"));
-    expect(fields(page)).not.toContain("readonly");
-  });
-
-  it("lets delete_locale delete but not edit", async () => {
-    const page = await open([...VIEWER, "delete_locale"]);
-
-    expect(await actions(page)).toEqual([t("locales.delete")]);
-    expect(fields(page)).not.toContain("editable");
-  });
-
-  const nameField = (page: MountedPage, locale: string, language: string) =>
-    page.wrapper.find<HTMLTextAreaElement>(`#locale-name-${locale}-${language}`)
-      .element;
-
-  async function choose(page: MountedPage, label: string) {
-    const items = await openActionMenu(page, t("locales.actions"));
-
-    await items.find((entry) => entry.label === label)!.item.trigger("click");
-    await settle();
-  }
-
-  it("fills the missing names of this locale as drafts", async () => {
-    const page = await open([...VIEWER, "update_locale"]);
-
-    expect(nameField(page, "l1", "de").value).toBe("");
-
-    await choose(page, t("locales.fillNames"));
-
-    expect(nameField(page, "l1", "de").value).toBe("Englisch");
-    // Names that were there stay.
-    expect(nameField(page, "l1", "en").value).toBe("English");
-    expect(page.wrapper.text()).toContain(
-      t("common.unsavedCount", { count: 1 }),
-    );
-    expect(await actions(page)).toContain(t("locales.fillNames"));
-
-    const fill = (await openActionMenu(page, t("locales.actions"))).find(
-      (entry) => entry.label === t("locales.fillNames"),
-    )!;
-
-    expect(fill.disabled).toBe(true);
-    expect(fill.hint).toBe(t("locales.noKnownMissingNames"));
-  });
-
-  it("fills the missing names of every locale", async () => {
-    const page = await open([...VIEWER, "update_locale"]);
-
-    await choose(page, t("locales.fillAllNames"));
-
-    expect(nameField(page, "l1", "de").value).toBe("Englisch");
-    // German was only listed, never opened; its draft waits for Save all.
-    expect(page.wrapper.text()).toContain(
-      t("locales.otherUnsaved", { count: 1 }),
-    );
-    expect(page.buttons()).toContain(t("common.saveAllCount", { count: 2 }));
   });
 });
 

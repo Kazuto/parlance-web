@@ -195,22 +195,30 @@ describe("locales page", () => {
   }
 
   const rowActions = () => [
+    t("locales.edit"),
     t("locales.delete"),
     t("locales.restore"),
     t("locales.permanentDelete"),
   ];
 
-  it("shows a viewer only the view action and the export", async () => {
+  it("shows a viewer only the export", async () => {
     const page = await open(VIEWER);
 
     expect(page.headerActions()).toEqual([t("export.zip.export")]);
-    expect(page.iconButtons()).toContain(t("locales.view"));
     expect(
       page.iconButtons().filter((label) => rowActions().includes(label)),
     ).toEqual([]);
   });
 
-  it("names the locales in the UI language", async () => {
+  it("lets update_locale edit the active locales", async () => {
+    const page = await open([...VIEWER, "update_locale"]);
+
+    expect(
+      page.iconButtons().filter((label) => label === t("locales.edit")),
+    ).toHaveLength(1);
+  });
+
+  it("names the locales by their codes in the UI language", async () => {
     const i18n = useNuxtApp().$i18n;
 
     await i18n.setLocale("de");
@@ -219,21 +227,26 @@ describe("locales page", () => {
       loginAs(VIEWER);
       mockRpc("LocaleService/ListLocales", {
         locales: [
-          {
-            id: "l1",
-            code: "de",
-            name: "German",
-            names: { en: "German", de: "Deutsch" },
-            createdAt,
-          },
+          // The server names it in the request's language, which may differ.
+          { id: "l1", code: "de", name: "German", createdAt },
+          { id: "l2", code: "pt_BR", name: "Brazilian Portuguese", createdAt },
+          // A made-up code from before codes were checked names itself.
+          { id: "l3", code: "en-informal", name: "en-informal", createdAt },
         ],
-        pagination: pagination(1),
+        pagination: pagination(3),
       });
 
       const page = await mountPage(LocalesPage);
+      const names = page.wrapper
+        .findAll("tbody tr")
+        .map((row) => row.findAll("td")[1]!.text());
 
-      expect(page.wrapper.text()).toContain("Deutsch");
-      expect(page.wrapper.text()).not.toContain("German");
+      // How the browser's CLDR data words regions differs between versions.
+      expect(names).toEqual([
+        "Deutsch",
+        expect.stringContaining("Portugiesisch"),
+        "en-informal",
+      ]);
     } finally {
       await i18n.setLocale("en");
     }

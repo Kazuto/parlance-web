@@ -15,7 +15,6 @@ const emit = defineEmits<{ close: [] }>();
 
 const form = ref({
   code: "",
-  names: {} as Record<string, string>,
   isDefault: false,
   formality: "FORMALITY_UNSPECIFIED" as Formality,
 });
@@ -24,6 +23,14 @@ const localeStore = useLocaleStore();
 const { t } = useI18n();
 const { showSuccess } = useErrorHelper();
 const formalityOptions = useFormalityOptions();
+const localeName = useLocaleName();
+// Languages are named by their codes, so the name shows as the code is typed.
+const name = computed(() => {
+  const code = form.value.code.trim();
+  const named = localeName({ code });
+
+  return named !== code ? named : undefined;
+});
 
 const { placeholder: codePlaceholder } = useTypingPlaceholder([
   "en-US",
@@ -38,19 +45,6 @@ const { placeholder: codePlaceholder } = useTypingPlaceholder([
   "pl-PL",
   "ru-RU",
 ]);
-const { placeholder: namePlaceholder } = useTypingPlaceholder([
-  "English",
-  "German",
-  "French",
-  "Spanish",
-  "Japanese",
-  "Chinese",
-  "Portuguese",
-  "Italian",
-  "Dutch",
-  "Polish",
-  "Russian",
-]);
 
 const { error, isPending, submit, cancel } = useFormDialog({
   open: () => props.open,
@@ -58,7 +52,6 @@ const { error, isPending, submit, cancel } = useFormDialog({
   reset: () => {
     form.value = {
       code: "",
-      names: {},
       isDefault: false,
       formality: "FORMALITY_UNSPECIFIED",
     };
@@ -68,22 +61,23 @@ const { error, isPending, submit, cancel } = useFormDialog({
 
 function handleSubmit() {
   submit(async () => {
-    if (!form.value.code || !form.value.names.en) {
+    if (!form.value.code.trim()) {
       error.value = t("locales.createRequired");
 
       return false;
     }
 
     const response = await localeStore.create.mutateAsync({
-      code: form.value.code,
-      names: { values: form.value.names },
+      code: form.value.code.trim(),
       isDefault: form.value.isDefault,
       formality: form.value.formality,
     });
 
     showSuccess(
       t("locales.created", {
-        name: response.locale?.name ?? form.value.names.en,
+        name: response.locale
+          ? localeName(response.locale)
+          : form.value.code.trim(),
       }),
     );
   });
@@ -99,21 +93,10 @@ function handleSubmit() {
         required
         :placeholder="codePlaceholder"
         :disabled="isPending"
-        :helper="t('locales.codeHelp')"
+        :helper="name ? t('locales.namedAs', { name }) : t('locales.codeHelp')"
         maxlength="10"
       >
         {{ t("common.code") }}
-      </Input>
-
-      <Input
-        v-model="form.names.en"
-        type="text"
-        required
-        :placeholder="namePlaceholder"
-        :helper="t('locales.nameHelp')"
-        :disabled="isPending"
-      >
-        {{ t("locales.englishName") }}
       </Input>
 
       <div class="space-y-1">
