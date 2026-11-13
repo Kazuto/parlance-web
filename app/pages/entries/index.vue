@@ -124,6 +124,7 @@ const {
   translationStatus,
   targetLocaleIds,
   statusLocaleIds,
+  duplicates,
 } = useEntryFeed(100);
 const scopeChoices = useScopeOptions();
 const { options: scopeOptions, error: scopeError } = scopeChoices;
@@ -137,6 +138,11 @@ const statusOptions = computed(() => [
   { label: t("entries.filterReview"), value: "review" },
   { label: t("entries.filterOutdated"), value: "outdated" },
   { label: t("entries.filterCheck"), value: "check" },
+]);
+const duplicateOptions = computed(() => [
+  { label: t("entries.duplicatesAll"), value: "" },
+  { label: t("entries.duplicatesSame"), value: "same" },
+  { label: t("entries.duplicatesDifferent"), value: "different" },
 ]);
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -184,6 +190,7 @@ useEntryFilterQuery({
   tagIds,
   releaseIds,
   status: translationStatus,
+  duplicates,
   search,
 });
 feedSearch.value = search.value || undefined;
@@ -218,7 +225,8 @@ const activeFilterCount = computed(
     Number(scopeIds.value.length > 0) +
     Number(tagIds.value.length > 0) +
     Number(releaseIds.value.length > 0) +
-    Number(!!translationStatus.value),
+    Number(!!translationStatus.value) +
+    Number(!!duplicates.value),
 );
 
 function toggleScopeFilter(id: string) {
@@ -276,6 +284,11 @@ const selectedStatusLabel = computed(
       (option) => option.value === translationStatus.value,
     )?.label ?? "",
 );
+const selectedDuplicatesLabel = computed(
+  () =>
+    duplicateOptions.value.find((option) => option.value === duplicates.value)
+      ?.label ?? "",
+);
 
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
@@ -283,24 +296,36 @@ function clearFilters() {
   tagIds.value = [];
   releaseIds.value = [];
   translationStatus.value = "";
+  duplicates.value = "";
 }
 
 // A new entry sits at its alphabetical place, which may not be loaded yet; keep it
 // selected until the user picks something else instead of falling back to the top.
+// The same goes for a twin opened from the context panel, which the filters may hide.
 const pinnedEntryId = ref<string>();
+
+function pinEntry(id: string, key: string) {
+  pinnedEntryId.value = id;
+  selectedEntry.value = { key: id, label: key };
+  compactEditor.show(id);
+}
+
+function openTwin(entry: { id: string; key: string }) {
+  if (isSaving.value || !entry.id) return;
+  pinEntry(entry.id, entry.key);
+}
 
 async function handleCreated(entry: Entry) {
   scopeIds.value = [];
   tagIds.value = [];
   releaseIds.value = [];
   translationStatus.value = "";
+  duplicates.value = "";
   search.value = "";
   feedSearch.value = undefined;
   if (!entry.id) return;
   knownEntries.value[entry.id] = entry;
-  pinnedEntryId.value = entry.id;
-  selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
-  compactEditor.show(entry.id);
+  pinEntry(entry.id, entry.key ?? "");
 }
 
 function selectEntry(item: SplitViewItem) {
@@ -377,8 +402,14 @@ const splitViewItems = computed((): SplitViewItem[] =>
       draftLocaleIds: entry.draftLocaleIds ?? [],
       outdatedLocaleIds: entry.outdatedLocaleIds ?? [],
       defaultTranslation: entry.defaultTranslation ?? "",
+      // Twins sit next to each other; the text they share marks each group.
+      detail: duplicates.value ? (entry.defaultTranslation ?? "") : undefined,
     })),
 );
+
+function itemDetail(item: SplitViewItem) {
+  return typeof item.detail === "string" ? item.detail : undefined;
+}
 
 function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
@@ -993,11 +1024,13 @@ watch(
         v-model:tag-ids="tagIds"
         v-model:release-ids="releaseIds"
         v-model:status="translationStatus"
+        v-model:duplicates="duplicates"
         :locale-options="localeOptions"
         :scope-options="scopeOptions"
         :tag-options="tagOptions"
         :release-options="releaseOptions"
         :status-options="statusOptions"
+        :duplicate-options="duplicateOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
         @clear="clearFilters"
@@ -1054,6 +1087,16 @@ watch(
           @remove="translationStatus = ''"
         >
           {{ selectedStatusLabel }}
+        </Chip>
+        <Chip
+          v-if="duplicates"
+          dense
+          variant="secondary"
+          removable
+          class="shrink-0"
+          @remove="duplicates = ''"
+        >
+          {{ selectedDuplicatesLabel }}
         </Chip>
       </div>
       <span v-if="scopeError" class="text-xs text-red-600">{{
@@ -1130,6 +1173,7 @@ watch(
         <template #item="{ item }">
           <EditorListItem
             :label="item.label"
+            :detail="itemDetail(item)"
             :missing-count="missingCount(item)"
             :draft-count="draftCount(item)"
             :draft-label="
@@ -1270,8 +1314,15 @@ watch(
                 )
               "
             >
+              <template v-if="localeId === defaultLocale?.id" #meta>
+                <EntrySameTextChip
+                  :text="currentEntryForms[localeId] ?? ''"
+                  :entry-id="String(item.key)"
+                  @open="openContext(localeId, 'memory')"
+                />
+              </template>
               <template
-                v-if="defaultLocale?.id && localeId !== defaultLocale.id"
+                v-else-if="defaultLocale?.id && localeId !== defaultLocale.id"
                 #meta
               >
                 <div class="flex flex-wrap gap-1">
@@ -1341,6 +1392,7 @@ watch(
           :can-use="canUpdate && !isSaving"
           @close="contextOpen = false"
           @use="applyContextText"
+          @open-entry="openTwin"
         />
       </EditorContextFrame>
     </div>

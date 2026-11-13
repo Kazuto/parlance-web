@@ -1,5 +1,6 @@
 import type { LocationQuery } from "vue-router";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
+import { DUPLICATE_FILTERS } from "./useEntryFeed";
 
 type EntryFilterRefs = {
   locales: Ref<Locale[] | null | undefined>;
@@ -8,6 +9,7 @@ type EntryFilterRefs = {
   tagIds: Ref<string[]>;
   releaseIds: Ref<string[]>;
   status: Ref<string>;
+  duplicates: Ref<string>;
   search: Ref<string>;
 };
 
@@ -19,7 +21,7 @@ function first(value: LocationQuery[string] | undefined) {
 
 /**
  * Mirrors the entry filters into the URL
- * (`?locales=en,de&scopes=…&tags=…&releases=…&status=…&q=…`)
+ * (`?locales=en,de&scopes=…&tags=…&releases=…&status=…&duplicates=…&q=…`)
  * so a filtered view can be bookmarked or shared. Locales are stored by code,
  * which stays readable and survives locale re-creation; everything else by value.
  *
@@ -33,6 +35,7 @@ export function useEntryFilterQuery({
   tagIds,
   releaseIds,
   status,
+  duplicates,
   search,
 }: EntryFilterRefs) {
   const route = useRoute();
@@ -47,6 +50,7 @@ export function useEntryFilterQuery({
     "tags",
     "releases",
     "status",
+    "duplicates",
     "q",
   ].some((key) => !!first(initialQuery[key]));
 
@@ -71,6 +75,14 @@ export function useEntryFilterQuery({
     : String(stored.entries.value.status ?? "");
 
   status.value = STATUSES.includes(initialStatus) ? initialStatus : "";
+
+  const initialDuplicates = fromLink
+    ? first(initialQuery.duplicates)
+    : String(stored.entries.value.duplicates ?? "");
+
+  duplicates.value = Object.hasOwn(DUPLICATE_FILTERS, initialDuplicates)
+    ? initialDuplicates
+    : "";
   search.value = first(initialQuery.q);
 
   const localeCodes = computed(() =>
@@ -104,8 +116,8 @@ export function useEntryFilterQuery({
       // watcher on unmount.
       scope?.run(() =>
         watch(
-          [localeIds, scopeIds, tagIds, releaseIds, status],
-          ([, scopes, tags, releases, nextStatus]) => {
+          [localeIds, scopeIds, tagIds, releaseIds, status, duplicates],
+          ([, scopes, tags, releases, nextStatus, nextDuplicates]) => {
             if (locales.value?.length) {
               stored.languages.value = [...localeCodes.value];
             }
@@ -115,6 +127,7 @@ export function useEntryFilterQuery({
               tags: [...tags],
               releases: [...releases],
               status: nextStatus,
+              duplicates: nextDuplicates,
             };
           },
           { deep: true },
@@ -125,7 +138,16 @@ export function useEntryFilterQuery({
   );
 
   watch(
-    [localesReady, localeCodes, scopeIds, tagIds, releaseIds, status, search],
+    [
+      localesReady,
+      localeCodes,
+      scopeIds,
+      tagIds,
+      releaseIds,
+      status,
+      duplicates,
+      search,
+    ],
     () => {
       // While the locale list reloads its codes are unknown; keeping the URL as
       // it is avoids dropping the selected locales from it.
@@ -138,6 +160,7 @@ export function useEntryFilterQuery({
         tags: tagIds.value.join(","),
         releases: releaseIds.value.join(","),
         status: status.value,
+        duplicates: duplicates.value,
         q: search.value.trim(),
       };
 
@@ -165,6 +188,7 @@ export function entriesLink(filters: {
   tags?: string[];
   releases?: string[];
   status?: "missing" | "complete" | "review" | "outdated" | "check";
+  duplicates?: "same" | "different";
   q?: string;
 }) {
   const list = (values: string[]) =>
@@ -175,6 +199,7 @@ export function entriesLink(filters: {
     filters.tags?.length && `tags=${list(filters.tags)}`,
     filters.releases?.length && `releases=${list(filters.releases)}`,
     filters.status && `status=${filters.status}`,
+    filters.duplicates && `duplicates=${filters.duplicates}`,
     filters.q && `q=${encodeURIComponent(filters.q)}`,
   ].filter(Boolean);
 

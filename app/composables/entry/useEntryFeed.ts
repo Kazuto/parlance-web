@@ -4,7 +4,16 @@ import {
   useQuery,
 } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
-import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
+import type {
+  DuplicateFilter,
+  Entry,
+} from "~/lib/api/schemas/parlance/v1/EntrySchema";
+
+/** The duplicates filters by their URL value */
+export const DUPLICATE_FILTERS: Record<string, DuplicateFilter> = {
+  same: "DUPLICATE_FILTER_SAME_TEXT",
+  different: "DUPLICATE_FILTER_TRANSLATED_DIFFERENTLY",
+};
 
 /**
  * Entry keys for the list panel, loaded page by page as the list scrolls.
@@ -24,6 +33,9 @@ export function useEntryFeed(perPage = 100) {
   const targetLocaleIds = ref<string[]>([]);
   // The languages the status filter checks; the target languages when empty.
   const statusLocaleIds = ref<string[]>([]);
+  // Only entries sharing their default text ("same"), or only those whose shared
+  // text is translated differently in the status languages ("different").
+  const duplicates = ref("");
 
   const params = computed(() => ({
     summary: true,
@@ -35,6 +47,7 @@ export function useEntryFeed(perPage = 100) {
     translationStatus: translationStatus.value,
     targetLocaleIds: [...targetLocaleIds.value],
     statusLocaleIds: [...statusLocaleIds.value],
+    duplicates: DUPLICATE_FILTERS[duplicates.value],
   }));
 
   const query = useInfiniteQuery({
@@ -62,6 +75,7 @@ export function useEntryFeed(perPage = 100) {
     translationStatus,
     targetLocaleIds,
     statusLocaleIds,
+    duplicates,
   };
 }
 

@@ -5,6 +5,7 @@ type StoredEntryFilters = {
   tags: string[];
   releases: string[];
   status: string;
+  duplicates: string;
 };
 
 /**
@@ -16,7 +17,7 @@ export function useStoredFilters() {
 
   const entries = useLocalStorage<StoredEntryFilters>(
     "filters.entries",
-    { scopes: [], tags: [], releases: [], status: "" },
+    { scopes: [], tags: [], releases: [], status: "", duplicates: "" },
     { mergeDefaults: true },
   );
 
