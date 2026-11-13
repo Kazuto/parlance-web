@@ -22,6 +22,16 @@ export const ImportChangeActionSchema = z.union([
   z.number().int().min(-2147483648).max(2147483647),
 ]);
 export type ImportChangeAction = z.infer<typeof ImportChangeActionSchema>;
+export const MissingLocaleReasonSchema = z.union([
+  z.enum([
+    "MISSING_LOCALE_REASON_UNSPECIFIED",
+    "MISSING_LOCALE_REASON_DELETED",
+    "MISSING_LOCALE_REASON_INVALID_CODE",
+    "MISSING_LOCALE_REASON_NO_PERMISSION",
+  ]),
+  z.number().int().min(-2147483648).max(2147483647),
+]);
+export type MissingLocaleReason = z.infer<typeof MissingLocaleReasonSchema>;
 export type ImportPhpRequest = {
   localeId?: string | null;
   scopeIds?: Array<string> | null;
@@ -228,6 +238,7 @@ export type ImportZipRequest = {
   mode?: ImportMode | null;
   approve?: boolean | null;
   dryRun?: boolean | null;
+  createLocaleCodes?: Array<string> | null;
 };
 export const ImportZipRequestSchema = z.object({
   get fileContent(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -244,6 +255,11 @@ export const ImportZipRequestSchema = z.object({
   },
   get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get createLocaleCodes(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<Array<string>>>
+  > {
+    return z.array(z.string()).nullish();
   },
 });
 export type ImportZipResponse = {
@@ -276,6 +292,10 @@ export type LocaleImportResult = {
   localeCode?: string | null;
   result?: ImportResult | null;
   error?: string | null;
+  localeMissing?: boolean | null;
+  localeName?: string | null;
+  missingReason?: MissingLocaleReason | null;
+  localeCreated?: boolean | null;
 };
 export const LocaleImportResultSchema = z.object({
   get localeCode(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -286,5 +306,19 @@ export const LocaleImportResultSchema = z.object({
   },
   get error(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get localeMissing(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get localeName(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get missingReason(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<MissingLocaleReason>>
+  > {
+    return MissingLocaleReasonSchema.nullish();
+  },
+  get localeCreated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
