@@ -282,6 +282,45 @@ describe("webhooks page", () => {
     });
   });
 
+  it("subscribes to failed exports and sign-ins", async () => {
+    const { page, calls } = await openWebhooks(ALL_PERMISSIONS);
+
+    page.options().primaryAction?.onClick?.();
+    await settle();
+    await dialogField(page, t("common.name")).setValue("Security");
+    await dialogField(page, t("webhooks.url")).setValue(
+      "https://alerts.example/hook",
+    );
+
+    const dialog = page.wrapper.find("dialog[open]").text();
+
+    expect(dialog).toContain(
+      t("webhooks.eventHelp.WEBHOOK_EVENT_EXPORT_FAILED"),
+    );
+    expect(dialog).toContain(
+      t("webhooks.eventHelp.WEBHOOK_EVENT_LOGIN_FAILED"),
+    );
+
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_TRANSLATIONS_APPROVED"),
+    ).setValue(false);
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_LOGIN_FAILED"),
+    ).setValue(true);
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_EXPORT_FAILED"),
+    ).setValue(true);
+    await submitDialog(page);
+
+    // In the form's order, whatever order they were ticked in.
+    expect(calls.at(-1)?.body).toMatchObject({
+      events: ["WEBHOOK_EVENT_EXPORT_FAILED", "WEBHOOK_EVENT_LOGIN_FAILED"],
+    });
+  });
+
   it("needs at least one event", async () => {
     const { page, calls } = await openWebhooks(ALL_PERMISSIONS);
 
