@@ -1409,34 +1409,31 @@ watch(
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <div class="flex flex-wrap items-center gap-3">
-        <span class="text-xs text-neutral-500 dark:text-neutral-400">
-          <!-- On phones only what is unsaved, to leave room for the buttons. -->
-          <span class="max-md:hidden">
-            <template v-if="entryTotal !== undefined"
-              >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
-            </template>
-            {{
-              t(
-                "common.selectedLanguages",
-                { count: selectedLocaleIds.length },
-                selectedLocaleIds.length,
-              )
-            }}
-          </span>
-          <span
-            v-if="unsavedLocaleIds.length"
-            class="md:ml-2 text-yellow-700 dark:text-amber-300"
-            >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
-            }}{{
-              unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-                ? ` ${t("common.hiddenLanguages")}`
-                : ""
-            }}</span
-          >
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">
+        <!-- On phones only what is unsaved, to leave room for the buttons. -->
+        <span class="max-md:hidden">
+          <template v-if="entryTotal !== undefined"
+            >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+          </template>
+          {{
+            t(
+              "common.selectedLanguages",
+              { count: selectedLocaleIds.length },
+              selectedLocaleIds.length,
+            )
+          }}
         </span>
-        <CommandPaletteHint class="max-sm:hidden" />
-      </div>
+        <span
+          v-if="unsavedLocaleIds.length"
+          class="md:ml-2 text-yellow-700 dark:text-amber-300"
+          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+          }}{{
+            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+              ? ` ${t("common.hiddenLanguages")}`
+              : ""
+          }}</span
+        >
+      </span>
       <EditorWorkspaceActions
         v-can="'update_entry'"
         show-save-all

@@ -204,11 +204,7 @@ describe("editor command palette", () => {
   it("jumps to an entry by its key", async () => {
     const { page } = await openEditor();
 
-    await page.wrapper
-      .findAll("button")
-      .find((button) => button.text().includes(t("commands.open")))!
-      .trigger("click");
-    await settle();
+    await press("k", { ctrlKey: true });
     await page.wrapper
       .findAll('dialog[open] [role="option"]')
       .find((option) => option.text() === "second")!
@@ -273,11 +269,7 @@ describe("editor command palette", () => {
   it("lists the copy command without a focused field, disabled", async () => {
     const { page } = await openEditor();
 
-    await page.wrapper
-      .findAll("button")
-      .find((button) => button.text().includes(t("commands.open")))!
-      .trigger("click");
-    await settle();
+    await press("k", { ctrlKey: true });
 
     const options = page.wrapper.findAll('dialog[open] [role="option"]');
     const disabled = (label: string) =>

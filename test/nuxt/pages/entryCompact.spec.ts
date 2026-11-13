@@ -6,6 +6,7 @@ import {
   mockRpc,
   mountPage,
   pagination,
+  runCommand,
   settle,
   t,
   type MountedPage,
@@ -83,16 +84,6 @@ const button = (page: MountedPage, text: string) =>
         candidate.attributes("aria-label") === text,
     );
 
-async function jumpTo(page: MountedPage, key: string) {
-  await button(page, t("commands.open"))!.trigger("click");
-  await settle();
-  await page.wrapper
-    .findAll('dialog[open] [role="option"]')
-    .find((option) => option.text() === key)!
-    .trigger("click");
-  await settle();
-}
-
 describe("entries editor on a phone", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -112,7 +103,7 @@ describe("entries editor on a phone", () => {
   it("opens an entry on its own, moves on and goes back to the list", async () => {
     const page = await openEditor();
 
-    await jumpTo(page, "second");
+    await runCommand(page, "second");
 
     expect(openEntry()).toBe("e2");
     expect(layout(page)).toContain("[&>*:first-child]:hidden");
