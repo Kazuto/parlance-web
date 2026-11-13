@@ -150,8 +150,13 @@ watch(() => props.disabled, close);
         </div>
       </fieldset>
 
-      <!-- Further filters of the page -->
-      <slot />
+      <!-- Further filters of the page, set apart from the long language list -->
+      <div
+        v-if="$slots.default"
+        class="flex flex-col gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700"
+      >
+        <slot />
+      </div>
     </div>
   </Teleport>
 </template>

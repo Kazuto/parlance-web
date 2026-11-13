@@ -132,6 +132,19 @@ const sameTextChips = (page: MountedPage) =>
 
 const sameTextChip = (page: MountedPage) => sameTextChips(page)[0];
 
+async function openFilters(page: MountedPage) {
+  await page.wrapper
+    .findAll("button")
+    .find((button) => button.text().startsWith(t("common.filters")))!
+    .trigger("click");
+  await settle();
+}
+
+// The panel renders at the end of the page.
+const filtersPanel = () =>
+  document.querySelector(`[role="dialog"][aria-label="${t("common.filters")}"]`)
+    ?.textContent ?? "";
+
 const similarList = (page: MountedPage) =>
   page.wrapper.find(`ol[aria-label="${t("context.similar")}"]`);
 
@@ -161,10 +174,16 @@ describe("duplicates filter", () => {
 
     expect(lists.at(-1)).not.toHaveProperty("duplicates");
 
+    await openFilters(page);
+    expect(filtersPanel()).toContain(t("entries.duplicatesHelp"));
+
     page.wrapper
       .findComponent(EntryFiltersPopover)
       .vm.$emit("update:duplicates", "different");
     await settle();
+
+    // Its help names the languages it compares.
+    expect(filtersPanel()).toContain(t("entries.duplicatesDifferentHelp"));
 
     expect(lists.at(-1)).toMatchObject({
       duplicates: "DUPLICATE_FILTER_TRANSLATED_DIFFERENTLY",

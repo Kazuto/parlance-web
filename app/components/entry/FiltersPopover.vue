@@ -96,40 +96,49 @@ const { t } = useI18n();
       />
     </label>
 
-    <label class="flex flex-col gap-1">
-      <span
-        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
-        >{{ t("entries.translationStatus") }}</span
-      >
-      <Select
-        v-model="status"
-        dense
-        :options="statusOptions"
-        :aria-label="t('entries.translationStatus')"
-      />
-      <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
-        t(
-          localeIds.length
-            ? "entries.filterSelectedHelp"
-            : "entries.filterAllHelp",
-        )
-      }}</span>
-    </label>
+    <!-- What state the entries are in, judged in the selected languages -->
+    <div
+      class="flex flex-col gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700"
+    >
+      <label class="flex flex-col gap-1">
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("entries.translationStatus") }}</span
+        >
+        <Select
+          v-model="status"
+          dense
+          :options="statusOptions"
+          :aria-label="t('entries.translationStatus')"
+        />
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
+          t(
+            localeIds.length
+              ? "entries.filterSelectedHelp"
+              : "entries.filterAllHelp",
+          )
+        }}</span>
+      </label>
 
-    <label class="flex flex-col gap-1">
-      <span
-        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
-        >{{ t("entries.duplicates") }}</span
-      >
-      <Select
-        v-model="duplicates"
-        dense
-        :options="duplicateOptions"
-        :aria-label="t('entries.duplicates')"
-      />
-      <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
-        t("entries.duplicatesHelp")
-      }}</span>
-    </label>
+      <label class="flex flex-col gap-1">
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("entries.duplicates") }}</span
+        >
+        <Select
+          v-model="duplicates"
+          dense
+          :options="duplicateOptions"
+          :aria-label="t('entries.duplicates')"
+        />
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
+          t(
+            duplicates === "different"
+              ? "entries.duplicatesDifferentHelp"
+              : "entries.duplicatesHelp",
+          )
+        }}</span>
+      </label>
+    </div>
   </EditorFiltersPopover>
 </template>
