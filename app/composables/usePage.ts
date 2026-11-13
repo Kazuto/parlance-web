@@ -1,4 +1,4 @@
-import type { PageOptions } from "@thkzt/eunoia";
+import type { HeaderAction, PageOptions } from "@thkzt/eunoia";
 
 export type AppPageOptions = PageOptions & { layout?: "workspace" };
 
@@ -20,5 +20,23 @@ export function usePage(pageOptions: MaybeRefOrGetter<AppPageOptions>) {
 
   watchEffect(() => {
     if (options) options.value = toValue(pageOptions);
+  });
+
+  // The header's actions can be run from the command palette too, under the page's
+  // title. Pages only add the actions the user may take.
+  useCommands(() => {
+    const { title, primaryAction, actions, secondaryActions } =
+      toValue(pageOptions);
+
+    return [primaryAction, ...(actions ?? []), ...(secondaryActions ?? [])]
+      .filter((action): action is HeaderAction => !!action)
+      .map((action, index) => ({
+        label: action.content,
+        value: `header:${index}`,
+        group: title,
+        icon: action.icon,
+        disabled: action.disabled,
+        run: () => action.onClick?.(),
+      }));
   });
 }

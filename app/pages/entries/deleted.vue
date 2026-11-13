@@ -35,6 +35,15 @@ const { onKeydown: onSearchKeydown } = useDebouncedSearch(search, (value) => {
   pagination.value.page = 1;
 });
 
+const searchBox = useTemplateRef("searchBox");
+
+useCommands(() => [
+  searchCommand(searchBox, {
+    label: t("commands.search"),
+    group: t("entries.deletedEntries"),
+  }),
+]);
+
 const tableColumns = computed<DataTableColumn<Entry>[]>(() => [
   { title: t("common.key"), key: "key" },
   { title: t("common.default"), key: "defaultTranslation" },
@@ -44,7 +53,7 @@ const tableItems = computed(() => data.value?.entries ?? []);
 </script>
 
 <template>
-  <Card dense class="mb-4">
+  <Card ref="searchBox" dense class="mb-4">
     <Input
       v-model="search"
       type="search"

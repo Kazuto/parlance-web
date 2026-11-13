@@ -4,11 +4,14 @@ import {
   Alert,
   Button,
   SplitView,
+  type ActionMenuItem,
   type SplitViewItem,
   Input,
   Chip,
 } from "@thkzt/eunoia";
+import { useEditorCommands } from "~/composables/editor/useEditorCommands";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
+import { useEditorShortcuts } from "~/composables/editor/useEditorShortcuts";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useCompactEditor } from "~/composables/editor/useCompactEditor";
 import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
@@ -23,7 +26,7 @@ import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchem
 import type { Definition } from "~/lib/api/schemas/parlance/v1/DefinitionSchema";
 
 const { t } = useI18n();
-const { can } = usePermission();
+const { can, canAny } = usePermission();
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Terminology>();
 const editDialogItem = ref<Terminology>();
@@ -325,6 +328,7 @@ const splitViewItems = computed((): SplitViewItem[] => {
       return {
         key: terminology.id ?? "",
         label: terminology.term ?? "",
+        description: source.description,
         missingLocaleIds,
         draftLocaleIds,
       };
@@ -384,19 +388,6 @@ const {
   refetch: refetchDetail,
 } = useTerminologyDetail(selectedTerminologyId);
 
-// Previous and next term, from the buttons above the open term on phones.
-const navigation = useEntryNavigation({
-  items: splitViewItems,
-  selected: selectedTerminology,
-  select: selectTerminology,
-  hasMore: () => !!hasNextPage.value,
-  loadMore: () => fetchNextPage(),
-  ready: () => !isDetailLoading.value,
-  fieldId: (terminologyId, localeId) =>
-    `terminology-${terminologyId}-${localeId}`,
-  focusedLocaleId: () => undefined,
-});
-
 function handleTerminologyUpdated(terminology: Terminology) {
   if (terminology.id) {
     const known = knownTerminologies.value[terminology.id];
@@ -444,6 +435,31 @@ const isEditorLoading = computed(
     !selectedTerminologyData.value &&
     isDetailLoading.value,
 );
+
+const fieldId = (terminologyId: string, localeId: string) =>
+  `terminology-${terminologyId}-${localeId}`;
+
+// The language whose field has the focus, if it belongs to the open term.
+function focusedLocaleId() {
+  const terminologyId = selectedTerminologyId.value;
+  const id = document.activeElement?.id ?? "";
+  const prefix = terminologyId ? fieldId(terminologyId, "") : undefined;
+
+  return prefix && id.startsWith(prefix) ? id.slice(prefix.length) : undefined;
+}
+
+// Previous and next term, from the keyboard or the buttons above the open term on
+// phones.
+const navigation = useEntryNavigation({
+  items: splitViewItems,
+  selected: selectedTerminology,
+  select: selectTerminology,
+  hasMore: () => !!hasNextPage.value,
+  loadMore: () => fetchNextPage(),
+  ready: () => !isEditorLoading.value && !!selectedTerminologyData.value,
+  fieldId,
+  focusedLocaleId,
+});
 
 // Counts what is typed, not only what is saved, so the header follows along.
 const definedCount = computed(
@@ -557,6 +573,130 @@ async function handleSave() {
     t("terminologies.definitionLabel", { term: terminology.term ?? "" }),
   );
 }
+
+const canEditDefinitions = computed(() =>
+  canAny.value(["create_definition", "update_definition"]),
+);
+
+async function saveAndNext() {
+  if (isSaving.value) return;
+  await handleSave();
+  // A failed save keeps the term open with what is left to save.
+  if (!selectedUnsavedLocaleIds.value.length) await navigation.next();
+}
+
+// Approves every draft of the open term in the shown languages.
+function approveShown() {
+  const terminologyId = selectedTerminologyId.value;
+
+  if (!terminologyId || !canReview.value || isSaving.value || isReviewing.value)
+    return;
+  if (!reviewableLocaleIds.value.length) return;
+
+  approveDefinitions([terminologyId], reviewableLocaleIds.value);
+}
+
+// What the open term's header and its default row offer, for the command palette.
+const terminologyActions = computed<ActionMenuItem[]>(() => {
+  const items: ActionMenuItem[] = [];
+
+  if (!selectedTerminologyData.value) return items;
+
+  if (canEditDefinitions.value) {
+    items.push({
+      value: "copy",
+      label: t("entries.copyDefaultToEmpty"),
+      icon: "copy",
+      disabled: !canFillEmptyDefinitions.value,
+    });
+  }
+
+  if (can.value("update_terminology")) {
+    items.push({
+      value: "edit",
+      label: t("terminologies.edit"),
+      icon: "pencil-simple",
+      disabled: isSaving.value,
+    });
+  }
+
+  if (can.value("delete_terminology")) {
+    items.push({
+      value: "delete",
+      label: t("terminologies.delete"),
+      icon: "trash",
+      disabled: isSaving.value,
+    });
+  }
+
+  return items;
+});
+
+function onTerminologyAction(action: string) {
+  if (isSaving.value) return;
+  if (action === "copy") fillEmptyDefinitions();
+  else if (action === "edit")
+    editDialogItem.value = selectedTerminologyData.value;
+  else if (action === "delete")
+    deleteDialogItem.value = selectedTerminologyData.value;
+}
+
+useEditorShortcuts({
+  save: () => canEditDefinitions.value && handleSave(),
+  saveAndNext: () => canEditDefinitions.value && saveAndNext(),
+  previous: () => !isSaving.value && navigation.previous(),
+  next: () => !isSaving.value && navigation.next(),
+  approveAll: approveShown,
+});
+
+const searchBox = useTemplateRef<HTMLElement>("searchBox");
+
+useEditorCommands({
+  labels: {
+    group: "commands.groupTerm",
+    items: "commands.groupTerms",
+    previous: "terminologies.previous",
+    next: "terminologies.next",
+    saveAndNext: "commands.saveAndNextTerm",
+    search: "commands.searchGlossary",
+  },
+  itemIcon: "book-open-text",
+  actions: terminologyActions,
+  items: splitViewItems,
+  itemKeywords: (item) => [String(item.description ?? "")],
+  statusOptions,
+  canSave: () =>
+    canEditDefinitions.value &&
+    !!selectedTerminologyData.value &&
+    !!selectedUnsavedLocaleIds.value.length &&
+    !isSaving.value,
+  canReview: () => canReview.value,
+  hasDrafts: () =>
+    !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
+  handlers: {
+    action: onTerminologyAction,
+    save: () => canEditDefinitions.value && handleSave(),
+    saveAndNext: () => canEditDefinitions.value && saveAndNext(),
+    previous: () => !isSaving.value && navigation.previous(),
+    next: () => !isSaving.value && navigation.next(),
+    approveAll: approveShown,
+    toggleContext: () => {
+      const localeId =
+        activeLocaleId.value ?? orderedSelectedLocaleIds.value[0];
+
+      if (localeId) toggleContext(localeId);
+    },
+    focusSearch: () => searchBox.value?.querySelector("input")?.focus(),
+    item: (id) => {
+      const item = splitViewItems.value.find((term) => term.key === id);
+
+      if (item) selectTerminology(item);
+    },
+    status: (value) => {
+      if (!isSaving.value) translationStatus.value = value;
+    },
+  },
+});
 </script>
 
 <template>
@@ -583,6 +723,7 @@ async function handleSave() {
       class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
       <div
+        ref="searchBox"
         class="min-w-0 flex-1 md:w-56 md:flex-none"
         @keydown="onSearchKeydown"
       >
@@ -735,8 +876,10 @@ async function handleSave() {
                   )
                 "
               />
+              <!-- v-if, not v-can: v-can takes the button out behind Vue's back, so
+                   the approve button before it couldn't come back. -->
               <BaseIconButton
-                v-can="'update_terminology'"
+                v-if="can('update_terminology')"
                 icon="pencil-simple"
                 :label="t('terminologies.edit')"
                 :disabled="isSaving"
@@ -744,7 +887,7 @@ async function handleSave() {
                 @click="editDialogItem = selectedTerminologyData"
               />
               <BaseIconButton
-                v-can="'delete_terminology'"
+                v-if="can('delete_terminology')"
                 icon="trash"
                 destructive
                 :label="t('terminologies.delete')"
@@ -864,38 +1007,41 @@ async function handleSave() {
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <span class="text-xs text-neutral-500 dark:text-neutral-400">
-        <!-- On phones only what is unsaved, to leave room for the buttons. -->
-        <span class="max-md:hidden">
-          <template v-if="terminologyTotal !== undefined"
-            >{{
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">
+          <!-- On phones only what is unsaved, to leave room for the buttons. -->
+          <span class="max-md:hidden">
+            <template v-if="terminologyTotal !== undefined"
+              >{{
+                t(
+                  "terminologies.count",
+                  { count: terminologyTotal },
+                  terminologyTotal,
+                )
+              }}
+              ·
+            </template>
+            {{
               t(
-                "terminologies.count",
-                { count: terminologyTotal },
-                terminologyTotal,
+                "common.selectedLanguages",
+                { count: selectedLocaleIds.length },
+                selectedLocaleIds.length,
               )
             }}
-            ·
-          </template>
-          {{
-            t(
-              "common.selectedLanguages",
-              { count: selectedLocaleIds.length },
-              selectedLocaleIds.length,
-            )
-          }}
+          </span>
+          <span
+            v-if="unsavedLocaleIds.length"
+            class="md:ml-2 text-yellow-700 dark:text-amber-300"
+            >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+            }}{{
+              unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+                ? ` ${t("common.hiddenLanguages")}`
+                : ""
+            }}</span
+          >
         </span>
-        <span
-          v-if="unsavedLocaleIds.length"
-          class="md:ml-2 text-yellow-700 dark:text-amber-300"
-          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
-          }}{{
-            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-              ? ` ${t("common.hiddenLanguages")}`
-              : ""
-          }}</span
-        >
-      </span>
+        <CommandPaletteHint class="max-sm:hidden" />
+      </div>
       <EditorWorkspaceActions
         v-can="{ any: ['create_definition', 'update_definition'] }"
         :compact="compactEditor.compact.value"

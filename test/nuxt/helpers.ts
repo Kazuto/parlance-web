@@ -277,3 +277,49 @@ export async function openActionMenu(page: MountedPage, label: string) {
 export async function actionMenuLabels(page: MountedPage, label: string) {
   return (await openActionMenu(page, label)).map((entry) => entry.label);
 }
+
+/**
+ * Opens the command palette with its key, as the user would, and returns its
+ * options. An option's text is its label, then its key if it has one.
+ */
+export async function paletteOptions(page: MountedPage) {
+  if (!page.wrapper.find("dialog[open]").exists()) {
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "k",
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await settle();
+  }
+
+  return page.wrapper.findAll('dialog[open] [role="option"]').map((option) => ({
+    option,
+    label: option.find("span").text().trim(),
+    text: option.text(),
+    disabled: option.attributes("aria-disabled") === "true",
+  }));
+}
+
+/**
+ * The labels of the open page's commands, which the palette lists before the
+ * pages to go to.
+ */
+export async function pageCommands(page: MountedPage) {
+  const labels = (await paletteOptions(page)).map(({ label }) => label);
+
+  return labels.slice(0, labels.indexOf(t("nav.dashboard")));
+}
+
+/** Runs the palette's command called `label`. */
+export async function runCommand(page: MountedPage, label: string) {
+  const command = (await paletteOptions(page)).find(
+    (option) => option.label === label,
+  );
+
+  if (!command) throw new Error(`No command "${label}" in the palette`);
+  await command.option.trigger("click");
+  await settle();
+}

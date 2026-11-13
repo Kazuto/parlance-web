@@ -13,7 +13,7 @@ import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
 
 const { t } = useI18n();
 const { getErrorMessage } = useErrorHelper();
-const { can } = usePermission();
+const { can, canAny } = usePermission();
 const { data, filter, pagination, isFetching, error, refetch } =
   usePaginatedList(api.scopes.list, { includeDeleted: true });
 
@@ -56,12 +56,38 @@ const tagsDialogScope = computed(() =>
   tableItems.value.find((scope) => scope.id === tagsDialogScopeId.value),
 );
 
+const searchBox = useTemplateRef("searchBox");
+
+useCommands(() => {
+  const group = t("nav.scopes");
+  const canManageTags = canAny.value([
+    "create_tag",
+    "update_tag",
+    "delete_tag",
+  ]);
+
+  return [
+    searchCommand(searchBox, { label: t("commands.search"), group }),
+    ...(canManageTags
+      ? tableItems.value
+          .filter((scope) => scope.id && !scope.deletedAt)
+          .map((scope) => ({
+            label: t("commands.manageTagsOf", { scope: scope.name ?? "" }),
+            value: `tags:${scope.id}`,
+            group,
+            icon: "tag",
+            run: () => (tagsDialogScopeId.value = scope.id ?? undefined),
+          }))
+      : []),
+  ];
+});
+
 // A few tags fit the row; the rest are counted.
 const VISIBLE_TAGS = 3;
 </script>
 
 <template>
-  <Card dense class="mb-4">
+  <Card ref="searchBox" dense class="mb-4">
     <div class="flex gap-4 items-center">
       <div class="flex-1">
         <Input

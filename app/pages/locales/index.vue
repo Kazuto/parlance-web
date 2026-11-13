@@ -136,6 +136,20 @@ const tableItems = computed(() =>
   })),
 );
 
+// Each language's page, from the command palette.
+useCommands(() =>
+  tableItems.value
+    .filter((locale) => locale.id && !locale.deletedAt)
+    .map((locale) => ({
+      label: t("commands.openLanguage", { language: locale.name }),
+      value: `locale:${locale.id}`,
+      group: t("nav.locales"),
+      icon: "globe-simple",
+      keywords: [locale.code ?? ""],
+      run: () => navigateTo(`/locales/${locale.id}`),
+    })),
+);
+
 const showDialog = ref(false);
 const deleteDialogItem = ref<Locale | undefined>(undefined);
 const restoreDialogItem = ref<Locale | undefined>(undefined);

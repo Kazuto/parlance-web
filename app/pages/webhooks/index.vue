@@ -114,6 +114,22 @@ async function sendTest(hook: Webhook) {
     testing.value = undefined;
   }
 }
+
+// Testing each webhook, from the command palette.
+useCommands(() =>
+  can.value("update_webhook")
+    ? webhooks.value
+        .filter((hook) => hook.id)
+        .map((hook) => ({
+          label: t("commands.testWebhook", { webhook: hook.name ?? "" }),
+          value: `test:${hook.id}`,
+          group: t("nav.webhooks"),
+          icon: "paper-plane-tilt",
+          disabled: !!testing.value,
+          run: () => sendTest(hook),
+        }))
+    : [],
+);
 </script>
 
 <template>

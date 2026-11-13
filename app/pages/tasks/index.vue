@@ -5,6 +5,7 @@ import { api } from "~/lib/api";
 import type { Task } from "~/lib/api/schemas/parlance/v1/TaskSchema";
 import { formToSettings, isActiveRun, taskToForm } from "~/lib/taskForm";
 import { formatHour, parseSchedule } from "~/lib/taskSchedule";
+import type { AppCommand } from "~/composables/useCommands";
 
 const { t, locale } = useI18n();
 const { can } = usePermission();
@@ -155,6 +156,40 @@ async function runNow(task: Task) {
     showError(error);
   }
 }
+
+// Pausing and running tasks, from the command palette.
+useCommands(() => {
+  const group = t("nav.tasks");
+  const commands: AppCommand[] = [];
+
+  if (can.value("update_task")) {
+    commands.push({
+      label: t(paused.value ? "commands.resumeTasks" : "commands.pauseTasks"),
+      value: "paused",
+      group,
+      icon: paused.value ? "play" : "pause",
+      disabled: store.updateSettings.isPending,
+      run: () => setPaused(!paused.value),
+    });
+  }
+
+  if (can.value("run_task")) {
+    commands.push(
+      ...tasks.value
+        .filter((task) => task.id)
+        .map((task) => ({
+          label: t("commands.runTaskNow", { task: task.name ?? "" }),
+          value: `run:${task.id}`,
+          group,
+          icon: "lightning",
+          disabled: store.run.isPending,
+          run: () => runNow(task),
+        })),
+    );
+  }
+
+  return commands;
+});
 </script>
 
 <template>

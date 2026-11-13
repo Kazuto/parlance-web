@@ -121,10 +121,19 @@ const tableItems = computed(() =>
     summary: getPermissionSummary(role.permissions ?? []),
   })),
 );
+
+const searchBox = useTemplateRef("searchBox");
+
+useCommands(() => [
+  searchCommand(searchBox, {
+    label: t("commands.search"),
+    group: t("nav.roles"),
+  }),
+]);
 </script>
 
 <template>
-  <Card dense class="mb-4">
+  <Card ref="searchBox" dense class="mb-4">
     <Input
       v-model="searchQuery"
       type="search"

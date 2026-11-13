@@ -52,6 +52,19 @@ const tableColumns = computed<DataTableColumn<Release>[]>(() => [
   { title: t("releases.entries"), key: "entryCount" },
 ]);
 const tableItems = computed(() => data.value?.releases ?? []);
+
+// What goes out with each pending release, from the command palette.
+useCommands(() =>
+  tableItems.value
+    .filter((release) => release.id && !release.releasedAt)
+    .map((release) => ({
+      label: t("commands.showReleaseEntries", { release: release.name ?? "" }),
+      value: `release:${release.id}`,
+      group: t("nav.releases"),
+      icon: "list-magnifying-glass",
+      run: () => navigateTo(entriesLink({ releases: [release.id ?? ""] })),
+    })),
+);
 </script>
 
 <template>
