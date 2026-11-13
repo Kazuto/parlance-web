@@ -228,7 +228,7 @@ function close() {
             <BaseActionButtons
               :disabled="isPending"
               :edit-label="t('tags.renameLabel', { name: tag.name ?? '' })"
-              :delete-label="t('tags.deleteLabel', { name: tag.name ?? '' })"
+              :delete-label="t('common.deleteFor', { name: tag.name ?? '' })"
               edit-permission="update_tag"
               delete-permission="delete_tag"
               @edit="startRename(tag)"

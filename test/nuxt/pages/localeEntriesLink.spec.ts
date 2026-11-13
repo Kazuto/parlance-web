@@ -236,7 +236,7 @@ describe("translation status on the locales overview", () => {
 
     expect(link.attributes("href")).toBe("/entries?locales=en");
     expect(link.attributes("aria-label")).toBe(
-      `${t("locales.showEntries")} (100%)`,
+      `${t("common.showEntries")} (100%)`,
     );
   });
 

@@ -100,7 +100,7 @@ async function openWithTicked(
 }
 
 const moreActions = (page: MountedPage) =>
-  openActionMenu(page, t("entries.bulkMore"));
+  openActionMenu(page, t("common.moreActions"));
 
 async function choose(page: MountedPage, label: string) {
   const action = (await moreActions(page)).find(

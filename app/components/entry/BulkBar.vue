@@ -213,7 +213,7 @@ function onMore(value: string) {
     <ActionMenu
       v-if="moreItems.length"
       :items="moreItems"
-      :label="t('entries.bulkMore')"
+      :label="t('common.moreActions')"
       placement="bottom-end"
       dense
       @select="onMore"

@@ -48,7 +48,7 @@ usePage(() => ({
 const tableColumns = computed<DataTableColumn<Release>[]>(() => [
   { title: t("common.name"), key: "name" },
   { title: t("releases.date"), key: "releaseAt" },
-  { title: t("releases.state"), key: "state" },
+  { title: t("common.status"), key: "state" },
   { title: t("releases.entries"), key: "entryCount" },
 ]);
 const tableItems = computed(() => data.value?.releases ?? []);
@@ -124,7 +124,7 @@ useCommands(() =>
         <div class="flex justify-end gap-2">
           <BaseIconButton
             icon="list-magnifying-glass"
-            :label="t('releases.showEntries')"
+            :label="t('common.showEntries')"
             :to="entriesLink({ releases: [item.id ?? ''] })"
           />
           <BaseIconButton

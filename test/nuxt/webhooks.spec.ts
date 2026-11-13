@@ -158,7 +158,7 @@ describe("webhooks page", () => {
     );
     expect(text).toContain(t("webhooks.signed"));
     expect(text).toContain("the receiver answered 503 Service Unavailable");
-    expect(text).toContain(t("webhooks.inactive"));
+    expect(text).toContain(t("common.inactive"));
     expect(text).toContain(t("webhooks.neverDelivered"));
     expect(text).toContain(t("webhooks.describe.immediate"));
     expect(text).toContain(t("webhooks.describe.daily", { time: "09:00" }));

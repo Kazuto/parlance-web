@@ -187,7 +187,7 @@ useCommands(() => [
                 @click="openViewPermissions(item)"
               >
                 {{
-                  t("roles.morePermissions", {
+                  t("common.moreCount", {
                     count:
                       item.summary.remainingInFirst +
                       item.summary.remainingCount,
