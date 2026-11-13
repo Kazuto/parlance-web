@@ -13,6 +13,8 @@ export const WEBHOOK_EVENTS = [
   "WEBHOOK_EVENT_ENTRIES_CREATED",
   "WEBHOOK_EVENT_TASK_RUN_SUCCEEDED",
   "WEBHOOK_EVENT_TASK_RUN_FAILED",
+  "WEBHOOK_EVENT_EXPORT_FAILED",
+  "WEBHOOK_EVENT_LOGIN_FAILED",
 ] as const satisfies readonly WebhookEvent[];
 
 /** The formats a webhook can post in, in the order the form lists them. */
