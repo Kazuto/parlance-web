@@ -18,6 +18,7 @@ import type {
   Locale,
 } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { fillLanguageNames, languageName } from "~/lib/languageNames";
+import type { AppCommand } from "~/composables/useCommands";
 
 type LocaleForm = {
   code: string;
@@ -436,6 +437,63 @@ async function saveLocales(ids: string[]) {
   }
 }
 
+const workspace = useTemplateRef<HTMLElement>("workspace");
+
+// What the footer and the header menu offer, from the command palette.
+useCommands(() => {
+  const group = t("nav.locales");
+  const nothingUnsaved = !unsavedLocaleIds.value.length || isSaving.value;
+  const commands: AppCommand[] = [];
+
+  if (canUpdate.value) {
+    commands.push(
+      {
+        label: t("common.saveChanges"),
+        value: "save",
+        group,
+        icon: "floppy-disk",
+        disabled: !currentUnsaved.value || isSaving.value,
+        run: saveChanges,
+      },
+      {
+        label: t("common.saveAll"),
+        value: "saveAll",
+        group,
+        icon: "floppy-disk",
+        disabled: nothingUnsaved,
+        run: () => (saveAllOpen.value = true),
+      },
+      {
+        label: t("common.discardAll"),
+        value: "discardAll",
+        group,
+        icon: "arrow-counter-clockwise",
+        disabled: nothingUnsaved,
+        run: requestDiscardAll,
+      },
+    );
+  }
+
+  if (form.value) {
+    commands.push(
+      ...localeActions.value.map((action) => ({
+        label: action.label,
+        value: `action:${action.value}`,
+        group,
+        icon: action.icon,
+        disabled: action.disabled,
+        run: () => onLocaleAction(action.value),
+      })),
+    );
+  }
+
+  commands.push(
+    searchCommand(workspace, { label: t("commands.search"), group }),
+  );
+
+  return commands;
+});
+
 async function handleDeleted(id: string) {
   Reflect.deleteProperty(drafts.value, id);
   Reflect.deleteProperty(saved.value, id);
@@ -445,7 +503,11 @@ async function handleDeleted(id: string) {
 </script>
 
 <template>
-  <section class="locale-workspace" :aria-label="t('locales.workspace')">
+  <section
+    ref="workspace"
+    class="locale-workspace"
+    :aria-label="t('locales.workspace')"
+  >
     <SplitView
       v-model:search="search"
       :items="items"

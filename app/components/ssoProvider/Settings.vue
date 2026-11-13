@@ -31,6 +31,20 @@ const formOpen = ref(false);
 const editing = ref<SsoProvider>();
 const deleting = ref<SsoProvider>();
 
+useCommands(() =>
+  can.value("create_sso_provider")
+    ? [
+        {
+          label: t("ssoProviders.add"),
+          value: "addSsoProvider",
+          group: t("nav.settings"),
+          icon: "plus",
+          run: () => openForm(),
+        },
+      ]
+    : [],
+);
+
 function openForm(provider?: SsoProvider) {
   editing.value = provider;
   formOpen.value = true;

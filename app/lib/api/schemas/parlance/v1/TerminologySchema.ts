@@ -59,6 +59,7 @@ export type ListTerminologiesRequest = {
   pagination?: PaginationRequest | null;
   filter?: FilterRequest | null;
   targetLocaleIds?: Array<string> | null;
+  translationStatus?: string | null;
 };
 export const ListTerminologiesRequestSchema = z.object({
   get pagination(): z.ZodOptional<z.ZodNullable<z.ZodType<PaginationRequest>>> {
@@ -71,6 +72,9 @@ export const ListTerminologiesRequestSchema = z.object({
     z.ZodNullable<z.ZodType<Array<string>>>
   > {
     return z.array(z.string()).nullish();
+  },
+  get translationStatus(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type ListTerminologiesResponse = {

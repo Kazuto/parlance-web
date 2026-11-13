@@ -18,6 +18,16 @@ const expired = (token: ApiToken) =>
 const creating = ref(false);
 const revoking = ref<ApiToken>();
 
+useCommands(() => [
+  {
+    label: t("apiTokens.create"),
+    value: "createApiToken",
+    group: t("nav.account"),
+    icon: "key",
+    run: () => (creating.value = true),
+  },
+]);
+
 const {
   isPending: isRevoking,
   run,

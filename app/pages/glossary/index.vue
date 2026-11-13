@@ -4,17 +4,21 @@ import {
   Alert,
   Button,
   SplitView,
+  type ActionMenuItem,
   type SplitViewItem,
   Input,
   Chip,
 } from "@thkzt/eunoia";
+import { useEditorCommands } from "~/composables/editor/useEditorCommands";
 import { useEditorLocales } from "~/composables/editor/useEditorLocales";
+import { useEditorShortcuts } from "~/composables/editor/useEditorShortcuts";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useCompactEditor } from "~/composables/editor/useCompactEditor";
 import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
 import {
+  TERMINOLOGY_STATUSES,
   useTerminologyDetail,
   useTerminologyFeed,
 } from "~/composables/terminology/useTerminologyFeed";
@@ -22,7 +26,7 @@ import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchem
 import type { Definition } from "~/lib/api/schemas/parlance/v1/DefinitionSchema";
 
 const { t } = useI18n();
-const { can } = usePermission();
+const { can, canAny } = usePermission();
 const showCreateDialog = ref(false);
 const deleteDialogItem = ref<Terminology>();
 const editDialogItem = ref<Terminology>();
@@ -55,7 +59,20 @@ const {
   refetch,
   search: feedSearch,
   targetLocaleIds,
+  translationStatus,
 } = useTerminologyFeed(100);
+const statusOptions = computed(() => [
+  { label: t("entries.filterAll"), value: "" },
+  { label: t("entries.missingTranslations"), value: "missing" },
+  { label: t("entries.filterComplete"), value: "complete" },
+  { label: t("entries.filterReview"), value: "review" },
+]);
+const selectedStatusLabel = computed(
+  () =>
+    statusOptions.value.find(
+      (option) => option.value === translationStatus.value,
+    )?.label ?? "",
+);
 
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -121,15 +138,19 @@ watch(
   { deep: true },
 );
 
-const activeFilterCount = computed(() => Number(languagesFiltered.value));
+const activeFilterCount = computed(
+  () => Number(languagesFiltered.value) + Number(!!translationStatus.value),
+);
 
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
+  translationStatus.value = "";
 }
 
 const selectedTerminology = ref<SplitViewItem>();
 // Links (e.g. from the dashboard activity) can open the page with a search via ?q=.
 const route = useRoute();
+const router = useRouter();
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
 // Types out terms and one of their translations from the list, showing by
 // example that both can be searched; the accessible name says it in words.
@@ -159,6 +180,37 @@ const { onKeydown: onSearchKeydown } = useDebouncedSearch(
 );
 
 feedSearch.value = search.value || undefined;
+
+// Links can open the page filtered by ?status=, which stays in the URL so the view
+// can be shared. Otherwise the status last picked here comes back, except for a
+// link with a search: there it could hide the term the link points to.
+const linkedStatus =
+  typeof route.query.status === "string" ? route.query.status : "";
+const initialStatus =
+  linkedStatus || search.value
+    ? linkedStatus
+    : String(storedFilters.glossary.value.status ?? "");
+
+translationStatus.value = TERMINOLOGY_STATUSES.includes(initialStatus)
+  ? initialStatus
+  : "";
+// Only changes made here are remembered, so opening a link keeps the stored one.
+watch(translationStatus, (status) => {
+  storedFilters.glossary.value = { status };
+});
+watch(
+  translationStatus,
+  (status) => {
+    if (route.query.status === (status || undefined)) return;
+
+    const query = { ...route.query };
+
+    if (status) query.status = status;
+    else Reflect.deleteProperty(query, "status");
+    router.replace({ query });
+  },
+  { immediate: true },
+);
 
 const pinnedTerminologyId = ref<string>();
 
@@ -276,6 +328,7 @@ const splitViewItems = computed((): SplitViewItem[] => {
       return {
         key: terminology.id ?? "",
         label: terminology.term ?? "",
+        description: source.description,
         missingLocaleIds,
         draftLocaleIds,
       };
@@ -335,19 +388,6 @@ const {
   refetch: refetchDetail,
 } = useTerminologyDetail(selectedTerminologyId);
 
-// Previous and next term, from the buttons above the open term on phones.
-const navigation = useEntryNavigation({
-  items: splitViewItems,
-  selected: selectedTerminology,
-  select: selectTerminology,
-  hasMore: () => !!hasNextPage.value,
-  loadMore: () => fetchNextPage(),
-  ready: () => !isDetailLoading.value,
-  fieldId: (terminologyId, localeId) =>
-    `terminology-${terminologyId}-${localeId}`,
-  focusedLocaleId: () => undefined,
-});
-
 function handleTerminologyUpdated(terminology: Terminology) {
   if (terminology.id) {
     const known = knownTerminologies.value[terminology.id];
@@ -395,6 +435,31 @@ const isEditorLoading = computed(
     !selectedTerminologyData.value &&
     isDetailLoading.value,
 );
+
+const fieldId = (terminologyId: string, localeId: string) =>
+  `terminology-${terminologyId}-${localeId}`;
+
+// The language whose field has the focus, if it belongs to the open term.
+function focusedLocaleId() {
+  const terminologyId = selectedTerminologyId.value;
+  const id = document.activeElement?.id ?? "";
+  const prefix = terminologyId ? fieldId(terminologyId, "") : undefined;
+
+  return prefix && id.startsWith(prefix) ? id.slice(prefix.length) : undefined;
+}
+
+// Previous and next term, from the keyboard or the buttons above the open term on
+// phones.
+const navigation = useEntryNavigation({
+  items: splitViewItems,
+  selected: selectedTerminology,
+  select: selectTerminology,
+  hasMore: () => !!hasNextPage.value,
+  loadMore: () => fetchNextPage(),
+  ready: () => !isEditorLoading.value && !!selectedTerminologyData.value,
+  fieldId,
+  focusedLocaleId,
+});
 
 // Counts what is typed, not only what is saved, so the header follows along.
 const definedCount = computed(
@@ -508,6 +573,130 @@ async function handleSave() {
     t("terminologies.definitionLabel", { term: terminology.term ?? "" }),
   );
 }
+
+const canEditDefinitions = computed(() =>
+  canAny.value(["create_definition", "update_definition"]),
+);
+
+async function saveAndNext() {
+  if (isSaving.value) return;
+  await handleSave();
+  // A failed save keeps the term open with what is left to save.
+  if (!selectedUnsavedLocaleIds.value.length) await navigation.next();
+}
+
+// Approves every draft of the open term in the shown languages.
+function approveShown() {
+  const terminologyId = selectedTerminologyId.value;
+
+  if (!terminologyId || !canReview.value || isSaving.value || isReviewing.value)
+    return;
+  if (!reviewableLocaleIds.value.length) return;
+
+  approveDefinitions([terminologyId], reviewableLocaleIds.value);
+}
+
+// What the open term's header and its default row offer, for the command palette.
+const terminologyActions = computed<ActionMenuItem[]>(() => {
+  const items: ActionMenuItem[] = [];
+
+  if (!selectedTerminologyData.value) return items;
+
+  if (canEditDefinitions.value) {
+    items.push({
+      value: "copy",
+      label: t("entries.copyDefaultToEmpty"),
+      icon: "copy",
+      disabled: !canFillEmptyDefinitions.value,
+    });
+  }
+
+  if (can.value("update_terminology")) {
+    items.push({
+      value: "edit",
+      label: t("terminologies.edit"),
+      icon: "pencil-simple",
+      disabled: isSaving.value,
+    });
+  }
+
+  if (can.value("delete_terminology")) {
+    items.push({
+      value: "delete",
+      label: t("terminologies.delete"),
+      icon: "trash",
+      disabled: isSaving.value,
+    });
+  }
+
+  return items;
+});
+
+function onTerminologyAction(action: string) {
+  if (isSaving.value) return;
+  if (action === "copy") fillEmptyDefinitions();
+  else if (action === "edit")
+    editDialogItem.value = selectedTerminologyData.value;
+  else if (action === "delete")
+    deleteDialogItem.value = selectedTerminologyData.value;
+}
+
+useEditorShortcuts({
+  save: () => canEditDefinitions.value && handleSave(),
+  saveAndNext: () => canEditDefinitions.value && saveAndNext(),
+  previous: () => !isSaving.value && navigation.previous(),
+  next: () => !isSaving.value && navigation.next(),
+  approveAll: approveShown,
+});
+
+const searchBox = useTemplateRef<HTMLElement>("searchBox");
+
+useEditorCommands({
+  labels: {
+    group: "commands.groupTerm",
+    items: "commands.groupTerms",
+    previous: "terminologies.previous",
+    next: "terminologies.next",
+    saveAndNext: "commands.saveAndNextTerm",
+    search: "commands.searchGlossary",
+  },
+  itemIcon: "book-open-text",
+  actions: terminologyActions,
+  items: splitViewItems,
+  itemKeywords: (item) => [String(item.description ?? "")],
+  statusOptions,
+  canSave: () =>
+    canEditDefinitions.value &&
+    !!selectedTerminologyData.value &&
+    !!selectedUnsavedLocaleIds.value.length &&
+    !isSaving.value,
+  canReview: () => canReview.value,
+  hasDrafts: () =>
+    !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
+  handlers: {
+    action: onTerminologyAction,
+    save: () => canEditDefinitions.value && handleSave(),
+    saveAndNext: () => canEditDefinitions.value && saveAndNext(),
+    previous: () => !isSaving.value && navigation.previous(),
+    next: () => !isSaving.value && navigation.next(),
+    approveAll: approveShown,
+    toggleContext: () => {
+      const localeId =
+        activeLocaleId.value ?? orderedSelectedLocaleIds.value[0];
+
+      if (localeId) toggleContext(localeId);
+    },
+    focusSearch: () => searchBox.value?.querySelector("input")?.focus(),
+    item: (id) => {
+      const item = splitViewItems.value.find((term) => term.key === id);
+
+      if (item) selectTerminology(item);
+    },
+    status: (value) => {
+      if (!isSaving.value) translationStatus.value = value;
+    },
+  },
+});
 </script>
 
 <template>
@@ -534,6 +723,7 @@ async function handleSave() {
       class="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3.5 py-2 dark:border-white/5"
     >
       <div
+        ref="searchBox"
         class="min-w-0 flex-1 md:w-56 md:flex-none"
         @keydown="onSearchKeydown"
       >
@@ -546,21 +736,36 @@ async function handleSave() {
           shortcut="/"
         />
       </div>
-      <EditorFiltersPopover
+      <TerminologyFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
+        v-model:status="translationStatus"
         :locale-options="localeOptions"
+        :status-options="statusOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
         @clear="clearFilters"
       />
-      <!-- On phones the chip gets a row of its own, leaving the search room. -->
-      <div class="flex min-w-0 items-center max-md:basis-full">
+      <!-- On phones the chips get a row of their own, leaving the search room. -->
+      <div
+        class="flex min-w-0 flex-wrap items-center gap-2 max-md:basis-full max-md:flex-nowrap max-md:overflow-x-auto"
+      >
         <Chip
           dense
           variant="secondary"
+          class="shrink-0"
           :title="selectedLanguageLabels.join(', ')"
         >
           {{ languageSummary }}
+        </Chip>
+        <Chip
+          v-if="translationStatus"
+          dense
+          variant="secondary"
+          removable
+          class="shrink-0"
+          @remove="translationStatus = ''"
+        >
+          {{ selectedStatusLabel }}
         </Chip>
       </div>
       <EditorRefreshStatus
@@ -671,8 +876,10 @@ async function handleSave() {
                   )
                 "
               />
+              <!-- v-if, not v-can: v-can takes the button out behind Vue's back, so
+                   the approve button before it couldn't come back. -->
               <BaseIconButton
-                v-can="'update_terminology'"
+                v-if="can('update_terminology')"
                 icon="pencil-simple"
                 :label="t('terminologies.edit')"
                 :disabled="isSaving"
@@ -680,7 +887,7 @@ async function handleSave() {
                 @click="editDialogItem = selectedTerminologyData"
               />
               <BaseIconButton
-                v-can="'delete_terminology'"
+                v-if="can('delete_terminology')"
                 icon="trash"
                 destructive
                 :label="t('terminologies.delete')"

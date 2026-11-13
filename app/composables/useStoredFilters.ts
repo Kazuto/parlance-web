@@ -8,6 +8,10 @@ type StoredEntryFilters = {
   duplicates: string;
 };
 
+type StoredGlossaryFilters = {
+  status: string;
+};
+
 /**
  * Filters remembered in this browser so they survive page changes. Languages are
  * shared by the entries and glossary pages and stored by locale code, like the URL.
@@ -21,7 +25,13 @@ export function useStoredFilters() {
     { mergeDefaults: true },
   );
 
-  return { languages, entries };
+  const glossary = useLocalStorage<StoredGlossaryFilters>(
+    "filters.glossary",
+    { status: "" },
+    { mergeDefaults: true },
+  );
+
+  return { languages, entries, glossary };
 }
 
 /** Ids of the locales with the given codes; unknown codes are skipped. */

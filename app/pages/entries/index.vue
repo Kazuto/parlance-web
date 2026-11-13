@@ -923,28 +923,40 @@ useEditorShortcuts({
 const paletteLocaleId = ref<string>();
 const searchBox = useTemplateRef<HTMLElement>("searchBox");
 const { open: paletteOpen } = useEditorCommands({
-  entryActions,
-  entries: splitViewItems,
+  labels: {
+    group: "commands.groupEntry",
+    items: "commands.groupEntries",
+    previous: "commands.previousEntry",
+    next: "commands.nextEntry",
+    saveAndNext: "commands.saveAndNext",
+    search: "commands.focusSearch",
+  },
+  itemIcon: "translate",
+  actions: entryActions,
+  items: splitViewItems,
+  itemKeywords: (entry) => [String(entry.defaultTranslation ?? "")],
   statusOptions,
   canSave: () =>
     canUpdate.value &&
     !!selectedEntryData.value &&
     !!selectedUnsavedLocaleIds.value.length &&
     !isSaving.value,
-  canCreate: () => can.value("create_entry"),
   canReview: () => canReview.value,
   hasDrafts: () =>
     !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
-  canEdit: () => canUpdate.value && !isSaving.value,
-  focusedLanguage: () => {
-    const localeId = paletteLocaleId.value;
+  copySource: {
+    canEdit: () => canUpdate.value && !isSaving.value,
+    focusedLanguage: () => {
+      const localeId = paletteLocaleId.value;
 
-    if (!localeId) return undefined;
+      if (!localeId) return undefined;
 
-    return {
-      name: localeOption(localeId)?.label ?? localeId,
-      isDefault: localeId === defaultLocale.value?.id,
-    };
+      return {
+        name: localeOption(localeId)?.label ?? localeId,
+        isDefault: localeId === defaultLocale.value?.id,
+      };
+    },
+    run: () => copySourceTo(paletteLocaleId.value),
   },
   handlers: {
     action: onEntryAction,
@@ -953,7 +965,6 @@ const { open: paletteOpen } = useEditorCommands({
     previous: () => !isSaving.value && navigation.previous(),
     next: () => !isSaving.value && navigation.next(),
     approveAll: approveShown,
-    copySource: () => copySourceTo(paletteLocaleId.value),
     toggleContext: () => {
       const localeId =
         activeLocaleId.value ?? orderedSelectedLocaleIds.value[0];
@@ -961,8 +972,7 @@ const { open: paletteOpen } = useEditorCommands({
       if (localeId) toggleContext(localeId);
     },
     focusSearch: () => searchBox.value?.querySelector("input")?.focus(),
-    create: () => (showCreateDialog.value = true),
-    entry: (id) => {
+    item: (id) => {
       const item = splitViewItems.value.find((entry) => entry.key === id);
 
       if (item) selectEntry(item);
@@ -1399,34 +1409,31 @@ watch(
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <div class="flex flex-wrap items-center gap-3">
-        <span class="text-xs text-neutral-500 dark:text-neutral-400">
-          <!-- On phones only what is unsaved, to leave room for the buttons. -->
-          <span class="max-md:hidden">
-            <template v-if="entryTotal !== undefined"
-              >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
-            </template>
-            {{
-              t(
-                "common.selectedLanguages",
-                { count: selectedLocaleIds.length },
-                selectedLocaleIds.length,
-              )
-            }}
-          </span>
-          <span
-            v-if="unsavedLocaleIds.length"
-            class="md:ml-2 text-yellow-700 dark:text-amber-300"
-            >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
-            }}{{
-              unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-                ? ` ${t("common.hiddenLanguages")}`
-                : ""
-            }}</span
-          >
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">
+        <!-- On phones only what is unsaved, to leave room for the buttons. -->
+        <span class="max-md:hidden">
+          <template v-if="entryTotal !== undefined"
+            >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+          </template>
+          {{
+            t(
+              "common.selectedLanguages",
+              { count: selectedLocaleIds.length },
+              selectedLocaleIds.length,
+            )
+          }}
         </span>
-        <CommandPaletteHint class="max-sm:hidden" />
-      </div>
+        <span
+          v-if="unsavedLocaleIds.length"
+          class="md:ml-2 text-yellow-700 dark:text-amber-300"
+          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+          }}{{
+            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+              ? ` ${t("common.hiddenLanguages")}`
+              : ""
+          }}</span
+        >
+      </span>
       <EditorWorkspaceActions
         v-can="'update_entry'"
         show-save-all
