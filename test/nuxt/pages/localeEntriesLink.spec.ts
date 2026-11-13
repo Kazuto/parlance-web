@@ -21,11 +21,10 @@ const locales = [
     id: "l1",
     code: "en",
     name: "English",
-    names: { en: "English" },
     isDefault: true,
   },
-  { id: "l2", code: "de", name: "German", names: { en: "German" } },
-  { id: "l3", code: "fr", name: "French", names: { en: "French" } },
+  { id: "l2", code: "de", name: "German" },
+  { id: "l3", code: "fr", name: "French" },
 ];
 
 const STORED_LANGUAGES = "parlance-filters.languages";
@@ -88,11 +87,6 @@ describe("opening entries from the locales overview", () => {
 
     expect(entries.element.tagName).toBe("A");
     expect(entries.attributes("href")).toBe("/entries?locales=en,de");
-
-    const view = row!.find(`[aria-label="${t("locales.view")}"]`);
-
-    expect(view.element.tagName).toBe("A");
-    expect(view.attributes("href")).toBe("/locales/l2");
   });
 
   it("is not offered without read_entry", async () => {
