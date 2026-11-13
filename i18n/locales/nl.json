@@ -884,6 +884,7 @@
   "terminologies.description": "Woordenlijst en terminologie beheren",
   "terminologies.descriptionPlaceholder": "Voeg context toe over deze term",
   "terminologies.edit": "Term bewerken",
+  "terminologies.filterSelectedHelp": "Controleert de geselecteerde talen, inclusief de standaardtaal.",
   "terminologies.loadFailed": "Er is een fout opgetreden bij het laden van de termen: {error}",
   "terminologies.loading": "Termen laden…",
   "terminologies.loadingTerminology": "Term laden…",

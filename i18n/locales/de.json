@@ -884,6 +884,7 @@
   "terminologies.description": "Glossar und Terminologie verwalten",
   "terminologies.descriptionPlaceholder": "Füge Kontext zu diesem Begriff hinzu",
   "terminologies.edit": "Begriff bearbeiten",
+  "terminologies.filterSelectedHelp": "Prüft die gewählten Sprachen, die Standardsprache eingeschlossen.",
   "terminologies.loadFailed": "Die Begriffe konnten nicht geladen werden: {error}",
   "terminologies.loading": "Begriffe werden geladen…",
   "terminologies.loadingTerminology": "Begriff wird geladen…",

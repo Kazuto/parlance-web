@@ -884,6 +884,7 @@
   "terminologies.description": "管理术语表与词汇库",
   "terminologies.descriptionPlaceholder": "添加关于此术语的说明",
   "terminologies.edit": "编辑术语",
+  "terminologies.filterSelectedHelp": "检查所选语言，包括默认语言。",
   "terminologies.loadFailed": "无法加载术语：{error}",
   "terminologies.loading": "正在加载术语…",
   "terminologies.loadingTerminology": "正在加载术语…",

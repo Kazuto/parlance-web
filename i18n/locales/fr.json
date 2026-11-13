@@ -884,6 +884,7 @@
   "terminologies.description": "Gérer le glossaire et la terminologie",
   "terminologies.descriptionPlaceholder": "Ajouter du contexte concernant ce terme",
   "terminologies.edit": "Modifier le terme",
+  "terminologies.filterSelectedHelp": "Vérifie les langues sélectionnées, y compris la langue par défaut.",
   "terminologies.loadFailed": "Échec du chargement des termes : {error}",
   "terminologies.loading": "Chargement des termes…",
   "terminologies.loadingTerminology": "Chargement du terme…",

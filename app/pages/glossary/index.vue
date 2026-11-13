@@ -15,6 +15,7 @@ import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
 import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
 import {
+  TERMINOLOGY_STATUSES,
   useTerminologyDetail,
   useTerminologyFeed,
 } from "~/composables/terminology/useTerminologyFeed";
@@ -55,7 +56,20 @@ const {
   refetch,
   search: feedSearch,
   targetLocaleIds,
+  translationStatus,
 } = useTerminologyFeed(100);
+const statusOptions = computed(() => [
+  { label: t("entries.filterAll"), value: "" },
+  { label: t("entries.missingTranslations"), value: "missing" },
+  { label: t("entries.filterComplete"), value: "complete" },
+  { label: t("entries.filterReview"), value: "review" },
+]);
+const selectedStatusLabel = computed(
+  () =>
+    statusOptions.value.find(
+      (option) => option.value === translationStatus.value,
+    )?.label ?? "",
+);
 
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -121,15 +135,19 @@ watch(
   { deep: true },
 );
 
-const activeFilterCount = computed(() => Number(languagesFiltered.value));
+const activeFilterCount = computed(
+  () => Number(languagesFiltered.value) + Number(!!translationStatus.value),
+);
 
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
+  translationStatus.value = "";
 }
 
 const selectedTerminology = ref<SplitViewItem>();
 // Links (e.g. from the dashboard activity) can open the page with a search via ?q=.
 const route = useRoute();
+const router = useRouter();
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
 // Types out terms and one of their translations from the list, showing by
 // example that both can be searched; the accessible name says it in words.
@@ -159,6 +177,37 @@ const { onKeydown: onSearchKeydown } = useDebouncedSearch(
 );
 
 feedSearch.value = search.value || undefined;
+
+// Links can open the page filtered by ?status=, which stays in the URL so the view
+// can be shared. Otherwise the status last picked here comes back, except for a
+// link with a search: there it could hide the term the link points to.
+const linkedStatus =
+  typeof route.query.status === "string" ? route.query.status : "";
+const initialStatus =
+  linkedStatus || search.value
+    ? linkedStatus
+    : String(storedFilters.glossary.value.status ?? "");
+
+translationStatus.value = TERMINOLOGY_STATUSES.includes(initialStatus)
+  ? initialStatus
+  : "";
+// Only changes made here are remembered, so opening a link keeps the stored one.
+watch(translationStatus, (status) => {
+  storedFilters.glossary.value = { status };
+});
+watch(
+  translationStatus,
+  (status) => {
+    if (route.query.status === (status || undefined)) return;
+
+    const query = { ...route.query };
+
+    if (status) query.status = status;
+    else Reflect.deleteProperty(query, "status");
+    router.replace({ query });
+  },
+  { immediate: true },
+);
 
 const pinnedTerminologyId = ref<string>();
 
@@ -546,21 +595,36 @@ async function handleSave() {
           shortcut="/"
         />
       </div>
-      <EditorFiltersPopover
+      <TerminologyFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
+        v-model:status="translationStatus"
         :locale-options="localeOptions"
+        :status-options="statusOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
         @clear="clearFilters"
       />
-      <!-- On phones the chip gets a row of its own, leaving the search room. -->
-      <div class="flex min-w-0 items-center max-md:basis-full">
+      <!-- On phones the chips get a row of their own, leaving the search room. -->
+      <div
+        class="flex min-w-0 flex-wrap items-center gap-2 max-md:basis-full max-md:flex-nowrap max-md:overflow-x-auto"
+      >
         <Chip
           dense
           variant="secondary"
+          class="shrink-0"
           :title="selectedLanguageLabels.join(', ')"
         >
           {{ languageSummary }}
+        </Chip>
+        <Chip
+          v-if="translationStatus"
+          dense
+          variant="secondary"
+          removable
+          class="shrink-0"
+          @remove="translationStatus = ''"
+        >
+          {{ selectedStatusLabel }}
         </Chip>
       </div>
       <EditorRefreshStatus
