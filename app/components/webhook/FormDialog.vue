@@ -14,6 +14,7 @@ import {
   WEBHOOK_EVENTS,
   WEBHOOK_FORMATS,
   formatForUrl,
+  requiredFormatForUrl,
   generateSecret,
 } from "~/lib/webhooks";
 
@@ -94,7 +95,7 @@ function pickFormat(format: WebhookFormat) {
 
 // An address whose service only takes another format, e.g. Discord's for JSON.
 const expectedFormat = computed(() => {
-  const format = formatForUrl(form.value.url.trim());
+  const format = requiredFormatForUrl(form.value.url.trim());
 
   return format && format !== form.value.format ? format : undefined;
 });
@@ -165,14 +166,14 @@ function handleSubmit() {
         events: { events },
         secret,
       });
-      showSuccess(t("webhooks.updated", { name }));
+      showSuccess(t("common.labelSaved", { label: name }));
     } else {
       await store.create.mutateAsync({
         ...input,
         events,
         secret: form.value.secret.trim(),
       });
-      showSuccess(t("webhooks.created", { name }));
+      showSuccess(t("common.labelAdded", { label: name }));
     }
   });
 }
@@ -256,7 +257,7 @@ function handleSubmit() {
           autocomplete="off"
           class="font-mono"
           :disabled="isPending || form.removeSecret"
-          :placeholder="item?.hasSecret ? t('webhooks.secretKept') : undefined"
+          :placeholder="item?.hasSecret ? t('common.secretKept') : undefined"
           :helper="t('webhooks.secretHelp')"
         >
           {{ t("webhooks.secret") }}

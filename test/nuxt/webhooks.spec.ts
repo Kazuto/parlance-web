@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Select } from "@thkzt/eunoia";
 import WebhooksPage from "~/pages/webhooks/index.vue";
 import {
   ALL_PERMISSIONS,
@@ -157,7 +158,7 @@ describe("webhooks page", () => {
     );
     expect(text).toContain(t("webhooks.signed"));
     expect(text).toContain("the receiver answered 503 Service Unavailable");
-    expect(text).toContain(t("webhooks.inactive"));
+    expect(text).toContain(t("common.inactive"));
     expect(text).toContain(t("webhooks.neverDelivered"));
     expect(text).toContain(t("webhooks.describe.immediate"));
     expect(text).toContain(t("webhooks.describe.daily", { time: "09:00" }));
@@ -240,6 +241,83 @@ describe("webhooks page", () => {
       id: "w2",
       format: "WEBHOOK_FORMAT_JSON",
       schedule: "0 9 * * *",
+    });
+  });
+
+  it("starts an Apprise address on the Apprise format, but only as a guess", async () => {
+    const { page, calls } = await openWebhooks(ALL_PERMISSIONS);
+    const format = () =>
+      page.wrapper
+        .findAllComponents(Select)
+        .find((select) => select.element.closest("dialog[open]"))!;
+
+    page.options().primaryAction?.onClick?.();
+    await settle();
+    await dialogField(page, t("common.name")).setValue("Alerts");
+
+    for (const [url, expected] of [
+      ["https://apprise.example/notify/", "WEBHOOK_FORMAT_APPRISE"],
+      ["https://ci.example/notify-me", "WEBHOOK_FORMAT_JSON"],
+      ["http://apprise:8000/notify/parlance", "WEBHOOK_FORMAT_APPRISE"],
+    ]) {
+      await dialogField(page, t("webhooks.url")).setValue(url);
+      await settle();
+
+      expect(format().props("modelValue")).toBe(expected);
+    }
+
+    // Other services may have such paths, so JSON doesn't get questioned.
+    format().vm.$emit("update:modelValue", "WEBHOOK_FORMAT_JSON");
+    await settle();
+
+    expect(page.wrapper.find("dialog[open] [role=status]").exists()).toBe(
+      false,
+    );
+
+    await submitDialog(page);
+
+    expect(calls.at(-1)?.body).toMatchObject({
+      url: "http://apprise:8000/notify/parlance",
+      format: "WEBHOOK_FORMAT_JSON",
+    });
+  });
+
+  it("subscribes to failed exports and sign-ins", async () => {
+    const { page, calls } = await openWebhooks(ALL_PERMISSIONS);
+
+    page.options().primaryAction?.onClick?.();
+    await settle();
+    await dialogField(page, t("common.name")).setValue("Security");
+    await dialogField(page, t("webhooks.url")).setValue(
+      "https://alerts.example/hook",
+    );
+
+    const dialog = page.wrapper.find("dialog[open]").text();
+
+    expect(dialog).toContain(
+      t("webhooks.eventHelp.WEBHOOK_EVENT_EXPORT_FAILED"),
+    );
+    expect(dialog).toContain(
+      t("webhooks.eventHelp.WEBHOOK_EVENT_LOGIN_FAILED"),
+    );
+
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_TRANSLATIONS_APPROVED"),
+    ).setValue(false);
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_LOGIN_FAILED"),
+    ).setValue(true);
+    await dialogField(
+      page,
+      t("webhooks.event.WEBHOOK_EVENT_EXPORT_FAILED"),
+    ).setValue(true);
+    await submitDialog(page);
+
+    // In the form's order, whatever order they were ticked in.
+    expect(calls.at(-1)?.body).toMatchObject({
+      events: ["WEBHOOK_EVENT_EXPORT_FAILED", "WEBHOOK_EVENT_LOGIN_FAILED"],
     });
   });
 

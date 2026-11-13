@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Checkbox, Select } from "@thkzt/eunoia";
 import TasksPage from "~/pages/tasks/index.vue";
 import {
   ALL_PERMISSIONS,
@@ -51,11 +52,24 @@ const tasks = [
   },
 ];
 
-async function openTasks(permissions: readonly string[]) {
+async function openTasks(
+  permissions: readonly string[],
+  list: object[] = tasks,
+) {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
 
   loginAs(permissions);
-  mockRpc("TaskService/ListTasks", { tasks });
+  mockRpc("TaskService/ListTasks", { tasks: list });
+  mockRpc("ScopeService/ListScopes", {
+    scopes: [
+      {
+        id: "s1",
+        name: "Mail",
+        tags: [{ id: "tg1", scopeId: "s1", name: "Billing" }],
+      },
+    ],
+    pagination: pagination(1),
+  });
   mockRpc("TaskService/GetTaskSettings", { settings: {} });
   mockRpc("TaskService/ListTaskRuns", {
     runs: [
@@ -130,9 +144,7 @@ describe("tasks page", () => {
 
     expect(text).toContain("Ship translations");
     expect(text).toContain("acme/app · main ← parlance/translations");
-    expect(text).toContain(
-      t("tasks.describe.onApproval", { count: 10 }).split(" | ")[2] ?? "",
-    );
+    expect(text).toContain(t("tasks.describe.onApproval", { count: 10 }, 10));
     expect(text).toContain(t("tasks.describe.daily", { time: "03:00" }));
     expect(text).toContain(t("tasks.outcome.updated", { count: 1 }));
     expect(text).toContain(t("tasks.neverRun"));
@@ -225,6 +237,97 @@ describe("tasks page", () => {
     await settle();
 
     expect(calls.at(-1)?.body).toMatchObject({ id: "t1", token: "ghp_new" });
+  });
+
+  it("exports the tags of a git export's scopes", async () => {
+    const { page, calls } = await openTasks(ALL_PERMISSIONS);
+    const select = (label: string) =>
+      page.wrapper
+        .findAllComponents(Select)
+        .filter((item) => item.element.closest("dialog[open]"))
+        .find((item) =>
+          item.findAll("label").some((el) => el.text().trim() === label),
+        );
+    const save = async () => {
+      await page.wrapper.find("dialog[open] form").trigger("submit");
+      await settle();
+
+      return calls.at(-1)?.body.gitExport;
+    };
+
+    await button(
+      page,
+      t("common.editFor", { name: "Ship translations" }),
+    )!.trigger("click");
+    await settle();
+
+    // Tags are picked within scopes, so they show once a scope is.
+    expect(select(t("tags.title"))).toBeUndefined();
+
+    select(t("nav.scopes"))!.vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+    select(t("tags.title"))!.vm.$emit("update:modelValue", ["tg1"]);
+    await settle();
+
+    expect(await save()).toMatchObject({ scopeIds: ["s1"], tagIds: ["tg1"] });
+
+    // Without its scope, a tag goes.
+    await button(
+      page,
+      t("common.editFor", { name: "Ship translations" }),
+    )!.trigger("click");
+    await settle();
+    select(t("nav.scopes"))!.vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+    select(t("tags.title"))!.vm.$emit("update:modelValue", ["tg1"]);
+    await settle();
+    select(t("nav.scopes"))!.vm.$emit("update:modelValue", []);
+    await settle();
+
+    expect(select(t("tags.title"))).toBeUndefined();
+    expect(await save()).toMatchObject({ scopeIds: [], tagIds: [] });
+  });
+
+  it("runs a task when a release goes out", async () => {
+    const { page, calls } = await openTasks(ALL_PERMISSIONS, [
+      {
+        ...tasks[0]!,
+        events: ["TASK_EVENT_TRANSLATIONS_RELEASED"],
+        eventDelayMinutes: 5,
+      },
+    ]);
+
+    expect(page.wrapper.text()).toContain(
+      t("tasks.describe.onRelease", { count: 5 }, 5),
+    );
+
+    await button(
+      page,
+      t("common.editFor", { name: "Ship translations" }),
+    )!.trigger("click");
+    await settle();
+
+    // The delay applies to releases as well as approvals.
+    const dialog = page.wrapper.find("dialog[open]");
+
+    expect(dialog.text()).toContain(t("tasks.delayHelp"));
+
+    page.wrapper
+      .findAllComponents(Checkbox)
+      .filter((box) => box.element.closest("dialog[open]"))
+      .find((box) => box.text().includes(t("tasks.onApproval")))!
+      .vm.$emit("update:modelValue", true);
+    await settle();
+    await dialog.find("form").trigger("submit");
+    await settle();
+
+    expect(calls.at(-1)?.body).toMatchObject({
+      events: [
+        "TASK_EVENT_TRANSLATIONS_APPROVED",
+        "TASK_EVENT_TRANSLATIONS_RELEASED",
+      ],
+      eventDelayMinutes: 5,
+    });
   });
 
   it("adds a machine translation task", async () => {

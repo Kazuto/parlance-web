@@ -48,6 +48,45 @@ describe("task form", () => {
     expect(settings).not.toHaveProperty("aiTranslate");
   });
 
+  it("runs after releases, alone or with approvals", () => {
+    const form = taskToForm({
+      id: "t3",
+      name: "Launch",
+      type: "TASK_TYPE_GIT_EXPORT",
+      events: ["TASK_EVENT_TRANSLATIONS_RELEASED"],
+      eventDelayMinutes: 5,
+    });
+
+    expect(form).toMatchObject({ onApproval: false, onRelease: true });
+    expect(formToSettings(form)).toMatchObject({
+      events: ["TASK_EVENT_TRANSLATIONS_RELEASED"],
+      eventDelayMinutes: 5,
+    });
+
+    form.onApproval = true;
+
+    expect(formToSettings(form).events).toEqual([
+      "TASK_EVENT_TRANSLATIONS_APPROVED",
+      "TASK_EVENT_TRANSLATIONS_RELEASED",
+    ]);
+    expect(taskToForm().onRelease).toBe(false);
+  });
+
+  it("keeps a git export's scopes and tags", () => {
+    const task = {
+      id: "t2",
+      name: "Billing mails",
+      type: "TASK_TYPE_GIT_EXPORT" as const,
+      gitExport: { repository: "acme/mail", scopeIds: ["s1"], tagIds: ["t1"] },
+    };
+
+    expect(formToSettings(taskToForm(task)).gitExport).toMatchObject({
+      scopeIds: ["s1"],
+      tagIds: ["t1"],
+    });
+    expect(taskToForm().git.tagIds).toEqual([]);
+  });
+
   it("keeps a saved task's settings when saved unchanged", () => {
     const task = {
       id: "t1",

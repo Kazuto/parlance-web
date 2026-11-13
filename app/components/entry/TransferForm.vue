@@ -9,6 +9,7 @@ import type {
   ImportMode,
   ImportResult,
 } from "~/lib/api/schemas/parlance/v1/ImportSchema";
+import type { ExportFormat } from "~/lib/api/schemas/parlance/v1/TaskSchema";
 
 const props = defineProps<{
   action: "import" | "export";
@@ -27,13 +28,21 @@ const exportPhp = useMutation(api.exports.php.use());
 const exportPo = useMutation(api.exports.po.use());
 const localeId = ref("");
 const scopeIds = ref<string[]>([]);
+const tagIds = ref<string[]>([]);
 const format = ref("json");
+// Set once the format is picked by hand; until then it follows the scopes.
+const formatPicked = ref(false);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 // Imports land as drafts unless a reviewer vouches for them; exports leave drafts out.
 const approve = ref(false);
 const includeDrafts = ref(false);
+// Exports leave out entries pending releases hold back, unless included.
+const includeUnreleased = ref(false);
+// Imports into the default language may delete the entries their file doesn't hold.
+const deleteMissing = ref(false);
 const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
+const canDeleteMissing = computed(() => can.value("delete_entry"));
 const file = ref<File>();
 const error = ref<string>();
 // An import is tried first, and its preview confirmed; then its result shows.
@@ -58,16 +67,38 @@ const localeOptions = computed(() =>
       value: locale.id ?? "",
     })),
 );
+const scopeChoices = useScopeOptions();
 const {
   options: scopeOptions,
   error: scopeError,
   isFetching: scopesLoading,
-} = useScopeOptions();
+} = scopeChoices;
+// Exports can narrow the scopes to their tags; removing a scope removes its tags.
+const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
 const selectedScopeNames = computed(() =>
   scopeOptions.value
     .filter((option) => scopeIds.value.includes(option.value))
     .map((option) => option.label)
     .join(", "),
+);
+// The default format the selected scopes share, as a file extension
+const EXTENSIONS: Partial<Record<ExportFormat, string>> = {
+  EXPORT_FORMAT_JSON: "json",
+  EXPORT_FORMAT_PHP: "php",
+  EXPORT_FORMAT_PO: "po",
+};
+const scopesFormat = computed(() => {
+  const formats = new Set(
+    scopeOptions.value
+      .filter((option) => scopeIds.value.includes(option.value))
+      .map((option) => option.exportFormat),
+  );
+  const [shared] = formats;
+
+  return formats.size === 1 && shared ? EXTENSIONS[shared] : undefined;
+});
+const formatFromScopes = computed(
+  () => !formatPicked.value && !!scopesFormat.value,
 );
 const formatOptions = computed(() => [
   { label: t("transfer.json"), value: "json" },
@@ -104,13 +135,22 @@ watch(
   },
   { immediate: true },
 );
+watch(scopesFormat, (value) => {
+  if (value && !formatPicked.value) format.value = value;
+});
 watch(format, () => {
   file.value = undefined;
   error.value = undefined;
 });
+
+function pickFormat(value: unknown) {
+  format.value = String(value);
+  formatPicked.value = true;
+}
+
 // A preview is only good for the inputs it was made with.
 watch(
-  [localeId, format, scopeIds, mode, approve, file],
+  [localeId, format, scopeIds, mode, approve, deleteMissing, file],
   () => {
     preview.value = undefined;
     result.value = undefined;
@@ -138,6 +178,13 @@ function encodeFile(value: File): Promise<string> {
 const selectedLocale = computed(() =>
   props.locales.find((item) => item.id === localeId.value),
 );
+// Other languages' files may leave out the entries they don't translate.
+const isDefaultLocale = computed(() => !!selectedLocale.value?.isDefault);
+
+watch(isDefaultLocale, (isDefault) => {
+  if (!isDefault) deleteMissing.value = false;
+});
+
 // A finished import is done until something changes.
 const canSubmit = computed(
   () => !isPending.value && localeOptions.value.length > 0 && !result.value,
@@ -180,6 +227,7 @@ async function handleSubmit() {
         scopeIds: scopeIds.value,
         approve: canApprove.value && approve.value,
         dryRun: !preview.value,
+        deleteMissing: canDeleteMissing.value && deleteMissing.value,
       };
       const response = await (format.value === "po"
         ? importPo.mutateAsync(input)
@@ -200,7 +248,9 @@ async function handleSubmit() {
       const input = {
         localeCode: locale.code,
         scopeIds: scopeIds.value,
+        tagIds: tagIds.value,
         includeDrafts: includeDrafts.value,
+        includeUnreleased: includeUnreleased.value,
       };
       const response = await (format.value === "po"
         ? exportPo.mutateAsync(input)
@@ -259,13 +309,22 @@ defineExpose({
         :placeholder="t('transfer.selectLanguage')"
         >{{ t("common.language") }}</Select
       >
-      <Select
-        v-model="format"
-        teleport-to="body"
-        :options="formatOptions"
-        :disabled="isPending"
-        >{{ t("common.format") }}</Select
-      >
+      <div class="space-y-1">
+        <Select
+          :model-value="format"
+          teleport-to="body"
+          :options="formatOptions"
+          :disabled="isPending"
+          @update:model-value="pickFormat"
+          >{{ t("common.format") }}</Select
+        >
+        <p
+          v-if="formatFromScopes"
+          class="text-xs text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("transfer.formatFromScopes") }}
+        </p>
+      </div>
       <div class="space-y-1">
         <Select
           v-model="scopeIds"
@@ -287,6 +346,23 @@ defineExpose({
           {{ t("transfer.importScopeHelp") }}
         </p>
       </div>
+      <div
+        v-if="action === 'export' && scopeIds.length && tagOptions.length"
+        class="space-y-1"
+      >
+        <Select
+          v-model="tagIds"
+          teleport-to="body"
+          multiple
+          :options="tagOptions"
+          :disabled="isPending"
+          :placeholder="t('tags.select')"
+          >{{ t("tags.title") }}</Select
+        >
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("tags.exportHelp") }}
+        </p>
+      </div>
       <template v-if="action === 'import'">
         <Select
           v-model="mode"
@@ -302,6 +378,20 @@ defineExpose({
           :helper="t('transfer.approveHelp')"
         >
           <template #description>{{ t("transfer.approve") }}</template>
+        </Checkbox>
+        <Checkbox
+          v-if="canDeleteMissing"
+          v-model="deleteMissing"
+          :disabled="isPending || !isDefaultLocale"
+          :helper="
+            t(
+              isDefaultLocale
+                ? 'transfer.deleteMissingHelp'
+                : 'transfer.deleteMissingDefaultOnly',
+            )
+          "
+        >
+          <template #description>{{ t("transfer.deleteMissing") }}</template>
         </Checkbox>
         <Dropzone
           v-model="file"
@@ -320,6 +410,14 @@ defineExpose({
         :helper="t('transfer.includeDraftsHelp')"
       >
         <template #description>{{ t("transfer.includeDrafts") }}</template>
+      </Checkbox>
+      <Checkbox
+        v-if="action === 'export'"
+        v-model="includeUnreleased"
+        :disabled="isPending"
+        :helper="t('transfer.includeUnreleasedHelp')"
+      >
+        <template #description>{{ t("transfer.includeUnreleased") }}</template>
       </Checkbox>
       <p
         v-if="action === 'export'"
@@ -361,6 +459,14 @@ defineExpose({
             updated: result.entriesUpdated ?? 0,
             skipped: result.entriesSkipped ?? 0,
             failed: result.entriesFailed ?? 0,
+          })
+        }}
+      </p>
+      <p v-if="result.deletion">
+        {{
+          t("transfer.deletedSummary", {
+            deleted: result.deletion.entriesDeleted ?? 0,
+            unscoped: result.deletion.entriesUnscoped ?? 0,
           })
         }}
       </p>

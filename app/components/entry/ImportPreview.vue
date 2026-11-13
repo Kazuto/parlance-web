@@ -7,8 +7,8 @@ import type { Formality } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 import { textDirection } from "~/lib/textDirection";
 
 // What an import would do, from its dry run: how many translations it adds, changes
-// and removes, which translations in other languages it outdates, and the first
-// changes with their old and new text.
+// and removes, which translations in other languages it outdates, the first changes
+// with their old and new text, and the entries it deletes.
 const props = defineProps<{
   result: ImportResult;
   /** The language imported into, for the writing direction of the texts. */
@@ -158,6 +158,11 @@ const unlisted = computed(() => totals.value.changes - changes.value.length);
     >
       {{ t("importPreview.more", { count: unlisted }, unlisted) }}
     </p>
+    <EntryImportDeletion
+      v-if="result.deletion"
+      :deletion="result.deletion"
+      :locale-code
+    />
     <ul
       v-if="result.errors?.length"
       class="max-h-40 overflow-y-auto text-sm text-red-600"

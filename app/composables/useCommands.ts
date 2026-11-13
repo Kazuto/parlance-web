@@ -1,4 +1,5 @@
 import type { CommandPaletteItem } from "@thkzt/eunoia";
+import { unrefElement, type MaybeElementRef } from "@vueuse/core";
 
 /** An entry of the command palette, and what choosing it does. */
 export type AppCommand = CommandPaletteItem & { run: () => unknown };
@@ -54,4 +55,21 @@ export function useCommands(commands: () => AppCommand[]) {
   }
 
   return { open: registry?.open ?? ref(false) };
+}
+
+/** A command that puts the focus in the search field inside `field`, as "/" does. */
+export function searchCommand(
+  field: MaybeElementRef,
+  options: { label: string; group: string },
+): AppCommand {
+  return {
+    ...options,
+    value: "search",
+    icon: "magnifying-glass",
+    shortcut: "/",
+    run: () =>
+      unrefElement(field)
+        ?.querySelector<HTMLInputElement>('input[type="search"]')
+        ?.focus(),
+  };
 }

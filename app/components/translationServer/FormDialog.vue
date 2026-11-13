@@ -83,10 +83,10 @@ function handleSubmit() {
         : form.value.apiKey || undefined;
 
       await store.update.mutateAsync({ id: props.item.id, ...input, apiKey });
-      showSuccess(t("translationServers.updated", { name }));
+      showSuccess(t("common.labelSaved", { label: name }));
     } else {
       await store.create.mutateAsync({ ...input, apiKey: form.value.apiKey });
-      showSuccess(t("translationServers.created", { name }));
+      showSuccess(t("common.labelAdded", { label: name }));
     }
   });
 }
@@ -131,9 +131,7 @@ function handleSubmit() {
         type="password"
         autocomplete="off"
         :disabled="isPending || form.removeApiKey"
-        :placeholder="
-          item?.hasApiKey ? t('translationServers.apiKeyKept') : undefined
-        "
+        :placeholder="item?.hasApiKey ? t('common.secretKept') : undefined"
         :helper="t('translationServers.apiKeyHelp')"
       >
         {{ t("translationServers.apiKey") }}

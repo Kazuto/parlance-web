@@ -6,15 +6,21 @@ import {
 import { api } from "~/lib/api";
 import type { Terminology } from "~/lib/api/schemas/parlance/v1/TerminologySchema";
 
+/** The definition states the glossary can be filtered by. */
+export const TERMINOLOGY_STATUSES = ["missing", "complete", "review"];
+
 /** Terminologies for the list panel, loaded page by page as the list scrolls. */
 export function useTerminologyFeed(perPage = 100) {
   const search = ref<string>();
   const targetLocaleIds = ref<string[]>([]);
+  // Definitions missing, complete or in review in the target languages; "" for all.
+  const translationStatus = ref("");
 
   const params = computed(() => ({
     pagination: { page: 1, perPage },
     filter: { search: search.value || undefined },
     targetLocaleIds: [...targetLocaleIds.value],
+    translationStatus: translationStatus.value || undefined,
   }));
 
   const query = useInfiniteQuery({
@@ -36,6 +42,7 @@ export function useTerminologyFeed(perPage = 100) {
     total,
     search,
     targetLocaleIds,
+    translationStatus,
   };
 }
 

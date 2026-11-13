@@ -20,6 +20,20 @@ const formOpen = ref(false);
 const editing = ref<TranslationServer>();
 const deleting = ref<TranslationServer>();
 
+useCommands(() =>
+  can.value("create_translation_server")
+    ? [
+        {
+          label: t("translationServers.add"),
+          value: "addTranslationServer",
+          group: t("nav.settings"),
+          icon: "plus",
+          run: () => openForm(),
+        },
+      ]
+    : [],
+);
+
 function openForm(server?: TranslationServer) {
   editing.value = server;
   formOpen.value = true;

@@ -13,7 +13,10 @@ import {
   Icon,
   Pagination,
 } from "@thkzt/eunoia";
-import { useZipExport } from "~/composables/export/useZipExport";
+import {
+  useZipExport,
+  type ZipExportOptions,
+} from "~/composables/export/useZipExport";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const { can } = usePermission();
@@ -46,9 +49,9 @@ function entriesUrl(locale: Locale, status?: "missing") {
 
 const showExportDialog = ref(false);
 
-async function handleExportZip(includeDrafts: boolean) {
+async function handleExportZip(options: ZipExportOptions) {
   try {
-    await exportZip([], includeDrafts);
+    await exportZip(options);
     showExportDialog.value = false;
     showSuccess(t("export.zip.success"));
   } catch (error) {
@@ -131,6 +134,20 @@ const tableItems = computed(() =>
       stats.value?.byLocale?.find((item) => item.localeId === locale.id)
         ?.percentage ?? 0,
   })),
+);
+
+// Each language's page, from the command palette.
+useCommands(() =>
+  tableItems.value
+    .filter((locale) => locale.id && !locale.deletedAt)
+    .map((locale) => ({
+      label: t("commands.openLanguage", { language: locale.name }),
+      value: `locale:${locale.id}`,
+      group: t("nav.locales"),
+      icon: "globe-simple",
+      keywords: [locale.code ?? ""],
+      run: () => navigateTo(`/locales/${locale.id}`),
+    })),
 );
 
 const showDialog = ref(false);

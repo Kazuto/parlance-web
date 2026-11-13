@@ -18,6 +18,9 @@ export const WebhookEventSchema = z.union([
     "WEBHOOK_EVENT_PING",
     "WEBHOOK_EVENT_TRANSLATIONS_AWAITING_APPROVAL",
     "WEBHOOK_EVENT_DIGEST",
+    "WEBHOOK_EVENT_TRANSLATIONS_RELEASED",
+    "WEBHOOK_EVENT_EXPORT_FAILED",
+    "WEBHOOK_EVENT_LOGIN_FAILED",
   ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);
@@ -28,6 +31,7 @@ export const WebhookFormatSchema = z.union([
     "WEBHOOK_FORMAT_JSON",
     "WEBHOOK_FORMAT_SLACK",
     "WEBHOOK_FORMAT_DISCORD",
+    "WEBHOOK_FORMAT_APPRISE",
   ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);

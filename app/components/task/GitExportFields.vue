@@ -16,7 +16,9 @@ const props = defineProps<{
   taskId?: string;
   hasToken?: boolean;
   localeOptions: Option[];
-  scopeOptions: Option[];
+  scopeOptions: (Option & { exportFormat?: ExportFormat })[];
+  /** The chosen scopes' tags */
+  tagOptions?: Option[];
   disabled?: boolean;
 }>();
 
@@ -34,11 +36,17 @@ const formatOptions = computed(() =>
   ).map((value) => ({ value, label: t(`tasks.git.format.${value}`) })),
 );
 
+// A new file takes a format not used yet, the selected scopes' defaults first.
 function addFile() {
   const used = new Set(form.value.files.map((file) => file.format));
+  const scopeFormats = props.scopeOptions
+    .filter((scope) => form.value.scopeIds.includes(scope.value))
+    .flatMap((scope) => (scope.exportFormat ? [scope.exportFormat] : []));
   const format =
-    formatOptions.value.find((option) => !used.has(option.value))?.value ??
-    "EXPORT_FORMAT_JSON";
+    [
+      ...scopeFormats,
+      ...formatOptions.value.map((option) => option.value),
+    ].find((value) => !used.has(value)) ?? "EXPORT_FORMAT_JSON";
 
   form.value.files.push({ format, path: DEFAULT_PATHS[format] ?? "" });
 }
@@ -188,6 +196,20 @@ async function checkAccess() {
         :placeholder="t('scopes.all')"
         >{{ t("nav.scopes") }}</Select
       >
+    </div>
+    <div v-if="form.scopeIds.length && tagOptions?.length" class="space-y-1">
+      <Select
+        v-model="form.tagIds"
+        teleport-to="body"
+        multiple
+        :options="tagOptions"
+        :disabled
+        :placeholder="t('tags.select')"
+        >{{ t("tags.title") }}</Select
+      >
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+        {{ t("tags.exportHelp") }}
+      </p>
     </div>
     <Checkbox
       v-model="form.includeDrafts"

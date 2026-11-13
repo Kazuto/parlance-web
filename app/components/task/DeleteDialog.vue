@@ -23,7 +23,7 @@ function handleConfirm() {
 <template>
   <ConfirmDialog
     :open
-    :title="t('tasks.deleteTitle', { name: item?.name ?? '' })"
+    :title="t('common.deleteTitle', { name: item?.name ?? '' })"
     :persistent="isPending"
     @cancel="cancel"
     @close="cancel"

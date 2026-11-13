@@ -114,6 +114,22 @@ async function sendTest(hook: Webhook) {
     testing.value = undefined;
   }
 }
+
+// Testing each webhook, from the command palette.
+useCommands(() =>
+  can.value("update_webhook")
+    ? webhooks.value
+        .filter((hook) => hook.id)
+        .map((hook) => ({
+          label: t("commands.testWebhook", { webhook: hook.name ?? "" }),
+          value: `test:${hook.id}`,
+          group: t("nav.webhooks"),
+          icon: "paper-plane-tilt",
+          disabled: !!testing.value,
+          run: () => sendTest(hook),
+        }))
+    : [],
+);
 </script>
 
 <template>
@@ -151,7 +167,7 @@ async function sendTest(hook: Webhook) {
               <span
                 v-if="!hook.enabled"
                 class="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] font-bold text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
-                >{{ t("webhooks.inactive") }}</span
+                >{{ t("common.inactive") }}</span
               >
               <span
                 v-if="hook.format && hook.format !== 'WEBHOOK_FORMAT_JSON'"

@@ -98,6 +98,35 @@ const { can } = usePermission();
 const visibleCards = computed(() =>
   cards.value.filter((card) => can.value(card.permission)),
 );
+
+// The entries behind the metric cards, from the command palette.
+useCommands(() =>
+  can.value("read_entry")
+    ? [
+        {
+          value: "missing",
+          status: t("entries.missingTranslations"),
+          to: missingUrl.value,
+        },
+        {
+          value: "review",
+          status: t("entries.filterReview"),
+          to: reviewUrl.value,
+        },
+        {
+          value: "complete",
+          status: t("entries.filterComplete"),
+          to: completeUrl.value,
+        },
+      ].map(({ value, status, to }) => ({
+        label: t("commands.showStatus", { status }),
+        value: `status:${value}`,
+        group: t("nav.dashboard"),
+        icon: "funnel",
+        run: () => navigateTo(to),
+      }))
+    : [],
+);
 </script>
 
 <template>

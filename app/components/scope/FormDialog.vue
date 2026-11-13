@@ -4,10 +4,12 @@ import {
   Button,
   Dialog,
   Input,
+  Select,
   Textarea,
   useTypingPlaceholder,
 } from "@thkzt/eunoia";
 import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
+import type { ExportFormat } from "~/lib/api/schemas/parlance/v1/TaskSchema";
 
 // Without an item the dialog creates a scope; with an item it edits it.
 const props = defineProps<{ open: boolean; item?: Scope }>();
@@ -15,13 +17,25 @@ const emit = defineEmits<{ close: [] }>();
 
 const DEFAULT_COLOR = "#6366f1";
 
-const form = ref({ name: "", slug: "", description: "", color: "" });
+const form = ref({
+  name: "",
+  slug: "",
+  description: "",
+  color: "",
+  exportFormat: "EXPORT_FORMAT_UNSPECIFIED" as ExportFormat,
+});
 // Follow the name until the slug is edited by hand; existing slugs are never rewritten.
 const slugTouched = ref(false);
 const scopeStore = useScopeStore();
 const isEdit = computed(() => !!props.item);
 const { t } = useI18n();
 const { showSuccess } = useErrorHelper();
+const formatOptions = computed(() => [
+  { label: t("scopes.exportFormatNone"), value: "EXPORT_FORMAT_UNSPECIFIED" },
+  ...(
+    ["EXPORT_FORMAT_JSON", "EXPORT_FORMAT_PHP", "EXPORT_FORMAT_PO"] as const
+  ).map((value) => ({ label: t(`tasks.git.format.${value}`), value })),
+]);
 const colorInvalid = computed(
   () => !!form.value.color && !HEX_COLOR.test(form.value.color),
 );
@@ -60,6 +74,7 @@ const { error, isPending, submit, cancel } = useFormDialog({
       slug: props.item?.slug ?? "",
       description: props.item?.description ?? "",
       color: props.item?.color ?? "",
+      exportFormat: props.item?.exportFormat ?? "EXPORT_FORMAT_UNSPECIFIED",
     };
     slugTouched.value = isEdit.value;
   },
@@ -100,6 +115,8 @@ function handleSubmit() {
       slug,
       description: form.value.description.trim(),
       color: form.value.color,
+      // Unspecified clears it
+      exportFormat: form.value.exportFormat,
     };
 
     if (props.item) {
@@ -167,6 +184,18 @@ function handleSubmit() {
           >
         </template>
       </Input>
+      <div class="space-y-1">
+        <Select
+          v-model="form.exportFormat"
+          teleport-to="body"
+          :options="formatOptions"
+          :disabled="isPending"
+          >{{ t("scopes.exportFormat") }}</Select
+        >
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          {{ t("scopes.exportFormatHelp") }}
+        </p>
+      </div>
       <p v-if="error" role="alert" class="text-sm text-red-600">{{ error }}</p>
     </form>
 

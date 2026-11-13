@@ -1,6 +1,16 @@
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-type StoredEntryFilters = { scopes: string[]; status: string };
+type StoredEntryFilters = {
+  scopes: string[];
+  tags: string[];
+  releases: string[];
+  status: string;
+  duplicates: string;
+};
+
+type StoredGlossaryFilters = {
+  status: string;
+};
 
 /**
  * Filters remembered in this browser so they survive page changes. Languages are
@@ -11,11 +21,17 @@ export function useStoredFilters() {
 
   const entries = useLocalStorage<StoredEntryFilters>(
     "filters.entries",
-    { scopes: [], status: "" },
+    { scopes: [], tags: [], releases: [], status: "", duplicates: "" },
     { mergeDefaults: true },
   );
 
-  return { languages, entries };
+  const glossary = useLocalStorage<StoredGlossaryFilters>(
+    "filters.glossary",
+    { status: "" },
+    { mergeDefaults: true },
+  );
+
+  return { languages, entries, glossary };
 }
 
 /** Ids of the locales with the given codes; unknown codes are skipped. */

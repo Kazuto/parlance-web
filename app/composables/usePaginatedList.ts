@@ -56,13 +56,15 @@ export function useAllPages<
 >(
   endpoint: QueryOperation<Input, Output>,
   pick: (output: Output) => Item[] | null | undefined,
+  /** Loads only while this is true, e.g. while the user may read the list. */
+  enabled: MaybeRefOrGetter<boolean> = true,
 ) {
   // Built during setup, which the API client needs; the query key carries the input.
   const options = endpoint.use({} as never);
   const [operation, middlewares] = options.queryKey;
 
   const query = useQuery({
-    enabled: options.enabled,
+    enabled: computed(() => toValue(options.enabled) && toValue(enabled)),
     queryKey: [operation, middlewares, { allPages: true }] as const,
     queryFn: async () => {
       const items: Item[] = [];

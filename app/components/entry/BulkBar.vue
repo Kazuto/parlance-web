@@ -26,6 +26,8 @@ const props = defineProps<{
   canCopy?: boolean;
   copyBlocker?: string;
   canDelete?: boolean;
+  /** The user may see releases, to add the entries to them. */
+  canEditReleases?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -34,6 +36,8 @@ const emit = defineEmits<{
   translate: [];
   stopTranslate: [];
   editScopes: [];
+  editTags: [];
+  editReleases: [];
   approve: [];
   reject: [];
   copy: [];
@@ -187,10 +191,29 @@ function onMore(value: string) {
     >
       {{ t("entries.bulkEditScopes") }}
     </Button>
+    <Button
+      type="button"
+      dense
+      icon="tag"
+      :disabled="isSaving || limitReached"
+      @click="emit('editTags')"
+    >
+      {{ t("entries.bulkEditTags") }}
+    </Button>
+    <Button
+      v-if="canEditReleases"
+      type="button"
+      dense
+      icon="rocket-launch"
+      :disabled="isSaving || limitReached"
+      @click="emit('editReleases')"
+    >
+      {{ t("entries.bulkEditReleases") }}
+    </Button>
     <ActionMenu
       v-if="moreItems.length"
       :items="moreItems"
-      :label="t('entries.bulkMore')"
+      :label="t('common.moreActions')"
       placement="bottom-end"
       dense
       @select="onMore"

@@ -1,11 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
+import { Checkbox, Select } from "@thkzt/eunoia";
 import TransferDialog from "~/components/entry/TransferDialog.vue";
-import { ALL_PERMISSIONS, loginAs, mockRpc, settle, t } from "./helpers";
+import {
+  ALL_PERMISSIONS,
+  loginAs,
+  mockRpc,
+  pagination,
+  settle,
+  t,
+} from "./helpers";
 
 const locales = [
   { id: "en", code: "en", isDefault: true, names: {} },
   { id: "de", code: "de", names: {} },
+];
+
+const scopes = [
+  {
+    id: "s1",
+    name: "Mail",
+    tags: [{ id: "t1", scopeId: "s1", name: "Billing" }],
+  },
+  { id: "s2", name: "Web", tags: [] },
 ];
 
 // What importing the file into English would change, as its dry run tells.
@@ -30,10 +47,17 @@ const preview = {
   ],
 };
 
-async function openDialog(action: "import" | "export") {
+async function openDialog(
+  action: "import" | "export",
+  dryRun: object = preview,
+) {
   const calls: { method: string; body: Record<string, unknown> }[] = [];
 
   loginAs(ALL_PERMISSIONS);
+  mockRpc("ScopeService/ListScopes", {
+    scopes,
+    pagination: pagination(scopes.length),
+  });
   mockRpc("ExportService/ExportJson", (body) => {
     calls.push({ method: "ExportJson", body });
 
@@ -42,7 +66,11 @@ async function openDialog(action: "import" | "export") {
   mockRpc("ImportService/ImportJson", (body) => {
     calls.push({ method: "ImportJson", body });
 
-    return { result: body.dryRun ? preview : { entriesCreated: 2 } };
+    return {
+      result: body.dryRun
+        ? dryRun
+        : { entriesCreated: 2, ...(body.deleteMissing ? DELETED : {}) },
+    };
   });
 
   // The dialog opens when its open prop turns true.
@@ -59,6 +87,10 @@ async function openDialog(action: "import" | "export") {
 }
 
 const SUMMARY = { created: 2, updated: 0, skipped: 0, failed: 0 };
+
+// What deleting the entries the file doesn't hold does: one deleted, one only out of
+// the selected scope.
+const DELETED = { deletion: { entriesDeleted: 1, entriesUnscoped: 1 } };
 
 type Wrapper = Awaited<ReturnType<typeof openDialog>>["wrapper"];
 
@@ -116,9 +148,73 @@ describe("transfer dialog", () => {
     expect(calls).toEqual([
       {
         method: "ExportJson",
-        body: { localeCode: "en", scopeIds: [], includeDrafts: false },
+        body: {
+          localeCode: "en",
+          scopeIds: [],
+          tagIds: [],
+          includeDrafts: false,
+          includeUnreleased: false,
+        },
       },
     ]);
+  });
+
+  it("exports the chosen scopes' tags", async () => {
+    const { wrapper, calls } = await openDialog("export");
+    const select = (label: string) =>
+      wrapper
+        .findAllComponents(Select)
+        .find((item) => item.find("label").text().trim() === label);
+
+    URL.createObjectURL = () => "blob:export";
+
+    URL.revokeObjectURL = () => {};
+
+    // Tags are picked within scopes, so they show once a scope is.
+    expect(select(t("tags.title"))).toBeUndefined();
+
+    select(t("nav.scopes"))!.vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+    select(t("tags.title"))!.vm.$emit("update:modelValue", ["t1"]);
+    await settle();
+
+    expect(wrapper.text()).toContain(t("tags.exportHelp"));
+
+    await click(wrapper, t("transfer.download"));
+
+    expect(calls.at(-1)?.body).toMatchObject({
+      scopeIds: ["s1"],
+      tagIds: ["t1"],
+    });
+  });
+
+  it("exports entries pending releases hold back when ticked", async () => {
+    const { wrapper, calls } = await openDialog("export");
+
+    URL.createObjectURL = () => "blob:export";
+
+    URL.revokeObjectURL = () => {};
+
+    wrapper
+      .findAllComponents(Checkbox)
+      .find((box) => box.text().includes(t("transfer.includeUnreleased")))!
+      .vm.$emit("update:modelValue", true);
+    await settle();
+    await click(wrapper, t("transfer.download"));
+
+    expect(calls.at(-1)?.body).toMatchObject({ includeUnreleased: true });
+  });
+
+  it("offers no tags when importing", async () => {
+    const { wrapper } = await openDialog("import");
+
+    wrapper
+      .findAllComponents(Select)
+      .find((item) => item.find("label").text().trim() === t("nav.scopes"))!
+      .vm.$emit("update:modelValue", ["s1"]);
+    await settle();
+
+    expect(wrapper.text()).not.toContain(t("tags.title"));
   });
 
   it("previews an import, then imports from the footer and offers to close", async () => {
@@ -169,6 +265,89 @@ describe("transfer dialog", () => {
     expect(wrapper.text()).toContain(
       t("importPreview.outdated", { count: 4 }, 4),
     );
+  });
+
+  it("deletes the entries missing from the file when ticked", async () => {
+    const { wrapper, calls } = await openDialog("import", {
+      ...preview,
+      deletion: {
+        entriesDeleted: 2,
+        entriesUnscoped: 1,
+        entries: [
+          { key: "old.title", sourceTranslation: "Old title" },
+          { key: "shared.title", sourceTranslation: "Shared", unscoped: true },
+        ],
+      },
+    });
+    const deleteBox = () =>
+      wrapper
+        .findAllComponents(Checkbox)
+        .find((box) => box.text().includes(t("transfer.deleteMissing")))!;
+
+    expect(deleteBox().text()).toContain(t("transfer.deleteMissingHelp"));
+
+    deleteBox().vm.$emit("update:modelValue", true);
+    await settle();
+    await chooseFile(wrapper);
+    await click(wrapper, t("transfer.preview"));
+
+    expect(calls[0]!.body).toMatchObject({ dryRun: true, deleteMissing: true });
+
+    const deletion = wrapper.find(
+      `section[aria-label="${t("importPreview.deletion")}"]`,
+    );
+    const items = deletion.findAll("li p").map((item) => item.text());
+
+    expect(deletion.text()).toContain(`${t("importPreview.deleted")} 2`);
+    expect(deletion.text()).toContain(`${t("importPreview.unscoped")} 1`);
+    expect(deletion.text()).toContain("old.title");
+    expect(items).toEqual(["Old title", "Shared"]);
+    // Only the deleted one is struck through.
+    expect(deletion.findAll(".line-through")).toHaveLength(1);
+    expect(deletion.text()).toContain(
+      t("importPreview.deletionMore", { count: 1 }, 1),
+    );
+
+    await click(wrapper, t("entries.import"));
+
+    expect(calls[1]!.body).toMatchObject({
+      dryRun: false,
+      deleteMissing: true,
+    });
+    expect(wrapper.text()).toContain(
+      t("transfer.deletedSummary", { deleted: 1, unscoped: 1 }),
+    );
+  });
+
+  it("deletes missing entries only from the default language's file", async () => {
+    const { wrapper, calls } = await openDialog("import");
+    const deleteBox = () =>
+      wrapper
+        .findAllComponents(Checkbox)
+        .find((box) => box.text().includes(t("transfer.deleteMissing")))!;
+
+    deleteBox().vm.$emit("update:modelValue", true);
+    await settle();
+    wrapper
+      .findAllComponents(Select)
+      .find(
+        (item) => item.find("label").text().trim() === t("common.language"),
+      )!
+      .vm.$emit("update:modelValue", "de");
+    await settle();
+
+    expect(deleteBox().props("disabled")).toBe(true);
+    expect(deleteBox().text()).toContain(
+      t("transfer.deleteMissingDefaultOnly"),
+    );
+
+    await chooseFile(wrapper);
+    await click(wrapper, t("transfer.preview"));
+
+    expect(calls[0]!.body).toMatchObject({
+      localeId: "de",
+      deleteMissing: false,
+    });
   });
 
   it("goes back from the preview to the settings", async () => {

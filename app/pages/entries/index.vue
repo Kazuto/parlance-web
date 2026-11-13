@@ -119,11 +119,18 @@ const {
   refetch,
   search: feedSearch,
   scopeIds,
+  tagIds,
+  releaseIds,
   translationStatus,
   targetLocaleIds,
   statusLocaleIds,
+  duplicates,
 } = useEntryFeed(100);
-const { options: scopeOptions, error: scopeError } = useScopeOptions();
+const scopeChoices = useScopeOptions();
+const { options: scopeOptions, error: scopeError } = scopeChoices;
+// Tags narrow the selected scopes; one whose scope is deselected goes too.
+const { tagOptions } = useScopedTags(scopeIds, tagIds, scopeChoices);
+const { options: releaseOptions } = useReleaseOptions();
 const statusOptions = computed(() => [
   { label: t("entries.filterAll"), value: "" },
   { label: t("entries.missingTranslations"), value: "missing" },
@@ -131,6 +138,11 @@ const statusOptions = computed(() => [
   { label: t("entries.filterReview"), value: "review" },
   { label: t("entries.filterOutdated"), value: "outdated" },
   { label: t("entries.filterCheck"), value: "check" },
+]);
+const duplicateOptions = computed(() => [
+  { label: t("entries.duplicatesAll"), value: "" },
+  { label: t("entries.duplicatesSame"), value: "same" },
+  { label: t("entries.duplicatesDifferent"), value: "different" },
 ]);
 const { items: locales } = useAllPages(
   api.locales.list,
@@ -175,7 +187,10 @@ useEntryFilterQuery({
   locales: computed(() => locales.value),
   localeIds: selectedLocaleIds,
   scopeIds,
+  tagIds,
+  releaseIds,
   status: translationStatus,
+  duplicates,
   search,
 });
 feedSearch.value = search.value || undefined;
@@ -208,7 +223,10 @@ const activeFilterCount = computed(
   () =>
     Number(languagesFiltered.value) +
     Number(scopeIds.value.length > 0) +
-    Number(!!translationStatus.value),
+    Number(tagIds.value.length > 0) +
+    Number(releaseIds.value.length > 0) +
+    Number(!!translationStatus.value) +
+    Number(!!duplicates.value),
 );
 
 function toggleScopeFilter(id: string) {
@@ -218,12 +236,47 @@ function toggleScopeFilter(id: string) {
     : [...scopeIds.value, id];
 }
 
+// Filtering by a tag filters by its scope too, as tags only narrow scopes.
+function toggleTagFilter(id: string, scopeId: string) {
+  if (isSaving.value) return;
+
+  if (tagIds.value.includes(id)) {
+    tagIds.value = tagIds.value.filter((tagId) => tagId !== id);
+
+    return;
+  }
+
+  if (!scopeIds.value.includes(scopeId))
+    scopeIds.value = [...scopeIds.value, scopeId];
+  tagIds.value = [...tagIds.value, id];
+}
+
+function toggleReleaseFilter(id: string) {
+  if (isSaving.value) return;
+  releaseIds.value = releaseIds.value.includes(id)
+    ? releaseIds.value.filter((releaseId) => releaseId !== id)
+    : [...releaseIds.value, id];
+}
+
+// The scope chips, each followed by the chips of its selected tags.
 const selectedScopes = computed(() =>
   scopeIds.value.map((id) => {
     const option = scopeOptions.value.find((scope) => scope.value === id);
 
-    return { id, label: option?.label ?? id, color: option?.color };
+    return {
+      id,
+      label: option?.label ?? id,
+      color: option?.color,
+      tags: (option?.tags ?? []).filter((tag) => tagIds.value.includes(tag.id)),
+    };
   }),
+);
+const selectedReleases = computed(() =>
+  releaseIds.value.map((id) => ({
+    id,
+    label:
+      releaseOptions.value.find((release) => release.value === id)?.label ?? id,
+  })),
 );
 const selectedStatusLabel = computed(
   () =>
@@ -231,27 +284,48 @@ const selectedStatusLabel = computed(
       (option) => option.value === translationStatus.value,
     )?.label ?? "",
 );
+const selectedDuplicatesLabel = computed(
+  () =>
+    duplicateOptions.value.find((option) => option.value === duplicates.value)
+      ?.label ?? "",
+);
 
 function clearFilters() {
   selectedLocaleIds.value = [...defaultLocaleIds.value];
   scopeIds.value = [];
+  tagIds.value = [];
+  releaseIds.value = [];
   translationStatus.value = "";
+  duplicates.value = "";
 }
 
 // A new entry sits at its alphabetical place, which may not be loaded yet; keep it
 // selected until the user picks something else instead of falling back to the top.
+// The same goes for a twin opened from the context panel, which the filters may hide.
 const pinnedEntryId = ref<string>();
+
+function pinEntry(id: string, key: string) {
+  pinnedEntryId.value = id;
+  selectedEntry.value = { key: id, label: key };
+  compactEditor.show(id);
+}
+
+function openTwin(entry: { id: string; key: string }) {
+  if (isSaving.value || !entry.id) return;
+  pinEntry(entry.id, entry.key);
+}
 
 async function handleCreated(entry: Entry) {
   scopeIds.value = [];
+  tagIds.value = [];
+  releaseIds.value = [];
   translationStatus.value = "";
+  duplicates.value = "";
   search.value = "";
   feedSearch.value = undefined;
   if (!entry.id) return;
   knownEntries.value[entry.id] = entry;
-  pinnedEntryId.value = entry.id;
-  selectedEntry.value = { key: entry.id, label: entry.key ?? "" };
-  compactEditor.show(entry.id);
+  pinEntry(entry.id, entry.key ?? "");
 }
 
 function selectEntry(item: SplitViewItem) {
@@ -261,11 +335,13 @@ function selectEntry(item: SplitViewItem) {
   compactEditor.show(String(item.key));
 }
 
-// Entries ticked in the list for bulk scope edits. Kept across filter changes so
+// Entries ticked in the list for bulk actions. Kept across filter changes so
 // entries can be gathered from several searches.
 const MAX_BULK_ENTRIES = 1000;
 const checkedEntryIds = ref<string[]>([]);
 const showScopesDialog = ref(false);
+const showTagsDialog = ref(false);
+const showReleasesDialog = ref(false);
 const bulkLimitReached = computed(
   () => checkedEntryIds.value.length > MAX_BULK_ENTRIES,
 );
@@ -286,7 +362,7 @@ function checkAllLoaded() {
   ];
 }
 
-function handleScopesUpdated(entryIds: string[]) {
+function handleBulkEdited(entryIds: string[]) {
   checkedEntryIds.value = [];
   if (selectedEntryId.value && entryIds.includes(selectedEntryId.value))
     refetchDetail();
@@ -326,8 +402,14 @@ const splitViewItems = computed((): SplitViewItem[] =>
       draftLocaleIds: entry.draftLocaleIds ?? [],
       outdatedLocaleIds: entry.outdatedLocaleIds ?? [],
       defaultTranslation: entry.defaultTranslation ?? "",
+      // Twins sit next to each other; the text they share marks each group.
+      detail: duplicates.value ? (entry.defaultTranslation ?? "") : undefined,
     })),
 );
+
+function itemDetail(item: SplitViewItem) {
+  return typeof item.detail === "string" ? item.detail : undefined;
+}
 
 function missingCount(item: SplitViewItem) {
   const missing = (item.missingLocaleIds as string[] | undefined) ?? [];
@@ -841,28 +923,40 @@ useEditorShortcuts({
 const paletteLocaleId = ref<string>();
 const searchBox = useTemplateRef<HTMLElement>("searchBox");
 const { open: paletteOpen } = useEditorCommands({
-  entryActions,
-  entries: splitViewItems,
+  labels: {
+    group: "commands.groupEntry",
+    items: "commands.groupEntries",
+    previous: "commands.previousEntry",
+    next: "commands.nextEntry",
+    saveAndNext: "commands.saveAndNext",
+    search: "commands.focusSearch",
+  },
+  itemIcon: "translate",
+  actions: entryActions,
+  items: splitViewItems,
+  itemKeywords: (entry) => [String(entry.defaultTranslation ?? "")],
   statusOptions,
   canSave: () =>
     canUpdate.value &&
     !!selectedEntryData.value &&
     !!selectedUnsavedLocaleIds.value.length &&
     !isSaving.value,
-  canCreate: () => can.value("create_entry"),
   canReview: () => canReview.value,
   hasDrafts: () =>
     !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
-  canEdit: () => canUpdate.value && !isSaving.value,
-  focusedLanguage: () => {
-    const localeId = paletteLocaleId.value;
+  copySource: {
+    canEdit: () => canUpdate.value && !isSaving.value,
+    focusedLanguage: () => {
+      const localeId = paletteLocaleId.value;
 
-    if (!localeId) return undefined;
+      if (!localeId) return undefined;
 
-    return {
-      name: localeOption(localeId)?.label ?? localeId,
-      isDefault: localeId === defaultLocale.value?.id,
-    };
+      return {
+        name: localeOption(localeId)?.label ?? localeId,
+        isDefault: localeId === defaultLocale.value?.id,
+      };
+    },
+    run: () => copySourceTo(paletteLocaleId.value),
   },
   handlers: {
     action: onEntryAction,
@@ -871,7 +965,6 @@ const { open: paletteOpen } = useEditorCommands({
     previous: () => !isSaving.value && navigation.previous(),
     next: () => !isSaving.value && navigation.next(),
     approveAll: approveShown,
-    copySource: () => copySourceTo(paletteLocaleId.value),
     toggleContext: () => {
       const localeId =
         activeLocaleId.value ?? orderedSelectedLocaleIds.value[0];
@@ -879,8 +972,7 @@ const { open: paletteOpen } = useEditorCommands({
       if (localeId) toggleContext(localeId);
     },
     focusSearch: () => searchBox.value?.querySelector("input")?.focus(),
-    create: () => (showCreateDialog.value = true),
-    entry: (id) => {
+    item: (id) => {
       const item = splitViewItems.value.find((entry) => entry.key === id);
 
       if (item) selectEntry(item);
@@ -939,10 +1031,16 @@ watch(
       <EntryFiltersPopover
         v-model:locale-ids="selectedLocaleIds"
         v-model:scope-ids="scopeIds"
+        v-model:tag-ids="tagIds"
+        v-model:release-ids="releaseIds"
         v-model:status="translationStatus"
+        v-model:duplicates="duplicates"
         :locale-options="localeOptions"
         :scope-options="scopeOptions"
+        :tag-options="tagOptions"
+        :release-options="releaseOptions"
         :status-options="statusOptions"
+        :duplicate-options="duplicateOptions"
         :active-count="activeFilterCount"
         :disabled="isSaving"
         @clear="clearFilters"
@@ -959,17 +1057,37 @@ watch(
         >
           {{ languageSummary }}
         </Chip>
-        <ScopeChip
-          v-for="scope in selectedScopes"
-          :key="scope.id"
+        <template v-for="scope in selectedScopes" :key="scope.id">
+          <ScopeChip
+            dense
+            removable
+            class="shrink-0"
+            :color="scope.color"
+            @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
+          >
+            {{ scope.label }}
+          </ScopeChip>
+          <ScopeTagChip
+            v-for="tag in scope.tags"
+            :key="tag.id"
+            dense
+            removable
+            class="shrink-0"
+            @remove="tagIds = tagIds.filter((id) => id !== tag.id)"
+          >
+            {{ tag.name }}
+          </ScopeTagChip>
+        </template>
+        <ReleaseChip
+          v-for="release in selectedReleases"
+          :key="release.id"
           dense
           removable
           class="shrink-0"
-          :color="scope.color"
-          @remove="scopeIds = scopeIds.filter((id) => id !== scope.id)"
+          @remove="releaseIds = releaseIds.filter((id) => id !== release.id)"
         >
-          {{ scope.label }}
-        </ScopeChip>
+          {{ release.label }}
+        </ReleaseChip>
         <Chip
           v-if="translationStatus"
           dense
@@ -979,6 +1097,16 @@ watch(
           @remove="translationStatus = ''"
         >
           {{ selectedStatusLabel }}
+        </Chip>
+        <Chip
+          v-if="duplicates"
+          dense
+          variant="secondary"
+          removable
+          class="shrink-0"
+          @remove="duplicates = ''"
+        >
+          {{ selectedDuplicatesLabel }}
         </Chip>
       </div>
       <span v-if="scopeError" class="text-xs text-red-600">{{
@@ -1009,11 +1137,14 @@ watch(
       :can-copy="canUpdate"
       :copy-blocker="bulkCopyBlocker"
       :can-delete="can('delete_entry')"
+      :can-edit-releases="can('read_release')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
       @translate="runBulkTranslation()"
       @stop-translate="stopBulkTranslation"
       @edit-scopes="showScopesDialog = true"
+      @edit-tags="showTagsDialog = true"
+      @edit-releases="showReleasesDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
       @copy="runBulkTranslation('copy')"
@@ -1052,6 +1183,7 @@ watch(
         <template #item="{ item }">
           <EditorListItem
             :label="item.label"
+            :detail="itemDetail(item)"
             :missing-count="missingCount(item)"
             :draft-count="draftCount(item)"
             :draft-label="
@@ -1106,6 +1238,8 @@ watch(
             :label="item?.label"
             :entry="selectedEntryData"
             :active-scope-ids="scopeIds"
+            :active-tag-ids="tagIds"
+            :active-release-ids="releaseIds"
             :translated-count="translatedCount"
             :locale-count="selectedLocaleIds.length"
             :is-saving="isSaving"
@@ -1114,6 +1248,8 @@ watch(
             "
             :actions="entryActions"
             @toggle-scope="toggleScopeFilter"
+            @toggle-tag="toggleTagFilter"
+            @toggle-release="toggleReleaseFilter"
             @edit="editDialogItem = selectedEntryData"
             @action="onEntryAction"
           />
@@ -1188,8 +1324,15 @@ watch(
                 )
               "
             >
+              <template v-if="localeId === defaultLocale?.id" #meta>
+                <EntrySameTextChip
+                  :text="currentEntryForms[localeId] ?? ''"
+                  :entry-id="String(item.key)"
+                  @open="openContext(localeId, 'memory')"
+                />
+              </template>
               <template
-                v-if="defaultLocale?.id && localeId !== defaultLocale.id"
+                v-else-if="defaultLocale?.id && localeId !== defaultLocale.id"
                 #meta
               >
                 <div class="flex flex-wrap gap-1">
@@ -1259,40 +1402,38 @@ watch(
           :can-use="canUpdate && !isSaving"
           @close="contextOpen = false"
           @use="applyContextText"
+          @open-entry="openTwin"
         />
       </EditorContextFrame>
     </div>
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
-      <div class="flex flex-wrap items-center gap-3">
-        <span class="text-xs text-neutral-500 dark:text-neutral-400">
-          <!-- On phones only what is unsaved, to leave room for the buttons. -->
-          <span class="max-md:hidden">
-            <template v-if="entryTotal !== undefined"
-              >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
-            </template>
-            {{
-              t(
-                "common.selectedLanguages",
-                { count: selectedLocaleIds.length },
-                selectedLocaleIds.length,
-              )
-            }}
-          </span>
-          <span
-            v-if="unsavedLocaleIds.length"
-            class="md:ml-2 text-yellow-700 dark:text-amber-300"
-            >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
-            }}{{
-              unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
-                ? ` ${t("common.hiddenLanguages")}`
-                : ""
-            }}</span
-          >
+      <span class="text-xs text-neutral-500 dark:text-neutral-400">
+        <!-- On phones only what is unsaved, to leave room for the buttons. -->
+        <span class="max-md:hidden">
+          <template v-if="entryTotal !== undefined"
+            >{{ t("entries.count", { count: entryTotal }, entryTotal) }} ·
+          </template>
+          {{
+            t(
+              "common.selectedLanguages",
+              { count: selectedLocaleIds.length },
+              selectedLocaleIds.length,
+            )
+          }}
         </span>
-        <CommandPaletteHint class="max-sm:hidden" />
-      </div>
+        <span
+          v-if="unsavedLocaleIds.length"
+          class="md:ml-2 text-yellow-700 dark:text-amber-300"
+          >{{ t("common.unsavedCount", { count: unsavedLocaleIds.length })
+          }}{{
+            unsavedLocaleIds.length > selectedUnsavedLocaleIds.length
+              ? ` ${t("common.hiddenLanguages")}`
+              : ""
+          }}</span
+        >
+      </span>
       <EditorWorkspaceActions
         v-can="'update_entry'"
         show-save-all
@@ -1352,7 +1493,19 @@ watch(
     :open="showScopesDialog"
     :entry-ids="checkedEntryIds"
     @close="showScopesDialog = false"
-    @updated="handleScopesUpdated"
+    @updated="handleBulkEdited"
+  />
+  <EntryTagsDialog
+    :open="showTagsDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showTagsDialog = false"
+    @updated="handleBulkEdited"
+  />
+  <EntryReleasesDialog
+    :open="showReleasesDialog"
+    :entry-ids="checkedEntryIds"
+    @close="showReleasesDialog = false"
+    @updated="handleBulkEdited"
   />
   <EntryTransferDialog
     :open="showTransferDialog"

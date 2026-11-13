@@ -12,6 +12,7 @@ import { api } from "~/lib/api";
 import type {
   ImportMode,
   ImportZipResponse,
+  LocaleImportResult,
 } from "~/lib/api/schemas/parlance/v1/ImportSchema";
 import { languageName } from "~/lib/languageNames";
 
@@ -34,22 +35,72 @@ const { items: locales } = useAllPages(
 );
 const localeFormality = (code?: string | null) =>
   formalityOf(locales.value.find((locale) => locale.code === code));
+// Its files decide which entries an import that deletes missing ones keeps.
+const defaultLocale = computed(() =>
+  locales.value.find((locale) => locale.isDefault && !locale.deletedAt),
+);
 
 const file = ref<File | undefined>(undefined);
 const mode = ref<ImportMode>("IMPORT_MODE_CREATE_OR_UPDATE");
 // Imported text lands as drafts unless a reviewer vouches for it.
 const approve = ref(false);
+// Deletes the entries the default language's file doesn't hold.
+const deleteMissing = ref(false);
 const { can } = usePermission();
 const canApprove = computed(() => can.value("review_entry"));
+const canCreateLocales = computed(() => can.value("create_locale"));
+const canDeleteMissing = computed(
+  () => can.value("delete_entry") && !!defaultLocale.value,
+);
 
 const hasFile = computed(() => !!file.value);
 // The import is tried first, and its preview confirmed. A preview is only good for
 // the inputs it was made with.
 const preview = ref<ImportZipResponse>();
 
-watch([file, mode, approve], () => {
+watch([file, mode, approve, deleteMissing], () => {
   preview.value = undefined;
 });
+
+// The preview's files by language, as they came: scope folders may hold several
+// files of one language. A missing language the import can create is created only
+// when ticked.
+const previewLocales = computed(() => {
+  const files = new Map<string, LocaleImportResult[]>();
+
+  for (const item of preview.value?.results ?? []) {
+    const code = item.localeCode ?? "";
+
+    files.set(code, [...(files.get(code) ?? []), item]);
+  }
+
+  return [...files].map(([code, items]) => ({
+    code,
+    items,
+    creatable:
+      canCreateLocales.value &&
+      items.some((item) => item.localeMissing && !blockedReason(item)),
+  }));
+});
+const createLocaleCodes = ref<string[]>([]);
+
+const skippedLocale = (locale: { code: string; creatable: boolean }) =>
+  locale.creatable && !createLocaleCodes.value.includes(locale.code);
+
+function setCreateLocale(code: string, create: boolean) {
+  createLocaleCodes.value = create
+    ? [...createLocaleCodes.value, code]
+    : createLocaleCodes.value.filter((item) => item !== code);
+}
+
+/** Why a missing language can't be created, if it can't. */
+function blockedReason(item: LocaleImportResult) {
+  const reason = item.missingReason;
+
+  return reason && reason !== "MISSING_LOCALE_REASON_UNSPECIFIED"
+    ? String(reason)
+    : undefined;
+}
 
 // The settings and file, then the preview to confirm; going back drops the preview.
 // Labels are computed so they follow the language, which may load after mounting.
@@ -105,36 +156,52 @@ async function handleSubmit() {
       mode.value,
       canApprove.value && approve.value,
       dryRun,
+      dryRun ? [] : createLocaleCodes.value,
+      canDeleteMissing.value && deleteMissing.value,
     );
 
     if (dryRun) {
       preview.value = result;
+      createLocaleCodes.value = previewLocales.value
+        .filter((locale) => locale.creatable)
+        .map((locale) => locale.code);
 
       return;
     }
 
-    const totalProcessed = result.results?.length ?? 0;
-    const created = result.totalCreated ?? 0;
-    const updated = result.totalUpdated ?? 0;
-    const failed = result.totalFailed ?? 0;
+    const results = result.results ?? [];
+    // Files the import couldn't take, e.g. of a language that doesn't exist, are
+    // skipped whole.
+    const skipped = results.filter((item) => item.error).length;
+    const counts = {
+      locales: results.length - skipped,
+      created: result.totalCreated ?? 0,
+      updated: result.totalUpdated ?? 0,
+      failed: result.totalFailed ?? 0,
+      skipped,
+    };
 
-    if (failed > 0) {
-      showError(
-        t("import.zip.completedWithErrors", {
-          locales: totalProcessed,
-          created,
-          updated,
-          failed,
-        }),
-      );
+    const created = [
+      ...new Set(
+        results
+          .filter((item) => item.localeCreated)
+          .map((item) => fileName(item.localeCode ?? "")),
+      ),
+    ];
+    const createdNote = created.length
+      ? ` ${t("import.zip.localesCreated", {
+          locales: new Intl.ListFormat(uiLocale.value).format(created),
+        })}`
+      : "";
+    const deleted = result.deletion?.entriesDeleted ?? 0;
+    const notes =
+      createdNote +
+      (deleted ? ` ${t("import.zip.entriesDeleted", { count: deleted })}` : "");
+
+    if (counts.failed + counts.skipped > 0) {
+      showError(t("import.zip.completedWithSkipped", counts) + notes);
     } else {
-      showSuccess(
-        t("import.zip.success", {
-          locales: totalProcessed,
-          created,
-          updated,
-        }),
-      );
+      showSuccess(t("import.zip.success", counts) + notes);
     }
 
     reset();
@@ -147,6 +214,8 @@ async function handleSubmit() {
 function reset() {
   file.value = undefined;
   preview.value = undefined;
+  createLocaleCodes.value = [];
+  deleteMissing.value = false;
 }
 
 function handleClose() {
@@ -196,6 +265,21 @@ function handleClose() {
         >
           <template #description>{{ t("transfer.approve") }}</template>
         </Checkbox>
+
+        <Checkbox
+          v-if="canDeleteMissing"
+          v-model="deleteMissing"
+          :disabled="isPending"
+          :helper="t('import.zip.deleteMissingHelp')"
+        >
+          <template #description>
+            {{
+              t("import.zip.deleteMissing", {
+                locale: fileName(defaultLocale?.code ?? ""),
+              })
+            }}
+          </template>
+        </Checkbox>
       </template>
 
       <section v-else class="space-y-4" :aria-label="t('importPreview.title')">
@@ -203,25 +287,72 @@ function handleClose() {
           {{ t("importPreview.hint") }}
         </p>
         <section
-          v-for="item in preview.results ?? []"
-          :key="item.localeCode ?? ''"
+          v-for="previewLocale in previewLocales"
+          :key="previewLocale.code"
           class="space-y-2"
-          :aria-label="fileName(item.localeCode ?? '')"
+          :aria-label="fileName(previewLocale.code)"
         >
           <h3 class="text-sm font-bold dark:text-neutral-100">
-            {{ fileName(item.localeCode ?? "") }}
+            {{ fileName(previewLocale.code) }}
           </h3>
-          <p v-if="item.error" role="alert" class="text-sm text-red-600">
-            {{ item.error }}
-          </p>
-          <EntryImportPreview
-            v-else-if="item.result"
-            :result="item.result"
-            :locale-code="item.localeCode ?? undefined"
-            :formality="localeFormality(item.localeCode)"
-            :in-zip="(preview.results?.length ?? 0) > 1"
-          />
+          <template v-if="previewLocale.creatable">
+            <Checkbox
+              :model-value="createLocaleCodes.includes(previewLocale.code)"
+              :disabled="isPending"
+              :helper="t('import.zip.createLocaleHelp')"
+              @update:model-value="
+                (create) => setCreateLocale(previewLocale.code, !!create)
+              "
+            >
+              <template #description>
+                {{
+                  t("import.zip.createLocale", {
+                    locale: fileName(previewLocale.code),
+                  })
+                }}
+              </template>
+            </Checkbox>
+            <p
+              v-if="skippedLocale(previewLocale)"
+              class="text-sm text-neutral-500 dark:text-neutral-400"
+            >
+              {{ t("import.zip.fileSkipped") }}
+            </p>
+          </template>
+          <div
+            v-for="(item, index) in previewLocale.items"
+            :key="index"
+            :class="{ 'opacity-50': skippedLocale(previewLocale) }"
+          >
+            <p
+              v-if="blockedReason(item)"
+              role="alert"
+              class="text-sm text-red-600"
+            >
+              {{
+                t(`import.zip.missing.${blockedReason(item)}`, {
+                  locale: fileName(previewLocale.code),
+                  code: previewLocale.code,
+                })
+              }}
+            </p>
+            <p v-else-if="item.error" role="alert" class="text-sm text-red-600">
+              {{ item.error }}
+            </p>
+            <EntryImportPreview
+              v-else-if="item.result"
+              :result="item.result"
+              :locale-code="item.localeCode ?? undefined"
+              :formality="localeFormality(item.localeCode)"
+              :in-zip="(preview.results?.length ?? 0) > 1"
+            />
+          </div>
         </section>
+        <EntryImportDeletion
+          v-if="preview.deletion"
+          :deletion="preview.deletion"
+          :locale-code="defaultLocale?.code ?? undefined"
+        />
       </section>
     </form>
 

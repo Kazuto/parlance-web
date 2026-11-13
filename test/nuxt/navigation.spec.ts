@@ -53,6 +53,7 @@ describe("sidebar", () => {
       "/entries/transfer",
       "/glossary",
       "/scopes",
+      "/releases",
     ]);
   });
 
@@ -67,6 +68,7 @@ describe("sidebar", () => {
       "/entries/deleted",
       "/glossary",
       "/scopes",
+      "/releases",
       "/roles",
       "/users",
       "/tasks",
@@ -81,6 +83,7 @@ describe("sidebar", () => {
     ["delete_entry", "/entries/deleted"],
     ["read_terminology", "/glossary"],
     ["read_scope", "/scopes"],
+    ["read_release", "/releases"],
     ["read_task", "/tasks"],
     ["read_webhook", "/webhooks"],
     ["read_role", "/roles"],
@@ -220,6 +223,7 @@ describe("bottom bar", () => {
         "/entries/transfer",
         "/entries/deleted",
         "/scopes",
+        "/releases",
         "/roles",
         "/users",
         "/tasks",
@@ -234,7 +238,7 @@ describe("bottom bar", () => {
 
     expect(await bottomBarLinks()).toEqual({
       bar: ["/", "/locales", "/entries", "/glossary"],
-      more: ["/entries/transfer", "/scopes"],
+      more: ["/entries/transfer", "/scopes", "/releases"],
     });
   });
 

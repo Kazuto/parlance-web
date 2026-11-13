@@ -30,7 +30,17 @@ const localeOptions = computed(() =>
       value: locale.id ?? "",
     })),
 );
-const { options: scopeOptions } = useScopeOptions();
+const scopeChoices = useScopeOptions();
+const { options: scopeOptions } = scopeChoices;
+// A git export's tags are those of its scopes; removing a scope removes its tags.
+const { tagOptions } = useScopedTags(
+  computed(() => form.value.git.scopeIds),
+  computed({
+    get: () => form.value.git.tagIds,
+    set: (value) => (form.value.git.tagIds = value),
+  }),
+  scopeChoices,
+);
 
 const typeOptions = computed(() =>
   (["TASK_TYPE_AI_TRANSLATE", "TASK_TYPE_GIT_EXPORT"] as const).map(
@@ -80,14 +90,14 @@ function handleSubmit() {
         ...settings,
         token: isGit ? replacement : undefined,
       });
-      showSuccess(t("tasks.updated", { name: settings.name }));
+      showSuccess(t("common.labelSaved", { label: settings.name }));
     } else {
       await store.create.mutateAsync({
         ...settings,
         type: form.value.type,
         token: isGit ? token.value : undefined,
       });
-      showSuccess(t("tasks.created", { name: settings.name }));
+      showSuccess(t("common.labelAdded", { label: settings.name }));
     }
   });
 }
@@ -135,12 +145,14 @@ function handleSubmit() {
         :has-token="!!item?.hasToken"
         :locale-options
         :scope-options
+        :tag-options
         :disabled="isPending"
       />
 
       <TaskTriggerFields
         v-model:schedule="form.schedule"
         v-model:on-approval="form.onApproval"
+        v-model:on-release="form.onRelease"
         v-model:delay="form.delay"
         :disabled="isPending"
       />

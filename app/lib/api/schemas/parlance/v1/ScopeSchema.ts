@@ -9,6 +9,7 @@ import {
   PaginationResponseSchema,
   type PaginationResponse,
 } from "./CommonSchema";
+import { ExportFormatSchema, type ExportFormat } from "./TaskSchema";
 export type Scope = {
   id?: string | null;
   name?: string | null;
@@ -18,6 +19,8 @@ export type Scope = {
   createdAt?: string | null;
   updatedAt?: string | null;
   deletedAt?: string | null;
+  tags?: Array<Tag> | null;
+  exportFormat?: ExportFormat | null;
 };
 export const ScopeSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -42,6 +45,40 @@ export const ScopeSchema = z.object({
     return z.string().nullish();
   },
   get deletedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get tags(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<Tag>>>> {
+    return z.array(TagSchema).nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
+  },
+});
+export type Tag = {
+  id?: string | null;
+  scopeId?: string | null;
+  name?: string | null;
+  entryCount?: number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+export const TagSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get entryCount(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get createdAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get updatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
 });
@@ -92,6 +129,7 @@ export type CreateScopeRequest = {
   slug?: string | null;
   description?: string | null;
   color?: string | null;
+  exportFormat?: ExportFormat | null;
 };
 export const CreateScopeRequestSchema = z.object({
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -105,6 +143,9 @@ export const CreateScopeRequestSchema = z.object({
   },
   get color(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
   },
 });
 export type CreateScopeResponse = {
@@ -121,6 +162,7 @@ export type UpdateScopeRequest = {
   slug?: string | null;
   description?: string | null;
   color?: string | null;
+  exportFormat?: ExportFormat | null;
 };
 export const UpdateScopeRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -137,6 +179,9 @@ export const UpdateScopeRequestSchema = z.object({
   },
   get color(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get exportFormat(): z.ZodOptional<z.ZodNullable<z.ZodType<ExportFormat>>> {
+    return ExportFormatSchema.nullish();
   },
 });
 export type UpdateScopeResponse = {
@@ -217,3 +262,53 @@ export const GetEntryScopesResponseSchema = z.object({
     return z.array(ScopeSchema).nullish();
   },
 });
+export type CreateTagRequest = {
+  scopeId?: string | null;
+  name?: string | null;
+};
+export const CreateTagRequestSchema = z.object({
+  get scopeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type CreateTagResponse = {
+  tag?: Tag | null;
+};
+export const CreateTagResponseSchema = z.object({
+  get tag(): z.ZodOptional<z.ZodNullable<z.ZodType<Tag>>> {
+    return TagSchema.nullish();
+  },
+});
+export type UpdateTagRequest = {
+  id?: string | null;
+  name?: string | null;
+};
+export const UpdateTagRequestSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type UpdateTagResponse = {
+  tag?: Tag | null;
+};
+export const UpdateTagResponseSchema = z.object({
+  get tag(): z.ZodOptional<z.ZodNullable<z.ZodType<Tag>>> {
+    return TagSchema.nullish();
+  },
+});
+export type DeleteTagRequest = {
+  id?: string | null;
+};
+export const DeleteTagRequestSchema = z.object({
+  get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+});
+export type DeleteTagResponse = Record<string, never>;
+export const DeleteTagResponseSchema = z.object({});

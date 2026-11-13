@@ -2,12 +2,17 @@
 import { ActionMenu, type ActionMenuItem, Icon, Tooltip } from "@thkzt/eunoia";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
 
-// The open entry's key, scopes and description, with its progress and actions.
+// The open entry's key, scopes, tags, pending releases and description, with its
+// progress and actions.
 defineProps<{
   label?: string;
   entry?: Entry;
   /** Scopes the list is filtered by. */
   activeScopeIds: string[];
+  /** Tags the list is filtered by. */
+  activeTagIds: string[];
+  /** Releases the list is filtered by. */
+  activeReleaseIds: string[];
   translatedCount: number;
   localeCount: number;
   isSaving: boolean;
@@ -17,10 +22,13 @@ defineProps<{
 
 const emit = defineEmits<{
   toggleScope: [id: string];
+  toggleTag: [id: string, scopeId: string];
+  toggleRelease: [id: string];
   edit: [];
   action: [value: string];
 }>();
 const { t } = useI18n();
+const releaseDate = useReleaseDate();
 
 const copiedKey = ref<string>();
 let copiedKeyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -82,6 +90,25 @@ async function copyKey(key: string) {
             @click="scope.id && emit('toggleScope', scope.id)"
             >{{ scope.name }}</ScopeChip
           >
+          <ScopeTagChip
+            v-for="tag in entry.tags ?? []"
+            :key="tag.id ?? undefined"
+            dense
+            :active="!!tag.id && activeTagIds.includes(tag.id)"
+            :title="
+              t(
+                tag.id && activeTagIds.includes(tag.id)
+                  ? 'entries.unfilterByTag'
+                  : 'entries.filterByTag',
+                { tag: tag.name },
+              )
+            "
+            class="cursor-pointer"
+            @click="
+              tag.id && tag.scopeId && emit('toggleTag', tag.id, tag.scopeId)
+            "
+            >{{ tag.name }}</ScopeTagChip
+          >
         </div>
         <button
           v-else-if="entry"
@@ -93,6 +120,30 @@ async function copyKey(key: string) {
         >
           {{ t("entries.noScopes") }}
         </button>
+        <div v-if="entry?.releases?.length" class="flex flex-wrap gap-1">
+          <ReleaseChip
+            v-for="release in entry.releases"
+            :key="release.id ?? undefined"
+            dense
+            :active="!!release.id && activeReleaseIds.includes(release.id)"
+            :title="
+              t(
+                release.id && activeReleaseIds.includes(release.id)
+                  ? 'entries.unfilterByRelease'
+                  : 'entries.filterByRelease',
+                { release: release.name },
+              )
+            "
+            class="cursor-pointer"
+            @click="release.id && emit('toggleRelease', release.id)"
+            >{{
+              t("releases.chip", {
+                name: release.name,
+                date: releaseDate(release),
+              })
+            }}</ReleaseChip
+          >
+        </div>
       </div>
       <p
         v-if="entry?.description"

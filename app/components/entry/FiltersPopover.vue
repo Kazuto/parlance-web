@@ -6,14 +6,22 @@ type Option = { label: string; value: string };
 defineProps<{
   localeOptions: Option[];
   scopeOptions: Option[];
+  /** The tags of the selected scopes */
+  tagOptions: Option[];
+  /** Releases to filter by; none hides the filter */
+  releaseOptions: Option[];
   statusOptions: Option[];
+  duplicateOptions: Option[];
   disabled?: boolean;
   activeCount: number;
 }>();
 
 const localeIds = defineModel<string[]>("localeIds", { required: true });
 const scopeIds = defineModel<string[]>("scopeIds", { required: true });
+const tagIds = defineModel<string[]>("tagIds", { required: true });
+const releaseIds = defineModel<string[]>("releaseIds", { required: true });
 const status = defineModel<string>("status", { required: true });
+const duplicates = defineModel<string>("duplicates", { required: true });
 const emit = defineEmits<{ clear: [] }>();
 
 const { t } = useI18n();
@@ -45,24 +53,92 @@ const { t } = useI18n();
       />
     </label>
 
-    <label class="flex flex-col gap-1">
+    <!-- Tags narrow scopes, so they are offered once scopes are picked. -->
+    <label v-if="scopeIds.length" class="flex flex-col gap-1">
       <span
         class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
-        >{{ t("entries.translationStatus") }}</span
+        >{{ t("tags.title") }}</span
       >
       <Select
-        v-model="status"
+        :model-value="tagIds"
         dense
-        :options="statusOptions"
-        :aria-label="t('entries.translationStatus')"
+        multiple
+        :options="tagOptions"
+        :disabled="!tagOptions.length"
+        :placeholder="t(tagOptions.length ? 'tags.all' : 'tags.noneInScopes')"
+        :aria-label="t('tags.title')"
+        @update:model-value="
+          tagIds = Array.isArray($event) ? $event.map(String) : []
+        "
       />
-      <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
-        t(
-          localeIds.length
-            ? "entries.filterSelectedHelp"
-            : "entries.filterAllHelp",
-        )
-      }}</span>
+      <span
+        v-if="tagOptions.length"
+        class="text-xs text-neutral-500 dark:text-neutral-400"
+        >{{ t("tags.filterHelp") }}</span
+      >
     </label>
+
+    <label v-if="releaseOptions.length" class="flex flex-col gap-1">
+      <span
+        class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        >{{ t("nav.releases") }}</span
+      >
+      <Select
+        :model-value="releaseIds"
+        dense
+        multiple
+        :options="releaseOptions"
+        :placeholder="t('releases.all')"
+        :aria-label="t('nav.releases')"
+        @update:model-value="
+          releaseIds = Array.isArray($event) ? $event.map(String) : []
+        "
+      />
+    </label>
+
+    <!-- What state the entries are in, judged in the selected languages -->
+    <div
+      class="flex flex-col gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700"
+    >
+      <label class="flex flex-col gap-1">
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("entries.translationStatus") }}</span
+        >
+        <Select
+          v-model="status"
+          dense
+          :options="statusOptions"
+          :aria-label="t('entries.translationStatus')"
+        />
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
+          t(
+            localeIds.length
+              ? "entries.filterSelectedHelp"
+              : "entries.filterAllHelp",
+          )
+        }}</span>
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span
+          class="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+          >{{ t("entries.duplicates") }}</span
+        >
+        <Select
+          v-model="duplicates"
+          dense
+          :options="duplicateOptions"
+          :aria-label="t('entries.duplicates')"
+        />
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{
+          t(
+            duplicates === "different"
+              ? "entries.duplicatesDifferentHelp"
+              : "entries.duplicatesHelp",
+          )
+        }}</span>
+      </label>
+    </div>
   </EditorFiltersPopover>
 </template>

@@ -13,7 +13,7 @@ import type { Scope } from "~/lib/api/schemas/parlance/v1/ScopeSchema";
 
 const { t } = useI18n();
 const { getErrorMessage } = useErrorHelper();
-const { can } = usePermission();
+const { can, canAny } = usePermission();
 const { data, filter, pagination, isFetching, error, refetch } =
   usePaginatedList(api.scopes.list, { includeDeleted: true });
 
@@ -21,6 +21,8 @@ const createDialogOpen = ref(false);
 const editDialogItem = ref<Scope>();
 const deleteDialogItem = ref<Scope>();
 const restoreDialogItem = ref<Scope>();
+// By id, so the dialog shows the tags as they reload after each change.
+const tagsDialogScopeId = ref<string>();
 
 usePage(() => ({
   width: "extra-wide",
@@ -46,13 +48,46 @@ const tableColumns = computed<DataTableColumn<Scope>[]>(() => [
   { title: t("common.name"), key: "name", sortable: true },
   { title: t("scopes.slug"), key: "slug", sortable: true },
   { title: t("common.description"), key: "description" },
+  { title: t("tags.title"), key: "tags" },
   { title: t("common.created"), key: "createdAt", sortable: true },
 ]);
 const tableItems = computed(() => data.value?.scopes ?? []);
+const tagsDialogScope = computed(() =>
+  tableItems.value.find((scope) => scope.id === tagsDialogScopeId.value),
+);
+
+const searchBox = useTemplateRef("searchBox");
+
+useCommands(() => {
+  const group = t("nav.scopes");
+  const canManageTags = canAny.value([
+    "create_tag",
+    "update_tag",
+    "delete_tag",
+  ]);
+
+  return [
+    searchCommand(searchBox, { label: t("commands.search"), group }),
+    ...(canManageTags
+      ? tableItems.value
+          .filter((scope) => scope.id && !scope.deletedAt)
+          .map((scope) => ({
+            label: t("commands.manageTagsOf", { scope: scope.name ?? "" }),
+            value: `tags:${scope.id}`,
+            group,
+            icon: "tag",
+            run: () => (tagsDialogScopeId.value = scope.id ?? undefined),
+          }))
+      : []),
+  ];
+});
+
+// A few tags fit the row; the rest are counted.
+const VISIBLE_TAGS = 3;
 </script>
 
 <template>
-  <Card dense class="mb-4">
+  <Card ref="searchBox" dense class="mb-4">
     <div class="flex gap-4 items-center">
       <div class="flex-1">
         <Input
@@ -110,20 +145,43 @@ const tableItems = computed(() => data.value?.scopes ?? []);
           >{{ item.description }}</span
         >
       </template>
+      <template #tags="{ item }">
+        <div v-if="item.tags?.length" class="flex flex-wrap items-center gap-1">
+          <ScopeTagChip
+            v-for="tag in item.tags.slice(0, VISIBLE_TAGS)"
+            :key="tag.id ?? undefined"
+            dense
+            >{{ tag.name }}</ScopeTagChip
+          >
+          <span
+            v-if="item.tags.length > VISIBLE_TAGS"
+            class="text-xs text-neutral-500 dark:text-neutral-400"
+            >{{
+              t("common.moreCount", { count: item.tags.length - VISIBLE_TAGS })
+            }}</span
+          >
+        </div>
+      </template>
       <template #createdAt="{ item }">
         <RelativeTime v-if="item.createdAt" :timestamp="item.createdAt" />
       </template>
       <template #actions="{ item }">
-        <BaseActionButtons
-          v-if="!item.deletedAt"
-          class="justify-end"
-          :edit-label="t('scopes.edit')"
-          :delete-label="t('scopes.delete')"
-          edit-permission="update_scope"
-          delete-permission="delete_scope"
-          @edit="editDialogItem = item"
-          @delete="deleteDialogItem = item"
-        />
+        <div v-if="!item.deletedAt" class="flex justify-end gap-2">
+          <BaseIconButton
+            v-can="{ any: ['create_tag', 'update_tag', 'delete_tag'] }"
+            icon="tag"
+            :label="t('tags.manage')"
+            @click="tagsDialogScopeId = item.id ?? undefined"
+          />
+          <BaseActionButtons
+            :edit-label="t('scopes.edit')"
+            :delete-label="t('scopes.delete')"
+            edit-permission="update_scope"
+            delete-permission="delete_scope"
+            @edit="editDialogItem = item"
+            @delete="deleteDialogItem = item"
+          />
+        </div>
         <div v-else class="flex justify-end">
           <BaseIconButton
             v-can="'delete_scope'"
@@ -172,5 +230,10 @@ const tableItems = computed(() => data.value?.scopes ?? []);
     :open="!!restoreDialogItem"
     :item="restoreDialogItem"
     @close="restoreDialogItem = undefined"
+  />
+  <ScopeTagsDialog
+    :open="!!tagsDialogScope"
+    :scope="tagsDialogScope"
+    @close="tagsDialogScopeId = undefined"
   />
 </template>

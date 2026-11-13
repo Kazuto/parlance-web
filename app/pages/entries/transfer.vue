@@ -41,6 +41,18 @@ const tabs = computed(() =>
     })),
 );
 
+// Switching the tab, from the command palette.
+useCommands(() =>
+  tabs.value.map((tab) => ({
+    label: tab.label,
+    value: `tab:${tab.value}`,
+    group: t("nav.transfer"),
+    icon: tab.value === "import" ? "upload" : "download",
+    disabled: tab.disabled,
+    run: () => (action.value = tab.value),
+  })),
+);
+
 usePage(() => ({
   width: "extra-wide",
   title: t("nav.transfer"),

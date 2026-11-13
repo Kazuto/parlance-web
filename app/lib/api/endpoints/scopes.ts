@@ -10,11 +10,20 @@ import {
   DeleteScopeResponseSchema,
   RestoreScopeRequestSchema,
   RestoreScopeResponseSchema,
+  CreateTagRequestSchema,
+  CreateTagResponseSchema,
+  UpdateTagRequestSchema,
+  UpdateTagResponseSchema,
+  DeleteTagRequestSchema,
+  DeleteTagResponseSchema,
   type ListScopesRequest,
   type CreateScopeRequest,
   type UpdateScopeRequest,
   type DeleteScopeRequest,
   type RestoreScopeRequest,
+  type CreateTagRequest,
+  type UpdateTagRequest,
+  type DeleteTagRequest,
 } from "../schemas/parlance/v1/ScopeSchema";
 
 export const scopes = {
@@ -57,5 +66,29 @@ export const scopes = {
       json: data,
     }),
     { input: RestoreScopeRequestSchema, output: RestoreScopeResponseSchema },
+  ),
+  createTag: authedEndpoint.mutate(
+    (data: CreateTagRequest) => ({
+      method: "post",
+      url: "/parlance.v1.ScopeService/CreateTag",
+      json: data,
+    }),
+    { input: CreateTagRequestSchema, output: CreateTagResponseSchema },
+  ),
+  updateTag: authedEndpoint.mutate(
+    (data: UpdateTagRequest) => ({
+      method: "post",
+      url: "/parlance.v1.ScopeService/UpdateTag",
+      json: data,
+    }),
+    { input: UpdateTagRequestSchema, output: UpdateTagResponseSchema },
+  ),
+  deleteTag: authedEndpoint.mutate(
+    (data: DeleteTagRequest) => ({
+      method: "post",
+      url: "/parlance.v1.ScopeService/DeleteTag",
+      json: data,
+    }),
+    { input: DeleteTagRequestSchema, output: DeleteTagResponseSchema },
   ),
 };

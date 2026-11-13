@@ -59,6 +59,12 @@ export function useNavigation() {
           permission: "read_scope",
         },
         {
+          label: t("nav.releases"),
+          to: "/releases",
+          icon: "rocket-launch",
+          permission: "read_release",
+        },
+        {
           label: t("nav.roles"),
           to: "/roles",
           icon: "shield",

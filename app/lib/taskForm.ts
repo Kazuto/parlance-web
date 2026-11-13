@@ -32,6 +32,8 @@ export type GitExportForm = {
   files: ExportFileForm[];
   localeIds: string[];
   scopeIds: string[];
+  /** Narrows each scope to the entries with any of its chosen tags */
+  tagIds: string[];
   includeDrafts: boolean;
 };
 
@@ -41,6 +43,7 @@ export type TaskForm = {
   enabled: boolean;
   schedule: ScheduleChoice;
   onApproval: boolean;
+  onRelease: boolean;
   delay: number;
   ai: AiTranslateForm;
   git: GitExportForm;
@@ -74,6 +77,7 @@ export function taskToForm(
     enabled: task ? !!task.enabled : true,
     schedule: parseSchedule(task?.schedule),
     onApproval: !!task?.events?.includes("TASK_EVENT_TRANSLATIONS_APPROVED"),
+    onRelease: !!task?.events?.includes("TASK_EVENT_TRANSLATIONS_RELEASED"),
     delay: task ? (task.eventDelayMinutes ?? 0) : 10,
     ai: {
       sourceLocaleId: ai?.sourceLocaleId ?? "",
@@ -101,6 +105,7 @@ export function taskToForm(
           ],
       localeIds: [...(git?.localeIds ?? [])],
       scopeIds: [...(git?.scopeIds ?? [])],
+      tagIds: [...(git?.tagIds ?? [])],
       includeDrafts: !!git?.includeDrafts,
     },
   };
@@ -112,7 +117,10 @@ export function formToSettings(form: TaskForm): TaskSettings {
     name: form.name.trim(),
     enabled: form.enabled,
     schedule: buildSchedule(form.schedule),
-    events: form.onApproval ? ["TASK_EVENT_TRANSLATIONS_APPROVED"] : [],
+    events: [
+      ...(form.onApproval ? ["TASK_EVENT_TRANSLATIONS_APPROVED" as const] : []),
+      ...(form.onRelease ? ["TASK_EVENT_TRANSLATIONS_RELEASED" as const] : []),
+    ],
     eventDelayMinutes: form.delay,
   };
 

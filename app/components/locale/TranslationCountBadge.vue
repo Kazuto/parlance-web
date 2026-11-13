@@ -44,7 +44,7 @@ const link = computed(() =>
   props.entriesUrl?.(isComplete.value ? undefined : "missing"),
 );
 const linkLabel = computed(() =>
-  t(isComplete.value ? "locales.showEntries" : "locales.showMissing"),
+  t(isComplete.value ? "common.showEntries" : "locales.showMissing"),
 );
 </script>
 
