@@ -411,7 +411,7 @@
   "import.modes.createOrUpdate": "作成または更新",
   "import.modes.replaceAll": "すべて置き換える",
   "import.modes.updateOnly": "更新のみ（新規はスキップ）",
-  "import.zip.completedWithErrors": "{locales}のロケールに{failed}件のエラーが発生しながらインポートされ、{created}件が作成され、{updated}件が更新されました",
+  "import.zip.completedWithSkipped": "{locales}のロケールにインポートしました：作成{created}件、更新{updated}件、失敗{failed}件。スキップしたファイル：{skipped}件",
   "import.zip.description": "ロケール用のJSONファイル（例：en.json、de.json）が含まれたZIPアーカイブをアップロードしてください。",
   "import.zip.file": "ZIPファイル",
   "import.zip.import": "ZIPをインポート",

@@ -411,7 +411,7 @@
   "import.modes.createOrUpdate": "Erstellen oder aktualisieren",
   "import.modes.replaceAll": "Alles ersetzen",
   "import.modes.updateOnly": "Nur aktualisieren (neue überspringen)",
-  "import.zip.completedWithErrors": "Importiert in {locales} Sprachen mit {failed} Fehlern: {created} wurden erstellt, {updated} aktualisiert",
+  "import.zip.completedWithSkipped": "Importiert in {locales} Sprachen: {created} erstellt, {updated} aktualisiert, {failed} fehlgeschlagen. Übersprungene Dateien: {skipped}",
   "import.zip.description": "Lade ein ZIP-Archiv hoch, das die Sprach-JSON-Dateien enthält (z. B. en.json, de.json).",
   "import.zip.file": "ZIP-Datei",
   "import.zip.import": "ZIP importieren",

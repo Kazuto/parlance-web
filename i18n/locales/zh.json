@@ -411,7 +411,7 @@
   "import.modes.createOrUpdate": "创建或更新",
   "import.modes.replaceAll": "全部替换",
   "import.modes.updateOnly": "仅更新（跳过新建）",
-  "import.zip.completedWithErrors": "已导入 {locales} 个语言区域，出现 {failed} 个错误：新建 {created} 个，更新 {updated} 个",
+  "import.zip.completedWithSkipped": "已导入 {locales} 个语言区域：新建 {created} 个，更新 {updated} 个，失败 {failed} 个。跳过的文件：{skipped} 个",
   "import.zip.description": "上传包含语言区域JSON文件（如en.json、de.json）的ZIP压缩包",
   "import.zip.file": "ZIP文件",
   "import.zip.import": "导入ZIP文件",

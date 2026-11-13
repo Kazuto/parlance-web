@@ -411,7 +411,7 @@
   "import.modes.createOrUpdate": "Create or update",
   "import.modes.replaceAll": "Replace all",
   "import.modes.updateOnly": "Update only (skip new)",
-  "import.zip.completedWithErrors": "Imported across {locales} locales with {failed} errors: {created} created, {updated} updated",
+  "import.zip.completedWithSkipped": "Imported across {locales} locales: {created} created, {updated} updated, {failed} failed. Files skipped: {skipped}",
   "import.zip.description": "Upload a ZIP archive containing locale JSON files (e.g., en.json, de.json)",
   "import.zip.file": "ZIP file",
   "import.zip.import": "Import ZIP",

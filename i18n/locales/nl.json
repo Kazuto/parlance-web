@@ -411,7 +411,7 @@
   "import.modes.createOrUpdate": "Maken of bijwerken",
   "import.modes.replaceAll": "Alles vervangen",
   "import.modes.updateOnly": "Alleen bijwerken (nieuwe overslaan)",
-  "import.zip.completedWithErrors": "Geïmporteerd in {locales} talen met {failed} fouten: {created} aangemaakt, {updated} bijgewerkt",
+  "import.zip.completedWithSkipped": "Geïmporteerd in {locales} talen: {created} aangemaakt, {updated} bijgewerkt, {failed} mislukt. Overgeslagen bestanden: {skipped}",
   "import.zip.description": "Laad een ZIP-archief op dat taalbestanden in JSON-formaat bevat (bijv. en.json, de.json)",
   "import.zip.file": "ZIP-bestand",
   "import.zip.import": "ZIP importeren",

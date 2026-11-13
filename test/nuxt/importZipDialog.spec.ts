@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import ImportZipDialog from "~/components/locale/ImportZipDialog.vue";
 import { ALL_PERMISSIONS, loginAs, mockRpc, settle, t } from "./helpers";
@@ -43,21 +43,20 @@ const preview = {
   ],
 };
 
-async function openDialog() {
+async function openDialog(imported: unknown = preview) {
   const calls: Record<string, unknown>[] = [];
+  const toasts = { add: vi.fn(), dismiss: vi.fn(), dismissAll: vi.fn() };
 
   loginAs(ALL_PERMISSIONS);
   mockRpc("ImportService/ImportZip", (body) => {
     calls.push(body as Record<string, unknown>);
 
-    return body.dryRun
-      ? preview
-      : { results: preview.results.slice(0, 2), totalUpdated: 2 };
+    return body.dryRun ? preview : imported;
   });
 
   const wrapper = await mountSuspended(ImportZipDialog, {
     props: { open: false },
-    global: { provide: { toastStack: ref(null) } },
+    global: { provide: { toastStack: ref(toasts) } },
   });
 
   await wrapper.setProps({ open: true });
@@ -73,7 +72,7 @@ async function openDialog() {
   await input.trigger("change");
   await settle();
 
-  return { wrapper, calls };
+  return { wrapper, calls, toasts };
 }
 
 type Wrapper = Awaited<ReturnType<typeof openDialog>>["wrapper"];
@@ -120,5 +119,49 @@ describe("ZIP import dialog", () => {
 
     expect(calls.map((call) => call.dryRun)).toEqual([true, true, false]);
     expect(wrapper.emitted("close")).toHaveLength(1);
+  });
+
+  it("counts skipped files in the result", async () => {
+    const { wrapper, toasts } = await openDialog({
+      ...preview,
+      totalUpdated: 2,
+    });
+
+    await click(wrapper, t("transfer.preview"));
+    await click(wrapper, t("import.zip.import"));
+
+    expect(toasts.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: "danger",
+        message: t("import.zip.completedWithSkipped", {
+          locales: 2,
+          created: 0,
+          updated: 2,
+          failed: 0,
+          skipped: 1,
+        }),
+      }),
+    );
+  });
+
+  it("reports a clean import as a success", async () => {
+    const { wrapper, toasts } = await openDialog({
+      results: preview.results.slice(0, 2),
+      totalUpdated: 2,
+    });
+
+    await click(wrapper, t("transfer.preview"));
+    await click(wrapper, t("import.zip.import"));
+
+    expect(toasts.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: "success",
+        message: t("import.zip.success", {
+          locales: 2,
+          created: 0,
+          updated: 2,
+        }),
+      }),
+    );
   });
 });

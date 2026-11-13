@@ -113,28 +113,22 @@ async function handleSubmit() {
       return;
     }
 
-    const totalProcessed = result.results?.length ?? 0;
-    const created = result.totalCreated ?? 0;
-    const updated = result.totalUpdated ?? 0;
-    const failed = result.totalFailed ?? 0;
+    const results = result.results ?? [];
+    // Files the import couldn't take, e.g. of a language that doesn't exist, are
+    // skipped whole.
+    const skipped = results.filter((item) => item.error).length;
+    const counts = {
+      locales: results.length - skipped,
+      created: result.totalCreated ?? 0,
+      updated: result.totalUpdated ?? 0,
+      failed: result.totalFailed ?? 0,
+      skipped,
+    };
 
-    if (failed > 0) {
-      showError(
-        t("import.zip.completedWithErrors", {
-          locales: totalProcessed,
-          created,
-          updated,
-          failed,
-        }),
-      );
+    if (counts.failed + counts.skipped > 0) {
+      showError(t("import.zip.completedWithSkipped", counts));
     } else {
-      showSuccess(
-        t("import.zip.success", {
-          locales: totalProcessed,
-          created,
-          updated,
-        }),
-      );
+      showSuccess(t("import.zip.success", counts));
     }
 
     reset();
