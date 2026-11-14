@@ -10,7 +10,7 @@ function catalog(file: string): Record<string, string> {
   return JSON.parse(readFileSync(join(directory, file), "utf8"));
 }
 
-const english = catalog("en.json");
+const english = catalog("en-US.json");
 
 /** The named values a message interpolates, e.g. ["count", "name"]. */
 function placeholders(message: string) {
@@ -28,14 +28,27 @@ function syntax(message: string) {
 
 describe("interface languages", () => {
   it("offers a language per catalog, named in itself", () => {
-    expect(locales.map((locale) => [locale.code, locale.name])).toEqual(
-      expect.arrayContaining([
-        ["de", "Deutsch"],
-        ["en", "English"],
-        ["es", "Español"],
-        ["fr", "Français"],
-      ]),
-    );
+    const expected = [
+      ["cs-CZ", "Čeština (Česko)"],
+      ["de-DE", "Deutsch (Deutschland)"],
+      ["en-GB", "British English"],
+      ["en-US", "American English"],
+      ["es-ES", "Español de España"],
+      ["fr-FR", "Français (France)"],
+      ["it-IT", "Italiano (Italia)"],
+      ["ja-JP", "日本語 (日本)"],
+      ["nl-NL", "Nederlands (Nederland)"],
+      ["pl-PL", "Polski (Polska)"],
+      ["pt-BR", "Português (Brasil)"],
+      ["ru-RU", "Русский (Россия)"],
+      ["tr-TR", "Türkçe (Türkiye)"],
+      ["zh-CN", "中文（中国）"],
+    ];
+
+    const actual = locales.map((locale) => [locale.code, locale.name]);
+
+    expect(actual).toHaveLength(expected.length);
+    expect(actual).toEqual(expect.arrayContaining(expected));
   });
 
   it.each(locales.map((locale) => [locale.code, locale.files[0]!]))(
