@@ -221,7 +221,7 @@ describe("locales page", () => {
   it("names the locales by their codes in the UI language", async () => {
     const i18n = useNuxtApp().$i18n;
 
-    await i18n.setLocale("de");
+    await i18n.setLocale("de-DE");
 
     try {
       loginAs(VIEWER);
@@ -248,7 +248,7 @@ describe("locales page", () => {
         "en-informal",
       ]);
     } finally {
-      await i18n.setLocale("en");
+      await i18n.setLocale("en-US");
     }
   });
 

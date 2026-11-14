@@ -9,7 +9,7 @@ const minute = 60_000;
 describe("RelativeTime", () => {
   afterEach(async () => {
     vi.useRealTimers();
-    await useNuxtApp().$i18n.setLocale("en");
+    await useNuxtApp().$i18n.setLocale("en-US");
   });
 
   it("keeps up as time passes", async () => {
@@ -39,7 +39,7 @@ describe("RelativeTime", () => {
 
     expect(wrapper.find("span").text()).toBe("1 hour ago");
 
-    await useNuxtApp().$i18n.setLocale("de");
+    await useNuxtApp().$i18n.setLocale("de-DE");
     await nextTick();
 
     expect(wrapper.find("span").text()).toBe("vor 1 Stunde");

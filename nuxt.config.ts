@@ -28,7 +28,7 @@ export default defineNuxtConfig({
 
   i18n: {
     strategy: "no_prefix",
-    defaultLocale: "en",
+    defaultLocale: "en-US",
     // Every catalog in i18n/locales is a language of the interface.
     locales: availableLocales(
       fileURLToPath(new URL("./i18n/locales", import.meta.url)),

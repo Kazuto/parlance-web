@@ -61,7 +61,7 @@ function field(page: MountedPage, label: string) {
 
 describe("account settings", () => {
   afterEach(async () => {
-    await useNuxtApp().$i18n.setLocale("en");
+    await useNuxtApp().$i18n.setLocale("en-US");
   });
 
   it("lets a viewer change their language", async () => {
@@ -75,7 +75,7 @@ describe("account settings", () => {
     // The language's texts load first.
     await vi.waitFor(() =>
       expect(calls).toEqual([
-        { method: "AccountService/UpdateAccount", body: { locale: "de" } },
+        { method: "AccountService/UpdateAccount", body: { locale: "de-DE" } },
       ]),
     );
   });
