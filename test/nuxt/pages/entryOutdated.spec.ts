@@ -8,6 +8,7 @@ import {
   loginAs,
   mockRpc,
   mountPage,
+  openActionMenu,
   pagination,
   settle,
   t,
@@ -256,6 +257,30 @@ describe("outdated count in the entry list", () => {
     });
 
     expect(wrapper.find(`[aria-label="${label}"]`).text()).toBe("2");
+  });
+});
+
+describe("approving outdated translations at once", () => {
+  it("approves the drafts and confirms the outdated translations of the open entry", async () => {
+    const { page, reviews } = await openEditor(REVIEWER);
+    const approve = (await openActionMenu(page, t("entries.actions"))).find(
+      (action) => action.label === t("review.approveAndConfirmShown"),
+    )!;
+
+    expect(approve.disabled).toBe(false);
+
+    await approve.item.trigger("click");
+    await settle();
+
+    // The outdated German and the French draft; the English is approved and current.
+    expect(reviews).toEqual([
+      {
+        entryIds: ["e1"],
+        localeIds: ["l2", "l3"],
+        decision: "REVIEW_DECISION_APPROVE",
+        confirmOutdated: true,
+      },
+    ]);
   });
 });
 

@@ -565,6 +565,7 @@ const {
   isReviewing,
   rejecting,
   approve: approveTranslations,
+  confirm: confirmTranslations,
   requestReject,
   requestRejectMany,
   confirmReject,
@@ -577,6 +578,7 @@ const {
     comment: details.comment,
     skipApproved: details.onlyDrafts,
     confirmOutdated: details.confirmOutdated,
+    onlyOutdated: details.onlyOutdated,
   }),
   afterReview: () =>
     Promise.all([
@@ -586,6 +588,19 @@ const {
     ]),
 });
 
+const showConfirmOutdatedDialog = ref(false);
+
+// Confirms the ticked entries' outdated translations in the shown languages still
+// fit; the dialog stays open when that fails.
+async function confirmOutdatedTicked() {
+  const done = await confirmTranslations(
+    checkedEntryIds.value,
+    selectedLocaleIds.value,
+  );
+
+  if (done) showConfirmOutdatedDialog.value = false;
+}
+
 // The saved translation of an entry in a language, with its review state.
 function savedLocalization(entryId: string, localeId: string) {
   return knownEntries.value[entryId]?.localizations?.find(
@@ -593,17 +608,22 @@ function savedLocalization(entryId: string, localeId: string) {
   );
 }
 
-// Drafts of the open entry in the shown languages, which can be approved at once.
+// Drafts and outdated translations of the open entry in the shown languages, which
+// can be approved, or confirmed to still fit, at once.
 const reviewableLocaleIds = computed(() => {
   const entryId = selectedEntryId.value;
 
   if (!entryId) return [];
 
-  return selectedLocaleIds.value.filter(
-    (localeId) =>
-      savedLocalization(entryId, localeId)?.status === "REVIEW_STATUS_DRAFT" &&
-      !isTranslationDirty(entryId, localeId),
-  );
+  return selectedLocaleIds.value.filter((localeId) => {
+    const saved = savedLocalization(entryId, localeId);
+
+    return (
+      !!saved &&
+      (saved.status === "REVIEW_STATUS_DRAFT" || !!saved.outdated) &&
+      !isTranslationDirty(entryId, localeId)
+    );
+  });
 });
 
 const selectedEntryData = computed(() =>
@@ -741,11 +761,11 @@ const entryActions = computed<ActionMenuItem[]>(() => {
   if (canReview.value) {
     items.push({
       value: "approve",
-      label: t("review.approveShown"),
+      label: t("review.approveAndConfirmShown"),
       icon: "seal-check",
       hint: reviewableLocaleIds.value.length
         ? undefined
-        : t("review.nothingToApprove"),
+        : t("review.nothingToApproveOrConfirm"),
       disabled: busy || isReviewing.value || !reviewableLocaleIds.value.length,
     });
   }
@@ -768,8 +788,7 @@ function onEntryAction(action: string) {
   const entry = selectedEntryData.value;
 
   if (!entry) return;
-  if (action === "approve")
-    approveTranslations([entry.id ?? ""], reviewableLocaleIds.value);
+  if (action === "approve") approveShown();
   else if (action === "translate") translateEmptyTranslations();
   else if (action === "copy") fillEmptyTranslations();
   else if (action === "edit") editDialogItem.value = entry;
@@ -923,7 +942,8 @@ async function saveAndNext() {
   if (!selectedUnsavedLocaleIds.value.length) await navigation.next();
 }
 
-// Approves every draft of the open entry in the shown languages.
+// Approves every draft of the open entry in the shown languages, and confirms its
+// outdated translations still fit.
 function approveShown() {
   const entryId = selectedEntryId.value;
 
@@ -931,7 +951,9 @@ function approveShown() {
     return;
   if (!reviewableLocaleIds.value.length) return;
 
-  approveTranslations([entryId], reviewableLocaleIds.value);
+  approveTranslations([entryId], reviewableLocaleIds.value, {
+    confirmOutdated: true,
+  });
 }
 
 function copySourceTo(localeId: string | undefined) {
@@ -969,6 +991,7 @@ const { open: paletteOpen } = useEditorCommands({
     next: "commands.nextEntry",
     saveAndNext: "commands.saveAndNext",
     search: "commands.focusSearch",
+    approveAll: "commands.approveAndConfirmAll",
   },
   itemIcon: "translate",
   actions: entryActions,
@@ -981,7 +1004,7 @@ const { open: paletteOpen } = useEditorCommands({
     !!selectedUnsavedLocaleIds.value.length &&
     !isSaving.value,
   canReview: () => canReview.value,
-  hasDrafts: () =>
+  canApproveAll: () =>
     !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
   copySource: {
     canEdit: () => canUpdate.value && !isSaving.value,
@@ -1186,6 +1209,7 @@ watch(
       @edit-releases="showReleasesDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
+      @confirm-outdated="showConfirmOutdatedDialog = true"
       @copy="runBulkTranslation('copy')"
       @delete="showBulkDeleteDialog = true"
     />
@@ -1506,6 +1530,13 @@ watch(
     :language="localeOption(defaultLocale?.id)?.label ?? ''"
     :language-code="localeOption(defaultLocale?.id)?.code"
     @answer="outdateCheck.answer"
+  />
+  <EntryConfirmOutdatedDialog
+    :open="showConfirmOutdatedDialog"
+    :count="checkedEntryIds.length"
+    :pending="isReviewing"
+    @close="showConfirmOutdatedDialog = false"
+    @confirm="confirmOutdatedTicked"
   />
   <EditorRejectDialog
     :open="!!rejecting"

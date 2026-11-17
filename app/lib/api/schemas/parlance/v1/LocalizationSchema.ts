@@ -329,6 +329,7 @@ export type ReviewLocalizationsRequest = {
   comment?: string | null;
   skipApproved?: boolean | null;
   confirmOutdated?: boolean | null;
+  onlyOutdated?: boolean | null;
 };
 export const ReviewLocalizationsRequestSchema = z.object({
   get localizationIds(): z.ZodOptional<
@@ -352,6 +353,9 @@ export const ReviewLocalizationsRequestSchema = z.object({
     return z.boolean().nullish();
   },
   get confirmOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get onlyOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });

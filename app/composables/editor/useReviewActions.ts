@@ -13,6 +13,8 @@ export type ReviewDetails = {
   onlyDrafts?: boolean;
   /** Approves outdated translations again too, confirming they still fit. */
   confirmOutdated?: boolean;
+  /** Approves only the outdated, approved translations, leaving the drafts. */
+  onlyOutdated?: boolean;
 };
 
 /**
@@ -86,6 +88,21 @@ export function useReviewActions<Request>(options: {
     );
   }
 
+  /**
+   * Confirms the approved translations of the items in the languages still fit
+   * their changed default text. Drafts are left for their own review.
+   */
+  async function confirm(itemIds: string[], localeIds: string[]) {
+    if (!itemIds.length || !localeIds.length || isReviewing.value) return false;
+
+    return run(
+      options.request(itemIds, localeIds, "REVIEW_DECISION_APPROVE", {
+        onlyOutdated: true,
+      }),
+      (count) => t("review.confirmedCount", { count }, count),
+    );
+  }
+
   function requestReject(itemId: string, localeId: string, language: string) {
     rejecting.value = { itemIds: [itemId], localeIds: [localeId], language };
   }
@@ -129,6 +146,7 @@ export function useReviewActions<Request>(options: {
     isReviewing,
     rejecting,
     approve,
+    confirm,
     requestReject,
     requestRejectMany,
     confirmReject,
