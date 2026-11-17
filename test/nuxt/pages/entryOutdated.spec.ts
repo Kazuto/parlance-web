@@ -62,6 +62,7 @@ async function openEditor(
   const lists: Request[] = [];
   const histories: Request[] = [];
   const reviews: Request[] = [];
+  const updates: Request[] = [];
 
   loginAs(permissions);
   mockRpc("LocaleService/ListLocales", {
@@ -89,10 +90,15 @@ async function openEditor(
 
     return { localizations: [entry.localizations[1]] };
   });
+  mockRpc("LocalizationService/UpdateLocalization", (body) => {
+    updates.push(body as Request);
+
+    return {};
+  });
 
   const page = await mountPage(EntriesPage, { route });
 
-  return { page, lists, histories, reviews };
+  return { page, lists, histories, reviews, updates };
 }
 
 const REVIEWER = [...VIEWER, "update_entry", "review_entry"];
@@ -250,5 +256,93 @@ describe("outdated count in the entry list", () => {
     });
 
     expect(wrapper.find(`[aria-label="${label}"]`).text()).toBe("2");
+  });
+});
+
+describe("small fixes of the default text", () => {
+  const field = (page: MountedPage, localeId: string) =>
+    page.wrapper.find<HTMLTextAreaElement>(`#entry-e1-${localeId}`);
+  const dialog = (page: MountedPage) => page.wrapper.find("dialog[open]");
+
+  async function save(page: MountedPage, texts: Record<string, string>) {
+    for (const [localeId, text] of Object.entries(texts))
+      await field(page, localeId).setValue(text);
+
+    await page.wrapper
+      .findAll("button")
+      .find((button) => button.text() === t("common.saveChanges"))!
+      .trigger("click");
+    await settle();
+  }
+
+  async function answer(page: MountedPage, label: string) {
+    await dialog(page)
+      .findAll("button")
+      .find((button) => button.text() === label)!
+      .trigger("click");
+    await settle();
+  }
+
+  it("asks before a typo fix marks the translations outdated", async () => {
+    const { page, updates } = await openEditor(REVIEWER);
+
+    await save(page, { l1: "Hi!" });
+
+    // The French is current, so the fix would mark it.
+    expect(dialog(page).text()).toContain(t("entries.outdateTitle"));
+    expect(dialog(page).find("del").text()).toBe("Hi");
+    expect(dialog(page).find("ins").text()).toBe("Hi!");
+    expect(updates).toEqual([]);
+
+    await answer(page, t("entries.outdateKeep"));
+
+    expect(updates).toEqual([
+      { id: "z1", translation: "Hi!", keepTranslationsCurrent: true },
+    ]);
+    expect(dialog(page).exists()).toBe(false);
+  });
+
+  it("marks them outdated when asked to", async () => {
+    const { page, updates } = await openEditor(REVIEWER);
+
+    await save(page, { l1: "Hi!" });
+    await answer(page, t("entries.outdateMark"));
+
+    expect(updates).toEqual([{ id: "z1", translation: "Hi!" }]);
+  });
+
+  it("saves nothing when cancelled", async () => {
+    const { page, updates } = await openEditor(REVIEWER);
+
+    await save(page, { l1: "Hi!" });
+    await answer(page, t("common.cancel"));
+
+    expect(updates).toEqual([]);
+    expect(field(page, "l1").element.value).toBe("Hi!");
+  });
+
+  it("marks them without asking after a larger change", async () => {
+    const { page, updates } = await openEditor(REVIEWER);
+
+    await save(page, { l1: "Good morning" });
+
+    expect(dialog(page).exists()).toBe(false);
+    expect(updates).toEqual([{ id: "z1", translation: "Good morning" }]);
+  });
+
+  it("doesn't ask when the current translations are saved along with it", async () => {
+    const { page, updates } = await openEditor(REVIEWER);
+
+    // The German is outdated already, and the French gets a new text.
+    await save(page, { l1: "Hi!", l3: "Salut !" });
+
+    expect(dialog(page).exists()).toBe(false);
+    expect(updates).toHaveLength(2);
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        { id: "z1", translation: "Hi!" },
+        { id: "z3", translation: "Salut !" },
+      ]),
+    );
   });
 });

@@ -113,7 +113,9 @@ language always comes first, since it is the source.
   the history of every language.
 - **Outdated translations:** when a default text changes, its translations are
   marked outdated. The side panel shows the text before and after the change;
-  confirm a translation that still fits, or edit it.
+  confirm a translation that still fits, or edit it. When a change only fixes a
+  typo, punctuation or capitalization, saving asks first whether to mark the
+  translations outdated.
 - **Several entries:** tick entries in the list to change their scopes or to
   machine-translate them all.
 

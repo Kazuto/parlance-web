@@ -13,13 +13,17 @@ import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useCompactEditor } from "~/composables/editor/useCompactEditor";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
-import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
+import {
+  type DraftChange,
+  useTranslationDrafts,
+} from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
 import { useEditorShortcuts } from "~/composables/editor/useEditorShortcuts";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
 import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
+import { useOutdateCheck } from "~/composables/entry/useOutdateCheck";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
@@ -474,6 +478,12 @@ const {
 } = useEntryDetail(selectedEntryId);
 
 const localizationStore = useLocalizationStore();
+
+type EntryChange = DraftChange & {
+  /** A small fix of the default text, which leaves the translations current. */
+  keepTranslationsCurrent?: boolean;
+};
+
 const {
   forms: localizationForms,
   saved: savedTranslations,
@@ -492,12 +502,15 @@ const {
   discardChanges,
   requestDiscardAll,
   save: saveTranslations,
-} = useTranslationDrafts<Entry, Localization>({
+} = useTranslationDrafts<Entry, Localization, EntryChange>({
   name: "entry-translations",
   selectedId: selectedEntryId,
   rows: (entry) => entry.localizations,
   setRows: (entry, localizations) => (entry.localizations = localizations),
-  upsert: async ({ itemId, localeId, translation }, existing) => {
+  upsert: async (
+    { itemId, localeId, translation, keepTranslationsCurrent },
+    existing,
+  ) => {
     // A suggestion saved as it is stays the model's text; any edit makes it the user's.
     const suggestion = suggestionFor(itemId, localeId);
     const machineModel =
@@ -511,6 +524,7 @@ const {
             id: existing.id,
             translation,
             machineModel,
+            keepTranslationsCurrent,
           })
         ).localization
       : (
@@ -812,6 +826,31 @@ const {
 
 const { showError, getErrorMessage } = useErrorHelper();
 
+const outdateCheck = useOutdateCheck({
+  defaultLocaleId: () => defaultLocale.value?.id ?? undefined,
+  entry: (entryId) => knownEntries.value[entryId],
+});
+
+/**
+ * Saves the changes, after asking whether small fixes of default texts mark their
+ * translations outdated. Cancelling saves nothing.
+ */
+async function saveChanges(changes: DraftChange[], label: string) {
+  const keepCurrent = await outdateCheck.check(changes);
+
+  if (!keepCurrent) return;
+
+  await saveTranslations(
+    changes.map((change) =>
+      change.localeId === defaultLocale.value?.id &&
+      keepCurrent.has(change.itemId)
+        ? { ...change, keepTranslationsCurrent: true }
+        : change,
+    ),
+    label,
+  );
+}
+
 async function handleSave() {
   const entry = selectedEntryData.value;
 
@@ -821,7 +860,7 @@ async function handleSave() {
   const localeIds = [...selectedUnsavedLocaleIds.value];
 
   if (!localeIds.length) return;
-  await saveTranslations(
+  await saveChanges(
     localeIds.map((localeId) => ({
       itemId: entryId,
       localeId,
@@ -834,7 +873,7 @@ async function handleSave() {
 async function handleSaveAll() {
   if (isSaving.value) return;
   showSaveAllDialog.value = false;
-  await saveTranslations(
+  await saveChanges(
     [...allUnsavedTranslations.value],
     t("entries.translations"),
   );
@@ -1461,6 +1500,12 @@ watch(
     :disabled="!allUnsavedCount || isSaving"
     @close="showSaveAllDialog = false"
     @confirm="handleSaveAll"
+  />
+  <EntryOutdateDialog
+    :changes="outdateCheck.asking.value"
+    :language="localeOption(defaultLocale?.id)?.label ?? ''"
+    :language-code="localeOption(defaultLocale?.id)?.code"
+    @answer="outdateCheck.answer"
   />
   <EditorRejectDialog
     :open="!!rejecting"

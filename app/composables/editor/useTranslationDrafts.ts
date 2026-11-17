@@ -17,11 +17,13 @@ export type DraftChange = {
 /**
  * The translations typed in an editor page, per item and language, next to what
  * the server has saved. Drafts survive reloads of their item and switching to
- * other items, so several can be saved at once.
+ * other items, so several can be saved at once. A page can pass more about each
+ * change to `save`, as `Change`, which reaches its `upsert`.
  */
 export function useTranslationDrafts<
   Item extends { id?: string | null },
   SavedRow extends Row,
+  Change extends DraftChange = DraftChange,
 >(options: {
   /** Names the drafts for the warning before leaving the page. */
   name: string;
@@ -30,11 +32,11 @@ export function useTranslationDrafts<
   setRows: (item: Item, rows: SavedRow[]) => void;
   /** Saves one translation: updates `existing` or creates the row. */
   upsert: (
-    change: DraftChange,
+    change: Change,
     existing: SavedRow | undefined,
   ) => Promise<SavedRow | null | undefined>;
   /** Names a change in the list of failed saves, e.g. "app.title: German". */
-  describe: (change: DraftChange, item: Item | undefined) => string;
+  describe: (change: Change, item: Item | undefined) => string;
   /** i18n keys of the toasts after saving: everything, or only some. */
   messages: { saved: string; partial: string };
   /** Runs after saving, while the page still counts as saving. */
@@ -160,7 +162,7 @@ export function useTranslationDrafts<
    * Saves the changes side by side. Saved ones count as saved even when others
    * fail; the toast lists the failures. `label` names what was saved.
    */
-  async function save(changes: DraftChange[], label: string) {
+  async function save(changes: Change[], label: string) {
     if (!changes.length || isSaving.value) return;
 
     isSaving.value = true;

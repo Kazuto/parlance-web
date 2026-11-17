@@ -165,6 +165,7 @@ export type UpdateLocalizationRequest = {
   id?: string | null;
   translation?: string | null;
   machineModel?: string | null;
+  keepTranslationsCurrent?: boolean | null;
 };
 export const UpdateLocalizationRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -175,6 +176,11 @@ export const UpdateLocalizationRequestSchema = z.object({
   },
   get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get keepTranslationsCurrent(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<boolean>>
+  > {
+    return z.boolean().nullish();
   },
 });
 export type UpdateLocalizationResponse = {
