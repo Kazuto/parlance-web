@@ -20,6 +20,13 @@ import {
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
 const { can } = usePermission();
+// The machine translation tasks translate a language again, but never the default
+// one, which they translate from.
+const canRetranslate = (locale: Locale) =>
+  !locale.isDefault &&
+  !locale.deletedAt &&
+  can.value("update_entry") &&
+  can.value("use_machine_translation");
 
 // Deleted locales only reach users with permanent_delete_locale; the server drops
 // the flag for everyone else.
@@ -138,18 +145,36 @@ const tableItems = computed(() =>
 
 // Editing each language, from the command palette.
 useCommands(() =>
-  can.value("update_locale")
-    ? tableItems.value
-        .filter((locale) => locale.id && !locale.deletedAt)
-        .map((locale) => ({
-          label: t("commands.editLanguage", { language: locale.name }),
-          value: `locale:${locale.id}`,
-          group: t("nav.locales"),
-          icon: "pencil-simple",
-          keywords: [locale.code ?? ""],
-          run: () => (editDialogItem.value = locale),
-        }))
-    : [],
+  tableItems.value
+    .filter((locale) => locale.id && !locale.deletedAt)
+    .flatMap((locale) => [
+      ...(can.value("update_locale")
+        ? [
+            {
+              label: t("commands.editLanguage", { language: locale.name }),
+              value: `locale:${locale.id}`,
+              group: t("nav.locales"),
+              icon: "pencil-simple",
+              keywords: [locale.code ?? ""],
+              run: () => (editDialogItem.value = locale),
+            },
+          ]
+        : []),
+      ...(canRetranslate(locale)
+        ? [
+            {
+              label: t("commands.retranslateLanguage", {
+                language: locale.name,
+              }),
+              value: `locale-retranslate:${locale.id}`,
+              group: t("nav.locales"),
+              icon: "sparkle",
+              keywords: [locale.code ?? ""],
+              run: () => (retranslateDialogItem.value = locale),
+            },
+          ]
+        : []),
+    ]),
 );
 
 const formalityOptions = useFormalityOptions();
@@ -165,6 +190,7 @@ function formalityLabel(locale: Locale) {
 
 const showDialog = ref(false);
 const editDialogItem = ref<Locale | undefined>(undefined);
+const retranslateDialogItem = ref<Locale | undefined>(undefined);
 const deleteDialogItem = ref<Locale | undefined>(undefined);
 const restoreDialogItem = ref<Locale | undefined>(undefined);
 const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
@@ -248,6 +274,12 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
               @click="editDialogItem = item"
             />
             <BaseIconButton
+              v-if="canRetranslate(item)"
+              icon="sparkle"
+              :label="t('locales.retranslate')"
+              @click="retranslateDialogItem = item"
+            />
+            <BaseIconButton
               v-can="'read_entry'"
               icon="translate"
               :label="t('locales.openEntries')"
@@ -329,6 +361,11 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
     :item="editDialogItem"
     :open="editDialogItem !== undefined"
     @close="editDialogItem = undefined"
+  />
+  <LocaleRetranslateDialog
+    :item="retranslateDialogItem"
+    :open="retranslateDialogItem !== undefined"
+    @close="retranslateDialogItem = undefined"
   />
   <LocaleDeleteDialog
     :item="deleteDialogItem"

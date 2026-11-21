@@ -1296,6 +1296,9 @@ watch(
               :outdated="
                 !!savedLocalization(String(item.key), localeId)?.outdated
               "
+              :retranslate="
+                !!savedLocalization(String(item.key), localeId)?.retranslate
+              "
               :can-review="canReview && !isReviewing"
               :model-value="currentEntryForms[localeId] ?? ''"
               @update:model-value="

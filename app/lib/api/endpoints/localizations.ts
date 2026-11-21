@@ -27,6 +27,9 @@ import {
   SearchTranslationMemoryRequestSchema,
   SearchTranslationMemoryResponseSchema,
   type SearchTranslationMemoryRequest,
+  RetranslateLocalizationsRequestSchema,
+  RetranslateLocalizationsResponseSchema,
+  type RetranslateLocalizationsRequest,
 } from "../schemas/parlance/v1/LocalizationSchema";
 
 export const localizations = {
@@ -137,6 +140,19 @@ export const localizations = {
     {
       input: SearchTranslationMemoryRequestSchema,
       output: SearchTranslationMemoryResponseSchema,
+    },
+  ),
+  // Marks a language's translations for the machine translation tasks to translate
+  // again, or takes the marks back; a dry run only counts.
+  retranslate: authedEndpoint.mutate(
+    (data: RetranslateLocalizationsRequest) => ({
+      method: "post",
+      url: "/parlance.v1.LocalizationService/RetranslateLocalizations",
+      json: data,
+    }),
+    {
+      input: RetranslateLocalizationsRequestSchema,
+      output: RetranslateLocalizationsResponseSchema,
     },
   ),
 };
