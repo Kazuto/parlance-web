@@ -27,5 +27,6 @@ usePage(() => ({
     <TranslationServerSettings v-if="can('read_translation_server')" />
     <SsoProviderSettings v-if="can('read_sso_provider')" />
     <UserRegistrationSettings v-if="can('read_user')" />
+    <VersionUpdates v-if="can('read_update')" />
   </div>
 </template>

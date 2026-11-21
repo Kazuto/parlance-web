@@ -60,6 +60,7 @@ build_image() {
 
     docker build -t "${IMAGE_NAME}:${VERSION}" \
         -t "${IMAGE_NAME}:latest" \
+        --build-arg VERSION="${VERSION#v}" \
         -f Dockerfile \
         .
 

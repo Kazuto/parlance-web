@@ -59,6 +59,9 @@ export default defineNuxtConfig({
     public: {
       apiBaseUrl:
         process.env.NUXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
+      // The web app's release, e.g. "1.2.1", which the image sets; builds from
+      // source are "dev".
+      appVersion: process.env.NUXT_PUBLIC_APP_VERSION || "dev",
     },
   },
 

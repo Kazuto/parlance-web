@@ -20,6 +20,7 @@ import { tasks } from "./endpoints/tasks";
 import { webhooks } from "./endpoints/webhooks";
 import { ssoProviders } from "./endpoints/ssoProviders";
 import { account } from "./endpoints/account";
+import { updates } from "./endpoints/updates";
 
 export const api = defineApi({
   auth,
@@ -43,6 +44,7 @@ export const api = defineApi({
   webhooks,
   ssoProviders,
   account,
+  updates,
 });
 
 export * from "./schemas";

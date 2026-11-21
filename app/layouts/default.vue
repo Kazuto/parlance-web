@@ -142,6 +142,7 @@ const headerOptions = computed(() => {
             :current-path="route.path"
           />
           <!-- Collapsed, the sidebar is only as wide as its icons. -->
+          <VersionUpdateNotice v-if="!sidebarCollapsed" class="mx-5 mb-3" />
           <CommandPaletteHint v-if="!sidebarCollapsed" class="mx-5 mb-4" />
         </div>
       </div>
