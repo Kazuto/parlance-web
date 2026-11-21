@@ -141,7 +141,9 @@ languages it would mark outdated. Nothing changes until you confirm.
 ### Your account
 
 Under **My account**, everyone can change their own name, email address, picture
-and password, and their language, whatever their role.
+and password, and their language, whatever their role. It also shows which versions
+of the web app and the server are running, and warns when the server's major
+version isn't the one this web app is made for.
 
 **API tokens** there let scripts and CI use the API as you, with your permissions.
 Give each a name and a lifetime (30, 90 or 365 days, or none); its secret is shown
@@ -160,6 +162,14 @@ not delete languages. Buttons for actions a user may not take are hidden.
 
 Anyone can create a viewer account through the API until you turn off
 **Settings → Registration** (needs `create_user`); admins still add users either way.
+
+### Updates
+
+With `read_update`, which the admin role has, **Settings → Updates** shows whether
+newer releases of the server and the web app are out, with their release notes, and
+the sidebar points there when one is. The server asks GitHub at most every 12 hours;
+see [Updates](https://github.com/Kazuto/parlance-server#updates) in the server
+README to turn that off.
 
 ### Single sign-on
 

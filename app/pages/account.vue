@@ -16,5 +16,6 @@ usePage(() => ({
     <AccountSettings v-if="authStore.user" />
     <AccountLanguageSettings />
     <AccountApiTokens v-if="authStore.user" />
+    <VersionAbout />
   </div>
 </template>

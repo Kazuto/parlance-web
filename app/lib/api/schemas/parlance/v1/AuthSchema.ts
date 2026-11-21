@@ -95,6 +95,7 @@ export const GetCurrentUserRequestSchema = z.object({});
 export type GetCurrentUserResponse = {
   user?: User | null;
   translationEnabled?: boolean | null;
+  serverVersion?: string | null;
 };
 export const GetCurrentUserResponseSchema = z.object({
   get user(): z.ZodOptional<z.ZodNullable<z.ZodType<User>>> {
@@ -102,6 +103,9 @@ export const GetCurrentUserResponseSchema = z.object({
   },
   get translationEnabled(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get serverVersion(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type SignInProvider = {

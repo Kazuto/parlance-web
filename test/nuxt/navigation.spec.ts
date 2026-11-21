@@ -102,7 +102,12 @@ describe("sidebar", () => {
   });
 
   it("links the instance settings for any of their parts", async () => {
-    const parts = ["read_translation_server", "read_sso_provider", "read_user"];
+    const parts = [
+      "read_translation_server",
+      "read_sso_provider",
+      "read_user",
+      "read_update",
+    ];
 
     for (const permission of parts) {
       loginAs([permission]);

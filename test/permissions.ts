@@ -62,6 +62,7 @@ export const ALL_PERMISSIONS = [
   "read_sso_provider",
   "update_sso_provider",
   "delete_sso_provider",
+  "read_update",
 ] as const;
 
 export type PermissionName = (typeof ALL_PERMISSIONS)[number];
