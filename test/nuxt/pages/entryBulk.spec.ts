@@ -127,16 +127,82 @@ describe("more actions for ticked entries", () => {
 
     expect(await labels(EVERYTHING)).toEqual([
       t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
       t("entries.copyDefaultToEmpty"),
       t("entries.bulkDelete"),
     ]);
     expect(await labels([...VIEWER, "review_entry"])).toEqual([
       t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
     ]);
     expect(await labels([...VIEWER, "delete_entry"])).toEqual([
       t("entries.bulkDelete"),
     ]);
     expect(await labels(VIEWER)).toEqual([]);
+  });
+
+  it("approves the drafts, leaving outdated translations to confirm", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await page.wrapper
+      .findAll("button")
+      .find((button) => button.text() === t("review.approveTicked"))!
+      .trigger("click");
+    await settle();
+
+    expect(reviews).toEqual([
+      {
+        entryIds: ["e1", "e2", "e3"],
+        localeIds: ["l1", "l2", "l3"],
+        decision: "REVIEW_DECISION_APPROVE",
+      },
+    ]);
+  });
+
+  it("confirms the outdated translations once confirmed in a dialog", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await choose(page, t("review.confirmOutdatedTicked"));
+
+    const dialog = page.wrapper.find("dialog[open]");
+
+    expect(dialog.text()).toContain(t("review.confirmOutdatedTitle"));
+    expect(dialog.text()).toContain(
+      t("review.confirmOutdatedMessage", { count: 3 }, 3),
+    );
+    expect(reviews).toEqual([]);
+
+    await dialog
+      .findAll("button")
+      .find((button) => button.text() === t("review.confirmOutdatedAction"))!
+      .trigger("click");
+    await settle();
+
+    // Only the approved, outdated ones; drafts wait for their own review.
+    expect(reviews).toEqual([
+      {
+        entryIds: ["e1", "e2", "e3"],
+        localeIds: ["l1", "l2", "l3"],
+        decision: "REVIEW_DECISION_APPROVE",
+        onlyOutdated: true,
+      },
+    ]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
+  });
+
+  it("confirms nothing when the dialog is cancelled", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await choose(page, t("review.confirmOutdatedTicked"));
+    await page.wrapper
+      .find("dialog[open]")
+      .findAll("button")
+      .find((button) => button.text() === t("common.cancel"))!
+      .trigger("click");
+    await settle();
+
+    expect(reviews).toEqual([]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
   });
 
   it("sends back the drafts with a comment, leaving approved texts", async () => {

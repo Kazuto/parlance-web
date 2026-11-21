@@ -169,6 +169,7 @@ export type UpdateLocalizationRequest = {
   id?: string | null;
   translation?: string | null;
   machineModel?: string | null;
+  keepTranslationsCurrent?: boolean | null;
 };
 export const UpdateLocalizationRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -179,6 +180,11 @@ export const UpdateLocalizationRequestSchema = z.object({
   },
   get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get keepTranslationsCurrent(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<boolean>>
+  > {
+    return z.boolean().nullish();
   },
 });
 export type UpdateLocalizationResponse = {
@@ -327,6 +333,7 @@ export type ReviewLocalizationsRequest = {
   comment?: string | null;
   skipApproved?: boolean | null;
   confirmOutdated?: boolean | null;
+  onlyOutdated?: boolean | null;
 };
 export const ReviewLocalizationsRequestSchema = z.object({
   get localizationIds(): z.ZodOptional<
@@ -350,6 +357,9 @@ export const ReviewLocalizationsRequestSchema = z.object({
     return z.boolean().nullish();
   },
   get confirmOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get onlyOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });

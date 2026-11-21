@@ -93,7 +93,8 @@ const FORMS: Record<string, { formal: AddressWords; informal: AddressWords }> =
     },
   };
 
-function placeholders(text: string): string[] {
+/** The placeholders of a text, e.g. ["{name}", "%d"]. */
+export function placeholders(text: string): string[] {
   // "%%" is a literal percent sign, not the start of one.
   return text.replaceAll("%%", "").match(PLACEHOLDER) ?? [];
 }
@@ -106,7 +107,8 @@ export function withoutPlaceholders(text: string) {
   return text.replaceAll("%%", " ").replace(PLACEHOLDER, " ");
 }
 
-function tags(text: string) {
+/** The markup tags of a text, as "<b>" and "</b>". */
+export function tags(text: string) {
   return [...text.matchAll(TAG)].map(
     ([, closing, name]) => `<${closing}${name!.toLowerCase()}>`,
   );
