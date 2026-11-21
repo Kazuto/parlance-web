@@ -43,6 +43,8 @@ async function openEditor(
     permissions?: readonly string[];
     enabled?: boolean;
     suggestions?: Suggestion[];
+    /** The shown languages, by code. */
+    shown?: string;
   } = {},
 ) {
   const requests: { entryId?: string; targetLocaleIds?: string[] }[] = [];
@@ -84,7 +86,7 @@ async function openEditor(
   }
 
   const page = await mountPage(EntriesPage, {
-    route: "/entries?locales=en,de,fr",
+    route: `/entries?locales=${options.shown ?? "en,de,fr"}`,
   });
 
   return { page, requests, saves, saved };
@@ -97,16 +99,108 @@ const field = (page: MountedPage, localeId: string) =>
 async function translateItem(page: MountedPage) {
   const items = await openActionMenu(page, t("entries.actions"));
 
-  return items.find((entry) => entry.label === t("entries.aiTranslateEmpty"));
+  return items.find((entry) => entry.label === t("entries.aiTranslate"));
 }
 
-async function translate(page: MountedPage) {
-  await (await translateItem(page))!.item.trigger("click");
+const dialog = (page: MountedPage) => page.wrapper.find("dialog[open]");
+
+/** The dialog's languages, by their labels, and whether each is ticked. */
+const choices = (page: MountedPage) =>
+  dialog(page)
+    .findAll("label")
+    .filter((label) => label.find("input[type='checkbox']").exists())
+    .map((label) => ({
+      text: label.text(),
+      ticked: label.find<HTMLInputElement>("input[type='checkbox']").element
+        .checked,
+    }));
+
+async function tick(page: MountedPage, index: number) {
+  await dialog(page).findAll("input[type='checkbox']")[index]!.setValue(true);
   await settle();
 }
 
+/** The dialog's button that translates, with the number of languages. */
+const confirmButton = (page: MountedPage) =>
+  dialog(page)
+    .findAll("button")
+    .find((button) =>
+      [1, 2].some(
+        (count) =>
+          button.text().trim() ===
+          t("entries.translateCount", { count }, count),
+      ),
+    )!;
+
+/** Translates the shown languages, taking the dialog's defaults if it asks. */
+async function translate(page: MountedPage) {
+  await (await translateItem(page))!.item.trigger("click");
+  await settle();
+
+  if (dialog(page).exists()) {
+    await confirmButton(page).trigger("click");
+    await settle();
+  }
+}
+
 describe("machine translation in the editor", () => {
-  it("fills only the empty languages, as unsaved drafts", async () => {
+  it("translates right away while every shown language is empty", async () => {
+    const { page, requests } = await openEditor({
+      shown: "en,de",
+      suggestions: [{ localeId: "l2", translation: "Hallo {name}" }],
+    });
+
+    await (await translateItem(page))!.item.trigger("click");
+    await settle();
+
+    expect(dialog(page).exists()).toBe(false);
+    expect(requests).toEqual([{ entryId: "e1", targetLocaleIds: ["l2"] }]);
+    expect(field(page, "l2").element.value).toBe("Hallo {name}");
+  });
+
+  it("asks which languages to replace once one has text", async () => {
+    const { page, requests } = await openEditor();
+
+    await (await translateItem(page))!.item.trigger("click");
+    await settle();
+
+    expect(choices(page)).toEqual([
+      {
+        text: expect.stringContaining(t("entries.translateEmptyText")),
+        ticked: true,
+      },
+      { text: expect.stringContaining("Bonjour {name}"), ticked: false },
+    ]);
+    expect(choices(page)[0]!.text).toContain("German (de)");
+    expect(confirmButton(page).text()).toBe(
+      t("entries.translateCount", { count: 1 }, 1),
+    );
+    expect(requests).toEqual([]);
+  });
+
+  it("replaces a ticked language's text as an unsaved change", async () => {
+    const { page, requests, saves } = await openEditor({
+      suggestions: [
+        { localeId: "l2", translation: "Hallo {name}" },
+        { localeId: "l3", translation: "Salut {name}" },
+      ],
+    });
+
+    await (await translateItem(page))!.item.trigger("click");
+    await settle();
+    await tick(page, 1);
+    await confirmButton(page).trigger("click");
+    await settle();
+
+    expect(requests).toEqual([
+      { entryId: "e1", targetLocaleIds: ["l2", "l3"] },
+    ]);
+    expect(field(page, "l3").element.value).toBe("Salut {name}");
+    expect(saves).toEqual([]);
+    expect(page.buttons()).toContain(t("common.saveChanges"));
+  });
+
+  it("fills only the empty languages by default, as unsaved drafts", async () => {
     const { page, requests, saves } = await openEditor({
       suggestions: [{ localeId: "l2", translation: "Hallo {name}" }],
     });
@@ -144,7 +238,6 @@ describe("machine translation in the editor", () => {
       machineModel: "hy-mt2-7b",
     });
 
-    await translate(page);
     await field(page, "l2").setValue("Servus {name}");
     await save();
 
@@ -194,21 +287,30 @@ describe("machine translation in the editor", () => {
     );
   });
 
-  it("keeps text typed while waiting", async () => {
+  it("keeps text typed or changed while waiting", async () => {
     const { page } = await openEditor({
-      suggestions: [{ localeId: "l2", translation: "Hallo {name}" }],
+      suggestions: [
+        { localeId: "l2", translation: "Hallo {name}" },
+        { localeId: "l3", translation: "Salut {name}" },
+      ],
     });
 
-    const click = (await translateItem(page))!.item.trigger("click");
+    await (await translateItem(page))!.item.trigger("click");
+    await settle();
+    await tick(page, 1);
+
+    const click = confirmButton(page).trigger("click");
 
     await field(page, "l2").setValue("Servus {name}");
+    await field(page, "l3").setValue("Coucou {name}");
     await click;
     await settle();
 
     expect(field(page, "l2").element.value).toBe("Servus {name}");
+    expect(field(page, "l3").element.value).toBe("Coucou {name}");
   });
 
-  it("explains why it can't run while every language has text", async () => {
+  it("runs while every language has text, replacing only ticked ones", async () => {
     const { page } = await openEditor();
 
     await field(page, "l2").setValue("Hallo {name}");
@@ -216,8 +318,32 @@ describe("machine translation in the editor", () => {
 
     const item = (await translateItem(page))!;
 
+    expect(item.disabled).toBe(false);
+    await item.item.trigger("click");
+    await settle();
+
+    expect(choices(page).map((choice) => choice.ticked)).toEqual([
+      false,
+      false,
+    ]);
+    expect(
+      dialog(page)
+        .findAll("button")
+        .find(
+          (button) =>
+            button.text().trim() ===
+            t("entries.translateCount", { count: 0 }, 0),
+        )!
+        .attributes("disabled"),
+    ).toBeDefined();
+  });
+
+  it("needs a language to translate into", async () => {
+    const { page } = await openEditor({ shown: "en" });
+    const item = (await translateItem(page))!;
+
     expect(item.disabled).toBe(true);
-    expect(item.hint).toBe(t("entries.noEmptyLanguages"));
+    expect(item.hint).toBe(t("entries.bulkTranslateNoLanguages"));
   });
 
   it("unlocks the languages when the request fails", async () => {
@@ -244,8 +370,7 @@ describe("machine translation in the editor", () => {
       () => new Promise((resolve) => (answer = resolve)),
     );
 
-    await (await translateItem(page))!.item.trigger("click");
-    await settle();
+    await translate(page);
 
     const statuses = page.wrapper
       .findAll('[role="status"]')

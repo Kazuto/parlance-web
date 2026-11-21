@@ -437,6 +437,7 @@ export type RetranslateLocalizationsRequest = {
   includeHuman?: boolean | null;
   cancel?: boolean | null;
   dryRun?: boolean | null;
+  entryIds?: Array<string> | null;
 };
 export const RetranslateLocalizationsRequestSchema = z.object({
   get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -453,6 +454,9 @@ export const RetranslateLocalizationsRequestSchema = z.object({
   },
   get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
+  },
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
   },
 });
 export type RetranslateLocalizationsResponse = {

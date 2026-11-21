@@ -29,6 +29,9 @@ const props = defineProps<{
   canCopy?: boolean;
   copyBlocker?: string;
   canDelete?: boolean;
+  /** The user may mark the translations for the machine translation tasks. */
+  canRetranslate?: boolean;
+  retranslateBlocker?: string;
   /** The user may see releases, to add the entries to them. */
   canEditReleases?: boolean;
 }>();
@@ -44,6 +47,7 @@ const emit = defineEmits<{
   approve: [];
   reject: [];
   confirmOutdated: [];
+  retranslate: [];
   copy: [];
   delete: [];
 }>();
@@ -69,6 +73,18 @@ const moreItems = computed<ActionMenuItem[]>(() => [
         },
       ]
     : []),
+  ...(props.canRetranslate
+    ? [
+        {
+          value: "retranslate",
+          label: t("entries.retranslateTicked"),
+          icon: "sparkle",
+          hint: props.retranslateBlocker ?? t("entries.retranslateTickedHint"),
+          disabled:
+            props.isSaving || props.limitReached || !!props.retranslateBlocker,
+        },
+      ]
+    : []),
   ...(props.canCopy
     ? [
         {
@@ -91,7 +107,8 @@ const moreItems = computed<ActionMenuItem[]>(() => [
           label: t("entries.bulkDelete"),
           icon: "trash",
           variant: "danger" as const,
-          divider: !!props.canReview || !!props.canCopy,
+          divider:
+            !!props.canReview || !!props.canRetranslate || !!props.canCopy,
           disabled: props.isSaving || props.limitReached,
         },
       ]
@@ -101,6 +118,7 @@ const moreItems = computed<ActionMenuItem[]>(() => [
 function onMore(value: string) {
   if (value === "reject") emit("reject");
   else if (value === "confirmOutdated") emit("confirmOutdated");
+  else if (value === "retranslate") emit("retranslate");
   else if (value === "copy") emit("copy");
   else if (value === "delete") emit("delete");
 }

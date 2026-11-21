@@ -5,17 +5,34 @@ import { api } from "~/lib/api";
 import { useTranslationDataInvalidation } from "~/lib/api/invalidation";
 import type { Locale } from "~/lib/api/schemas/parlance/v1/LocaleSchema";
 
-// Marks a language's translations for the machine translation tasks to translate
-// again, e.g. after switching models. Each text stays, in exports too, until a task
-// replaces it with a draft.
-const props = defineProps<{ open: boolean; item?: Locale }>();
+// Marks translations for the machine translation tasks to translate again: a
+// language's, e.g. after switching models, or the ticked entries' in the shown
+// languages. Each text stays, in exports too, until a task replaces it with a draft.
+const props = defineProps<{
+  open: boolean;
+  locales: Locale[];
+  /** Only these entries' translations; without them, every entry's in the scopes. */
+  entryIds?: string[];
+}>();
 const emit = defineEmits<{ close: [] }>();
 
-const { t } = useI18n();
+const { t, locale: uiLocale } = useI18n();
 const { showSuccess, getErrorMessage } = useErrorHelper();
 const localeName = useLocaleName();
 const invalidateTranslationData = useTranslationDataInvalidation();
-const name = computed(() => (props.item ? localeName(props.item) : ""));
+const forEntries = computed(() => !!props.entryIds?.length);
+const title = computed(() => {
+  const count = props.entryIds?.length ?? 0;
+
+  return forEntries.value
+    ? t("entries.retranslateTitle", { count }, count)
+    : t("locales.retranslateTitle", {
+        language: props.locales[0] ? localeName(props.locales[0]) : "",
+      });
+});
+const languages = computed(() =>
+  new Intl.ListFormat(uiLocale.value).format(props.locales.map(localeName)),
+);
 
 const texts = ref<"machine" | "all">("machine");
 const scopeIds = ref<string[]>([]);
@@ -29,10 +46,26 @@ const textOptions = computed(() => [
   { label: t("locales.retranslateAll"), value: "all" },
 ]);
 
+// One call per language, the counts added up.
+const { mutationFn: retranslateFn } = api.localizations.retranslate.use();
+
+async function each(changes: { cancel?: boolean; dryRun?: boolean }) {
+  const responses = await Promise.all(
+    props.locales.map((locale) =>
+      retranslateFn({ ...request(locale), ...changes }),
+    ),
+  );
+
+  return {
+    count: responses.reduce((sum, { count }) => sum + (count ?? 0), 0),
+    pending: responses.reduce((sum, { pending }) => sum + (pending ?? 0), 0),
+  };
+}
+
 // Dry runs count what the choice marks, and what is marked already.
-const preview = useMutation(api.localizations.retranslate.use());
+const preview = useMutation({ mutationFn: each });
 const apply = useMutation({
-  ...api.localizations.retranslate.use(),
+  mutationFn: each,
   onSuccess: () => invalidateTranslationData(),
 });
 const counts = ref<{ count: number; pending: number }>();
@@ -48,19 +81,20 @@ const { error, isPending, submit, cancel } = useFormDialog({
   close: () => emit("close"),
 });
 
-function request(changes: { cancel?: boolean; dryRun?: boolean } = {}) {
+function request(locale: Locale) {
   return {
-    localeId: props.item?.id ?? "",
-    scopeIds: [...scopeIds.value],
+    localeId: locale.id ?? "",
+    ...(forEntries.value
+      ? { entryIds: [...props.entryIds!] }
+      : { scopeIds: [...scopeIds.value] }),
     includeHuman: texts.value === "all",
-    ...changes,
   };
 }
 
 // The open dialog's dry run, which changes only with the choice
 const dryRun = computed(() =>
-  props.open && props.item?.id
-    ? JSON.stringify(request({ dryRun: true }))
+  props.open && props.locales.length
+    ? JSON.stringify(props.locales.map(request))
     : undefined,
 );
 // Only the latest choice's counts show.
@@ -74,14 +108,9 @@ watch(
     const call = ++latest;
 
     try {
-      const response = await preview.mutateAsync(JSON.parse(body));
+      const response = await preview.mutateAsync({ dryRun: true });
 
-      if (call === latest) {
-        counts.value = {
-          count: response.count ?? 0,
-          pending: response.pending ?? 0,
-        };
-      }
+      if (call === latest) counts.value = response;
     } catch (cause) {
       if (call === latest) error.value = getErrorMessage(cause);
     }
@@ -91,7 +120,7 @@ watch(
 
 function retranslate() {
   submit(async () => {
-    const count = (await apply.mutateAsync(request())).count ?? 0;
+    const { count } = await apply.mutateAsync({});
 
     showSuccess(t("locales.retranslated", { count }, count));
   });
@@ -99,8 +128,7 @@ function retranslate() {
 
 function takeBack() {
   submit(async () => {
-    const count =
-      (await apply.mutateAsync(request({ cancel: true }))).count ?? 0;
+    const { count } = await apply.mutateAsync({ cancel: true });
 
     showSuccess(t("locales.retranslateCanceled", { count }, count));
   });
@@ -108,15 +136,17 @@ function takeBack() {
 </script>
 
 <template>
-  <Dialog
-    :open
-    :title="t('locales.retranslateTitle', { language: name })"
-    :persistent="isPending"
-    @close="cancel"
-  >
+  <Dialog :open :title :persistent="isPending" @close="cancel">
     <form class="space-y-4" @submit.prevent="retranslate">
       <p class="text-sm text-neutral-700 dark:text-neutral-200">
         {{ t("locales.retranslateIntro") }}
+      </p>
+      <p
+        v-if="forEntries"
+        class="text-sm text-neutral-500 dark:text-neutral-400"
+        data-testid="retranslate-languages"
+      >
+        {{ t("entries.retranslateLanguages", { languages }) }}
       </p>
 
       <Select
@@ -127,7 +157,7 @@ function takeBack() {
         >{{ t("locales.retranslateTexts") }}</Select
       >
 
-      <div class="space-y-1">
+      <div v-if="!forEntries" class="space-y-1">
         <Select
           v-model="scopeIds"
           teleport-to="body"

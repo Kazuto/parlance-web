@@ -717,6 +717,25 @@ const fillEmptyBlocker = computed(() => {
   return undefined;
 });
 
+// The shown languages AI translation writes into: all but the default one.
+const translateLocaleIds = computed(() =>
+  selectedLocaleIds.value.filter((id) => id !== defaultLocale.value?.id),
+);
+
+// Why AI translation can't run right now, if it can't.
+const translateBlocker = computed(() => {
+  const sourceId = defaultLocale.value?.id;
+
+  if (isTranslating.value) return t("entries.translating");
+  if (!sourceId || !currentEntryForms.value[sourceId]?.trim())
+    return t("entries.noSourceText");
+  if (!translateLocaleIds.value.length)
+    return t("entries.bulkTranslateNoLanguages");
+  if (isSourceUnsaved.value) return t("entries.translateSaveSourceFirst");
+
+  return undefined;
+});
+
 // Actions on the whole entry: they affect every selected language, so they sit
 // in the entry header rather than on a language row.
 const entryActions = computed<ActionMenuItem[]>(() => {
@@ -725,19 +744,12 @@ const entryActions = computed<ActionMenuItem[]>(() => {
 
   if (can.value("update_entry")) {
     if (canMachineTranslate.value) {
-      const hint = isTranslating.value
-        ? t("entries.translating")
-        : (fillEmptyBlocker.value ??
-          (isSourceUnsaved.value
-            ? t("entries.translateSaveSourceFirst")
-            : undefined));
-
       items.push({
         value: "translate",
-        label: t("entries.aiTranslateEmpty"),
+        label: t("entries.aiTranslate"),
         icon: "sparkle",
-        hint,
-        disabled: busy || !!hint,
+        hint: translateBlocker.value,
+        disabled: busy || !!translateBlocker.value,
       });
     }
 
@@ -789,33 +801,63 @@ function onEntryAction(action: string) {
 
   if (!entry) return;
   if (action === "approve") approveShown();
-  else if (action === "translate") translateEmptyTranslations();
+  else if (action === "translate") translateEntry();
   else if (action === "copy") fillEmptyTranslations();
   else if (action === "edit") editDialogItem.value = entry;
   else if (action === "delete") deleteDialogItem.value = entry;
 }
 
-async function translateEmptyTranslations() {
+// The ticked entries' translations in the shown languages can be marked for the
+// machine translation tasks, which replace them on their next runs.
+const canRetranslate = computed(() =>
+  canAll.value(["update_entry", "use_machine_translation"]),
+);
+const showRetranslateDialog = ref(false);
+const retranslateLocales = computed(() =>
+  translateLocaleIds.value
+    .map((id) => locales.value.find((locale) => locale.id === id))
+    .filter((locale) => !!locale),
+);
+
+// Languages with text are only replaced when ticked in the dialog; while all are
+// empty, they are translated right away.
+const translateDialogOpen = ref(false);
+const translateChoices = computed(() => {
+  const key = selectedEntryId.value ?? "";
+
+  return translateLocaleIds.value.map((id) => ({
+    id,
+    label: `${localeOption(id)?.label ?? id} (${localeOption(id)?.code ?? ""})`,
+    text: localizationForms.value[key]?.[id] ?? "",
+  }));
+});
+
+function translateEntry() {
+  if (translateBlocker.value || isSaving.value) return;
+  if (translateChoices.value.some((choice) => choice.text.trim()))
+    translateDialogOpen.value = true;
+  else translateInto([...translateLocaleIds.value]);
+}
+
+// Puts machine translations into the languages as unsaved changes to review.
+async function translateInto(localeIds: string[]) {
   const entryId = selectedEntry.value?.key;
 
-  if (
-    !canFillEmptyTranslations.value ||
-    isSourceUnsaved.value ||
-    entryId == null
-  )
-    return;
+  translateDialogOpen.value = false;
+  if (!localeIds.length || translateBlocker.value || entryId == null) return;
 
   const key = String(entryId);
+  const form = (localeId: string) =>
+    localizationForms.value[key]?.[localeId] ?? "";
+  // Text typed or changed while waiting stays.
+  const before = Object.fromEntries(localeIds.map((id) => [id, form(id)]));
 
   try {
-    const suggestions = await suggestTranslations(key, [
-      ...emptySelectedLocaleIds.value,
-    ]);
+    const suggestions = await suggestTranslations(key, localeIds);
 
     for (const { localeId, translation } of suggestions) {
-      // Text typed while waiting stays.
-      if (!localeId || !translation) continue;
-      if ((localizationForms.value[key]?.[localeId] ?? "").trim()) continue;
+      if (!localeId || !translation || form(localeId) !== before[localeId])
+        continue;
       setLocalizationForm(key, localeId, translation);
     }
   } catch (error) {
@@ -1199,6 +1241,12 @@ watch(
       :can-copy="canUpdate"
       :copy-blocker="bulkCopyBlocker"
       :can-delete="can('delete_entry')"
+      :can-retranslate="canRetranslate"
+      :retranslate-blocker="
+        translateLocaleIds.length
+          ? undefined
+          : t('entries.bulkTranslateNoLanguages')
+      "
       :can-edit-releases="can('read_release')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
@@ -1210,6 +1258,7 @@ watch(
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
       @confirm-outdated="showConfirmOutdatedDialog = true"
+      @retranslate="showRetranslateDialog = true"
       @copy="runBulkTranslation('copy')"
       @delete="showBulkDeleteDialog = true"
     />
@@ -1562,6 +1611,20 @@ watch(
     @close="showDiscardDialog = false"
     @confirm="discardChanges"
   />
+  <LocaleRetranslateDialog
+    :open="showRetranslateDialog"
+    :locales="retranslateLocales"
+    :entry-ids="checkedEntryIds"
+    @close="showRetranslateDialog = false"
+  />
+  <EntryTranslateDialog
+    :open="translateDialogOpen"
+    :entry-key="selectedEntryData?.key ?? ''"
+    :choices="translateChoices"
+    @close="translateDialogOpen = false"
+    @translate="translateInto"
+  />
+
   <EntryFormDialog
     :open="!!editDialogItem"
     :item="editDialogItem"
