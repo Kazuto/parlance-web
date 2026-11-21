@@ -27,6 +27,8 @@ const props = defineProps<{
   reviewComment?: string | null;
   /** The default text changed since the saved text was written or approved. */
   outdated?: boolean;
+  /** Marked for the machine translation tasks to translate again. */
+  retranslate?: boolean;
   /** The user may approve the text or send it back. */
   canReview?: boolean;
 }>();
@@ -179,6 +181,19 @@ const contextButtonClass = computed(() => {
         >
           {{ t("review.outdated") }}
         </button>
+      </Tooltip>
+      <Tooltip
+        v-if="retranslate && !isDefault"
+        :content="t('review.retranslateHint')"
+        class="self-start"
+      >
+        <span
+          tabindex="0"
+          class="ml-3 inline-flex items-center gap-1 rounded-[6px] bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-bold text-primary-700 squircle dark:bg-primary-400/15 dark:text-primary-300"
+        >
+          <Icon name="sparkle" size="xs" />
+          {{ t("review.retranslate") }}
+        </span>
       </Tooltip>
       <div v-if="$slots.meta" class="pl-3">
         <slot name="meta" />
