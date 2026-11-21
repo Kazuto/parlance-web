@@ -19,5 +19,6 @@ export * from "./StatsSchema";
 export * from "./TaskSchema";
 export * from "./TerminologySchema";
 export * from "./TranslationServerSchema";
+export * from "./UpdateSchema";
 export * from "./UserSchema";
 export * from "./WebhookSchema";

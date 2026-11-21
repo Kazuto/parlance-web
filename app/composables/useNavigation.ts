@@ -5,6 +5,7 @@ export const INSTANCE_SETTINGS_PERMISSIONS = [
   "read_translation_server",
   "read_sso_provider",
   "read_user",
+  "read_update",
 ];
 
 /**

@@ -13,13 +13,17 @@ import { useEditorLocales } from "~/composables/editor/useEditorLocales";
 import { useEditorContextPanel } from "~/composables/editor/useEditorContextPanel";
 import { useCompactEditor } from "~/composables/editor/useCompactEditor";
 import { useTranslationSuggestions } from "~/composables/editor/useTranslationSuggestions";
-import { useTranslationDrafts } from "~/composables/editor/useTranslationDrafts";
+import {
+  type DraftChange,
+  useTranslationDrafts,
+} from "~/composables/editor/useTranslationDrafts";
 import { useReviewActions } from "~/composables/editor/useReviewActions";
 import { useEditorShortcuts } from "~/composables/editor/useEditorShortcuts";
 import { useEntryDetail, useEntryFeed } from "~/composables/entry/useEntryFeed";
 import { useEntryFilterQuery } from "~/composables/entry/useEntryFilterQuery";
 import { useBulkTranslate } from "~/composables/entry/useBulkTranslate";
 import { useEntryNavigation } from "~/composables/entry/useEntryNavigation";
+import { useOutdateCheck } from "~/composables/entry/useOutdateCheck";
 import { useQueryClient } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import type { Entry } from "~/lib/api/schemas/parlance/v1/EntrySchema";
@@ -474,6 +478,12 @@ const {
 } = useEntryDetail(selectedEntryId);
 
 const localizationStore = useLocalizationStore();
+
+type EntryChange = DraftChange & {
+  /** A small fix of the default text, which leaves the translations current. */
+  keepTranslationsCurrent?: boolean;
+};
+
 const {
   forms: localizationForms,
   saved: savedTranslations,
@@ -492,12 +502,15 @@ const {
   discardChanges,
   requestDiscardAll,
   save: saveTranslations,
-} = useTranslationDrafts<Entry, Localization>({
+} = useTranslationDrafts<Entry, Localization, EntryChange>({
   name: "entry-translations",
   selectedId: selectedEntryId,
   rows: (entry) => entry.localizations,
   setRows: (entry, localizations) => (entry.localizations = localizations),
-  upsert: async ({ itemId, localeId, translation }, existing) => {
+  upsert: async (
+    { itemId, localeId, translation, keepTranslationsCurrent },
+    existing,
+  ) => {
     // A suggestion saved as it is stays the model's text; any edit makes it the user's.
     const suggestion = suggestionFor(itemId, localeId);
     const machineModel =
@@ -511,6 +524,7 @@ const {
             id: existing.id,
             translation,
             machineModel,
+            keepTranslationsCurrent,
           })
         ).localization
       : (
@@ -551,6 +565,7 @@ const {
   isReviewing,
   rejecting,
   approve: approveTranslations,
+  confirm: confirmTranslations,
   requestReject,
   requestRejectMany,
   confirmReject,
@@ -563,6 +578,7 @@ const {
     comment: details.comment,
     skipApproved: details.onlyDrafts,
     confirmOutdated: details.confirmOutdated,
+    onlyOutdated: details.onlyOutdated,
   }),
   afterReview: () =>
     Promise.all([
@@ -572,6 +588,19 @@ const {
     ]),
 });
 
+const showConfirmOutdatedDialog = ref(false);
+
+// Confirms the ticked entries' outdated translations in the shown languages still
+// fit; the dialog stays open when that fails.
+async function confirmOutdatedTicked() {
+  const done = await confirmTranslations(
+    checkedEntryIds.value,
+    selectedLocaleIds.value,
+  );
+
+  if (done) showConfirmOutdatedDialog.value = false;
+}
+
 // The saved translation of an entry in a language, with its review state.
 function savedLocalization(entryId: string, localeId: string) {
   return knownEntries.value[entryId]?.localizations?.find(
@@ -579,17 +608,22 @@ function savedLocalization(entryId: string, localeId: string) {
   );
 }
 
-// Drafts of the open entry in the shown languages, which can be approved at once.
+// Drafts and outdated translations of the open entry in the shown languages, which
+// can be approved, or confirmed to still fit, at once.
 const reviewableLocaleIds = computed(() => {
   const entryId = selectedEntryId.value;
 
   if (!entryId) return [];
 
-  return selectedLocaleIds.value.filter(
-    (localeId) =>
-      savedLocalization(entryId, localeId)?.status === "REVIEW_STATUS_DRAFT" &&
-      !isTranslationDirty(entryId, localeId),
-  );
+  return selectedLocaleIds.value.filter((localeId) => {
+    const saved = savedLocalization(entryId, localeId);
+
+    return (
+      !!saved &&
+      (saved.status === "REVIEW_STATUS_DRAFT" || !!saved.outdated) &&
+      !isTranslationDirty(entryId, localeId)
+    );
+  });
 });
 
 const selectedEntryData = computed(() =>
@@ -683,6 +717,25 @@ const fillEmptyBlocker = computed(() => {
   return undefined;
 });
 
+// The shown languages AI translation writes into: all but the default one.
+const translateLocaleIds = computed(() =>
+  selectedLocaleIds.value.filter((id) => id !== defaultLocale.value?.id),
+);
+
+// Why AI translation can't run right now, if it can't.
+const translateBlocker = computed(() => {
+  const sourceId = defaultLocale.value?.id;
+
+  if (isTranslating.value) return t("entries.translating");
+  if (!sourceId || !currentEntryForms.value[sourceId]?.trim())
+    return t("entries.noSourceText");
+  if (!translateLocaleIds.value.length)
+    return t("entries.bulkTranslateNoLanguages");
+  if (isSourceUnsaved.value) return t("entries.translateSaveSourceFirst");
+
+  return undefined;
+});
+
 // Actions on the whole entry: they affect every selected language, so they sit
 // in the entry header rather than on a language row.
 const entryActions = computed<ActionMenuItem[]>(() => {
@@ -691,19 +744,12 @@ const entryActions = computed<ActionMenuItem[]>(() => {
 
   if (can.value("update_entry")) {
     if (canMachineTranslate.value) {
-      const hint = isTranslating.value
-        ? t("entries.translating")
-        : (fillEmptyBlocker.value ??
-          (isSourceUnsaved.value
-            ? t("entries.translateSaveSourceFirst")
-            : undefined));
-
       items.push({
         value: "translate",
-        label: t("entries.aiTranslateEmpty"),
+        label: t("entries.aiTranslate"),
         icon: "sparkle",
-        hint,
-        disabled: busy || !!hint,
+        hint: translateBlocker.value,
+        disabled: busy || !!translateBlocker.value,
       });
     }
 
@@ -727,11 +773,11 @@ const entryActions = computed<ActionMenuItem[]>(() => {
   if (canReview.value) {
     items.push({
       value: "approve",
-      label: t("review.approveShown"),
+      label: t("review.approveAndConfirmShown"),
       icon: "seal-check",
       hint: reviewableLocaleIds.value.length
         ? undefined
-        : t("review.nothingToApprove"),
+        : t("review.nothingToApproveOrConfirm"),
       disabled: busy || isReviewing.value || !reviewableLocaleIds.value.length,
     });
   }
@@ -754,35 +800,64 @@ function onEntryAction(action: string) {
   const entry = selectedEntryData.value;
 
   if (!entry) return;
-  if (action === "approve")
-    approveTranslations([entry.id ?? ""], reviewableLocaleIds.value);
-  else if (action === "translate") translateEmptyTranslations();
+  if (action === "approve") approveShown();
+  else if (action === "translate") translateEntry();
   else if (action === "copy") fillEmptyTranslations();
   else if (action === "edit") editDialogItem.value = entry;
   else if (action === "delete") deleteDialogItem.value = entry;
 }
 
-async function translateEmptyTranslations() {
+// The ticked entries' translations in the shown languages can be marked for the
+// machine translation tasks, which replace them on their next runs.
+const canRetranslate = computed(() =>
+  canAll.value(["update_entry", "use_machine_translation"]),
+);
+const showRetranslateDialog = ref(false);
+const retranslateLocales = computed(() =>
+  translateLocaleIds.value
+    .map((id) => locales.value.find((locale) => locale.id === id))
+    .filter((locale) => !!locale),
+);
+
+// Languages with text are only replaced when ticked in the dialog; while all are
+// empty, they are translated right away.
+const translateDialogOpen = ref(false);
+const translateChoices = computed(() => {
+  const key = selectedEntryId.value ?? "";
+
+  return translateLocaleIds.value.map((id) => ({
+    id,
+    label: `${localeOption(id)?.label ?? id} (${localeOption(id)?.code ?? ""})`,
+    text: localizationForms.value[key]?.[id] ?? "",
+  }));
+});
+
+function translateEntry() {
+  if (translateBlocker.value || isSaving.value) return;
+  if (translateChoices.value.some((choice) => choice.text.trim()))
+    translateDialogOpen.value = true;
+  else translateInto([...translateLocaleIds.value]);
+}
+
+// Puts machine translations into the languages as unsaved changes to review.
+async function translateInto(localeIds: string[]) {
   const entryId = selectedEntry.value?.key;
 
-  if (
-    !canFillEmptyTranslations.value ||
-    isSourceUnsaved.value ||
-    entryId == null
-  )
-    return;
+  translateDialogOpen.value = false;
+  if (!localeIds.length || translateBlocker.value || entryId == null) return;
 
   const key = String(entryId);
+  const form = (localeId: string) =>
+    localizationForms.value[key]?.[localeId] ?? "";
+  // Text typed or changed while waiting stays.
+  const before = Object.fromEntries(localeIds.map((id) => [id, form(id)]));
 
   try {
-    const suggestions = await suggestTranslations(key, [
-      ...emptySelectedLocaleIds.value,
-    ]);
+    const suggestions = await suggestTranslations(key, localeIds);
 
     for (const { localeId, translation } of suggestions) {
-      // Text typed while waiting stays.
-      if (!localeId || !translation) continue;
-      if ((localizationForms.value[key]?.[localeId] ?? "").trim()) continue;
+      if (!localeId || !translation || form(localeId) !== before[localeId])
+        continue;
       setLocalizationForm(key, localeId, translation);
     }
   } catch (error) {
@@ -812,6 +887,31 @@ const {
 
 const { showError, getErrorMessage } = useErrorHelper();
 
+const outdateCheck = useOutdateCheck({
+  defaultLocaleId: () => defaultLocale.value?.id ?? undefined,
+  entry: (entryId) => knownEntries.value[entryId],
+});
+
+/**
+ * Saves the changes, after asking whether small fixes of default texts mark their
+ * translations outdated. Cancelling saves nothing.
+ */
+async function saveChanges(changes: DraftChange[], label: string) {
+  const keepCurrent = await outdateCheck.check(changes);
+
+  if (!keepCurrent) return;
+
+  await saveTranslations(
+    changes.map((change) =>
+      change.localeId === defaultLocale.value?.id &&
+      keepCurrent.has(change.itemId)
+        ? { ...change, keepTranslationsCurrent: true }
+        : change,
+    ),
+    label,
+  );
+}
+
 async function handleSave() {
   const entry = selectedEntryData.value;
 
@@ -821,7 +921,7 @@ async function handleSave() {
   const localeIds = [...selectedUnsavedLocaleIds.value];
 
   if (!localeIds.length) return;
-  await saveTranslations(
+  await saveChanges(
     localeIds.map((localeId) => ({
       itemId: entryId,
       localeId,
@@ -834,7 +934,7 @@ async function handleSave() {
 async function handleSaveAll() {
   if (isSaving.value) return;
   showSaveAllDialog.value = false;
-  await saveTranslations(
+  await saveChanges(
     [...allUnsavedTranslations.value],
     t("entries.translations"),
   );
@@ -884,7 +984,8 @@ async function saveAndNext() {
   if (!selectedUnsavedLocaleIds.value.length) await navigation.next();
 }
 
-// Approves every draft of the open entry in the shown languages.
+// Approves every draft of the open entry in the shown languages, and confirms its
+// outdated translations still fit.
 function approveShown() {
   const entryId = selectedEntryId.value;
 
@@ -892,7 +993,9 @@ function approveShown() {
     return;
   if (!reviewableLocaleIds.value.length) return;
 
-  approveTranslations([entryId], reviewableLocaleIds.value);
+  approveTranslations([entryId], reviewableLocaleIds.value, {
+    confirmOutdated: true,
+  });
 }
 
 function copySourceTo(localeId: string | undefined) {
@@ -930,6 +1033,7 @@ const { open: paletteOpen } = useEditorCommands({
     next: "commands.nextEntry",
     saveAndNext: "commands.saveAndNext",
     search: "commands.focusSearch",
+    approveAll: "commands.approveAndConfirmAll",
   },
   itemIcon: "translate",
   actions: entryActions,
@@ -942,7 +1046,7 @@ const { open: paletteOpen } = useEditorCommands({
     !!selectedUnsavedLocaleIds.value.length &&
     !isSaving.value,
   canReview: () => canReview.value,
-  hasDrafts: () =>
+  canApproveAll: () =>
     !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
   copySource: {
     canEdit: () => canUpdate.value && !isSaving.value,
@@ -1137,6 +1241,12 @@ watch(
       :can-copy="canUpdate"
       :copy-blocker="bulkCopyBlocker"
       :can-delete="can('delete_entry')"
+      :can-retranslate="canRetranslate"
+      :retranslate-blocker="
+        translateLocaleIds.length
+          ? undefined
+          : t('entries.bulkTranslateNoLanguages')
+      "
       :can-edit-releases="can('read_release')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
@@ -1147,6 +1257,8 @@ watch(
       @edit-releases="showReleasesDialog = true"
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
+      @confirm-outdated="showConfirmOutdatedDialog = true"
+      @retranslate="showRetranslateDialog = true"
       @copy="runBulkTranslation('copy')"
       @delete="showBulkDeleteDialog = true"
     />
@@ -1295,6 +1407,9 @@ watch(
               "
               :outdated="
                 !!savedLocalization(String(item.key), localeId)?.outdated
+              "
+              :retranslate="
+                !!savedLocalization(String(item.key), localeId)?.retranslate
               "
               :can-review="canReview && !isReviewing"
               :model-value="currentEntryForms[localeId] ?? ''"
@@ -1462,6 +1577,19 @@ watch(
     @close="showSaveAllDialog = false"
     @confirm="handleSaveAll"
   />
+  <EntryOutdateDialog
+    :changes="outdateCheck.asking.value"
+    :language="localeOption(defaultLocale?.id)?.label ?? ''"
+    :language-code="localeOption(defaultLocale?.id)?.code"
+    @answer="outdateCheck.answer"
+  />
+  <EntryConfirmOutdatedDialog
+    :open="showConfirmOutdatedDialog"
+    :count="checkedEntryIds.length"
+    :pending="isReviewing"
+    @close="showConfirmOutdatedDialog = false"
+    @confirm="confirmOutdatedTicked"
+  />
   <EditorRejectDialog
     :open="!!rejecting"
     :language="rejecting?.language ?? ''"
@@ -1483,6 +1611,20 @@ watch(
     @close="showDiscardDialog = false"
     @confirm="discardChanges"
   />
+  <LocaleRetranslateDialog
+    :open="showRetranslateDialog"
+    :locales="retranslateLocales"
+    :entry-ids="checkedEntryIds"
+    @close="showRetranslateDialog = false"
+  />
+  <EntryTranslateDialog
+    :open="translateDialogOpen"
+    :entry-key="selectedEntryData?.key ?? ''"
+    :choices="translateChoices"
+    @close="translateDialogOpen = false"
+    @translate="translateInto"
+  />
+
   <EntryFormDialog
     :open="!!editDialogItem"
     :item="editDialogItem"

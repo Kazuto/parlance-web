@@ -58,6 +58,7 @@ async function openWithTicked(
   route = "/entries?locales=en,de,fr",
 ) {
   const reviews: Record<string, unknown>[] = [];
+  const retranslates: Record<string, unknown>[] = [];
   const deletes: { ids?: string[] }[] = [];
   const deleted = new Set<string>();
 
@@ -79,6 +80,12 @@ async function openWithTicked(
 
     return { localizations: [entries[0]!.localizations[1]] };
   });
+  mockRpc("LocalizationService/RetranslateLocalizations", (body) => {
+    retranslates.push(body);
+
+    // German has two to mark, French one.
+    return { count: body.localeId === "l2" ? 2 : 1, pending: 0 };
+  });
   mockRpc("EntryService/DeleteEntries", (body) => {
     const request = body as { ids?: string[] };
 
@@ -96,7 +103,7 @@ async function openWithTicked(
     .vm.$emit("update:selection", ["e1", "e2", "e3"]);
   await settle();
 
-  return { page, reviews, deletes };
+  return { page, reviews, retranslates, deletes };
 }
 
 const moreActions = (page: MountedPage) =>
@@ -127,16 +134,95 @@ describe("more actions for ticked entries", () => {
 
     expect(await labels(EVERYTHING)).toEqual([
       t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
       t("entries.copyDefaultToEmpty"),
       t("entries.bulkDelete"),
     ]);
+    expect(
+      await labels([
+        ...VIEWER,
+        "update_entry",
+        "review_entry",
+        "use_machine_translation",
+      ]),
+    ).toEqual([
+      t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
+      t("entries.retranslateTicked"),
+      t("entries.copyDefaultToEmpty"),
+    ]);
     expect(await labels([...VIEWER, "review_entry"])).toEqual([
       t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
     ]);
     expect(await labels([...VIEWER, "delete_entry"])).toEqual([
       t("entries.bulkDelete"),
     ]);
     expect(await labels(VIEWER)).toEqual([]);
+  });
+
+  it("approves the drafts, leaving outdated translations to confirm", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await page.wrapper
+      .findAll("button")
+      .find((button) => button.text() === t("review.approveTicked"))!
+      .trigger("click");
+    await settle();
+
+    expect(reviews).toEqual([
+      {
+        entryIds: ["e1", "e2", "e3"],
+        localeIds: ["l1", "l2", "l3"],
+        decision: "REVIEW_DECISION_APPROVE",
+      },
+    ]);
+  });
+
+  it("confirms the outdated translations once confirmed in a dialog", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await choose(page, t("review.confirmOutdatedTicked"));
+
+    const dialog = page.wrapper.find("dialog[open]");
+
+    expect(dialog.text()).toContain(t("review.confirmOutdatedTitle"));
+    expect(dialog.text()).toContain(
+      t("review.confirmOutdatedMessage", { count: 3 }, 3),
+    );
+    expect(reviews).toEqual([]);
+
+    await dialog
+      .findAll("button")
+      .find((button) => button.text() === t("review.confirmOutdatedAction"))!
+      .trigger("click");
+    await settle();
+
+    // Only the approved, outdated ones; drafts wait for their own review.
+    expect(reviews).toEqual([
+      {
+        entryIds: ["e1", "e2", "e3"],
+        localeIds: ["l1", "l2", "l3"],
+        decision: "REVIEW_DECISION_APPROVE",
+        onlyOutdated: true,
+      },
+    ]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
+  });
+
+  it("confirms nothing when the dialog is cancelled", async () => {
+    const { page, reviews } = await openWithTicked();
+
+    await choose(page, t("review.confirmOutdatedTicked"));
+    await page.wrapper
+      .find("dialog[open]")
+      .findAll("button")
+      .find((button) => button.text() === t("common.cancel"))!
+      .trigger("click");
+    await settle();
+
+    expect(reviews).toEqual([]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
   });
 
   it("sends back the drafts with a comment, leaving approved texts", async () => {
@@ -215,6 +301,61 @@ describe("more actions for ticked entries", () => {
     expect(copy).toMatchObject({
       label: t("entries.copyDefaultToEmpty"),
       hint: t("entries.bulkCopyNoLanguages"),
+      disabled: true,
+    });
+  });
+});
+
+describe("marking ticked entries to translate again", () => {
+  const TRANSLATOR = [...VIEWER, "update_entry", "use_machine_translation"];
+
+  it("marks their translations in each shown language", async () => {
+    const { page, retranslates } = await openWithTicked(TRANSLATOR);
+
+    await choose(page, t("entries.retranslateTicked"));
+
+    const dialog = page.wrapper.find("dialog[open]");
+    const ticked = { entryIds: ["e1", "e2", "e3"], includeHuman: false };
+
+    expect(dialog.text()).toContain(
+      t("entries.retranslateTitle", { count: 3 }, 3),
+    );
+    expect(dialog.find('[data-testid="retranslate-languages"]').text()).toBe(
+      t("entries.retranslateLanguages", { languages: "German and French" }),
+    );
+    // The ticked entries take the place of scopes.
+    expect(dialog.text()).not.toContain(t("nav.scopes"));
+    // One dry run per language other than the default, the counts added up.
+    expect(retranslates).toEqual([
+      { localeId: "l2", ...ticked, dryRun: true },
+      { localeId: "l3", ...ticked, dryRun: true },
+    ]);
+    expect(dialog.find('[data-testid="retranslate-count"]').text()).toBe(
+      t("locales.retranslateCount", { count: 3 }, 3),
+    );
+
+    retranslates.length = 0;
+    await dialog
+      .findAll("button")
+      .find((button) => button.text() === t("locales.retranslate"))!
+      .trigger("click");
+    await settle();
+
+    expect(retranslates).toEqual([
+      { localeId: "l2", ...ticked },
+      { localeId: "l3", ...ticked },
+    ]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
+  });
+
+  it("needs a language to mark", async () => {
+    const { page } = await openWithTicked(TRANSLATOR, "/entries?locales=en");
+    const item = (await moreActions(page)).find(
+      (entry) => entry.label === t("entries.retranslateTicked"),
+    );
+
+    expect(item).toMatchObject({
+      hint: t("entries.bulkTranslateNoLanguages"),
       disabled: true,
     });
   });

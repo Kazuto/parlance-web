@@ -159,7 +159,7 @@ describe("entries page", () => {
     expect(await entryActions(page)).toEqual([
       t("entries.copyDefaultToEmpty"),
       t("entries.edit"),
-      t("review.approveShown"),
+      t("review.approveAndConfirmShown"),
       t("entries.delete"),
     ]);
   });

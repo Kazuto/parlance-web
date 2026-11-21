@@ -19,13 +19,19 @@ const props = defineProps<{
     total: number;
     stop: boolean;
   };
-  /** The user may approve and reject the ticked entries' drafts. */
+  /**
+   * The user may approve and reject the ticked entries' drafts, and confirm their
+   * outdated translations.
+   */
   canReview?: boolean;
   isReviewing?: boolean;
   /** The user may copy the default text into the empty languages. */
   canCopy?: boolean;
   copyBlocker?: string;
   canDelete?: boolean;
+  /** The user may mark the translations for the machine translation tasks. */
+  canRetranslate?: boolean;
+  retranslateBlocker?: string;
   /** The user may see releases, to add the entries to them. */
   canEditReleases?: boolean;
 }>();
@@ -40,6 +46,8 @@ const emit = defineEmits<{
   editReleases: [];
   approve: [];
   reject: [];
+  confirmOutdated: [];
+  retranslate: [];
   copy: [];
   delete: [];
 }>();
@@ -55,6 +63,25 @@ const moreItems = computed<ActionMenuItem[]>(() => [
           icon: "arrow-u-up-left",
           hint: t("review.rejectTickedHint"),
           disabled: props.isSaving || props.isReviewing || props.limitReached,
+        },
+        {
+          value: "confirmOutdated",
+          label: t("review.confirmOutdatedTicked"),
+          icon: "checks",
+          hint: t("review.confirmOutdatedTickedHint"),
+          disabled: props.isSaving || props.isReviewing || props.limitReached,
+        },
+      ]
+    : []),
+  ...(props.canRetranslate
+    ? [
+        {
+          value: "retranslate",
+          label: t("entries.retranslateTicked"),
+          icon: "sparkle",
+          hint: props.retranslateBlocker ?? t("entries.retranslateTickedHint"),
+          disabled:
+            props.isSaving || props.limitReached || !!props.retranslateBlocker,
         },
       ]
     : []),
@@ -80,7 +107,8 @@ const moreItems = computed<ActionMenuItem[]>(() => [
           label: t("entries.bulkDelete"),
           icon: "trash",
           variant: "danger" as const,
-          divider: !!props.canReview || !!props.canCopy,
+          divider:
+            !!props.canReview || !!props.canRetranslate || !!props.canCopy,
           disabled: props.isSaving || props.limitReached,
         },
       ]
@@ -89,6 +117,8 @@ const moreItems = computed<ActionMenuItem[]>(() => [
 
 function onMore(value: string) {
   if (value === "reject") emit("reject");
+  else if (value === "confirmOutdated") emit("confirmOutdated");
+  else if (value === "retranslate") emit("retranslate");
   else if (value === "copy") emit("copy");
   else if (value === "delete") emit("delete");
 }

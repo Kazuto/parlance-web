@@ -30,5 +30,9 @@ EXPOSE 3000
 # Set environment to production
 ENV NODE_ENV=production
 
+# The release, e.g. 1.2.1, which the app shows
+ARG VERSION=dev
+ENV NUXT_PUBLIC_APP_VERSION=${VERSION}
+
 # Run the application
 CMD ["bun", "run", ".output/server/index.mjs"]

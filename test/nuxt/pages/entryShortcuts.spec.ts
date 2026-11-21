@@ -225,7 +225,9 @@ describe("editor command palette", () => {
 
     // One approve command: not one per language, nor the header menu's as well.
     expect(
-      labels.filter((label) => label.includes(t("review.approveShown"))),
+      labels.filter((label) =>
+        label.includes(t("review.approveAndConfirmShown")),
+      ),
     ).toEqual([]);
     expect(
       labels.filter((label) =>
@@ -234,7 +236,7 @@ describe("editor command palette", () => {
     ).toEqual([]);
 
     const approve = options.find((option) =>
-      option.text().startsWith(t("commands.approveAll")),
+      option.text().startsWith(t("commands.approveAndConfirmAll")),
     )!;
 
     expect(approve.text()).toContain("Alt");

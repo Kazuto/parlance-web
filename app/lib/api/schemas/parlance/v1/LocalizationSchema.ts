@@ -31,6 +31,7 @@ export type Localization = {
   outdatedAt?: string | null;
   machine?: boolean | null;
   machineModel?: string | null;
+  retranslate?: boolean | null;
 };
 export const LocalizationSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -83,6 +84,9 @@ export const LocalizationSchema = z.object({
   },
   get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get retranslate(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
   },
 });
 export type ListLocalizationsRequest = {
@@ -165,6 +169,7 @@ export type UpdateLocalizationRequest = {
   id?: string | null;
   translation?: string | null;
   machineModel?: string | null;
+  keepTranslationsCurrent?: boolean | null;
 };
 export const UpdateLocalizationRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -175,6 +180,11 @@ export const UpdateLocalizationRequestSchema = z.object({
   },
   get machineModel(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get keepTranslationsCurrent(): z.ZodOptional<
+    z.ZodNullable<z.ZodType<boolean>>
+  > {
+    return z.boolean().nullish();
   },
 });
 export type UpdateLocalizationResponse = {
@@ -323,6 +333,7 @@ export type ReviewLocalizationsRequest = {
   comment?: string | null;
   skipApproved?: boolean | null;
   confirmOutdated?: boolean | null;
+  onlyOutdated?: boolean | null;
 };
 export const ReviewLocalizationsRequestSchema = z.object({
   get localizationIds(): z.ZodOptional<
@@ -346,6 +357,9 @@ export const ReviewLocalizationsRequestSchema = z.object({
     return z.boolean().nullish();
   },
   get confirmOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get onlyOutdated(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
     return z.boolean().nullish();
   },
 });
@@ -415,5 +429,45 @@ export const SearchTranslationMemoryResponseSchema = z.object({
     z.ZodNullable<z.ZodType<Array<TranslationMemoryMatch>>>
   > {
     return z.array(TranslationMemoryMatchSchema).nullish();
+  },
+});
+export type RetranslateLocalizationsRequest = {
+  localeId?: string | null;
+  scopeIds?: Array<string> | null;
+  includeHuman?: boolean | null;
+  cancel?: boolean | null;
+  dryRun?: boolean | null;
+  entryIds?: Array<string> | null;
+};
+export const RetranslateLocalizationsRequestSchema = z.object({
+  get localeId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get includeHuman(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get cancel(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get dryRun(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get entryIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+});
+export type RetranslateLocalizationsResponse = {
+  count?: number | null;
+  pending?: number | null;
+};
+export const RetranslateLocalizationsResponseSchema = z.object({
+  get count(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get pending(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
   },
 });

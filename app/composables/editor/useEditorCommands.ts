@@ -16,6 +16,8 @@ export type EditorCommandLabels = {
   next: string;
   saveAndNext: string;
   search: string;
+  /** Approving what the open item has to review, e.g. "Approve all drafts" */
+  approveAll: string;
 };
 
 /**
@@ -35,8 +37,8 @@ export function useEditorCommands(options: {
   statusOptions: Ref<{ label: string; value: string }[]>;
   canSave: () => boolean;
   canReview: () => boolean;
-  /** Whether the open item has drafts in the shown languages to approve. */
-  hasDrafts: () => boolean;
+  /** Whether the open item has anything in the shown languages to approve. */
+  canApproveAll: () => boolean;
   /** Copying the default text into the focused field, where the editor has it. */
   copySource?: {
     canEdit: () => boolean;
@@ -100,13 +102,13 @@ export function useEditorCommands(options: {
 
     if (options.canReview()) {
       commands.push({
-        label: t("commands.approveAll"),
+        label: t(labels.approveAll),
         value: "approveAll",
         run: handlers.approveAll,
         group: itemGroup,
         icon: "seal-check",
         shortcut: EDITOR_SHORTCUTS.approveAll,
-        disabled: !options.hasDrafts(),
+        disabled: !options.canApproveAll(),
       });
     }
 
