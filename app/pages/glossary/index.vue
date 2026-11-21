@@ -659,6 +659,7 @@ useEditorCommands({
     next: "terminologies.next",
     saveAndNext: "commands.saveAndNextTerm",
     search: "commands.searchGlossary",
+    approveAll: "commands.approveAll",
   },
   itemIcon: "book-open-text",
   actions: terminologyActions,
@@ -671,7 +672,7 @@ useEditorCommands({
     !!selectedUnsavedLocaleIds.value.length &&
     !isSaving.value,
   canReview: () => canReview.value,
-  hasDrafts: () =>
+  canApproveAll: () =>
     !!reviewableLocaleIds.value.length && !isSaving.value && !isReviewing.value,
   handlers: {
     action: onTerminologyAction,

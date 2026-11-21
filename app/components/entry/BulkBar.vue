@@ -19,7 +19,10 @@ const props = defineProps<{
     total: number;
     stop: boolean;
   };
-  /** The user may approve and reject the ticked entries' drafts. */
+  /**
+   * The user may approve and reject the ticked entries' drafts, and confirm their
+   * outdated translations.
+   */
   canReview?: boolean;
   isReviewing?: boolean;
   /** The user may copy the default text into the empty languages. */
@@ -40,6 +43,7 @@ const emit = defineEmits<{
   editReleases: [];
   approve: [];
   reject: [];
+  confirmOutdated: [];
   copy: [];
   delete: [];
 }>();
@@ -54,6 +58,13 @@ const moreItems = computed<ActionMenuItem[]>(() => [
           label: t("review.rejectTicked"),
           icon: "arrow-u-up-left",
           hint: t("review.rejectTickedHint"),
+          disabled: props.isSaving || props.isReviewing || props.limitReached,
+        },
+        {
+          value: "confirmOutdated",
+          label: t("review.confirmOutdatedTicked"),
+          icon: "checks",
+          hint: t("review.confirmOutdatedTickedHint"),
           disabled: props.isSaving || props.isReviewing || props.limitReached,
         },
       ]
@@ -89,6 +100,7 @@ const moreItems = computed<ActionMenuItem[]>(() => [
 
 function onMore(value: string) {
   if (value === "reject") emit("reject");
+  else if (value === "confirmOutdated") emit("confirmOutdated");
   else if (value === "copy") emit("copy");
   else if (value === "delete") emit("delete");
 }
