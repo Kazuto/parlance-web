@@ -58,6 +58,7 @@ async function openWithTicked(
   route = "/entries?locales=en,de,fr",
 ) {
   const reviews: Record<string, unknown>[] = [];
+  const retranslates: Record<string, unknown>[] = [];
   const deletes: { ids?: string[] }[] = [];
   const deleted = new Set<string>();
 
@@ -79,6 +80,12 @@ async function openWithTicked(
 
     return { localizations: [entries[0]!.localizations[1]] };
   });
+  mockRpc("LocalizationService/RetranslateLocalizations", (body) => {
+    retranslates.push(body);
+
+    // German has two to mark, French one.
+    return { count: body.localeId === "l2" ? 2 : 1, pending: 0 };
+  });
   mockRpc("EntryService/DeleteEntries", (body) => {
     const request = body as { ids?: string[] };
 
@@ -96,7 +103,7 @@ async function openWithTicked(
     .vm.$emit("update:selection", ["e1", "e2", "e3"]);
   await settle();
 
-  return { page, reviews, deletes };
+  return { page, reviews, retranslates, deletes };
 }
 
 const moreActions = (page: MountedPage) =>
@@ -130,6 +137,19 @@ describe("more actions for ticked entries", () => {
       t("review.confirmOutdatedTicked"),
       t("entries.copyDefaultToEmpty"),
       t("entries.bulkDelete"),
+    ]);
+    expect(
+      await labels([
+        ...VIEWER,
+        "update_entry",
+        "review_entry",
+        "use_machine_translation",
+      ]),
+    ).toEqual([
+      t("review.rejectTicked"),
+      t("review.confirmOutdatedTicked"),
+      t("entries.retranslateTicked"),
+      t("entries.copyDefaultToEmpty"),
     ]);
     expect(await labels([...VIEWER, "review_entry"])).toEqual([
       t("review.rejectTicked"),
@@ -281,6 +301,61 @@ describe("more actions for ticked entries", () => {
     expect(copy).toMatchObject({
       label: t("entries.copyDefaultToEmpty"),
       hint: t("entries.bulkCopyNoLanguages"),
+      disabled: true,
+    });
+  });
+});
+
+describe("marking ticked entries to translate again", () => {
+  const TRANSLATOR = [...VIEWER, "update_entry", "use_machine_translation"];
+
+  it("marks their translations in each shown language", async () => {
+    const { page, retranslates } = await openWithTicked(TRANSLATOR);
+
+    await choose(page, t("entries.retranslateTicked"));
+
+    const dialog = page.wrapper.find("dialog[open]");
+    const ticked = { entryIds: ["e1", "e2", "e3"], includeHuman: false };
+
+    expect(dialog.text()).toContain(
+      t("entries.retranslateTitle", { count: 3 }, 3),
+    );
+    expect(dialog.find('[data-testid="retranslate-languages"]').text()).toBe(
+      t("entries.retranslateLanguages", { languages: "German and French" }),
+    );
+    // The ticked entries take the place of scopes.
+    expect(dialog.text()).not.toContain(t("nav.scopes"));
+    // One dry run per language other than the default, the counts added up.
+    expect(retranslates).toEqual([
+      { localeId: "l2", ...ticked, dryRun: true },
+      { localeId: "l3", ...ticked, dryRun: true },
+    ]);
+    expect(dialog.find('[data-testid="retranslate-count"]').text()).toBe(
+      t("locales.retranslateCount", { count: 3 }, 3),
+    );
+
+    retranslates.length = 0;
+    await dialog
+      .findAll("button")
+      .find((button) => button.text() === t("locales.retranslate"))!
+      .trigger("click");
+    await settle();
+
+    expect(retranslates).toEqual([
+      { localeId: "l2", ...ticked },
+      { localeId: "l3", ...ticked },
+    ]);
+    expect(page.wrapper.find("dialog[open]").exists()).toBe(false);
+  });
+
+  it("needs a language to mark", async () => {
+    const { page } = await openWithTicked(TRANSLATOR, "/entries?locales=en");
+    const item = (await moreActions(page)).find(
+      (entry) => entry.label === t("entries.retranslateTicked"),
+    );
+
+    expect(item).toMatchObject({
+      hint: t("entries.bulkTranslateNoLanguages"),
       disabled: true,
     });
   });

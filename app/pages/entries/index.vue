@@ -807,6 +807,18 @@ function onEntryAction(action: string) {
   else if (action === "delete") deleteDialogItem.value = entry;
 }
 
+// The ticked entries' translations in the shown languages can be marked for the
+// machine translation tasks, which replace them on their next runs.
+const canRetranslate = computed(() =>
+  canAll.value(["update_entry", "use_machine_translation"]),
+);
+const showRetranslateDialog = ref(false);
+const retranslateLocales = computed(() =>
+  translateLocaleIds.value
+    .map((id) => locales.value.find((locale) => locale.id === id))
+    .filter((locale) => !!locale),
+);
+
 // Languages with text are only replaced when ticked in the dialog; while all are
 // empty, they are translated right away.
 const translateDialogOpen = ref(false);
@@ -1229,6 +1241,12 @@ watch(
       :can-copy="canUpdate"
       :copy-blocker="bulkCopyBlocker"
       :can-delete="can('delete_entry')"
+      :can-retranslate="canRetranslate"
+      :retranslate-blocker="
+        translateLocaleIds.length
+          ? undefined
+          : t('entries.bulkTranslateNoLanguages')
+      "
       :can-edit-releases="can('read_release')"
       @check-loaded="checkAllLoaded"
       @clear="checkedEntryIds = []"
@@ -1240,6 +1258,7 @@ watch(
       @approve="approveTranslations(checkedEntryIds, selectedLocaleIds)"
       @reject="requestRejectMany(checkedEntryIds, selectedLocaleIds)"
       @confirm-outdated="showConfirmOutdatedDialog = true"
+      @retranslate="showRetranslateDialog = true"
       @copy="runBulkTranslation('copy')"
       @delete="showBulkDeleteDialog = true"
     />
@@ -1591,6 +1610,12 @@ watch(
     :count="allUnsavedCount"
     @close="showDiscardDialog = false"
     @confirm="discardChanges"
+  />
+  <LocaleRetranslateDialog
+    :open="showRetranslateDialog"
+    :locales="retranslateLocales"
+    :entry-ids="checkedEntryIds"
+    @close="showRetranslateDialog = false"
   />
   <EntryTranslateDialog
     :open="translateDialogOpen"

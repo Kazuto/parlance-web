@@ -363,7 +363,7 @@ const permanentDeleteDialogItem = ref<Locale | undefined>(undefined);
     @close="editDialogItem = undefined"
   />
   <LocaleRetranslateDialog
-    :item="retranslateDialogItem"
+    :locales="retranslateDialogItem ? [retranslateDialogItem] : []"
     :open="retranslateDialogItem !== undefined"
     @close="retranslateDialogItem = undefined"
   />
