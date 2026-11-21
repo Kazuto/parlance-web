@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Switch, Text } from "@thkzt/eunoia";
+import { Card, Headline, Switch, Text } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 
@@ -27,10 +27,10 @@ async function setOpen(value: boolean) {
 </script>
 
 <template>
-  <Card dense>
-    <div class="flex flex-wrap items-center gap-3">
+  <Card>
+    <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="min-w-0 flex-1">
-        <div class="font-semibold">{{ t("registration.title") }}</div>
+        <Headline :level="4">{{ t("registration.title") }}</Headline>
         <Text muted size="sm">{{
           open ? t("registration.openHint") : t("registration.closedHint")
         }}</Text>
