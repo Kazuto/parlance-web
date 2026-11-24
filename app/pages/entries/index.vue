@@ -3,7 +3,6 @@ import {
   type ActionMenuItem,
   Alert,
   Button,
-  SplitView,
   type SplitViewItem,
   Chip,
   Input,
@@ -457,15 +456,6 @@ const selectedIndex = computed(() =>
     (item) => item.key === selectedEntry.value?.key,
   ),
 );
-// The list and the editor side by side, or on phones the one that is open.
-const splitViewLayout = computed(() => {
-  if (!compactEditor.compact.value)
-    return "grid-cols-[minmax(200px,250px)_minmax(0,1fr)]";
-
-  return compactEditor.editorOpen.value
-    ? "grid-cols-[minmax(0,1fr)] [&>*:first-child]:hidden"
-    : "grid-cols-[minmax(0,1fr)] [&>*:last-child]:hidden [&>*:first-child]:border-r-0";
-});
 
 const selectedEntryId = computed(() =>
   selectedEntry.value ? String(selectedEntry.value.key) : undefined,
@@ -1155,7 +1145,7 @@ watch(
       >
         <Chip
           dense
-          variant="secondary"
+          variant="primary"
           class="shrink-0"
           :title="selectedLanguageLabels.join(', ')"
         >
@@ -1262,265 +1252,261 @@ watch(
       @copy="runBulkTranslation('copy')"
       @delete="showBulkDeleteDialog = true"
     />
-    <div class="relative flex flex-1 min-h-0 overflow-hidden">
-      <SplitView
-        :items="splitViewItems"
-        :selected="selectedEntry"
-        virtual
-        :has-more="hasNextPage"
-        :loading="isFetchingNextPage"
-        :total="entryTotal"
-        :selectable="canUpdate"
-        :selection="checkedEntryIds"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent"
-        :class="splitViewLayout"
-        @select="selectEntry"
-        @end-reached="fetchNextPage()"
-        @update:selection="checkedEntryIds = $event.map(String)"
-      >
-        <template #listFooter>
-          <p
-            v-if="isFetchingNextPage"
-            role="status"
-            class="px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400"
+    <EditorPanes
+      v-model:selection="checkedEntryIds"
+      :items="splitViewItems"
+      :selected="selectedEntry"
+      :has-more="hasNextPage"
+      :loading="isFetchingNextPage"
+      :total="entryTotal"
+      :list-label="t('entries.keys')"
+      :selectable="canUpdate"
+      :compact="compactEditor.compact.value"
+      :editor-open="compactEditor.editorOpen.value"
+      @select="selectEntry"
+      @end-reached="fetchNextPage()"
+    >
+      <template #legend>
+        <EditorListLegend outdated />
+      </template>
+      <template #listFooter>
+        <p
+          v-if="isFetchingNextPage"
+          role="status"
+          class="px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("entries.loadingMore") }}
+        </p>
+      </template>
+      <template #empty>
+        <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+          {{ t("entries.noMatches") }}
+        </p>
+      </template>
+      <template #item="{ item }">
+        <EditorListItem
+          :label="item.label"
+          mono
+          :detail="itemDetail(item)"
+          :missing-count="missingCount(item)"
+          :draft-count="draftCount(item)"
+          :draft-label="
+            t(
+              'review.draftCount',
+              { count: draftCount(item) },
+              draftCount(item),
+            )
+          "
+          :outdated-count="outdatedCount(item)"
+          :outdated-label="
+            t(
+              'review.outdatedCount',
+              { count: outdatedCount(item) },
+              outdatedCount(item),
+            )
+          "
+          :unsaved="hasUnsavedTranslations(String(item.key))"
+          :missing-label="
+            t(
+              'entries.missingCount',
+              { count: missingCount(item) },
+              missingCount(item),
+            )
+          "
+        >
+          <template v-if="defaultLocale?.id" #tooltip>
+            <EntryDefaultTranslation
+              :translation="item.defaultTranslation as string"
+              :locale-name="localeOption(defaultLocale.id)?.label ?? ''"
+              :locale-code="localeOption(defaultLocale.id)?.code"
+            />
+          </template>
+        </EditorListItem>
+      </template>
+      <template #header="{ item }">
+        <EditorCompactNav
+          v-if="compactEditor.editorOpen.value"
+          :back-label="t('nav.allEntries')"
+          :previous-label="t('commands.previousEntry')"
+          :next-label="t('commands.nextEntry')"
+          :has-previous="selectedIndex > 0"
+          :has-next="selectedIndex < splitViewItems.length - 1 || !!hasNextPage"
+          :disabled="isSaving"
+          @back="compactEditor.close()"
+          @previous="navigation.previous()"
+          @next="navigation.next()"
+        />
+        <EntryHeader
+          :label="item?.label"
+          :entry="selectedEntryData"
+          :active-scope-ids="scopeIds"
+          :active-tag-ids="tagIds"
+          :active-release-ids="releaseIds"
+          :translated-count="translatedCount"
+          :locale-count="selectedLocaleIds.length"
+          :is-saving="isSaving"
+          :is-translating="!!selectedEntryId && isEntryWaiting(selectedEntryId)"
+          :actions="entryActions"
+          @toggle-scope="toggleScopeFilter"
+          @toggle-tag="toggleTagFilter"
+          @toggle-release="toggleReleaseFilter"
+          @edit="editDialogItem = selectedEntryData"
+          @action="onEntryAction"
+        />
+      </template>
+      <template v-if="selectedEntry && selectedLocaleIds.length" #columns>
+        <EditorTranslationColumns :text-label="t('common.translation')" />
+      </template>
+      <template #default="{ item }">
+        <div
+          v-if="item && isEditorLoading"
+          role="status"
+          class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("entries.loadingEntry") }}
+        </div>
+        <div
+          v-else-if="item && detailError && !selectedEntryData"
+          role="alert"
+          class="flex h-full flex-col items-center justify-center gap-2 text-sm text-red-600"
+        >
+          {{ t("entries.entryLoadFailed") }}
+          <Button ghost dense @click="() => refetchDetail()">{{
+            t("common.retry")
+          }}</Button>
+        </div>
+        <template v-else-if="item && selectedLocaleIds.length > 0">
+          <EditorTranslationRow
+            v-for="localeId in orderedSelectedLocaleIds"
+            :key="localeId"
+            :input-id="fieldId(String(item.key), localeId)"
+            :locale-name="localeOption(localeId)?.label ?? localeId"
+            :locale-code="localeOption(localeId)?.code ?? ''"
+            :is-default="localeId === defaultLocale?.id"
+            :translated="!!(currentEntryForms[localeId] ?? '').trim()"
+            :dirty="isTranslationDirty(String(item.key), localeId)"
+            :active="contextOpen && activeLocaleId === localeId"
+            :readonly="isSaving || !canUpdate"
+            :translating="isTranslatingLocale(String(item.key), localeId)"
+            :placeholder="t('entries.translationPlaceholder')"
+            :status="savedLocalization(String(item.key), localeId)?.status"
+            :review-comment="
+              savedLocalization(String(item.key), localeId)?.reviewComment
+            "
+            :outdated="
+              !!savedLocalization(String(item.key), localeId)?.outdated
+            "
+            :retranslate="
+              !!savedLocalization(String(item.key), localeId)?.retranslate
+            "
+            :can-review="canReview && !isReviewing"
+            :model-value="currentEntryForms[localeId] ?? ''"
+            @update:model-value="
+              setLocalizationForm(String(item.key), localeId, $event)
+            "
+            @focus="onRowFocus(localeId)"
+            @revert="
+              setLocalizationForm(
+                String(item.key),
+                localeId,
+                savedTranslations[String(item.key)]?.[localeId] ?? '',
+              )
+            "
+            @open-context="toggleContext(localeId)"
+            @show-change="openContext(localeId, 'terminology')"
+            @approve="
+              approveTranslations([String(item.key)], [localeId], {
+                confirmOutdated: true,
+              })
+            "
+            @reject="
+              requestReject(
+                String(item.key),
+                localeId,
+                localeOption(localeId)?.label ?? localeId,
+              )
+            "
           >
-            {{ t("entries.loadingMore") }}
-          </p>
-        </template>
-        <template #empty>
-          <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-            {{ t("entries.noMatches") }}
-          </p>
-        </template>
-        <template #item="{ item }">
-          <EditorListItem
-            :label="item.label"
-            :detail="itemDetail(item)"
-            :missing-count="missingCount(item)"
-            :draft-count="draftCount(item)"
-            :draft-label="
-              t(
-                'review.draftCount',
-                { count: draftCount(item) },
-                draftCount(item),
-              )
-            "
-            :outdated-count="outdatedCount(item)"
-            :outdated-label="
-              t(
-                'review.outdatedCount',
-                { count: outdatedCount(item) },
-                outdatedCount(item),
-              )
-            "
-            :unsaved="hasUnsavedTranslations(String(item.key))"
-            :missing-label="
-              t(
-                'entries.missingCount',
-                { count: missingCount(item) },
-                missingCount(item),
-              )
-            "
-          >
-            <template v-if="defaultLocale?.id" #tooltip>
-              <EntryDefaultTranslation
-                :translation="item.defaultTranslation as string"
-                :locale-name="localeOption(defaultLocale.id)?.label ?? ''"
-                :locale-code="localeOption(defaultLocale.id)?.code"
+            <template v-if="localeId === defaultLocale?.id" #meta>
+              <EntrySameTextChip
+                :text="currentEntryForms[localeId] ?? ''"
+                :entry-id="String(item.key)"
+                @open="openContext(localeId, 'memory')"
               />
             </template>
-          </EditorListItem>
-        </template>
-        <template #header="{ item }">
-          <EditorCompactNav
-            v-if="compactEditor.editorOpen.value"
-            :back-label="t('nav.allEntries')"
-            :previous-label="t('commands.previousEntry')"
-            :next-label="t('commands.nextEntry')"
-            :has-previous="selectedIndex > 0"
-            :has-next="
-              selectedIndex < splitViewItems.length - 1 || !!hasNextPage
-            "
-            :disabled="isSaving"
-            @back="compactEditor.close()"
-            @previous="navigation.previous()"
-            @next="navigation.next()"
-          />
-          <EntryHeader
-            :label="item?.label"
-            :entry="selectedEntryData"
-            :active-scope-ids="scopeIds"
-            :active-tag-ids="tagIds"
-            :active-release-ids="releaseIds"
-            :translated-count="translatedCount"
-            :locale-count="selectedLocaleIds.length"
-            :is-saving="isSaving"
-            :is-translating="
-              !!selectedEntryId && isEntryWaiting(selectedEntryId)
-            "
-            :actions="entryActions"
-            @toggle-scope="toggleScopeFilter"
-            @toggle-tag="toggleTagFilter"
-            @toggle-release="toggleReleaseFilter"
-            @edit="editDialogItem = selectedEntryData"
-            @action="onEntryAction"
-          />
-        </template>
-        <template #default="{ item }">
-          <div
-            v-if="item && isEditorLoading"
-            role="status"
-            class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
-          >
-            {{ t("entries.loadingEntry") }}
-          </div>
-          <div
-            v-else-if="item && detailError && !selectedEntryData"
-            role="alert"
-            class="flex h-full flex-col items-center justify-center gap-2 text-sm text-red-600"
-          >
-            {{ t("entries.entryLoadFailed") }}
-            <Button ghost dense @click="() => refetchDetail()">{{
-              t("common.retry")
-            }}</Button>
-          </div>
-          <div
-            v-else-if="item && selectedLocaleIds.length > 0"
-            class="flex w-full flex-col gap-0.5 rounded-[22px] bg-neutral-100 p-1 squircle dark:bg-neutral-950"
-          >
-            <EditorTranslationRow
-              v-for="localeId in orderedSelectedLocaleIds"
-              :key="localeId"
-              :input-id="fieldId(String(item.key), localeId)"
-              :locale-name="localeOption(localeId)?.label ?? localeId"
-              :locale-code="localeOption(localeId)?.code ?? ''"
-              :is-default="localeId === defaultLocale?.id"
-              :translated="!!(currentEntryForms[localeId] ?? '').trim()"
-              :dirty="isTranslationDirty(String(item.key), localeId)"
-              :active="contextOpen && activeLocaleId === localeId"
-              :readonly="isSaving || !canUpdate"
-              :translating="isTranslatingLocale(String(item.key), localeId)"
-              :placeholder="t('entries.translationPlaceholder')"
-              :status="savedLocalization(String(item.key), localeId)?.status"
-              :review-comment="
-                savedLocalization(String(item.key), localeId)?.reviewComment
-              "
-              :outdated="
-                !!savedLocalization(String(item.key), localeId)?.outdated
-              "
-              :retranslate="
-                !!savedLocalization(String(item.key), localeId)?.retranslate
-              "
-              :can-review="canReview && !isReviewing"
-              :model-value="currentEntryForms[localeId] ?? ''"
-              @update:model-value="
-                setLocalizationForm(String(item.key), localeId, $event)
-              "
-              @focus="onRowFocus(localeId)"
-              @revert="
-                setLocalizationForm(
-                  String(item.key),
-                  localeId,
-                  savedTranslations[String(item.key)]?.[localeId] ?? '',
-                )
-              "
-              @open-context="toggleContext(localeId)"
-              @show-change="openContext(localeId, 'terminology')"
-              @approve="
-                approveTranslations([String(item.key)], [localeId], {
-                  confirmOutdated: true,
-                })
-              "
-              @reject="
-                requestReject(
-                  String(item.key),
-                  localeId,
-                  localeOption(localeId)?.label ?? localeId,
-                )
-              "
+            <template
+              v-else-if="defaultLocale?.id && localeId !== defaultLocale.id"
+              #meta
             >
-              <template v-if="localeId === defaultLocale?.id" #meta>
-                <EntrySameTextChip
-                  :text="currentEntryForms[localeId] ?? ''"
-                  :entry-id="String(item.key)"
-                  @open="openContext(localeId, 'memory')"
+              <div class="flex flex-wrap gap-1">
+                <EntryTermChip
+                  :source-text="currentEntryForms[defaultLocale.id] ?? ''"
+                  :locale-id="localeId"
+                  :translation="currentEntryForms[localeId] ?? ''"
+                  @open="openContext(localeId, 'terminology')"
                 />
-              </template>
-              <template
-                v-else-if="defaultLocale?.id && localeId !== defaultLocale.id"
-                #meta
-              >
-                <div class="flex flex-wrap gap-1">
-                  <EntryTermChip
-                    :source-text="currentEntryForms[defaultLocale.id] ?? ''"
-                    :locale-id="localeId"
-                    :translation="currentEntryForms[localeId] ?? ''"
-                    @open="openContext(localeId, 'terminology')"
-                  />
-                  <EditorSuggestionNotice
-                    :suggestion="suggestionFor(String(item.key), localeId)"
-                    :value="currentEntryForms[localeId] ?? ''"
-                  />
-                  <EditorQaNotice
-                    :source="currentEntryForms[defaultLocale.id] ?? ''"
-                    :value="currentEntryForms[localeId] ?? ''"
-                    :target="localeOption(localeId)"
-                  />
-                </div>
-              </template>
-            </EditorTranslationRow>
-          </div>
-
-          <div
-            v-else
-            class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
-          >
-            {{
-              item
-                ? t("entries.selectLanguagesHint")
-                : t("entries.selectEntryHint")
-            }}
-          </div>
+                <EditorSuggestionNotice
+                  :suggestion="suggestionFor(String(item.key), localeId)"
+                  :value="currentEntryForms[localeId] ?? ''"
+                />
+                <EditorQaNotice
+                  :source="currentEntryForms[defaultLocale.id] ?? ''"
+                  :value="currentEntryForms[localeId] ?? ''"
+                  :target="localeOption(localeId)"
+                />
+              </div>
+            </template>
+          </EditorTranslationRow>
         </template>
-      </SplitView>
-      <EditorContextFrame
-        v-if="activeLocaleId && selectedEntry"
-        :compact="compactEditor.compact.value"
-        :open="contextOpen"
-        :title="`${t('context.title')} · ${activeLocaleName}`"
-        @close="contextOpen = false"
-      >
-        <EntryContextPanel
-          v-model:tab="contextTab"
-          :sheet="compactEditor.compact.value"
-          :class="
-            compactEditor.compact.value
-              ? ''
-              : 'flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]'
-          "
-          :entry-id="String(selectedEntry.key)"
-          :locale-id="activeLocaleId"
-          :locale-name="activeLocaleName"
-          :locale-code="localeOption(activeLocaleId)?.code"
-          :source-locale-id="defaultLocale?.id ?? undefined"
-          :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
-          :source-locale-code="localeOption(defaultLocale?.id)?.code"
-          :source-text="
-            defaultLocale?.id ? (currentEntryForms[defaultLocale.id] ?? '') : ''
-          "
-          :translation="currentEntryForms[activeLocaleId] ?? ''"
-          :is-default="activeLocaleId === defaultLocale?.id"
-          :outdated-at="
-            savedLocalization(String(selectedEntry.key), activeLocaleId)
-              ?.outdatedAt
-          "
-          :can-use="canUpdate && !isSaving"
+
+        <div
+          v-else
+          class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
+        >
+          {{
+            item
+              ? t("entries.selectLanguagesHint")
+              : t("entries.selectEntryHint")
+          }}
+        </div>
+      </template>
+      <template #context>
+        <EditorContextFrame
+          v-if="activeLocaleId && selectedEntry"
+          :compact="compactEditor.compact.value"
+          :open="contextOpen"
+          :title="`${t('context.title')} · ${activeLocaleName}`"
           @close="contextOpen = false"
-          @use="applyContextText"
-          @open-entry="openTwin"
-        />
-      </EditorContextFrame>
-    </div>
+        >
+          <EntryContextPanel
+            v-model:tab="contextTab"
+            :sheet="compactEditor.compact.value"
+            :entry-id="String(selectedEntry.key)"
+            :locale-id="activeLocaleId"
+            :locale-name="activeLocaleName"
+            :locale-code="localeOption(activeLocaleId)?.code"
+            :source-locale-id="defaultLocale?.id ?? undefined"
+            :source-locale-name="localeOption(defaultLocale?.id)?.label ?? ''"
+            :source-locale-code="localeOption(defaultLocale?.id)?.code"
+            :source-text="
+              defaultLocale?.id
+                ? (currentEntryForms[defaultLocale.id] ?? '')
+                : ''
+            "
+            :translation="currentEntryForms[activeLocaleId] ?? ''"
+            :is-default="activeLocaleId === defaultLocale?.id"
+            :outdated-at="
+              savedLocalization(String(selectedEntry.key), activeLocaleId)
+                ?.outdatedAt
+            "
+            :can-use="canUpdate && !isSaving"
+            @close="contextOpen = false"
+            @use="applyContextText"
+            @open-entry="openTwin"
+          />
+        </EditorContextFrame>
+      </template>
+    </EditorPanes>
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
@@ -1673,9 +1659,3 @@ watch(
     @deleted="handleBulkDeleted"
   />
 </template>
-
-<style scoped>
-.editor-split-view :deep(> *) {
-  grid-column: span 1;
-}
-</style>

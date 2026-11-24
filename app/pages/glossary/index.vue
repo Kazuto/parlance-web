@@ -3,7 +3,6 @@ import { api } from "~/lib/api";
 import {
   Alert,
   Button,
-  SplitView,
   type ActionMenuItem,
   type SplitViewItem,
   Input,
@@ -371,15 +370,6 @@ const selectedIndex = computed(() =>
     (item) => item.key === selectedTerminology.value?.key,
   ),
 );
-// The list and the editor side by side, or on phones the one that is open.
-const splitViewLayout = computed(() => {
-  if (!compactEditor.compact.value)
-    return "grid-cols-[minmax(200px,250px)_minmax(0,1fr)]";
-
-  return compactEditor.editorOpen.value
-    ? "grid-cols-[minmax(0,1fr)] [&>*:first-child]:hidden"
-    : "grid-cols-[minmax(0,1fr)] [&>*:last-child]:hidden [&>*:first-child]:border-r-0";
-});
 
 const {
   data: detailData,
@@ -752,7 +742,7 @@ useEditorCommands({
       >
         <Chip
           dense
-          variant="secondary"
+          variant="primary"
           class="shrink-0"
           :title="selectedLanguageLabels.join(', ')"
         >
@@ -775,236 +765,230 @@ useEditorCommands({
         @retry="refetch()"
       />
     </div>
-    <div class="relative flex flex-1 min-h-0 overflow-hidden">
-      <SplitView
-        :items="splitViewItems"
-        :selected="selectedTerminology"
-        virtual
-        :has-more="hasNextPage"
-        :loading="isFetchingNextPage"
-        :total="terminologyTotal"
-        class="editor-split-view w-full flex-1 min-w-0 gap-0 border-0 rounded-none bg-transparent dark:bg-transparent"
-        :class="splitViewLayout"
-        @select="selectTerminology"
-        @end-reached="fetchNextPage()"
-      >
-        <template #empty>
-          <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-            {{ t("terminologies.noMatches") }}
-          </p>
-        </template>
-        <template #item="{ item }">
-          <EditorListItem
-            :label="item.label"
-            :missing-count="missingCount(item)"
-            :draft-count="draftCount(item)"
-            :draft-label="
-              t(
-                'review.draftCount',
-                { count: draftCount(item) },
-                draftCount(item),
-              )
-            "
-            :unsaved="hasUnsavedDefinitions(String(item.key))"
-            :missing-label="
-              t(
-                'entries.missingCount',
-                { count: missingCount(item) },
-                missingCount(item),
-              )
-            "
-          />
-        </template>
-        <template #header="{ item }">
-          <EditorCompactNav
-            v-if="compactEditor.editorOpen.value"
-            :back-label="t('nav.glossary')"
-            :previous-label="t('terminologies.previous')"
-            :next-label="t('terminologies.next')"
-            :has-previous="selectedIndex > 0"
-            :has-next="
-              selectedIndex < splitViewItems.length - 1 || !!hasNextPage
-            "
-            :disabled="isSaving"
-            @back="compactEditor.close()"
-            @previous="navigation.previous()"
-            @next="navigation.next()"
-          />
-          <!-- On phones the term gets the whole width; the actions go below. -->
-          <div
-            class="flex items-center justify-between gap-4 max-md:flex-wrap max-md:gap-2"
-          >
-            <div class="min-w-0 max-md:w-full">
-              <h2 class="min-w-0 font-semibold break-all">
-                {{ item?.label ?? t("terminologies.selectTerminology") }}
-              </h2>
-              <p
-                v-if="selectedTerminologyData?.description"
-                class="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
-              >
-                {{ selectedTerminologyData.description }}
-              </p>
-            </div>
-            <div
-              v-if="selectedTerminologyData"
-              class="flex shrink-0 items-center gap-2"
-            >
-              <span
-                class="mr-1.5 text-[11.5px] font-semibold whitespace-nowrap text-neutral-500 dark:text-neutral-400"
-                >{{
-                  t("terminologies.definedCount", {
-                    done: definedCount,
-                    total: selectedLocaleIds.length,
-                  })
-                }}</span
-              >
-              <BaseIconButton
-                v-if="canReview"
-                icon="seal-check"
-                :label="
-                  reviewableLocaleIds.length
-                    ? t('review.approveShown')
-                    : t('review.nothingToApprove')
-                "
-                :disabled="
-                  isSaving || isReviewing || !reviewableLocaleIds.length
-                "
-                class="bg-neutral-100 dark:bg-white/5"
-                @click="
-                  approveDefinitions(
-                    [String(selectedTerminologyId)],
-                    reviewableLocaleIds,
-                  )
-                "
-              />
-              <!-- v-if, not v-can: v-can takes the button out behind Vue's back, so
-                   the approve button before it couldn't come back. -->
-              <BaseIconButton
-                v-if="can('update_terminology')"
-                icon="pencil-simple"
-                :label="t('terminologies.edit')"
-                :disabled="isSaving"
-                class="bg-neutral-100 dark:bg-white/5"
-                @click="editDialogItem = selectedTerminologyData"
-              />
-              <BaseIconButton
-                v-if="can('delete_terminology')"
-                icon="trash"
-                destructive
-                :label="t('terminologies.delete')"
-                :disabled="isSaving"
-                class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
-                @click="deleteDialogItem = selectedTerminologyData"
-              />
-            </div>
-          </div>
-        </template>
-        <template #default="{ item }">
-          <div
-            v-if="item && isEditorLoading"
-            role="status"
-            class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
-          >
-            {{ t("terminologies.loadingTerminology") }}
-          </div>
-          <div
-            v-else-if="item && detailError && !selectedTerminologyData"
-            role="alert"
-            class="flex h-full flex-col items-center justify-center gap-2 text-sm text-red-600"
-          >
-            {{ t("terminologies.terminologyLoadFailed") }}
-            <Button ghost dense @click="() => refetchDetail()">{{
-              t("common.retry")
-            }}</Button>
-          </div>
-          <div
-            v-else-if="item && selectedLocaleIds.length > 0"
-            class="flex w-full flex-col gap-0.5 rounded-[22px] bg-neutral-100 p-1 squircle dark:bg-neutral-950"
-          >
-            <EditorTranslationRow
-              v-for="localeId in orderedSelectedLocaleIds"
-              :key="localeId"
-              :input-id="`terminology-${item.key}-${localeId}`"
-              :locale-name="localeOption(localeId)?.label ?? localeId"
-              :locale-code="localeOption(localeId)?.code ?? ''"
-              :is-default="localeId === defaultLocale?.id"
-              :translated="!!(currentTerminologyForms[localeId] ?? '').trim()"
-              :dirty="isDefinitionDirty(String(item.key), localeId)"
-              :active="contextOpen && activeLocaleId === localeId"
-              :readonly="
-                isSaving || !canEditDefinition(String(item.key), localeId)
-              "
-              :placeholder="t('terminologies.definitionPlaceholder')"
-              :status="savedDefinition(String(item.key), localeId)?.status"
-              :review-comment="
-                savedDefinition(String(item.key), localeId)?.reviewComment
-              "
-              :can-review="canReview && !isReviewing"
-              :model-value="currentTerminologyForms[localeId] ?? ''"
-              @update:model-value="
-                setDefinitionForm(String(item.key), localeId, $event)
-              "
-              @focus="onRowFocus(localeId)"
-              @revert="
-                setDefinitionForm(
-                  String(item.key),
-                  localeId,
-                  savedDefinitions[String(item.key)]?.[localeId] ?? '',
-                )
-              "
-              @open-context="toggleContext(localeId)"
-              @approve="approveDefinitions([String(item.key)], [localeId])"
-              @reject="
-                requestReject(
-                  String(item.key),
-                  localeId,
-                  localeOption(localeId)?.label ?? localeId,
-                )
-              "
-            >
-              <template v-if="localeId === defaultLocale?.id" #meta>
-                <EditorCopyEmptyChip
-                  v-can="{ any: ['create_definition', 'update_definition'] }"
-                  :disabled="!canFillEmptyDefinitions"
-                  @click="fillEmptyDefinitions"
-                />
-              </template>
-            </EditorTranslationRow>
-          </div>
-
-          <div
-            v-else
-            class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
-          >
-            {{
-              item
-                ? t("terminologies.selectLanguagesHint")
-                : t("terminologies.selectTerminologyHint")
-            }}
-          </div>
-        </template>
-      </SplitView>
-      <EditorContextFrame
-        v-if="activeLocaleId && selectedTerminology"
-        :compact="compactEditor.compact.value"
-        :open="contextOpen"
-        :title="`${t('context.title')} · ${activeLocaleName}`"
-        @close="contextOpen = false"
-      >
-        <TerminologyContextPanel
-          :sheet="compactEditor.compact.value"
-          :class="
-            compactEditor.compact.value
-              ? ''
-              : 'flex-[0_0_320px] min-w-0 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:w-[min(340px,100%)] max-[1100px]:z-20 max-[1100px]:shadow-[-8px_0_24px_rgb(0_0_0/0.08)]'
+    <EditorPanes
+      :items="splitViewItems"
+      :selected="selectedTerminology"
+      :has-more="hasNextPage"
+      :loading="isFetchingNextPage"
+      :total="terminologyTotal"
+      :list-label="t('terminologies.terms')"
+      :compact="compactEditor.compact.value"
+      :editor-open="compactEditor.editorOpen.value"
+      @select="selectTerminology"
+      @end-reached="fetchNextPage()"
+    >
+      <template #legend>
+        <EditorListLegend />
+      </template>
+      <template #empty>
+        <p class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+          {{ t("terminologies.noMatches") }}
+        </p>
+      </template>
+      <template #item="{ item }">
+        <EditorListItem
+          :label="item.label"
+          :missing-count="missingCount(item)"
+          :draft-count="draftCount(item)"
+          :draft-label="
+            t(
+              'review.draftCount',
+              { count: draftCount(item) },
+              draftCount(item),
+            )
           "
-          :terminology-id="String(selectedTerminology.key)"
-          :locale-id="activeLocaleId"
-          :locale-name="activeLocaleName"
-          @close="contextOpen = false"
+          :unsaved="hasUnsavedDefinitions(String(item.key))"
+          :missing-label="
+            t(
+              'entries.missingCount',
+              { count: missingCount(item) },
+              missingCount(item),
+            )
+          "
         />
-      </EditorContextFrame>
-    </div>
+      </template>
+      <template #header="{ item }">
+        <EditorCompactNav
+          v-if="compactEditor.editorOpen.value"
+          :back-label="t('nav.glossary')"
+          :previous-label="t('terminologies.previous')"
+          :next-label="t('terminologies.next')"
+          :has-previous="selectedIndex > 0"
+          :has-next="selectedIndex < splitViewItems.length - 1 || !!hasNextPage"
+          :disabled="isSaving"
+          @back="compactEditor.close()"
+          @previous="navigation.previous()"
+          @next="navigation.next()"
+        />
+        <!-- On phones the term gets the whole width; the actions go below. -->
+        <div
+          class="flex items-center justify-between gap-4 max-md:flex-wrap max-md:gap-2"
+        >
+          <div class="min-w-0 max-md:w-full">
+            <h2 class="min-w-0 font-semibold break-all">
+              {{ item?.label ?? t("terminologies.selectTerminology") }}
+            </h2>
+            <p
+              v-if="selectedTerminologyData?.description"
+              class="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400"
+            >
+              {{ selectedTerminologyData.description }}
+            </p>
+          </div>
+          <div
+            v-if="selectedTerminologyData"
+            class="flex shrink-0 items-center gap-2"
+          >
+            <span
+              class="mr-1.5 text-[11.5px] font-semibold whitespace-nowrap text-neutral-500 dark:text-neutral-400"
+              >{{
+                t("terminologies.definedCount", {
+                  done: definedCount,
+                  total: selectedLocaleIds.length,
+                })
+              }}</span
+            >
+            <BaseIconButton
+              v-if="canReview"
+              icon="seal-check"
+              :label="
+                reviewableLocaleIds.length
+                  ? t('review.approveShown')
+                  : t('review.nothingToApprove')
+              "
+              :disabled="isSaving || isReviewing || !reviewableLocaleIds.length"
+              class="bg-neutral-100 dark:bg-white/5"
+              @click="
+                approveDefinitions(
+                  [String(selectedTerminologyId)],
+                  reviewableLocaleIds,
+                )
+              "
+            />
+            <!-- v-if, not v-can: v-can takes the button out behind Vue's back, so
+                   the approve button before it couldn't come back. -->
+            <BaseIconButton
+              v-if="can('update_terminology')"
+              icon="pencil-simple"
+              :label="t('terminologies.edit')"
+              :disabled="isSaving"
+              class="bg-neutral-100 dark:bg-white/5"
+              @click="editDialogItem = selectedTerminologyData"
+            />
+            <BaseIconButton
+              v-if="can('delete_terminology')"
+              icon="trash"
+              destructive
+              :label="t('terminologies.delete')"
+              :disabled="isSaving"
+              class="bg-red-50 text-red-500 dark:bg-rose-500/15 dark:text-rose-300"
+              @click="deleteDialogItem = selectedTerminologyData"
+            />
+          </div>
+        </div>
+      </template>
+      <template v-if="selectedTerminology && selectedLocaleIds.length" #columns>
+        <EditorTranslationColumns :text-label="t('terminologies.definition')" />
+      </template>
+      <template #default="{ item }">
+        <div
+          v-if="item && isEditorLoading"
+          role="status"
+          class="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
+        >
+          {{ t("terminologies.loadingTerminology") }}
+        </div>
+        <div
+          v-else-if="item && detailError && !selectedTerminologyData"
+          role="alert"
+          class="flex h-full flex-col items-center justify-center gap-2 text-sm text-red-600"
+        >
+          {{ t("terminologies.terminologyLoadFailed") }}
+          <Button ghost dense @click="() => refetchDetail()">{{
+            t("common.retry")
+          }}</Button>
+        </div>
+        <template v-else-if="item && selectedLocaleIds.length > 0">
+          <EditorTranslationRow
+            v-for="localeId in orderedSelectedLocaleIds"
+            :key="localeId"
+            :input-id="`terminology-${item.key}-${localeId}`"
+            :locale-name="localeOption(localeId)?.label ?? localeId"
+            :locale-code="localeOption(localeId)?.code ?? ''"
+            :is-default="localeId === defaultLocale?.id"
+            :translated="!!(currentTerminologyForms[localeId] ?? '').trim()"
+            :dirty="isDefinitionDirty(String(item.key), localeId)"
+            :active="contextOpen && activeLocaleId === localeId"
+            :readonly="
+              isSaving || !canEditDefinition(String(item.key), localeId)
+            "
+            :placeholder="t('terminologies.definitionPlaceholder')"
+            :status="savedDefinition(String(item.key), localeId)?.status"
+            :review-comment="
+              savedDefinition(String(item.key), localeId)?.reviewComment
+            "
+            :can-review="canReview && !isReviewing"
+            :model-value="currentTerminologyForms[localeId] ?? ''"
+            @update:model-value="
+              setDefinitionForm(String(item.key), localeId, $event)
+            "
+            @focus="onRowFocus(localeId)"
+            @revert="
+              setDefinitionForm(
+                String(item.key),
+                localeId,
+                savedDefinitions[String(item.key)]?.[localeId] ?? '',
+              )
+            "
+            @open-context="toggleContext(localeId)"
+            @approve="approveDefinitions([String(item.key)], [localeId])"
+            @reject="
+              requestReject(
+                String(item.key),
+                localeId,
+                localeOption(localeId)?.label ?? localeId,
+              )
+            "
+          >
+            <template v-if="localeId === defaultLocale?.id" #meta>
+              <EditorCopyEmptyChip
+                v-can="{ any: ['create_definition', 'update_definition'] }"
+                :disabled="!canFillEmptyDefinitions"
+                @click="fillEmptyDefinitions"
+              />
+            </template>
+          </EditorTranslationRow>
+        </template>
+
+        <div
+          v-else
+          class="flex h-full items-center justify-center text-center text-neutral-500 dark:text-neutral-400 text-sm"
+        >
+          {{
+            item
+              ? t("terminologies.selectLanguagesHint")
+              : t("terminologies.selectTerminologyHint")
+          }}
+        </div>
+      </template>
+      <template #context>
+        <EditorContextFrame
+          v-if="activeLocaleId && selectedTerminology"
+          :compact="compactEditor.compact.value"
+          :open="contextOpen"
+          :title="`${t('context.title')} · ${activeLocaleName}`"
+          @close="contextOpen = false"
+        >
+          <TerminologyContextPanel
+            :sheet="compactEditor.compact.value"
+            :terminology-id="String(selectedTerminology.key)"
+            :locale-id="activeLocaleId"
+            :locale-name="activeLocaleName"
+            @close="contextOpen = false"
+          />
+        </EditorContextFrame>
+      </template>
+    </EditorPanes>
     <div
       class="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-3 border-t border-neutral-200 py-2 pr-3.5 pl-5 dark:border-white/5"
     >
@@ -1085,9 +1069,3 @@ useEditorCommands({
     @deleted="handleDeleted"
   />
 </template>
-
-<style scoped>
-.editor-split-view :deep(> *) {
-  grid-column: span 1;
-}
-</style>
