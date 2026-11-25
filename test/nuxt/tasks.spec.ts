@@ -330,6 +330,102 @@ describe("tasks page", () => {
     });
   });
 
+  it("adds an S3 export and checks the bucket", async () => {
+    const { page, calls } = await openTasks(ALL_PERMISSIONS);
+    const checks: Record<string, unknown>[] = [];
+
+    mockRpc("TaskService/CheckTaskAccess", (body) => {
+      checks.push(body);
+
+      return { ok: true };
+    });
+
+    page.options().primaryAction?.onClick?.();
+    await settle();
+    page.wrapper
+      .findAllComponents(Select)
+      .filter((item) => item.element.closest("dialog[open]"))
+      .find((item) =>
+        item
+          .findAll("label")
+          .some((el) => el.text().trim() === t("tasks.typeLabel")),
+      )!
+      .vm.$emit("update:modelValue", "TASK_TYPE_S3_EXPORT");
+    await settle();
+
+    await dialogField(page, t("common.name")).setValue("Upload");
+    await dialogField(page, t("tasks.s3.bucket")).setValue("translations");
+    await dialogField(page, t("tasks.s3.accessKeyId")).setValue("AKIA123");
+    await dialogField(page, t("tasks.s3.secretKey")).setValue("s3cret");
+
+    await button(page, t("tasks.git.check"))!.trigger("click");
+    await settle();
+
+    expect(checks).toEqual([
+      expect.objectContaining({
+        token: "s3cret",
+        s3Export: expect.objectContaining({ bucket: "translations" }),
+      }),
+    ]);
+    expect(page.wrapper.find("dialog[open]").text()).toContain(
+      t("tasks.s3.checkOk"),
+    );
+
+    await page.wrapper.find("dialog[open] form").trigger("submit");
+    await settle();
+
+    expect(calls.at(-1)?.method).toBe("CreateTask");
+    expect(calls.at(-1)?.body).not.toHaveProperty("gitExport");
+    expect(calls.at(-1)?.body).toMatchObject({
+      name: "Upload",
+      type: "TASK_TYPE_S3_EXPORT",
+      token: "s3cret",
+      s3Export: {
+        bucket: "translations",
+        accessKeyId: "AKIA123",
+        manifestPath: "i18n/manifest.json",
+        hashLength: 64,
+        files: [
+          { format: "EXPORT_FORMAT_JSON", path: "i18n/{locale}.{hash}.json" },
+        ],
+      },
+    });
+  });
+
+  it("shows where an S3 export uploads and what its last run did", async () => {
+    const { page } = await openTasks(ALL_PERMISSIONS, [
+      {
+        id: "t5",
+        name: "Upload",
+        type: "TASK_TYPE_S3_EXPORT",
+        enabled: true,
+        hasToken: true,
+        s3Export: {
+          bucket: "translations",
+          manifestPath: "i18n/manifest.json",
+        },
+        lastRun: {
+          id: "r5",
+          taskId: "t5",
+          trigger: "TASK_TRIGGER_MANUAL",
+          status: "TASK_RUN_STATUS_SUCCEEDED",
+          createdAt: "2026-10-23T10:00:00Z",
+          summary: {
+            outcome: "no_changes",
+            manifestUrl: "s3://translations/i18n/manifest.json",
+          },
+        },
+      },
+    ]);
+
+    const text = page.wrapper.text();
+
+    expect(text).toContain(t("tasks.type.TASK_TYPE_S3_EXPORT"));
+    expect(text).toContain("s3://translations/i18n/manifest.json");
+    expect(text).toContain(t("tasks.s3.outcome.no_changes"));
+    expect(text).not.toContain(t("tasks.outcome.no_changes"));
+  });
+
   it("adds a machine translation task", async () => {
     const { page, calls } = await openTasks(ALL_PERMISSIONS);
 

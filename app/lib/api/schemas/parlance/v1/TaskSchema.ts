@@ -13,6 +13,7 @@ export const TaskTypeSchema = z.union([
     "TASK_TYPE_UNSPECIFIED",
     "TASK_TYPE_AI_TRANSLATE",
     "TASK_TYPE_GIT_EXPORT",
+    "TASK_TYPE_S3_EXPORT",
   ]),
   z.number().int().min(-2147483648).max(2147483647),
 ]);
@@ -140,6 +141,58 @@ export const GitExportConfigSchema = z.object({
     return z.array(z.string()).nullish();
   },
 });
+export type S3ExportConfig = {
+  endpoint?: string | null;
+  region?: string | null;
+  bucket?: string | null;
+  accessKeyId?: string | null;
+  pathStyle?: boolean | null;
+  manifestPath?: string | null;
+  hashLength?: number | null;
+  files?: Array<GitExportFile> | null;
+  localeIds?: Array<string> | null;
+  scopeIds?: Array<string> | null;
+  tagIds?: Array<string> | null;
+  includeDrafts?: boolean | null;
+};
+export const S3ExportConfigSchema = z.object({
+  get endpoint(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get region(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get bucket(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get accessKeyId(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get pathStyle(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+  get manifestPath(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
+  },
+  get hashLength(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
+    return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get files(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<GitExportFile>>>> {
+    return z.array(GitExportFileSchema).nullish();
+  },
+  get localeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get scopeIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get tagIds(): z.ZodOptional<z.ZodNullable<z.ZodType<Array<string>>>> {
+    return z.array(z.string()).nullish();
+  },
+  get includeDrafts(): z.ZodOptional<z.ZodNullable<z.ZodType<boolean>>> {
+    return z.boolean().nullish();
+  },
+});
 export type TaskRunSummary = {
   translated?: number | null;
   failed?: number | null;
@@ -148,6 +201,7 @@ export type TaskRunSummary = {
   changedFiles?: Array<string> | null;
   outcome?: string | null;
   redone?: number | null;
+  manifestUrl?: string | null;
 };
 export const TaskRunSummarySchema = z.object({
   get translated(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
@@ -170,6 +224,9 @@ export const TaskRunSummarySchema = z.object({
   },
   get redone(): z.ZodOptional<z.ZodNullable<z.ZodType<number>>> {
     return z.number().int().min(-2147483648).max(2147483647).nullish();
+  },
+  get manifestUrl(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
+    return z.string().nullish();
   },
 });
 export type TaskRun = {
@@ -247,6 +304,7 @@ export type Task = {
   lastRun?: TaskRun | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  s3Export?: S3ExportConfig | null;
 };
 export const TaskSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -293,6 +351,9 @@ export const TaskSchema = z.object({
   get updatedAt(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
+  get s3Export(): z.ZodOptional<z.ZodNullable<z.ZodType<S3ExportConfig>>> {
+    return S3ExportConfigSchema.nullish();
+  },
 });
 export type ListTasksRequest = Record<string, never>;
 export const ListTasksRequestSchema = z.object({});
@@ -330,6 +391,7 @@ export type CreateTaskRequest = {
   aiTranslate?: AiTranslateConfig | null;
   gitExport?: GitExportConfig | null;
   token?: string | null;
+  s3Export?: S3ExportConfig | null;
 };
 export const CreateTaskRequestSchema = z.object({
   get name(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -361,6 +423,9 @@ export const CreateTaskRequestSchema = z.object({
   get token(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
   },
+  get s3Export(): z.ZodOptional<z.ZodNullable<z.ZodType<S3ExportConfig>>> {
+    return S3ExportConfigSchema.nullish();
+  },
 });
 export type CreateTaskResponse = {
   task?: Task | null;
@@ -380,6 +445,7 @@ export type UpdateTaskRequest = {
   aiTranslate?: AiTranslateConfig | null;
   gitExport?: GitExportConfig | null;
   token?: string | null;
+  s3Export?: S3ExportConfig | null;
 };
 export const UpdateTaskRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -410,6 +476,9 @@ export const UpdateTaskRequestSchema = z.object({
   },
   get token(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get s3Export(): z.ZodOptional<z.ZodNullable<z.ZodType<S3ExportConfig>>> {
+    return S3ExportConfigSchema.nullish();
   },
 });
 export type UpdateTaskResponse = {
@@ -508,6 +577,7 @@ export type CheckTaskAccessRequest = {
   id?: string | null;
   gitExport?: GitExportConfig | null;
   token?: string | null;
+  s3Export?: S3ExportConfig | null;
 };
 export const CheckTaskAccessRequestSchema = z.object({
   get id(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
@@ -518,6 +588,9 @@ export const CheckTaskAccessRequestSchema = z.object({
   },
   get token(): z.ZodOptional<z.ZodNullable<z.ZodType<string>>> {
     return z.string().nullish();
+  },
+  get s3Export(): z.ZodOptional<z.ZodNullable<z.ZodType<S3ExportConfig>>> {
+    return S3ExportConfigSchema.nullish();
   },
 });
 export type CheckTaskAccessResponse = {
