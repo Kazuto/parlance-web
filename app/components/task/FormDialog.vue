@@ -2,7 +2,12 @@
 import { Button, Dialog, Input, Select, Switch } from "@thkzt/eunoia";
 import { api } from "~/lib/api";
 import type { Task, TaskType } from "~/lib/api/schemas/parlance/v1/TaskSchema";
-import { formToSettings, taskToForm, type TaskForm } from "~/lib/taskForm";
+import {
+  formToSettings,
+  isExportType,
+  taskToForm,
+  type TaskForm,
+} from "~/lib/taskForm";
 
 // Without an item the dialog adds a task; with an item it edits it, keeping its type.
 const props = defineProps<{ open: boolean; item?: Task }>();
@@ -32,20 +37,28 @@ const localeOptions = computed(() =>
 );
 const scopeChoices = useScopeOptions();
 const { options: scopeOptions } = scopeChoices;
-// A git export's tags are those of its scopes; removing a scope removes its tags.
+// The export the form is for; only one of them is sent.
+const exportForm = computed(() =>
+  form.value.type === "TASK_TYPE_S3_EXPORT" ? form.value.s3 : form.value.git,
+);
+// An export's tags are those of its scopes; removing a scope removes its tags.
 const { tagOptions } = useScopedTags(
-  computed(() => form.value.git.scopeIds),
+  computed(() => exportForm.value.scopeIds),
   computed({
-    get: () => form.value.git.tagIds,
-    set: (value) => (form.value.git.tagIds = value),
+    get: () => exportForm.value.tagIds,
+    set: (value) => (exportForm.value.tagIds = value),
   }),
   scopeChoices,
 );
 
 const typeOptions = computed(() =>
-  (["TASK_TYPE_AI_TRANSLATE", "TASK_TYPE_GIT_EXPORT"] as const).map(
-    (value) => ({ value, label: t(`tasks.type.${value}`) }),
-  ),
+  (
+    [
+      "TASK_TYPE_AI_TRANSLATE",
+      "TASK_TYPE_GIT_EXPORT",
+      "TASK_TYPE_S3_EXPORT",
+    ] as const
+  ).map((value) => ({ value, label: t(`tasks.type.${value}`) })),
 );
 
 const { error, isPending, submit, cancel } = useFormDialog({
@@ -59,8 +72,10 @@ const { error, isPending, submit, cancel } = useFormDialog({
   close: () => emit("close"),
 });
 
+// A git token is no secret access key, and the other way round.
 function setType(type: TaskType) {
   form.value.type = type;
+  token.value = "";
 }
 
 function handleSubmit() {
@@ -79,7 +94,7 @@ function handleSubmit() {
       return false;
     }
 
-    const isGit = form.value.type === "TASK_TYPE_GIT_EXPORT";
+    const isExport = isExportType(form.value.type);
 
     if (props.item?.id) {
       // Only a typed token replaces the stored one; removing sends an empty token.
@@ -88,14 +103,14 @@ function handleSubmit() {
       await store.update.mutateAsync({
         id: props.item.id,
         ...settings,
-        token: isGit ? replacement : undefined,
+        token: isExport ? replacement : undefined,
       });
       showSuccess(t("common.labelSaved", { label: settings.name }));
     } else {
       await store.create.mutateAsync({
         ...settings,
         type: form.value.type,
-        token: isGit ? token.value : undefined,
+        token: isExport ? token.value : undefined,
       });
       showSuccess(t("common.labelAdded", { label: settings.name }));
     }
@@ -134,6 +149,18 @@ function handleSubmit() {
         v-model="form.ai"
         :locale-options
         :scope-options
+        :disabled="isPending"
+      />
+      <TaskS3ExportFields
+        v-else-if="form.type === 'TASK_TYPE_S3_EXPORT'"
+        v-model="form.s3"
+        v-model:token="token"
+        v-model:remove-token="removeToken"
+        :task-id="item?.id ?? undefined"
+        :has-token="!!item?.hasToken"
+        :locale-options
+        :scope-options
+        :tag-options
         :disabled="isPending"
       />
       <TaskGitExportFields

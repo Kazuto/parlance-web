@@ -27,10 +27,12 @@ const { t } = useI18n();
         {{ t("tasks.summary.remaining", { count: run.summary.remaining }) }}
       </template>
     </template>
+    <!-- Only S3 exports have a manifest, and say what they did in their own words. -->
     <template v-else-if="run.summary?.outcome">{{
-      t(`tasks.outcome.${run.summary.outcome}`, {
-        count: run.summary.changedFiles?.length ?? 0,
-      })
+      t(
+        `tasks.${run.summary.manifestUrl ? "s3.outcome" : "outcome"}.${run.summary.outcome}`,
+        { count: run.summary.changedFiles?.length ?? 0 },
+      )
     }}</template>
     <a
       v-if="run.summary?.pullRequestUrl"
