@@ -73,8 +73,14 @@ async function openEditor(route = "/entries?locales=en,de") {
 }
 
 const openEntry = () => useRouter().currentRoute.value.query.entry;
-const layout = (page: MountedPage) =>
-  page.wrapper.find(".editor-split-view").classes().join(" ");
+// What EditorPanes shows on a phone: the list or the open entry, not both.
+const shown = (page: MountedPage) => {
+  const classes = page.wrapper.find(".editor-split-view").classes();
+
+  if (!classes.includes("compact")) return "both";
+
+  return classes.includes("editor-open") ? "entry" : "list";
+};
 const button = (page: MountedPage, text: string) =>
   page.wrapper
     .findAll("button")
@@ -93,7 +99,7 @@ describe("entries editor on a phone", () => {
     const page = await openEditor();
 
     expect(openEntry()).toBeUndefined();
-    expect(layout(page)).toContain("[&>*:last-child]:hidden");
+    expect(shown(page)).toBe("list");
     expect(button(page, t("nav.allEntries"))).toBeUndefined();
     expect(button(page, t("common.saveAll"))).toBeDefined();
     expect(button(page, t("common.moreActions"))).toBeDefined();
@@ -106,7 +112,7 @@ describe("entries editor on a phone", () => {
     await runCommand(page, "second");
 
     expect(openEntry()).toBe("e2");
-    expect(layout(page)).toContain("[&>*:first-child]:hidden");
+    expect(shown(page)).toBe("entry");
     expect(button(page, t("common.saveChanges"))).toBeDefined();
 
     await button(page, t("commands.previousEntry"))!.trigger("click");
@@ -119,13 +125,13 @@ describe("entries editor on a phone", () => {
     await settle();
 
     expect(openEntry()).toBeUndefined();
-    expect(layout(page)).toContain("[&>*:last-child]:hidden");
+    expect(shown(page)).toBe("list");
   });
 
   it("opens the entry a link names", async () => {
     const page = await openEditor("/entries?locales=en,de&entry=e2");
 
-    expect(layout(page)).toContain("[&>*:first-child]:hidden");
+    expect(shown(page)).toBe("entry");
     expect(page.wrapper.find("#entry-e2-l1").exists()).toBe(true);
   });
 

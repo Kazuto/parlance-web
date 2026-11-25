@@ -6,6 +6,8 @@ import { Tooltip } from "@thkzt/eunoia";
 // detail line under it.
 defineProps<{
   label: string;
+  /** Sets the label in monospace, e.g. for keys. */
+  mono?: boolean;
   /** A muted second line, e.g. the default text twins share. */
   detail?: string;
   missingCount: number;
@@ -39,14 +41,22 @@ const { t } = useI18n();
           teleport-to="body"
           class="min-w-0"
         >
-          <span class="min-w-0 truncate">{{ label }}</span>
+          <span
+            class="min-w-0 truncate"
+            :class="{ 'font-mono text-[12.5px]': mono }"
+            >{{ label }}</span
+          >
           <template #content><slot name="tooltip" /></template>
         </Tooltip>
         <span class="flex-1" aria-hidden="true" />
       </template>
-      <span v-else class="min-w-0 flex-1 truncate" :title="label">{{
-        label
-      }}</span>
+      <span
+        v-else
+        class="min-w-0 flex-1 truncate"
+        :class="{ 'font-mono text-[12.5px]': mono }"
+        :title="label"
+        >{{ label }}</span
+      >
       <span
         v-if="unsaved"
         class="shrink-0 text-xs font-medium text-yellow-700 dark:text-amber-300"

@@ -3,8 +3,9 @@ import { Icon, Tooltip } from "@thkzt/eunoia";
 import type { ReviewStatus } from "~/lib/api/schemas/parlance/v1/CommonSchema";
 import { textDirection } from "~/lib/textDirection";
 
-// One language of the item being edited: label column, text field, and the button
-// that opens this language in the context panel.
+// One language of the item being edited, as a row of the table in EditorPanes: the
+// language, the text field, and the review buttons and the one that opens this
+// language in the context panel. Phones stack them instead.
 const props = defineProps<{
   inputId: string;
   localeName: string;
@@ -17,8 +18,6 @@ const props = defineProps<{
   active?: boolean;
   readonly?: boolean;
   placeholder?: string;
-  /** Pages without a context panel hide the button and its column. */
-  withoutContext?: boolean;
   /** A machine translation for this field is on its way. */
   translating?: boolean;
   /** The saved text's review state; unset while nothing is saved. */
@@ -93,50 +92,34 @@ const reviewable = computed(
     !props.translating,
 );
 
-// Light mode mirrors dark: filled fields stand out from the group behind them and
-// empty ones stay faint. The default row is a white card, so its field is gray instead.
-const fieldClass = computed(() => {
-  if (props.translated)
-    return props.isDefault
-      ? "bg-neutral-100 dark:bg-neutral-800"
-      : "bg-white dark:bg-neutral-800";
+// Filled fields stand out from the table and empty ones stay faint.
+const fieldClass = computed(() =>
+  props.translated
+    ? "bg-neutral-100 dark:bg-neutral-800"
+    : "bg-neutral-100/60 dark:bg-white/[0.03]",
+);
 
-  return props.isDefault
-    ? "bg-neutral-100/60 dark:bg-white/[0.03]"
-    : "bg-white/50 dark:bg-white/[0.03]";
-});
-
-const contextButtonClass = computed(() => {
-  if (props.active)
-    return "bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-200";
-
-  return props.isDefault
-    ? "bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
-    : "bg-white text-neutral-500 dark:bg-white/5 dark:text-neutral-400";
-});
+const contextButtonClass = computed(() =>
+  props.active
+    ? "bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-200"
+    : "bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400",
+);
 </script>
 
 <template>
+  <!-- On phones the language and the buttons share the first line, so the field
+       below gets the whole width. -->
   <div
-    class="grid items-start gap-3 rounded-[18px] py-2.5 pr-2.5 pl-3.5 squircle"
-    :class="[
-      withoutContext
-        ? 'grid-cols-[150px_minmax(0,1fr)] max-md:grid-cols-1'
-        : 'grid-cols-[150px_minmax(0,1fr)_auto] max-md:grid-cols-[minmax(0,1fr)_auto]',
-      isDefault
-        ? 'bg-white shadow-sm dark:bg-neutral-800/60 dark:shadow-none'
-        : '',
-    ]"
+    class="grid border-b border-neutral-200 md:grid-cols-(--translation-columns) max-md:grid-cols-[minmax(0,1fr)_auto] max-md:gap-x-3 max-md:gap-y-2 max-md:px-4 max-md:py-3 dark:border-white/5"
   >
-    <!-- On phones the language and the buttons share the first line, so the field
-         below gets the whole width. -->
+    <!-- The label sits on the field's first line: the cell's 8px and the field's
+         10px padding above it, and the same 20px line. -->
     <div
-      class="flex min-w-0 flex-col gap-1"
-      :class="{ 'max-md:col-start-1 max-md:row-start-1': !withoutContext }"
+      class="flex min-w-0 flex-col gap-1 border-neutral-200 max-md:col-start-1 max-md:row-start-1 md:border-r md:px-4 md:pt-[18px] md:pb-2.5 dark:border-white/5"
     >
       <label
         :for="inputId"
-        class="group inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 self-start"
+        class="group inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 self-start leading-5"
       >
         <span
           class="size-1.5 shrink-0 rounded-full"
@@ -165,7 +148,7 @@ const contextButtonClass = computed(() => {
       </label>
       <span
         v-if="isDefault"
-        class="pl-3 text-[10.5px] font-bold text-primary-600 dark:text-primary-300"
+        class="ml-3 self-start rounded-[6px] bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-bold text-primary-700 squircle dark:bg-primary-400/15 dark:text-primary-300"
         >{{ t("common.default") }}</span
       >
       <Tooltip
@@ -199,115 +182,123 @@ const contextButtonClass = computed(() => {
         <slot name="meta" />
       </div>
     </div>
-    <!-- Unsaved changes mark the field itself: a yellow border and, like an input
-         append, a revert button aligned with the first line. The field's 20px lines
-         and 10px padding let a 20px marker at top-2.5 sit centered on that line. -->
     <div
-      class="relative min-w-0"
-      :class="{ 'max-md:col-span-2 max-md:row-start-2': !withoutContext }"
+      class="min-w-0 border-neutral-200 max-md:col-span-2 max-md:row-start-2 md:border-r md:p-2 dark:border-white/5"
     >
-      <textarea
-        :id="inputId"
-        v-model="value"
-        :dir="direction"
-        :readonly="readonly || translating"
-        :aria-busy="translating || undefined"
-        :placeholder="translating ? undefined : placeholder"
-        rows="1"
-        class="block min-h-10 w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] leading-5 text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
-        :class="[
-          fieldClass,
-          markerPadding,
-          dirty && 'ring-1 ring-yellow-500 dark:ring-amber-300/70',
-        ]"
-        @focus="emit('focus')"
-      />
-      <!-- While a machine translation is on its way, the field shows it is being
-           worked on. The sweep is left out for reduced motion. -->
-      <div
-        v-if="translating"
-        aria-hidden="true"
-        class="pointer-events-none absolute inset-0 overflow-hidden rounded-[13px] bg-primary-50/90 squircle dark:bg-primary-950/60"
-      >
-        <div
-          class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/80 to-transparent motion-safe:animate-shimmer dark:via-primary-300/15"
+      <!-- Unsaved changes mark the field itself: a yellow border and, like an input
+           append, a revert button aligned with the first line. The field's 20px
+           lines and 10px padding let a 20px marker at top-2.5 sit centered on that
+           line. -->
+      <div class="relative">
+        <textarea
+          :id="inputId"
+          v-model="value"
+          :dir="direction"
+          :readonly="readonly || translating"
+          :aria-busy="translating || undefined"
+          :placeholder="translating ? undefined : placeholder"
+          rows="1"
+          class="block min-h-10 w-full resize-y rounded-[13px] supports-[field-sizing:content]:resize-none px-3 py-2.5 text-[13.5px] leading-5 text-neutral-900 outline-none squircle [field-sizing:content] placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-neutral-50 dark:placeholder:text-neutral-500"
+          :class="[
+            fieldClass,
+            markerPadding,
+            dirty && 'ring-1 ring-yellow-500 dark:ring-amber-300/70',
+          ]"
+          @focus="emit('focus')"
         />
+        <!-- While a machine translation is on its way, the field shows it is being
+             worked on. The sweep is left out for reduced motion. -->
         <div
-          class="relative flex h-full min-h-10 items-center gap-1.5 px-3 text-[12.5px] font-semibold text-primary-700 dark:text-primary-200"
+          v-if="translating"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 overflow-hidden rounded-[13px] bg-primary-50/90 squircle dark:bg-primary-950/60"
         >
-          <Icon name="sparkle" size="xs" class="motion-safe:animate-pulse" />
-          {{ t("entries.translating") }}
+          <div
+            class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/80 to-transparent motion-safe:animate-shimmer dark:via-primary-300/15"
+          />
+          <div
+            class="relative flex h-full min-h-10 items-center gap-1.5 px-3 text-[12.5px] font-semibold text-primary-700 dark:text-primary-200"
+          >
+            <Icon name="sparkle" size="xs" class="motion-safe:animate-pulse" />
+            {{ t("entries.translating") }}
+          </div>
         </div>
-      </div>
-      <Tooltip
-        v-if="marker === 'revert'"
-        :content="t('common.revert')"
-        class="absolute top-2.5 right-2"
-      >
-        <button
-          type="button"
-          class="grid size-5 cursor-pointer place-items-center rounded-[100%] text-yellow-700 superellipse hover:bg-yellow-50 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-400/15"
-          :disabled="readonly"
-          :aria-label="t('common.revertFor', { language: localeName })"
-          @click="emit('revert')"
+        <Tooltip
+          v-if="marker === 'revert'"
+          :content="t('common.revert')"
+          class="absolute top-2.5 right-2"
         >
-          <Icon name="arrow-counter-clockwise" size="xs" />
-        </button>
-      </Tooltip>
-      <Tooltip
-        v-else-if="marker"
-        :content="
-          marker === 'approved'
-            ? t('review.approved')
-            : marker === 'rejected'
-              ? t('review.rejectedHint', { comment: reviewComment })
-              : t('review.draftHint')
-        "
-        class="absolute top-2.5 right-2 flex h-5 items-center"
-      >
-        <span
-          v-if="marker === 'draft'"
-          class="block rounded-[6px] bg-neutral-100 px-1.5 py-0.5 text-[10.5px] font-bold text-neutral-500 squircle dark:bg-white/10 dark:text-neutral-300"
-          >{{ t("review.draft") }}</span
-        >
-        <Icon
-          v-else
-          :name="marker === 'approved' ? 'seal-check' : 'chat-circle-text'"
-          size="sm"
-          :class="
+          <button
+            type="button"
+            class="grid size-5 cursor-pointer place-items-center rounded-[100%] text-yellow-700 superellipse hover:bg-yellow-50 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-400/15"
+            :disabled="readonly"
+            :aria-label="t('common.revertFor', { language: localeName })"
+            @click="emit('revert')"
+          >
+            <Icon name="arrow-counter-clockwise" size="xs" />
+          </button>
+        </Tooltip>
+        <Tooltip
+          v-else-if="marker"
+          :content="
             marker === 'approved'
-              ? 'text-green-600 dark:text-green-300'
-              : 'text-red-500 dark:text-rose-300'
+              ? t('review.approved')
+              : marker === 'rejected'
+                ? t('review.rejectedHint', { comment: reviewComment })
+                : t('review.draftHint')
           "
-          :aria-label="
-            marker === 'approved' ? t('review.approved') : t('review.rejected')
-          "
-        />
-      </Tooltip>
+          class="absolute top-2.5 right-2 flex h-5 items-center"
+        >
+          <span
+            v-if="marker === 'draft'"
+            class="block rounded-[6px] bg-white px-1.5 py-0.5 text-[10.5px] font-bold text-neutral-500 squircle dark:bg-white/10 dark:text-neutral-300"
+            >{{ t("review.draft") }}</span
+          >
+          <Icon
+            v-else
+            :name="marker === 'approved' ? 'seal-check' : 'chat-circle-text'"
+            size="sm"
+            :class="
+              marker === 'approved'
+                ? 'text-green-600 dark:text-green-300'
+                : 'text-red-500 dark:text-rose-300'
+            "
+            :aria-label="
+              marker === 'approved'
+                ? t('review.approved')
+                : t('review.rejected')
+            "
+          />
+        </Tooltip>
+      </div>
     </div>
+    <!-- The buttons keep to the right of their column and center on the field's
+         first 40px, however tall it grows. -->
     <div
-      v-if="!withoutContext"
-      class="flex items-center gap-1 max-md:col-start-2 max-md:row-start-1"
+      class="flex items-start justify-end gap-1 max-md:col-start-2 max-md:row-start-1 md:h-14 md:items-center md:px-3"
     >
       <template v-if="reviewable">
         <BaseIconButton
+          dense
           icon="check"
           :label="
             t(confirming ? 'review.confirmFor' : 'review.approveFor', {
               language: localeName,
             })
           "
-          class="bg-white text-green-600 dark:bg-white/5 dark:text-green-300"
+          class="bg-neutral-100 text-green-600 dark:bg-white/5 dark:text-green-300"
           @click="emit('approve')"
         />
         <BaseIconButton
+          dense
           icon="arrow-u-up-left"
           :label="t('review.rejectFor', { language: localeName })"
-          class="bg-white text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
+          class="bg-neutral-100 text-neutral-500 dark:bg-white/5 dark:text-neutral-400"
           @click="emit('reject')"
         />
       </template>
       <BaseIconButton
+        dense
         icon="sidebar"
         :label="contextLabel"
         :aria-pressed="active"

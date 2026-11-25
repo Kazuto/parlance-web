@@ -360,3 +360,59 @@ describe("marking ticked entries to translate again", () => {
     });
   });
 });
+
+describe("ticking every loaded entry", () => {
+  async function openList(permissions: readonly string[] = EVERYTHING) {
+    loginAs(permissions);
+    mockRpc("LocaleService/ListLocales", {
+      locales,
+      pagination: pagination(locales.length),
+    });
+    mockRpc("EntryService/ListEntries", {
+      entries,
+      pagination: pagination(entries.length),
+    });
+    mockRpc("EntryService/GetEntry", (body) => ({
+      entry: entries.find((entry) => entry.id === body.id),
+    }));
+
+    return mountPage(EntriesPage, { route: "/entries?locales=en,de,fr" });
+  }
+
+  const checkAll = (page: MountedPage) =>
+    page.wrapper.find<HTMLInputElement>(
+      `input[aria-label="${t("entries.bulkSelectLoaded", { count: 3 })}"]`,
+    );
+  const ticked = (page: MountedPage) =>
+    page.wrapper.findComponent(SplitView).props("selection");
+
+  it("ticks them from the list's header, and unticks them again", async () => {
+    const page = await openList();
+
+    await checkAll(page).setValue(true);
+    await settle();
+
+    expect(ticked(page)).toEqual(["e1", "e2", "e3"]);
+
+    await checkAll(page).setValue(false);
+    await settle();
+
+    expect(ticked(page)).toEqual([]);
+  });
+
+  it("shows when only some are ticked", async () => {
+    const page = await openList();
+
+    page.wrapper.findComponent(SplitView).vm.$emit("update:selection", ["e2"]);
+    await settle();
+
+    expect(checkAll(page).element.indeterminate).toBe(true);
+    expect(checkAll(page).element.checked).toBe(false);
+  });
+
+  it("needs the permission to edit entries", async () => {
+    const page = await openList(VIEWER);
+
+    expect(checkAll(page).exists()).toBe(false);
+  });
+});
