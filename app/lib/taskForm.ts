@@ -1,6 +1,7 @@
 import type {
   CreateTaskRequest,
   ExportFormat,
+  GitExportConfig,
   Task,
   TaskRunStatus,
   TaskType,
@@ -24,17 +25,32 @@ export type AiTranslateForm = {
 
 export type ExportFileForm = { format: ExportFormat; path: string };
 
-export type GitExportForm = {
-  apiUrl: string;
-  repository: string;
-  baseBranch: string;
-  branch: string;
+/** What an export renders: its files, for which languages and entries. */
+export type ExportSelectionForm = {
   files: ExportFileForm[];
   localeIds: string[];
   scopeIds: string[];
   /** Narrows each scope to the entries with any of its chosen tags */
   tagIds: string[];
   includeDrafts: boolean;
+};
+
+export type GitExportForm = ExportSelectionForm & {
+  apiUrl: string;
+  repository: string;
+  baseBranch: string;
+  branch: string;
+};
+
+export type S3ExportForm = ExportSelectionForm & {
+  endpoint: string;
+  region: string;
+  bucket: string;
+  accessKeyId: string;
+  pathStyle: boolean;
+  manifestPath: string;
+  /** Hex digits of the SHA-256 in each key, 8 to 64 */
+  hashLength: number;
 };
 
 export type TaskForm = {
@@ -47,6 +63,7 @@ export type TaskForm = {
   delay: number;
   ai: AiTranslateForm;
   git: GitExportForm;
+  s3: S3ExportForm;
 };
 
 /** The settings shared by creating and updating, without the type and token. */
@@ -61,6 +78,62 @@ export const DEFAULT_PATHS: Record<string, string> = {
   EXPORT_FORMAT_PO: "locale/{locale}/LC_MESSAGES/messages.po",
 };
 
+/** The keys of an S3 export's files unless changed, named by their hash. */
+export const DEFAULT_S3_PATHS: Record<string, string> = {
+  EXPORT_FORMAT_JSON: "i18n/{locale}.{hash}.json",
+  EXPORT_FORMAT_PHP: "i18n/{locale}.{hash}.php",
+  EXPORT_FORMAT_PO: "i18n/{locale}.{hash}.po",
+};
+
+export const DEFAULT_MANIFEST_PATH = "i18n/manifest.json";
+
+/** A whole SHA-256 in hex; the server takes 0 for it too. */
+export const FULL_HASH_LENGTH = 64;
+
+/** What git and S3 exports save alike. */
+type SavedSelection = Pick<
+  GitExportConfig,
+  "files" | "localeIds" | "scopeIds" | "tagIds" | "includeDrafts"
+>;
+
+/** The form of an export's files and selection, or a new one's. */
+function selectionToForm(
+  saved: SavedSelection | null | undefined,
+  defaultPaths: Record<string, string>,
+): ExportSelectionForm {
+  return {
+    files: saved?.files?.length
+      ? saved.files.map((file) => ({
+          format: file.format ?? "EXPORT_FORMAT_JSON",
+          path: file.path ?? "",
+        }))
+      : [
+          {
+            format: "EXPORT_FORMAT_JSON",
+            path: defaultPaths.EXPORT_FORMAT_JSON!,
+          },
+        ],
+    localeIds: [...(saved?.localeIds ?? [])],
+    scopeIds: [...(saved?.scopeIds ?? [])],
+    tagIds: [...(saved?.tagIds ?? [])],
+    includeDrafts: !!saved?.includeDrafts,
+  };
+}
+
+/** The selection as sent, with the paths trimmed. */
+function selectionToSettings(form: ExportSelectionForm): ExportSelectionForm {
+  return {
+    files: form.files.map((file) => ({
+      format: file.format,
+      path: file.path.trim(),
+    })),
+    localeIds: [...form.localeIds],
+    scopeIds: [...form.scopeIds],
+    tagIds: [...form.tagIds],
+    includeDrafts: form.includeDrafts,
+  };
+}
+
 /** The form for a task, or a new one of the type. */
 export function taskToForm(
   task?: Task,
@@ -68,6 +141,7 @@ export function taskToForm(
 ): TaskForm {
   const ai = task?.aiTranslate;
   const git = task?.gitExport;
+  const s3 = task?.s3Export;
 
   return {
     name: task?.name ?? "",
@@ -92,23 +166,24 @@ export function taskToForm(
       repository: git?.repository ?? "",
       baseBranch: git?.baseBranch ?? "main",
       branch: git?.branch ?? "parlance/translations",
-      files: git?.files?.length
-        ? git.files.map((file) => ({
-            format: file.format ?? "EXPORT_FORMAT_JSON",
-            path: file.path ?? "",
-          }))
-        : [
-            {
-              format: "EXPORT_FORMAT_JSON",
-              path: DEFAULT_PATHS.EXPORT_FORMAT_JSON!,
-            },
-          ],
-      localeIds: [...(git?.localeIds ?? [])],
-      scopeIds: [...(git?.scopeIds ?? [])],
-      tagIds: [...(git?.tagIds ?? [])],
-      includeDrafts: !!git?.includeDrafts,
+      ...selectionToForm(git, DEFAULT_PATHS),
+    },
+    s3: {
+      endpoint: s3?.endpoint ?? "",
+      region: s3?.region ?? "",
+      bucket: s3?.bucket ?? "",
+      accessKeyId: s3?.accessKeyId ?? "",
+      pathStyle: !!s3?.pathStyle,
+      manifestPath: s3?.manifestPath ?? DEFAULT_MANIFEST_PATH,
+      hashLength: s3?.hashLength || FULL_HASH_LENGTH,
+      ...selectionToForm(s3, DEFAULT_S3_PATHS),
     },
   };
+}
+
+/** Whether tasks of the type export translations, with a token or key to store. */
+export function isExportType(type?: TaskType | null) {
+  return type === "TASK_TYPE_GIT_EXPORT" || type === "TASK_TYPE_S3_EXPORT";
 }
 
 /** The request settings of the form; only the type's own config is sent. */
@@ -126,17 +201,24 @@ export function formToSettings(form: TaskForm): TaskSettings {
 
   if (form.type === "TASK_TYPE_AI_TRANSLATE") {
     settings.aiTranslate = { ...form.ai };
+  } else if (form.type === "TASK_TYPE_S3_EXPORT") {
+    settings.s3Export = {
+      ...selectionToSettings(form.s3),
+      endpoint: form.s3.endpoint.trim(),
+      region: form.s3.region.trim(),
+      bucket: form.s3.bucket.trim(),
+      accessKeyId: form.s3.accessKeyId.trim(),
+      pathStyle: form.s3.pathStyle,
+      manifestPath: form.s3.manifestPath.trim(),
+      hashLength: form.s3.hashLength,
+    };
   } else {
     settings.gitExport = {
-      ...form.git,
+      ...selectionToSettings(form.git),
       apiUrl: form.git.apiUrl.trim(),
       repository: form.git.repository.trim(),
       baseBranch: form.git.baseBranch.trim(),
       branch: form.git.branch.trim(),
-      files: form.git.files.map((file) => ({
-        format: file.format,
-        path: file.path.trim(),
-      })),
     };
   }
 

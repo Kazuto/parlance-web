@@ -3,7 +3,12 @@ import { Alert, Button, Card, Icon, Switch, Text } from "@thkzt/eunoia";
 import { useQuery } from "@tanstack/vue-query";
 import { api } from "~/lib/api";
 import type { Task } from "~/lib/api/schemas/parlance/v1/TaskSchema";
-import { formToSettings, isActiveRun, taskToForm } from "~/lib/taskForm";
+import {
+  formToSettings,
+  isActiveRun,
+  isExportType,
+  taskToForm,
+} from "~/lib/taskForm";
 import { formatHour, parseSchedule } from "~/lib/taskSchedule";
 import type { AppCommand } from "~/composables/useCommands";
 
@@ -121,12 +126,24 @@ function describeTriggers(task: Task) {
   return parts.length ? parts.join(" · ") : t("tasks.describe.manual");
 }
 
+/** The icon of each type of task */
+const taskIcons: Record<string, string> = {
+  TASK_TYPE_GIT_EXPORT: "git-pull-request",
+  TASK_TYPE_S3_EXPORT: "cloud-arrow-up",
+};
+
 /** What the task works on, e.g. the repository of a git export. */
 function describeTarget(task: Task) {
   if (task.type === "TASK_TYPE_GIT_EXPORT") {
     const git = task.gitExport;
 
     return `${git?.repository ?? ""} · ${git?.baseBranch ?? ""} ← ${git?.branch ?? ""}`;
+  }
+
+  if (task.type === "TASK_TYPE_S3_EXPORT") {
+    const s3 = task.s3Export;
+
+    return `s3://${s3?.bucket ?? ""}/${s3?.manifestPath ?? ""}`;
   }
 
   return t("tasks.ai.target");
@@ -236,13 +253,7 @@ useCommands(() => {
           <div
             class="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-200"
           >
-            <Icon
-              :name="
-                task.type === 'TASK_TYPE_GIT_EXPORT'
-                  ? 'git-pull-request'
-                  : 'sparkle'
-              "
-            />
+            <Icon :name="taskIcons[task.type ?? ''] ?? 'sparkle'" />
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
@@ -259,7 +270,7 @@ useCommands(() => {
             </div>
             <div
               class="truncate text-xs text-neutral-500 dark:text-neutral-400"
-              :class="{ 'font-mono': task.type === 'TASK_TYPE_GIT_EXPORT' }"
+              :class="{ 'font-mono': isExportType(task.type) }"
             >
               {{ describeTarget(task) }}
             </div>

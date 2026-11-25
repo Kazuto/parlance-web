@@ -26,6 +26,11 @@ from [`@thkzt/eunoia`](https://www.npmjs.com/package/@thkzt/eunoia).
   ("du", "tu").
 - **Import and export:** flat or nested JSON, PHP arrays (Laravel), gettext PO, and
   ZIP files with one file per language.
+- **Automation:** tasks that run on a schedule, after approvals or releases, or by
+  hand. They fill missing translations by machine, propose the exported files as a
+  GitHub pull request, or upload them to an S3-compatible bucket, each file named by
+  its SHA-256, with a manifest for apps to find them. See
+  [Tasks](https://github.com/Kazuto/parlance-server#tasks) in the server README.
 - **Machine translation (optional):** suggestions from a self-hosted
   [Hy-MT2](https://github.com/Tencent-Hunyuan/Hy-MT2) model, for one entry or many.
   Suggestions are drafts to review, never saved on their own.

@@ -87,6 +87,72 @@ describe("task form", () => {
     expect(taskToForm().git.tagIds).toEqual([]);
   });
 
+  it("sends an S3 export's bucket and files named by their hash", () => {
+    const form = taskToForm(undefined, "TASK_TYPE_S3_EXPORT");
+
+    form.name = "Upload";
+    form.s3.bucket = " translations ";
+    form.s3.accessKeyId = " AKIA123 ";
+    form.s3.endpoint = " https://minio.example.com ";
+    form.s3.pathStyle = true;
+
+    const settings = formToSettings(form);
+
+    expect(settings.s3Export).toEqual({
+      endpoint: "https://minio.example.com",
+      region: "",
+      bucket: "translations",
+      accessKeyId: "AKIA123",
+      pathStyle: true,
+      manifestPath: "i18n/manifest.json",
+      hashLength: 64,
+      files: [
+        { format: "EXPORT_FORMAT_JSON", path: "i18n/{locale}.{hash}.json" },
+      ],
+      localeIds: [],
+      scopeIds: [],
+      tagIds: [],
+      includeDrafts: false,
+    });
+    expect(settings).not.toHaveProperty("gitExport");
+  });
+
+  it("keeps a saved S3 export's settings", () => {
+    const task = {
+      id: "t4",
+      name: "Upload",
+      type: "TASK_TYPE_S3_EXPORT" as const,
+      // The API leaves out false and zero values.
+      s3Export: {
+        bucket: "translations",
+        accessKeyId: "AKIA123",
+        manifestPath: "app/manifest.json",
+        hashLength: 16,
+        files: [
+          {
+            format: "EXPORT_FORMAT_PO" as const,
+            path: "po/{locale}.{hash}.po",
+          },
+        ],
+        scopeIds: ["s1"],
+      },
+    };
+
+    expect(formToSettings(taskToForm(task)).s3Export).toMatchObject({
+      bucket: "translations",
+      pathStyle: false,
+      manifestPath: "app/manifest.json",
+      hashLength: 16,
+      files: [{ format: "EXPORT_FORMAT_PO", path: "po/{locale}.{hash}.po" }],
+      scopeIds: ["s1"],
+    });
+    // A saved length of 0 is the whole hash.
+    expect(
+      taskToForm({ ...task, s3Export: { bucket: "translations" } }).s3
+        .hashLength,
+    ).toBe(64);
+  });
+
   it("keeps a saved task's settings when saved unchanged", () => {
     const task = {
       id: "t1",
